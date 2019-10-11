@@ -626,7 +626,7 @@ public class PropTypecheckIndividual
     @Test
     public void checkField2() throws UserException, InternalException
     {
-        checkConcreteType(DataType.TEXT, "@define abs = [(a : 3, b : \"Hi\"), (b : \"\", a: (3 * 4))] @then @call function\\\\element(abs, 1)#b @enddefine");
+        checkConcreteType(DataType.TEXT, "@define var\\\\abs = [(a : 3, b : \"Hi\"), (b : \"\", a: (3 * 4))] @then @call function\\\\element(var\\\\abs, 1)#b @enddefine");
     }
 
     @Test
