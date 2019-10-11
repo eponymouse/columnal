@@ -500,7 +500,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
          * @param idents
          * @return
          */
-        Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents);
+        Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isPattern);
 
         /**
          * Makes a new save destination with the given names defined (namespace plus idents for each entry) 
@@ -518,7 +518,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public static final SaveDestination TO_STRING = new SaveDestination()
         {
             @Override
-            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
+            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isPattern)
             {
                 // Give everything in full:
                 return new Pair<>(namespace, idents);
@@ -542,7 +542,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public static final SaveDestination TO_FILE = new SaveDestination()
         {
             @Override
-            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
+            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isPattern)
             {
                 // Give everything in full:
                 return new Pair<>(namespace, idents);
@@ -571,10 +571,10 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             }
 
             @Override
-            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
+            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isPattern)
             {
                 // Need to keep adding idents backwards from end until it is not ambigious:
-                boolean usingNamespace = false;
+                boolean usingNamespace = isPattern && !Objects.equals(namespace, "var");
                 int firstIdentUsed = idents.size() - 1;
                 // Can only increase scoping if we're not using the namespace or are not yet using all idents
                 increaseScoping: while (!usingNamespace || firstIdentUsed > 0)

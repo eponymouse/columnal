@@ -149,8 +149,8 @@ public class IdentExpression extends NonOperatorExpression
         // - Standard function name (Scope: "function")
 
         @Nullable TypeState state = original;
-        boolean singleUnscoped = namespace == null && idents.size() == 1;
-        List<TypeExp> varType = singleUnscoped ? state.findVarType(idents.get(0)) : null;
+        boolean couldBeVar = (namespace == null || Objects.equals(namespace, "var")) && idents.size() == 1;
+        List<TypeExp> varType = couldBeVar ? state.findVarType(idents.get(0)) : null;
 
         if (varType != null)
         {
@@ -169,9 +169,15 @@ public class IdentExpression extends NonOperatorExpression
                 }
 
                 @Override
-                public @Nullable @ExpressionIdentifier String getFoundNamespace()
+                public @ExpressionIdentifier String getFoundNamespace()
                 {
-                    return null;
+                    return "var";
+                }
+
+                @Override
+                public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+                {
+                    return idents;
                 }
 
                 @Override
@@ -179,44 +185,15 @@ public class IdentExpression extends NonOperatorExpression
                 {
                     return result(state.get(idents.get(0)), state);
                 }
+
+                @Override
+                public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+                {
+                    return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName(), kind == ExpressionKind.PATTERN);
+                }
             };
             // If they're trying to use a variable with many types, it justifies us trying to unify all the types:
             return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType), state);
-        }
-
-        if (singleUnscoped && kind == ExpressionKind.PATTERN)
-        {
-            MutVar patternType = new MutVar(this);
-            state = state.add(idents.get(0), patternType, s -> onError.recordError(this, s));
-            if (state == null)
-                return null;
-            resolution = new Resolution()
-            {
-                @Override
-                public boolean isDeclarationInMatch()
-                {
-                    return true;
-                }
-
-                @Override
-                public boolean isVariable()
-                {
-                    return true;
-                }
-
-                @Override
-                public @Nullable @ExpressionIdentifier String getFoundNamespace()
-                {
-                    return null;
-                }
-
-                @Override
-                public ValueResult getValue(EvaluateState state) throws InternalException
-                {
-                    throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
-                }
-            };
-            return onError.recordType(this, state, patternType);
         }
 
         if (namespace == null || namespace.equals("column"))
@@ -263,20 +240,26 @@ public class IdentExpression extends NonOperatorExpression
                     }
 
                     @Override
-                    public @Nullable @ExpressionIdentifier String getFoundNamespace()
+                    public @ExpressionIdentifier String getFoundNamespace()
                     {
                         return "column";
                     }
 
                     @Override
-                    public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
+                    public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+                    {
+                        return ImmutableList.of(col.tableId.getRaw(), columnName.getRaw());
+                    }
+
+                    @Override
+                    public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
                     {
                         final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(resolvedTableName, columnName, null);
 
                         final @Nullable TableId renamedTableId = renamed.getFirst();
                         ImmutableList<@ExpressionIdentifier String> tablePlusColumn = renamedTableId != null ? ImmutableList.of(renamedTableId.getRaw(), renamed.getSecond().getRaw()) : ImmutableList.of(renamed.getSecond().getRaw());
 
-                        return saveDestination.disambiguate(getFoundNamespace(), tablePlusColumn);
+                        return saveDestination.disambiguate(getFoundNamespace(), tablePlusColumn, kind == ExpressionKind.PATTERN);
                     }
                 };
                 return onError.recordType(this, state, TypeExp.fromDataType(this, column.getType()));
@@ -313,15 +296,21 @@ public class IdentExpression extends NonOperatorExpression
                 resolution = new Resolution()
                 {
                     @Override
-                    public @Nullable @ExpressionIdentifier String getFoundNamespace()
+                    public @ExpressionIdentifier String getFoundNamespace()
                     {
                         return "table";
                     }
 
                     @Override
-                    public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
+                    public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
                     {
-                        return saveDestination.disambiguate(getFoundNamespace(), ImmutableList.of(renames.tableId(new TableId(idents.get(0))).getRaw()));
+                        return ImmutableList.of(resolvedTable.getTableId().getRaw());
+                    }
+
+                    @Override
+                    public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+                    {
+                        return saveDestination.disambiguate(getFoundNamespace(), ImmutableList.of(renames.tableId(new TableId(idents.get(0))).getRaw()), kind == ExpressionKind.PATTERN);
                     }
 
                     @Override
@@ -448,15 +437,27 @@ public class IdentExpression extends NonOperatorExpression
                     }
 
                     @Override
-                    public @Nullable @ExpressionIdentifier String getFoundNamespace()
+                    public @ExpressionIdentifier String getFoundNamespace()
                     {
                         return "tag";
+                    }
+
+                    @Override
+                    public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+                    {
+                        return ImmutableList.of(tagFinal.getTypeName().getRaw(), tagFinal.getTagInfo().getName());
                     }
 
                     @Override
                     public @Nullable TagInfo getResolvedConstructor()
                     {
                         return tagFinal;
+                    }
+
+                    @Override
+                    public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+                    {
+                        return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName(), kind == ExpressionKind.PATTERN);
                     }
 
                     @Override
@@ -496,9 +497,21 @@ public class IdentExpression extends NonOperatorExpression
                     }
 
                     @Override
-                    public @Nullable @ExpressionIdentifier String getFoundNamespace()
+                    public @ExpressionIdentifier String getFoundNamespace()
                     {
                         return "function";
+                    }
+
+                    @Override
+                    public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+                    {
+                        return functionDefinition.getFullName();
+                    }
+
+                    @Override
+                    public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+                    {
+                        return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName(), kind == ExpressionKind.PATTERN);
                     }
 
                     @Override
@@ -531,6 +544,55 @@ public class IdentExpression extends NonOperatorExpression
                 return onError.recordType(this, state, functionDefinition.getType(state.getTypeManager()).getFirst());
             }
         }
+
+        if (couldBeVar && kind == ExpressionKind.PATTERN)
+        {
+            MutVar patternType = new MutVar(this);
+            state = state.add(idents.get(0), patternType, s -> onError.recordError(this, s));
+            if (state == null)
+                return null;
+            resolution = new Resolution()
+            {
+                @Override
+                public boolean isDeclarationInMatch()
+                {
+                    return true;
+                }
+
+                @Override
+                public boolean isVariable()
+                {
+                    return true;
+                }
+
+                @Override
+                public @ExpressionIdentifier String getFoundNamespace()
+                {
+                    return "var";
+                }
+
+                @Override
+                public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+                {
+                    return idents;
+                }
+
+                @Override
+                public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+                {
+                    return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName(), kind == ExpressionKind.PATTERN);
+                }
+
+                @Override
+                public ValueResult getValue(EvaluateState state) throws InternalException
+                {
+                    throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
+                }
+            };
+            return onError.recordType(this, state, patternType);
+        }
+
+
         if (namespace != null && !ImmutableList.of("column", "table", "tag", "function").contains(namespace))
         {
             onError.recordError(this, StyledString.s("Unknown namespace or identifier: \"" + namespace + "\".  Known namespaces: column, table, tag, function."));
@@ -595,7 +657,7 @@ public class IdentExpression extends NonOperatorExpression
     public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
     {
         // TODO not sure this should rely on type-checking for the renames
-        return toText(resolution == null ? saveDestination.disambiguate(namespace, idents) : resolution.save(saveDestination, idents, renames));
+        return toText(resolution == null ? saveDestination.disambiguate(namespace, idents, true) : resolution.save(saveDestination, renames));
     }
 
     private static String toText(Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> namespaceAndIdents)
@@ -697,12 +759,10 @@ public class IdentExpression extends NonOperatorExpression
 
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException;
         
-        public @Nullable @ExpressionIdentifier String getFoundNamespace();
+        public @ExpressionIdentifier String getFoundNamespace();
+        public ImmutableList<@ExpressionIdentifier String> getFoundFullName();
         
-        public default Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, ImmutableList<@ExpressionIdentifier String> original, TableAndColumnRenames renames)
-        {
-            return saveDestination.disambiguate(getFoundNamespace(), original);
-        }
+        public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames);
 
         public boolean isVariable();
         

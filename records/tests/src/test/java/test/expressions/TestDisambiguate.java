@@ -88,7 +88,7 @@ public class TestDisambiguate
     
     private static String t(SaveDestination destination, Name name)
     {
-        Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> result = destination.disambiguate(name.namespace, name.names);
+        Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> result = destination.disambiguate(name.namespace, name.names, false);
         return (result.getFirst() != null ? result.getFirst() + "\\\\" : "") + result.getSecond().stream().collect(Collectors.joining("\\")); 
     }
 }
