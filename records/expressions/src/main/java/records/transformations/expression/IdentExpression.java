@@ -532,7 +532,7 @@ public class IdentExpression extends NonOperatorExpression
                                 if (concrete == null)
                                     throw new UserException("Could not resolve unit " + s + " to a concrete unit from " + u);
                                 return concrete;
-                            }, t -> t.toConcreteType(state.getTypeManager(), true).eitherEx(
+                            }, t -> t.toConcreteType(state.getTypeManager(), false).eitherEx(
                                     l -> {
                                         throw new UserException(StyledString.concat(StyledString.s("Ambiguous type for call to " + functionDefinition.getName() + " "), l.getErrorText()));
                                     },
@@ -541,7 +541,7 @@ public class IdentExpression extends NonOperatorExpression
                         })), state);
                     }
                 };
-                return onError.recordType(this, state, functionDefinition.getType(state.getTypeManager()).getFirst());
+                return onError.recordType(this, state, type.getFirst());
             }
         }
 
