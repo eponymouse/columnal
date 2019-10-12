@@ -130,7 +130,7 @@ public class TestExpressionQuickFixType extends BaseTestQuickFix
     @Test
     public void testAsType1()
     {
-        testSimpleFix("minimum([])", "minimum", "@call function\\\\conversion\\as type(type{@invalidtypeops()},@call function\\\\comparison\\minimum([]))");
+        testSimpleFix("minimum([])", "minimum", "@call function\\\\core\\as type(type{@invalidtypeops()},@call function\\\\comparison\\minimum([]))");
     }
 
     @Test
@@ -142,6 +142,6 @@ public class TestExpressionQuickFixType extends BaseTestQuickFix
     @Test
     public void testAsType2()
     {
-        testSimpleFix("[]", "[", "@call function\\\\conversion\\as type(type{@invalidtypeops()},[])");
+        testSimpleFix("[]", "[", "@call function\\\\core\\as type(type{@invalidtypeops()},[])");
     }
 }
