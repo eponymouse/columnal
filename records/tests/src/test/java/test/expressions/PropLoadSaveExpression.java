@@ -158,8 +158,8 @@ public class PropLoadSaveExpression extends FXApplicationTest
         Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(columnLookup), null, null, typeManager, () -> TestUtil.createTypeState(typeManager), FunctionList.getFunctionLookup(typeManager.getUnitManager()), e -> {
         }).save(false);
         assertEquals(expression, edited);
-        assertEquals(expression.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, typeManager, TableAndColumnRenames.EMPTY), edited.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, typeManager, TableAndColumnRenames.EMPTY));
-        assertEquals(expression.save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, typeManager, TableAndColumnRenames.EMPTY), edited.save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, typeManager, TableAndColumnRenames.EMPTY));
+        assertEquals(expression.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY), edited.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY));
+        assertEquals(expression.save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY), edited.save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));
     }
 
     @Property(trials = 200)
@@ -177,12 +177,12 @@ public class PropLoadSaveExpression extends FXApplicationTest
 
     private void testLoadSave(@From(GenNonsenseExpression.class) Expression expression) throws UserException, InternalException
     {
-        String saved = expression.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, null, TableAndColumnRenames.EMPTY);
+        String saved = expression.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY);
         // Use same manager to load so that types are preserved:
         TypeManager typeManager = TestUtil.managerWithTestTypes().getFirst().getTypeManager();
         Expression reloaded = TestUtil.parseExpression(saved, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         assertEquals("Saved version: " + saved, expression, reloaded);
-        String resaved = reloaded.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, null, TableAndColumnRenames.EMPTY);
+        String resaved = reloaded.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY);
         assertEquals(saved, resaved);
 
     }

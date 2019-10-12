@@ -60,7 +60,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return "unit{" + unitExpression.save(saveDestination, true) + "}";
     }

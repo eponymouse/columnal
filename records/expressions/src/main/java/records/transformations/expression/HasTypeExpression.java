@@ -101,9 +101,9 @@ public class HasTypeExpression extends Expression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return lhsVar.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames) + " :: " + rhsType.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames);
+        return lhsVar.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + " :: " + rhsType.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames);
     }
 
     @Override

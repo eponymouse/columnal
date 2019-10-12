@@ -372,7 +372,7 @@ public class Check extends Transformation implements SingleSourceTransformation
                 checkTypeStr = "STANDALONE";
                 break;
         }
-        return Collections.singletonList(PREFIX + " " + checkTypeStr + " @EXPRESSION " + checkExpression.save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, null, renames));
+        return Collections.singletonList(PREFIX + " " + checkTypeStr + " @EXPRESSION " + checkExpression.save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, renames));
     }
     
     @OnThread(Tag.Any)

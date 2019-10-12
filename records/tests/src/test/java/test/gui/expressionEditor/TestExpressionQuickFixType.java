@@ -31,7 +31,7 @@ public class TestExpressionQuickFixType extends BaseTestQuickFix
     @OnThread(Tag.Simulation)
     public void testDateSubtractionFix1()
     {
-        testFix("date from ymd(2019{year}, 1{month}, 1{day}) - date{2018-12-31}", "2019", "", "@call function\\\\days between(@call function\\\\date from ymd(2019{year}, 1{month}, 1{day}), date{2018-12-31})");
+        testFix("date from ymd(2019{year}, 1{month}, 1{day}) - date{2018-12-31}", "2019", "", "@call function\\\\datetime\\days between(@call function\\\\datetime\\date from ymd(2019{year}, 1{month}, 1{day}), date{2018-12-31})");
     }
 
     @Test
@@ -130,18 +130,18 @@ public class TestExpressionQuickFixType extends BaseTestQuickFix
     @Test
     public void testAsType1()
     {
-        testSimpleFix("minimum([])", "minimum", "@call function\\\\as type(type{@invalidtypeops()},@call function\\\\minimum([]))");
+        testSimpleFix("minimum([])", "minimum", "@call function\\\\conversion\\as type(type{@invalidtypeops()},@call function\\\\comparison\\minimum([]))");
     }
 
     @Test
     public void testAsType1b()
     {
-        testSimpleFix("from text(\"\")", "from", "@call function\\\\from text to(type{@invalidtypeops()}, \"\")");
+        testSimpleFix("from text(\"\")", "from", "@call function\\\\conversion\\from text to(type{@invalidtypeops()}, \"\")");
     }
 
     @Test
     public void testAsType2()
     {
-        testSimpleFix("[]", "[", "@call function\\\\as type(type{@invalidtypeops()},[])");
+        testSimpleFix("[]", "[", "@call function\\\\conversion\\as type(type{@invalidtypeops()},[])");
     }
 }

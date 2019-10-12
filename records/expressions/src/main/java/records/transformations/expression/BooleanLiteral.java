@@ -36,7 +36,7 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return Boolean.toString(value);
     }

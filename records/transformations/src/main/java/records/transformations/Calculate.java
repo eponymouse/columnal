@@ -236,7 +236,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
             Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(getId(), entry.getKey(), srcTableId);
             b.kw("CALCULATE").id(renamed.getSecond());
             b.kw("@EXPRESSION");
-            b.raw(entry.getValue().save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, null, renames.withDefaultTableId(srcTableId)));
+            b.raw(entry.getValue().save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, renames.withDefaultTableId(srcTableId)));
             return b.toString();
         }).collect(Collectors.<String>toList());
     }

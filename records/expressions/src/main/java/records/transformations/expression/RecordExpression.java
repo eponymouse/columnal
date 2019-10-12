@@ -138,9 +138,9 @@ public class RecordExpression extends Expression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "(" + members.stream().map(m -> m.getFirst() + ": " + m.getSecond().save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames)).collect(Collectors.joining(", ")) + ")";
+        return "(" + members.stream().map(m -> m.getFirst() + ": " + m.getSecond().save(saveDestination, BracketedStatus.NEED_BRACKETS, renames)).collect(Collectors.joining(", ")) + ")";
     }
 
     @SuppressWarnings("recorded")

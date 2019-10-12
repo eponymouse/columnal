@@ -152,9 +152,9 @@ public class MatchExpression extends NonOperatorExpression
             };
         }
 
-        public String save(SaveDestination saveDestination, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
+        public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
         {
-            return " @case " + patterns.stream().map(p -> p.save(saveDestination, typeManager, renames)).collect(Collectors.joining(" @orcase ")) + " @then " + outcome.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames);
+            return " @case " + patterns.stream().map(p -> p.save(saveDestination, renames)).collect(Collectors.joining(" @orcase ")) + " @then " + outcome.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames);
         }
 
         public StyledString toDisplay(ExpressionStyler expressionStyler)
@@ -272,9 +272,9 @@ public class MatchExpression extends NonOperatorExpression
             return ImmutableList.of(patternOutcome);
         }
 
-        public String save(SaveDestination saveDestination, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
+        public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
         {
-            return pattern.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames) + (guard == null ? "" : " @given " + guard.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames));
+            return pattern.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + (guard == null ? "" : " @given " + guard.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames));
         }
 
         public StyledString toDisplay(ExpressionStyler expressionStyler)
@@ -360,13 +360,13 @@ public class MatchExpression extends NonOperatorExpression
                     Utility.<ValueResult>prependToList(originalResult, Utility.<ValueResult>appendToList(checkedClauses.build(), clauseOutcomeResult)));
             }
         }
-        throw new UserException("No matching clause found in expression: \"" + save(SaveDestination.TO_STRING, BracketedStatus.NEED_BRACKETS, state.getTypeManager(), TableAndColumnRenames.EMPTY) + "\"");
+        throw new UserException("No matching clause found in expression: \"" + save(SaveDestination.TO_STRING, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY) + "\"");
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String inner = "@match " + expression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames) + clauses.stream().map(c -> c.save(saveDestination, typeManager, renames)).collect(Collectors.joining("")) + " @endmatch";
+        String inner = "@match " + expression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + clauses.stream().map(c -> c.save(saveDestination, renames)).collect(Collectors.joining("")) + " @endmatch";
         return (surround == BracketedStatus.DONT_NEED_BRACKETS) ? inner : ("(" + inner + ")");
     }
 

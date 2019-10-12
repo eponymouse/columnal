@@ -700,7 +700,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
      * @param renames
      * @return
      */
-    public abstract String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames);
+    public abstract String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames);
 
     @Pure
     public Optional<Rational> constantFold()
@@ -730,7 +730,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     @Override
     public final String toString()
     {
-        return save(SaveDestination.TO_STRING, BracketedStatus.DONT_NEED_BRACKETS, null, TableAndColumnRenames.EMPTY);
+        return save(SaveDestination.TO_STRING, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY);
     }
 
     // This is like a zipper.  It gets a list of all expressions in the tree (i.e. all nodes)

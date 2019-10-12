@@ -89,10 +89,10 @@ public class LambdaExpression extends Expression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String params = parameters.stream().map(e -> e.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames)).collect(Collectors.joining(", "));
-        String body = this.body.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames);
+        String params = parameters.stream().map(e -> e.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames)).collect(Collectors.joining(", "));
+        String body = this.body.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames);
         if (saveDestination.needKeywords())
             return "@function(" + params + ") @then " + body + "@endfunction";
         else

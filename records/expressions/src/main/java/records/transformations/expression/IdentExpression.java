@@ -654,7 +654,7 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
         // TODO not sure this should rely on type-checking for the renames
         return toText(resolution == null ? saveDestination.disambiguate(namespace, idents, true) : resolution.save(saveDestination, renames));

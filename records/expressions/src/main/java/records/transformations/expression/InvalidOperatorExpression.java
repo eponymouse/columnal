@@ -51,12 +51,12 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
         if (saveDestination.needKeywords())
-            return "@invalidops(" + items.stream().map(x -> x.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames)).collect(Collectors.joining(", "))+ ")";
+            return "@invalidops(" + items.stream().map(x -> x.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames)).collect(Collectors.joining(", "))+ ")";
         else
-            return items.stream().map(x -> x.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames)).collect(Collectors.joining(""));
+            return items.stream().map(x -> x.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames)).collect(Collectors.joining(""));
     }
 
     @Override

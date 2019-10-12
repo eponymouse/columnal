@@ -1013,9 +1013,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
+        public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
         {
-            return lhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames) + ": " + rhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames);
+            return lhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + ": " + rhs.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames);
         }
 
         @Override

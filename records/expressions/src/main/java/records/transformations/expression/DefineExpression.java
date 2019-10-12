@@ -65,9 +65,9 @@ public class DefineExpression extends Expression
                 return null;
         }
 
-        public String save(SaveDestination saveDestination, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
+        public String save(SaveDestination saveDestination, TableAndColumnRenames renames)
         {
-            return lhsPattern.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames) + " = " + rhsValue.save(saveDestination, BracketedStatus.NEED_BRACKETS, typeManager, renames);
+            return lhsPattern.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + " = " + rhsValue.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames);
         }
 
         @SuppressWarnings("recorded")
@@ -239,9 +239,9 @@ public class DefineExpression extends Expression
     }
 
     @Override
-    public String save(SaveDestination saveDestination, BracketedStatus surround, @Nullable TypeManager typeManager, TableAndColumnRenames renames)
+    public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@define " + defines.stream().map(e -> e.typeOrDefinition.either(x -> x.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames), x -> x.save(saveDestination, typeManager, renames))).collect(Collectors.joining(", ")) + " @then " + body.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, typeManager, renames) + " @enddefine";
+        return "@define " + defines.stream().map(e -> e.typeOrDefinition.either(x -> x.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames), x -> x.save(saveDestination, renames))).collect(Collectors.joining(", ")) + " @then " + body.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @enddefine";
     }
 
     @Override

@@ -456,14 +456,14 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                     @NonNull Window window = getScene().getWindow();
                     Expression expression = recipe.makeExpression(window, makeColumnPicker());
                     if (expression != null)
-                        expressionEditor.setContent(expression.save(SaveDestination.toExpressionEditor(typeManager, curColumnLookup.get(), FunctionList.getFunctionLookup(typeManager.getUnitManager())), BracketedStatus.DONT_NEED_BRACKETS, typeManager, TableAndColumnRenames.EMPTY));
+                        expressionEditor.setContent(expression.save(SaveDestination.toExpressionEditor(typeManager, curColumnLookup.get(), FunctionList.getFunctionLookup(typeManager.getUnitManager())), BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));
                 }, "recipe-button"));
             }
         }
         
         public void update(Expression curContent)
         {
-            boolean empty = curContent.save(SaveDestination.toExpressionEditor(typeManager, curColumnLookup.get(), FunctionList.getFunctionLookup(typeManager.getUnitManager())), BracketedStatus.DONT_NEED_BRACKETS, typeManager, TableAndColumnRenames.EMPTY).trim().isEmpty();
+            boolean empty = curContent.save(SaveDestination.toExpressionEditor(typeManager, curColumnLookup.get(), FunctionList.getFunctionLookup(typeManager.getUnitManager())), BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY).trim().isEmpty();
             setVisible(empty);
         }
         

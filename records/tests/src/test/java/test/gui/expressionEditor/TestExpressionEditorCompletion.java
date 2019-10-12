@@ -19,6 +19,7 @@ import records.data.ColumnId;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.Table.InitialLoadDetails;
+import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
@@ -32,6 +33,7 @@ import records.transformations.Calculate;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
@@ -85,6 +87,11 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         TestUtil.doubleOk(this);
         sleep(500);
         return TestUtil.checkNonNull(((Calculate)mainWindowActions._test_getTableManager().getSingleTableOrThrow(new TableId("Calc"))).getCalculatedColumns().get(new ColumnId("My Calc")));
+    }
+    
+    private String finishExternal() throws UserException
+    {
+        return finish().save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY);
     }
     
     private class CompletionCheck
@@ -283,7 +290,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
     public void testColumn2b() throws Exception
     {
         loadExpression("@unfinished \"\"");
-        write("@tab");
+        write("tab");
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
@@ -321,7 +328,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         // Should be single completion that is auto-selected:
         push(KeyCode.ENTER);
         // Don't care exactly how it's saved, as long as keyword is in there:
-        assertThat(finish().toString(), Matchers.containsString("^aelse"));
+        assertThat(finishExternal(), Matchers.containsString("^aelse"));
     }
     
     @Test
@@ -330,7 +337,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         loadExpression("column\\\\My Number");
         push(KeyCode.HOME);
         write("@if ");
-        String finished = finish().toString();
+        String finished = finishExternal();
         // Don't care exactly how it's saved:
         assertThat(finished, Matchers.containsString("^aif"));
         assertThat(finished, Matchers.containsString("My Number"));
@@ -345,7 +352,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
-        String finished = finish().toString();
+        String finished = finishExternal();
         // Don't care exactly how it's saved:
         assertThat(finished, Matchers.containsString("^aif"));
         assertThat(finished, Matchers.containsString("My Number"));
@@ -360,7 +367,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkPosition();
         push(KeyCode.END);
         write("@else0@endif");
-        String finished = finish().toString();
+        String finished = finishExternal();
         assertEquals("@if true @then column\\\\My Number @else 0 @endif", finished);
     }
     
@@ -436,7 +443,7 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         checkPosition();
         push(KeyCode.DOWN);
         push(KeyCode.ENTER);
-        assertEquals("@if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + column\\\\My Number", finish().toString());
+        assertEquals("@if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + column\\\\My Number", finishExternal());
     }
     
     @Test
@@ -583,6 +590,6 @@ public class TestExpressionEditorCompletion extends FXApplicationTest implements
         FunctionLookup functionLookup = FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager());
         IdentExpression fromTextTo = IdentExpression.function(TestUtil.checkNonNull(functionLookup.lookup("from text to")).getFullName());
         // Should still have trailing x:
-        assertEquals(TestUtil.parseExpression("@invalidops(@call function\\\\from text to(1), x)", mainWindowActions._test_getTableManager().getTypeManager(), functionLookup), finish());
+        assertEquals(TestUtil.parseExpression("@invalidops(@call from text to(1), x)", mainWindowActions._test_getTableManager().getTypeManager(), functionLookup), finish());
     }
 }
