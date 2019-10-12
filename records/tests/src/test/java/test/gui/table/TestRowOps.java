@@ -86,7 +86,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         TableManager manager = new DummyManager();
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);
 
-        Table srcData = new ImmediateDataSource(manager, new InitialLoadDetails(null, null, CellPosition.ORIGIN.offsetByRowCols(1, 1), null), new EditableRecordSet(expressionValue.recordSet));
+        Table srcData = new ImmediateDataSource(manager, new InitialLoadDetails(expressionValue.tableId, null, CellPosition.ORIGIN.offsetByRowCols(1, 1), null), new EditableRecordSet(expressionValue.recordSet));
         manager.record(srcData);
 
         InitialLoadDetails ild = new InitialLoadDetails(null, null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + expressionValue.recordSet.getColumns().size())), null);
