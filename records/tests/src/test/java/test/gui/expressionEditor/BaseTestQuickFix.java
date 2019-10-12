@@ -54,6 +54,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -164,7 +165,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             assertNotNull(Utility.listToString(windows), errorPopup);
             assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
                 1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
-            assertEquals("Looking for row that matches" + fixId + ", among: " + lookup(".quick-fix-row").<Node>queryAll().stream().map(n -> "{" + TestUtil.fx(() -> n.getStyleClass()).stream().collect(Collectors.joining(", ")) + "}").collect(Collectors.joining(" and ")), 
+            assertEquals("Looking for row that matches" + showId(fixId) + ", among: " + lookup(".quick-fix-row").<Node>queryAll().stream().map(n -> "{" + TestUtil.fx(() -> n.getStyleClass()).stream().map(s -> showId(s)).collect(Collectors.joining(", ")) + "}").collect(Collectors.joining(" and ")), 
                 1, lookup(".quick-fix-row" + fixId).queryAll().size());
             // Get around issue with not being able to get the position of
             // items in the fix popup correctly, by using keyboard:
@@ -204,6 +205,16 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
         {
             throw t;
         }
+    }
+
+    private String showId(String fixId)
+    {
+        int munge = fixId.indexOf("munged-");
+        if (munge != -1)
+        {
+            return fixId + "[" + Arrays.stream(fixId.substring(munge + "munged-".length()).split("-")).map(n -> "" + (char)Integer.parseInt(n)).collect(Collectors.joining()) + "]";
+        }
+        return fixId;
     }
 
     private boolean isShowingErrorPopup()
