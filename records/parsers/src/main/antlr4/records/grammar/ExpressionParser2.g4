@@ -65,7 +65,7 @@ match : MATCH topLevelExpression matchClause+ ENDMATCH;
 
 lambdaExpression : FUNCTION OPEN_BRACKET topLevelExpression (COMMA topLevelExpression)* CLOSE_BRACKET THEN topLevelExpression ENDFUNCTION;
 
-hasTypeExpression : singleIdent HAS_TYPE customLiteralExpression;
+hasTypeExpression : ident HAS_TYPE customLiteralExpression;
 definition : (expression EQUALITY expression) | hasTypeExpression;
 defineExpression: DEFINE definition (COMMA definition)* THEN topLevelExpression ENDDEFINE;
 

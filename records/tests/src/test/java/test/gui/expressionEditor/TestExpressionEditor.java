@@ -583,7 +583,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testTableReference() throws Exception
     {
-        testSimple("table\\\\Table 1");
+        testSimple("table\\\\Table1");
     }
 
     @Test

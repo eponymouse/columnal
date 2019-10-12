@@ -319,6 +319,11 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
                     write(namespace + "\\\\", DELAY);
                 }
                 write(idents.stream().collect(Collectors.joining("\\")), DELAY);*/
+                // A hack!
+                if (idents.size() >= 2 && idents.get(idents.size() - 1).equals("Single"))
+                    write(idents.get(idents.size() - 2) + "\\", DELAY);
+                
+                
                 write(idents.get(idents.size() - 1), DELAY);
                 
                 return UnitType.UNIT;

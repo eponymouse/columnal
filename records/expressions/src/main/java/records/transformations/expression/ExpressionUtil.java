@@ -869,7 +869,7 @@ public class ExpressionUtil
         public Expression visitHasTypeExpression(ExpressionParser2.HasTypeExpressionContext ctx)
         {
             Expression customLiteralExpression = visitCustomLiteralExpression(ctx.customLiteralExpression());
-            return new HasTypeExpression(IdentExpression.load(IdentifierUtility.fromParsed(ctx.singleIdent())), customLiteralExpression);
+            return new HasTypeExpression(visit(ctx.ident()), customLiteralExpression);
         }
 
         @Override
