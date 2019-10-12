@@ -4,6 +4,10 @@ import com.google.common.collect.ImmutableList;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MessageFactory;
+import org.apache.logging.log4j.message.SimpleMessageFactory;
+import org.apache.logging.log4j.simple.SimpleLogger;
+import org.apache.logging.log4j.util.PropertiesUtil;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -12,6 +16,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
+import java.util.Properties;
 import java.util.function.Consumer;
 
 public class Log
@@ -168,8 +173,19 @@ public class Log
 
     private static Logger getLogger()
     {
-        if (logger == null) 
-            logger = LogManager.getRootLogger();
+        if (logger == null)
+        {
+            try
+            {
+                logger = LogManager.getRootLogger();
+            }
+            catch (Throwable t)
+            {
+                // Uh-oh!  Make a backup logger:
+                logger = new SimpleLogger("BackupLogger", Level.ERROR, false, true, true, false, "yyyy/MM/dd HH:mm:ss:SSS zzz", new SimpleMessageFactory(), new PropertiesUtil(new Properties()), System.out);
+                logger.log(Level.ERROR, t);
+            }
+        }
         return logger;
     }
 
