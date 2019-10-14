@@ -132,9 +132,9 @@ public class RecordExpression extends Expression
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
+    protected StyledString toDisplay(DisplayType displayType, BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-         return expressionStyler.styleExpression(StyledString.roundBracket(members.stream().map(s -> StyledString.concat(StyledString.s(s.getFirst() + ": "), s.getSecond().toStyledString())).collect(StyledString.joining(", "))), this);
+         return expressionStyler.styleExpression(StyledString.roundBracket(members.stream().map(s -> StyledString.concat(StyledString.s(s.getFirst() + ": "), s.getSecond().toDisplay(displayType, BracketedStatus.NEED_BRACKETS, expressionStyler))).collect(StyledString.joining(", "))), this);
     }
 
     @Override

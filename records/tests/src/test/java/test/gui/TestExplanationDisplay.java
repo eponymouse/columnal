@@ -109,7 +109,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
      //"asc was 4, using asc (row 4)",
             "? was 4",
             "? < 4 was false",
-            "all(\u2195asc, ? < 4) was false, using asc (row 4)");
+            "all(T2#asc, ? < 4) was false, using asc (row 4)");
     }
 
     @Test

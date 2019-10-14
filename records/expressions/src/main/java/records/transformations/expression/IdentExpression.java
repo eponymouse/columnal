@@ -157,6 +157,12 @@ public class IdentExpression extends NonOperatorExpression
             resolution = new Resolution()
             {
                 @Override
+                public boolean hideFromExplanation(boolean skipIfTrivial)
+                {
+                    return false;
+                }
+
+                @Override
                 public boolean isDeclarationInMatch()
                 {
                     return false;
@@ -225,6 +231,12 @@ public class IdentExpression extends NonOperatorExpression
                 DataTypeValue column = col.dataTypeValue;
                 resolution = new Resolution()
                 {
+                    @Override
+                    public boolean hideFromExplanation(boolean skipIfTrivial)
+                    {
+                        return skipIfTrivial;
+                    }
+
                     @Override
                     public ValueResult getValue(EvaluateState state) throws InternalException, UserException
                     {
@@ -299,6 +311,13 @@ public class IdentExpression extends NonOperatorExpression
                     public @ExpressionIdentifier String getFoundNamespace()
                     {
                         return "table";
+                    }
+
+                    @Override
+                    public boolean hideFromExplanation(boolean skipIfTrivial)
+                    {
+                        // We never want to see a full table in an explanation
+                        return true;
                     }
 
                     @Override
@@ -394,7 +413,7 @@ public class IdentExpression extends NonOperatorExpression
                             }
                         });
 
-                        return result(result, state, ImmutableList.of(), ImmutableList.of(/*new ExplanationLocation(resolvedTableName, columnName)*/), false);
+                        return result(result, state, ImmutableList.of(), ImmutableList.of(/*new ExplanationLocation(resolvedTableName, columnName)*/), true);
                     }
 
                     @Override
@@ -440,6 +459,13 @@ public class IdentExpression extends NonOperatorExpression
                     public @ExpressionIdentifier String getFoundNamespace()
                     {
                         return "tag";
+                    }
+
+                    @Override
+                    public boolean hideFromExplanation(boolean skipIfTrivial)
+                    {
+                        // Tags themselves are always trivial as they are literals
+                        return true;
                     }
 
                     @Override
@@ -490,6 +516,13 @@ public class IdentExpression extends NonOperatorExpression
                 Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> type = functionDefinition.getType(state.getTypeManager());
                 resolution = new Resolution()
                 {
+                    @Override
+                    public boolean hideFromExplanation(boolean skipIfTrivial)
+                    {
+                        // Functions can't be explained anyway:
+                        return true;
+                    }
+
                     @Override
                     public boolean isVariable()
                     {
@@ -553,6 +586,14 @@ public class IdentExpression extends NonOperatorExpression
                 return null;
             resolution = new Resolution()
             {
+                @Override
+                public boolean hideFromExplanation(boolean skipIfTrivial)
+                {
+                    // We are a trivial match, no point saying _foo matched successfully if
+                    // we appear inside a tuple, etc.
+                    return skipIfTrivial;
+                }
+
                 @Override
                 public boolean isDeclarationInMatch()
                 {
@@ -645,10 +686,8 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public boolean hideFromExplanation(boolean skipIfTrivial)
     {
-        // We are a trivial match, no point saying _foo matched successfully if
-        // we appear inside a tuple, etc.
-        if (resolution != null && resolution.isDeclarationInMatch())
-            return skipIfTrivial;
+        if (resolution != null)
+            return resolution.hideFromExplanation(skipIfTrivial);
         else
             return super.hideFromExplanation(skipIfTrivial);
     }
@@ -680,9 +719,9 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
+    protected StyledString toDisplay(DisplayType displayType, BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return expressionStyler.styleExpression(StyledString.s(toText(namespace, idents)), this);
+        return expressionStyler.styleExpression(StyledString.s(displayType == DisplayType.SIMPLE ? idents.get(idents.size() - 1) : toText(namespace, idents)), this);
     }
 
     @Override
@@ -756,6 +795,8 @@ public class IdentExpression extends NonOperatorExpression
         {
             return false;
         }
+        
+        public boolean hideFromExplanation(boolean skipIfTrivial);
 
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException;
         

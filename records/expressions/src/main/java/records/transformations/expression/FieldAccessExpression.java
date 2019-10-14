@@ -12,6 +12,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.visitor.ExpressionVisitor;
+import records.transformations.expression.visitor.ExpressionVisitorFlat;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -123,9 +124,28 @@ public class FieldAccessExpression extends Expression
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
+    protected StyledString toDisplay(DisplayType displayType, BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return expressionStyler.styleExpression(StyledString.concat(lhsRecord.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler), StyledString.s("#" + fieldName)),this);
+        return expressionStyler.styleExpression(StyledString.concat(lhsRecord.toDisplay(displayType, BracketedStatus.NEED_BRACKETS, expressionStyler), StyledString.s("#" + fieldName)),this);
+    }
+
+    @Override
+    public boolean hideFromExplanation(boolean skipIfTrivial)
+    {
+        return lhsRecord.visit(new ExpressionVisitorFlat<Boolean>()
+        {
+            @Override
+            protected Boolean makeDef(Expression expression)
+            {
+                return false;
+            }
+
+            @Override
+            public Boolean ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            {
+                return Objects.equals(namespace,"table");
+            }
+        });
     }
 
     @SuppressWarnings("recorded")

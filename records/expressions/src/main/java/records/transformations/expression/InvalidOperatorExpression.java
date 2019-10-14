@@ -89,13 +89,13 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
+    protected StyledString toDisplay(DisplayType displayType, BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
         Builder r = StyledString.builder();
 
         for (Expression item : items)
         {
-            r.append(item.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler));
+            r.append(item.toDisplay(displayType, BracketedStatus.NEED_BRACKETS, expressionStyler));
         }
         
         class ErrorStyle extends Style<ErrorStyle>

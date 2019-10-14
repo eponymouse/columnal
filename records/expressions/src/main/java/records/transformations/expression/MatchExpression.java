@@ -157,20 +157,20 @@ public class MatchExpression extends NonOperatorExpression
             return " @case " + patterns.stream().map(p -> p.save(saveDestination, renames)).collect(Collectors.joining(" @orcase ")) + " @then " + outcome.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames);
         }
 
-        public StyledString toDisplay(ExpressionStyler expressionStyler)
+        public StyledString toDisplay(DisplayType displayType, ExpressionStyler expressionStyler)
         {
             return StyledString.concat(
                 StyledString.s(" case "),
-                patterns.stream().map(p -> p.toDisplay(expressionStyler)).collect(StyledString.joining(" or ")),
+                patterns.stream().map(p -> p.toDisplay(displayType, expressionStyler)).collect(StyledString.joining(" or ")),
                 StyledString.s(" then "),
-                outcome.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler)
+                outcome.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler)
             );
         }
 
         @Override
         public String toString()
         {
-            return toDisplay((s, e) -> s).toPlain();
+            return toDisplay(DisplayType.FULL, (s, e) -> s).toPlain();
         }
 
         public MatchClause _test_copy()
@@ -277,10 +277,10 @@ public class MatchExpression extends NonOperatorExpression
             return pattern.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + (guard == null ? "" : " @given " + guard.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames));
         }
 
-        public StyledString toDisplay(ExpressionStyler expressionStyler)
+        public StyledString toDisplay(DisplayType displayType, ExpressionStyler expressionStyler)
         {
-            StyledString patternDisplay = pattern.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler);
-            return guard == null ? patternDisplay : StyledString.concat(patternDisplay, StyledString.s(" given "), guard.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler));
+            StyledString patternDisplay = pattern.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler);
+            return guard == null ? patternDisplay : StyledString.concat(patternDisplay, StyledString.s(" given "), guard.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler));
         }
 
         public @Recorded Expression getPattern()
@@ -371,9 +371,9 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
+    public StyledString toDisplay(DisplayType displayType, BracketedStatus surround, ExpressionStyler expressionStyler)
     {
-        StyledString inner = StyledString.concat(StyledString.s("match "), expression.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), clauses.stream().map(c -> c.toDisplay(expressionStyler)).collect(StyledString.joining("")), StyledString.s(" endmatch"));
+        StyledString inner = StyledString.concat(StyledString.s("match "), expression.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), clauses.stream().map(c -> c.toDisplay(displayType, expressionStyler)).collect(StyledString.joining("")), StyledString.s(" endmatch"));
         return expressionStyler.styleExpression(inner, this); //(surround == BracketedStatus.DIRECT_ROUND_BRACKETED || surround == BracketedStatus.DONT_NEED_BRACKETS) ? inner : StyledString.roundBracket(inner);
     }
 

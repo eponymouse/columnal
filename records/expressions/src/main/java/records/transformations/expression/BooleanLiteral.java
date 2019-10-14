@@ -42,7 +42,7 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
+    protected StyledString toDisplay(DisplayType displayType, BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
         return expressionStyler.styleExpression(StyledString.s(Boolean.toString(value)), this);
     }

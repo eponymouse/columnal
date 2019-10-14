@@ -93,7 +93,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
+    protected StyledString toDisplay(DisplayType displayType, BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
         return expressionStyler.styleExpression(StyledString.concat(StyledString.s("unit{"), unitExpression.toStyledString(), StyledString.s("}")), this);
     }

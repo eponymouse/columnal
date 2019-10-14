@@ -128,13 +128,13 @@ public class LambdaExpression extends Expression
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
+    protected StyledString toDisplay(DisplayType displayType, BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
         return expressionStyler.styleExpression(StyledString.concat(
             StyledString.s("@function("),
-            parameters.stream().map(e -> e.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler)).collect(StyledString.joining(", ")),
+            parameters.stream().map(e -> e.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler)).collect(StyledString.joining(", ")),
             StyledString.s(") @then "),
-            body.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler),
+            body.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler),
             StyledString.s(" @endfunction")
         ), this);
     }

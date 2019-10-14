@@ -98,7 +98,7 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
+    public StyledString toDisplay(DisplayType displayType, BracketedStatus surround, ExpressionStyler expressionStyler)
     {
         StyledString num = StyledString.s(numberAsString());
         if (unit == null)

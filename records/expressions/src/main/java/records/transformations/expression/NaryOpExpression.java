@@ -94,7 +94,7 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public StyledString toDisplay(BracketedStatus surround, ExpressionStyler expressionStyler)
+    public StyledString toDisplay(DisplayType displayType, BracketedStatus surround, ExpressionStyler expressionStyler)
     {
         StyledString.Builder s = new StyledString.Builder();
         s.append(surround == BracketedStatus.NEED_BRACKETS ? "(" : "");
@@ -102,7 +102,7 @@ public abstract class NaryOpExpression extends Expression
         {
             if (i > 0)
                 s.append(" ").append(saveOp(i - 1)).append(" ");
-            s.append(expressions.get(i).toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler));
+            s.append(expressions.get(i).toDisplay(displayType, BracketedStatus.NEED_BRACKETS, expressionStyler));
         }
         if (surround == BracketedStatus.NEED_BRACKETS)
             s.append(")");

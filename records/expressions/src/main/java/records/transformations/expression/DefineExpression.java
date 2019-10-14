@@ -76,12 +76,12 @@ public class DefineExpression extends Expression
             return new Definition(lhsPattern.replaceSubExpression(toReplace, replaceWith), rhsValue.replaceSubExpression(toReplace, replaceWith));
         }
 
-        public StyledString toDisplay(ExpressionStyler expressionStyler)
+        public StyledString toDisplay(DisplayType displayType, ExpressionStyler expressionStyler)
         {
             return StyledString.concat(
-                lhsPattern.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler),
+                lhsPattern.toDisplay(displayType, BracketedStatus.NEED_BRACKETS, expressionStyler),
                 StyledString.s(" = "),
-                rhsValue.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler)
+                rhsValue.toDisplay(displayType, BracketedStatus.NEED_BRACKETS, expressionStyler)
             );
         }
 
@@ -273,11 +273,11 @@ public class DefineExpression extends Expression
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
+    protected StyledString toDisplay(DisplayType displayType, BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
         return expressionStyler.styleExpression(StyledString.concat(
             StyledString.s("@define "),
-            defines.stream().map(e -> e.typeOrDefinition.either(x -> x.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), x -> x.toDisplay(expressionStyler))).collect(StyledString.joining(", ")),
+            defines.stream().map(e -> e.typeOrDefinition.either(x -> x.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), x -> x.toDisplay(displayType, expressionStyler))).collect(StyledString.joining(", ")),
             StyledString.s(" @then "),
             body.toStyledString(),
             StyledString.s(" @enddefine")

@@ -135,9 +135,9 @@ public class HasTypeExpression extends Expression
     }
 
     @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
+    protected StyledString toDisplay(DisplayType displayType, BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return expressionStyler.styleExpression(StyledString.concat(lhsVar.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler), StyledString.s(" :: "), rhsType.toDisplay(BracketedStatus.NEED_BRACKETS, expressionStyler)), this);
+        return expressionStyler.styleExpression(StyledString.concat(lhsVar.toDisplay(displayType, BracketedStatus.NEED_BRACKETS, expressionStyler), StyledString.s(" :: "), rhsType.toDisplay(displayType, BracketedStatus.NEED_BRACKETS, expressionStyler)), this);
     }
 
     @SuppressWarnings("recorded")

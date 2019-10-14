@@ -390,11 +390,11 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
         if (executionType == ExecutionType.MATCH && value instanceof Boolean)
         {
-            return StyledString.concat(Expression.this.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), StyledString.s(((Boolean)value) ? " matched" : " did not match"), using);
+            return StyledString.concat(Expression.this.toDisplay(DisplayType.SIMPLE, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), StyledString.s(((Boolean)value) ? " matched" : " did not match"), using);
         }
         else
         {
-            return StyledString.concat(Expression.this.toDisplay(BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this, executionType), value, null)), using);
+            return StyledString.concat(Expression.this.toDisplay(DisplayType.SIMPLE, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(evaluateState.getTypeFor(Expression.this, executionType), value, null)), using);
         }
     }
 
@@ -758,7 +758,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     @Override
     public final StyledString toStyledString()
     {
-        return toDisplay(BracketedStatus.DONT_NEED_BRACKETS, (s, e) -> s);
+        return toDisplay(DisplayType.FULL, BracketedStatus.DONT_NEED_BRACKETS, (s, e) -> s);
     }
 
     public static interface ExpressionStyler
@@ -766,7 +766,12 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public StyledString styleExpression(StyledString display, Expression src);
     }
     
-    protected abstract StyledString toDisplay(BracketedStatus bracketedStatus, ExpressionStyler expressionStyler);
+    public static enum DisplayType
+    {
+        SIMPLE, FULL;
+    }
+    
+    protected abstract StyledString toDisplay(DisplayType displayType, BracketedStatus bracketedStatus, ExpressionStyler expressionStyler);
 
     // Only for testing:
     public static interface _test_TypeVary
