@@ -53,6 +53,12 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
     @OnThread(Tag.Any)
     default public void enterStructuredValue(DataType dataType, @Value Object value, Random r, boolean deleteAllFirst, boolean allowFieldShuffle) throws InternalException, UserException
     {
+        enterStructuredValue_Impl(dataType, value, r, deleteAllFirst, allowFieldShuffle, true);
+    }
+    
+    @OnThread(Tag.Any)
+    default public void enterStructuredValue_Impl(DataType dataType, @Value Object value, Random r, boolean deleteAllFirst, boolean allowFieldShuffle, boolean topLevel) throws InternalException, UserException
+    {
         final int DELAY = 1;
         
         if (deleteAllFirst)
@@ -94,7 +100,11 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             @Override
             public UnitType text() throws InternalException, UserException
             {
-                writeOrPaste("\"" + GrammarUtility.escapeChars(Utility.cast(value, String.class)) + "\"");
+                @Value String stringValue = Utility.cast(value, String.class);
+                if (topLevel && !stringValue.startsWith("\"") && !stringValue.endsWith("\"") && r.nextBoolean())
+                    writeOrPaste(stringValue);
+                else
+                    writeOrPaste("\"" + GrammarUtility.escapeChars(stringValue) + "\"");
                 return UnitType.UNIT;
             }
 
@@ -190,7 +200,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                     }
                     first = false;
                     write(entry.getKey() + ": ");
-                    enterStructuredValue(entry.getValue(), record.getField(entry.getKey()), r, false, allowFieldShuffle);
+                    enterStructuredValue_Impl(entry.getValue(), record.getField(entry.getKey()), r, false, allowFieldShuffle, false);
                 }
 
                 write(")");
@@ -214,7 +224,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                             if (r.nextBoolean())
                                 write(" ");
                         }
-                        enterStructuredValue(inner, listEx.get(i), r, false, allowFieldShuffle);
+                        enterStructuredValue_Impl(inner, listEx.get(i), r, false, allowFieldShuffle, false);
                     }
                     write("]");
                 }
