@@ -258,7 +258,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         {
             defaultValue = DataTypeUtility.makeDefaultValue(dataType);
             // Bit of a hack to work around thread checker:
-            return makeEditorKit(((ExBiFunction<DataType, @Value Object, String>)EditImmediateColumnDialog::defaultAsString).apply(dataType, defaultValue), TableDisplayUtility.recogniser(dataType));
+            return makeEditorKit(((ExBiFunction<DataType, @Value Object, String>)EditImmediateColumnDialog::defaultAsString).apply(dataType, defaultValue), TableDisplayUtility.recogniser(dataType, true));
             //return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, defaultValue), TableDisplayUtility.stfStylesFor(dataType));
         }
         catch (UserException e)

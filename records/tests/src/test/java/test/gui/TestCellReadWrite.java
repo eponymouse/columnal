@@ -21,6 +21,7 @@ import records.data.DataItemPosition;
 import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.UserException;
@@ -217,13 +218,15 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
             Log.debug("Making value for type " + columnDTV);
             Either<String, @Value Object> value;
-            if (r.nextInt(5) == 1)
+            DataType type = table.getData().getColumns().get(column).getType().getType();
+            if (r.nextInt(5) == 1 && !type.equals(DataType.TEXT))
             {
                 value = Either.left("#" + r.nextInt());
             }
             else
             {
-                value = Either.right(valueGenerator.makeValue(table.getData().getColumns().get(column).getType().getType()));
+                
+                value = Either.right(valueGenerator.makeValue(type));
             }
             value.eitherEx_(str -> {
                 push(KeyCode.SHORTCUT, KeyCode.A);

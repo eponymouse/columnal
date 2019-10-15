@@ -1120,7 +1120,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                                     @OnThread(Tag.FXPlatform)
                                     public Optional<Expression> get()
                                     {
-                                        return unwrapOptionalType(inner, columnReference, () -> TableDisplayUtility.recogniser(inner));
+                                        return unwrapOptionalType(inner, columnReference, () -> TableDisplayUtility.recogniser(inner, false));
                                     }
                                 }, inner);
                                 

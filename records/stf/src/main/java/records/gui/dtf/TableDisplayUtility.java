@@ -8,11 +8,7 @@ import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.BorderPane;
-import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -64,7 +60,6 @@ import utility.Utility.Record;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
-import utility.gui.GUI;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
@@ -409,7 +404,7 @@ public class TableDisplayUtility
     @OnThread(Tag.FXPlatform)
     public static EditorKitCache<?> makeField(@TableDataColIndex int columnIndex, DataTypeValue dataTypeValue, EditableStatus editableStatus, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws InternalException
     {
-        return valueAndComponent(dataTypeValue).makeDisplayCache(columnIndex, editableStatus, stfStylesFor(dataTypeValue.getType()), getTablePos, onModify);
+        return valueAndComponent(dataTypeValue, true).makeDisplayCache(columnIndex, editableStatus, stfStylesFor(dataTypeValue.getType()), getTablePos, onModify);
     }
 
     @OnThread(Tag.Any)
@@ -462,7 +457,7 @@ public class TableDisplayUtility
     }
 
     @OnThread(Tag.FXPlatform)
-    private static GetValueAndComponent<?> valueAndComponent(DataTypeValue dataTypeValue) throws InternalException
+    private static GetValueAndComponent<?> valueAndComponent(DataTypeValue dataTypeValue, boolean topLevel) throws InternalException
     {
         return dataTypeValue.applyGet(new DataTypeVisitorGetEx<GetValueAndComponent<?>, InternalException>()
         {
@@ -475,7 +470,7 @@ public class TableDisplayUtility
             @Override
             public GetValueAndComponent<?> text(GetValue<@Value String> g) throws InternalException
             {
-                return new GetValueAndComponent<@ImmediateValue String>(dataTypeValue.getType(), String.class, g, new StringRecogniser());
+                return new GetValueAndComponent<@ImmediateValue String>(dataTypeValue.getType(), String.class, g, new StringRecogniser(topLevel));
             }
 
             @Override
@@ -518,7 +513,7 @@ public class TableDisplayUtility
             @Override
             public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<TaggedValue> getTagged) throws InternalException
             {
-                return new GetValueAndComponent<TaggedValue>(dataTypeValue.getType(), TaggedValue.class, getTagged, new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<@ImmediateValue ?>>>mapListInt(tagTypes, tt -> tt.<Recogniser<@ImmediateValue ?>>mapInt(t -> recogniser(t).recogniser)))); 
+                return new GetValueAndComponent<TaggedValue>(dataTypeValue.getType(), TaggedValue.class, getTagged, new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<@ImmediateValue ?>>>mapListInt(tagTypes, tt -> tt.<Recogniser<@ImmediateValue ?>>mapInt(t -> recogniser(t, false).recogniser)))); 
                     //(parents, v) -> (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, v));
             }
 
@@ -526,7 +521,7 @@ public class TableDisplayUtility
             @OnThread(Tag.FXPlatform)
             public GetValueAndComponent<?> record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, InternalException
             {
-                ImmutableMap<@ExpressionIdentifier String, Recogniser<@ImmediateValue ?>> recognisers = Utility.<@ExpressionIdentifier String, DataType, Recogniser<@ImmediateValue ?>>mapValuesInt(types, t -> recogniser(t).recogniser);
+                ImmutableMap<@ExpressionIdentifier String, Recogniser<@ImmediateValue ?>> recognisers = Utility.<@ExpressionIdentifier String, DataType, Recogniser<@ImmediateValue ?>>mapValuesInt(types, t -> recogniser(t, false).recogniser);
 
                 return new GetValueAndComponent<@Value Record>(dataTypeValue.getType(), (Class<@Value Record>)Record.class, g, new RecordRecogniser(recognisers));
             }
@@ -535,7 +530,7 @@ public class TableDisplayUtility
             @OnThread(Tag.FXPlatform)
             public GetValueAndComponent<?> array(DataType inner, GetValue<@Value ListEx> g) throws InternalException
             {
-                return new GetValueAndComponent<@ImmediateValue ListEx>(dataTypeValue.getType(), ListEx.class, g, new ListRecogniser(recogniser(inner).recogniser));
+                return new GetValueAndComponent<@ImmediateValue ListEx>(dataTypeValue.getType(), ListEx.class, g, new ListRecogniser(recogniser(inner, false).recogniser));
                     /*
                 (parents, value) ->
                 {
@@ -640,7 +635,7 @@ public class TableDisplayUtility
     }
     
     
-    public static RecogniserAndType<@NonNull @ImmediateValue ?> recogniser(DataType dataType) throws InternalException
+    public static RecogniserAndType<@NonNull @ImmediateValue ?> recogniser(DataType dataType, boolean topLevel) throws InternalException
     {   
         return dataType.apply(new DataTypeVisitorEx<RecogniserAndType<@NonNull @ImmediateValue ?>, InternalException>()
         {
@@ -658,7 +653,7 @@ public class TableDisplayUtility
             @Override
             public RecogniserAndType<@NonNull @ImmediateValue ?> text() throws InternalException
             {
-                return r(new StringRecogniser(), String.class);
+                return r(new StringRecogniser(topLevel), String.class);
             }
 
             @Override
@@ -676,19 +671,19 @@ public class TableDisplayUtility
             @Override
             public RecogniserAndType<@NonNull @ImmediateValue ?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
-                return r(new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<@ImmediateValue ?>>>mapListInt(tags, tt -> tt.<Recogniser<@ImmediateValue ?>>mapInt(t -> recogniser(t).recogniser))), TaggedValue.class);
+                return r(new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<@ImmediateValue ?>>>mapListInt(tags, tt -> tt.<Recogniser<@ImmediateValue ?>>mapInt(t -> recogniser(t, false).recogniser))), TaggedValue.class);
             }
 
             @Override
             public RecogniserAndType<@NonNull @ImmediateValue ?> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                return r(new RecordRecogniser(Utility.<@ExpressionIdentifier String, DataType, Recogniser<@ImmediateValue ?>>mapValuesInt(fields, t -> recogniser(t).recogniser)), (Class<@ImmediateValue Record>)Record.class);
+                return r(new RecordRecogniser(Utility.<@ExpressionIdentifier String, DataType, Recogniser<@ImmediateValue ?>>mapValuesInt(fields, t -> recogniser(t, false).recogniser)), (Class<@ImmediateValue Record>)Record.class);
             }
 
             @Override
             public RecogniserAndType<@NonNull @ImmediateValue ?> array(DataType inner) throws InternalException
             {
-                return r(new ListRecogniser(recogniser(inner).recogniser), ListEx.class);
+                return r(new ListRecogniser(recogniser(inner, false).recogniser), ListEx.class);
             }
         });
     }
