@@ -634,6 +634,11 @@
                                     <arg value="appdmg.json"/>
                                     <arg value="columnal-${columnal.version}.dmg"/>
                                 </exec>
+                                
+                                <exec executable="bash" dir="../installers/mac_dmg" failonerror="true">
+                                    <arg value="notarize-app.sh"/>
+                                    <arg value="columnal-${columnal.version}.dmg"/>
+                                </exec>
                             </target>
                         </configuration>
                         <goals>
@@ -641,7 +646,7 @@
                         </goals>
                     </execution>
                     <execution>
-                        <!-- Must be run manually using mvn antrun:run@publish-dmg -->
+                        <!-- Must be run manually using mvn antrun:run@publish-dmg   Make sure to finish notarizing first! -->
                         <id>publish-dmg</id>
                         <phase>package</phase>
                         <configuration>
