@@ -2007,7 +2007,6 @@ public class Utility
         return dir;
     }
 
-    //package-visible
     public static File getStorageDirectory() throws IOException
     {
         File dir = new File(System.getProperty("user.home"), ".columnal");
