@@ -16,6 +16,8 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.ExceptionWithStyle;
 import records.error.InternalException;
@@ -320,21 +322,31 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
     {
         return new CodeCompletionContext(curType != ChunkType.IDENT ? ImmutableList.of() : ImmutableList.of(new LexCompletionGroup(
             Stream.<LexCompletion>concat(
-                streamDataTypes().<LexCompletion>map(t -> {
-                    int len = Utility.longestCommonStartIgnoringCase(t.toString(), 0, stem, 0);
-                    return typeCompletion(t, canonIndex, len);
-                }),
-                Stream.<LexCompletion>of(typeCompletion(DataType.NUMBER, canonIndex, Utility.longestCommonStartIgnoringCase("Number{}", 0, stem, 0)).withReplacement("Number{}", StyledString.concat(StyledString.s("Number{"), StyledString.styled("unit", CommonStyles.ITALIC), StyledString.s("}"))).withCaretPosAfterCompletion("Number{".length()))
+                Stream.<LexCompletion>concat(
+                    streamConcreteDataTypes().<LexCompletion>map(t -> {
+                        int len = Utility.longestCommonStartIgnoringCase(t.toString(), 0, stem, 0);
+                        return typeCompletionConcrete(t, canonIndex, len);
+                    }),
+                    Stream.<LexCompletion>of(typeCompletionConcrete(DataType.NUMBER, canonIndex, Utility.longestCommonStartIgnoringCase("Number{}", 0, stem, 0)).withReplacement("Number{}", StyledString.concat(StyledString.s("Number{"), StyledString.styled("unit", CommonStyles.ITALIC), StyledString.s("}"))).withCaretPosAfterCompletion("Number{".length())))
+                , typeManager.getKnownTaggedTypes().values().stream().filter(ttd -> !ttd.getTags().isEmpty() && !ttd.getTaggedTypeName().equals(new TypeId("Type")) && !ttd.getTaggedTypeName().equals(new TypeId("Unit"))).<LexCompletion>map(ttd -> {
+                        int len = Utility.longestCommonStartIgnoringCase(ttd.getTaggedTypeName().getRaw(), 0, stem, 0);
+                       return typeCompletionTagged(ttd, canonIndex, len).withCaretPosAfterCompletion(ttd.getTaggedTypeName().getRaw().length() + (ttd.getTypeArguments().isEmpty() ? 0 : 1));
+                    })
             ).collect(ImmutableList.<LexCompletion>toImmutableList())
         , null, 2)));
     }
 
-    protected LexCompletion typeCompletion(DataType dataType, @CanonicalLocation int start, int lengthToShowFor)
+    protected LexCompletion typeCompletionConcrete(DataType dataType, @CanonicalLocation int start, int lengthToShowFor)
     {
         return new LexCompletion(start, lengthToShowFor, dataType.toString()).withFurtherDetailsURL("type-" + dataType.toString() + ".html");
     }
+    
+    protected LexCompletion typeCompletionTagged(TaggedTypeDefinition taggedTypeDefinition, @CanonicalLocation int start, int lengthToShowFor)
+    {
+        return new LexCompletion(start, lengthToShowFor, taggedTypeDefinition.getTaggedTypeName().getRaw() + Utility.replicate(taggedTypeDefinition.getTypeArguments().size(), "()").stream().collect(Collectors.joining()));
+    }
 
-    private Stream<DataType> streamDataTypes()
+    private static Stream<DataType> streamConcreteDataTypes()
     {
         return Stream.<DataType>concat(Stream.<DataType>of(DataType.NUMBER, DataType.TEXT, DataType.BOOLEAN), Arrays.stream(DateTimeType.values()).<DataType>map(t -> DataType.date(new DateTimeInfo(t))));
     }

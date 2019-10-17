@@ -1,5 +1,6 @@
 package test.gui.expressionEditor;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -16,8 +17,11 @@ import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
+import records.data.datatype.TypeId;
 import records.gui.MainWindow.MainWindowActions;
 import records.transformations.Calculate;
 import records.transformations.function.FunctionList;
@@ -25,6 +29,7 @@ import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.SimulationSupplier;
 import utility.gui.FXUtility;
 
@@ -39,6 +44,10 @@ public class TestTypeEditorCompletion extends BaseTestEditorCompletion
     private void loadTypeExpression(String typeExpressionSrc, TaggedTypeDefinition... taggedTypes) throws Exception
     {
         TableManager toLoad = new DummyManager();
+        for (TaggedTypeDefinition taggedTypeDefinition : taggedTypes)
+        {
+            toLoad.getTypeManager().registerTaggedType(taggedTypeDefinition.getTaggedTypeName().getRaw(), taggedTypeDefinition.getTypeArguments(), taggedTypeDefinition.getTags());
+        }
         toLoad.record(
                 new ImmediateDataSource(toLoad,
                         new InitialLoadDetails(new TableId("IDS"), null, new CellPosition(CellPosition.row(1), CellPosition.col(1)), null),
@@ -65,6 +74,7 @@ public class TestTypeEditorCompletion extends BaseTestEditorCompletion
         loadTypeExpression("");
         checkCompletions(
             c("Number", 0, 0),
+            c("Number{}", 0, 0),
             c("Text", 0, 0),
             c("Date", 0, 0),
             c("DateTime", 0, 0),
@@ -72,10 +82,38 @@ public class TestTypeEditorCompletion extends BaseTestEditorCompletion
         );
         write("Dat");
 
-        checkCompletions(c("Number", 0, 0));
-        checkCompletions(c("Text", 0, 0));
-        checkCompletions(c("Date", 0, 3));
-        checkCompletions(c("DateTime", 0, 3));
-        checkCompletions(c("DateYM", 0, 3));
+        checkCompletions(
+                c("Number", 0, 0),
+                c("Number{}", 0, 0),
+                c("Text", 0, 0),
+                c("Date", 0, 3),
+                c("DateTime", 0, 3),
+                c("DateYM", 0, 3)
+        );
+    }
+
+    @Test
+    public void testBuiltInTagged() throws Exception
+    {
+        loadTypeExpression("",
+            new TaggedTypeDefinition(new TypeId("Opsicle"), ImmutableList.of(), ImmutableList.of(new TagType<>("Single", null))),
+            new TaggedTypeDefinition(new TypeId("Either"), ImmutableList.<Pair<TypeVariableKind, @ExpressionIdentifier String>>of(new Pair<>(TypeVariableKind.TYPE, "a"), new Pair<>(TypeVariableKind.TYPE, "b")), ImmutableList.of(new TagType<>("Left", null))));
+        // Don't want to offer Void or Type as they are considered internal
+        checkCompletions(
+                c("Optional()", 0, 0),
+                c("Opsicle", 0, 0),
+                c("Either()()", 0, 0),
+                c("Void"),
+                c("Type")
+        );
+        write("Opst");
+
+        checkCompletions(
+                c("Optional()", 0, 2),
+                c("Opsicle", 0, 3),
+                c("Either()()", 0, 0),
+                c("Void"),
+                c("Type")
+        );
     }
 }
