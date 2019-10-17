@@ -51,6 +51,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -215,6 +216,7 @@ public class Main extends Application
     @OnThread(Tag.Worker)
     private Optional<UpgradeInfo> fetchUpgradeInfo(@Nullable String currentVersion)
     {
+        // If in development or version totally broken, don't worry about checking:
         if (currentVersion == null)
             return Optional.empty();
         
@@ -225,9 +227,21 @@ public class Main extends Application
             os = "macx86";
         else
             return Optional.empty();
+        
+        final String uuid;
+        @Nullable String readUuid = Utility.getProperty("usage.stats", "uuid");
+        if (readUuid == null || readUuid.length() < 10 || readUuid.length() > 50)
+        {
+            uuid = UUID.randomUUID().toString();
+            Utility.setProperty("usage.stats", "uuid", uuid);
+        }
+        else
+            uuid = readUuid;
+        
+        
         try
         {
-            String[] lines = IOUtils.toString(new URL("https", DOMAIN, "/version/" + os + "/" + currentVersion + "/check"), StandardCharsets.UTF_8)
+            String[] lines = IOUtils.toString(new URL("https", DOMAIN, "/version/" + os + "/" + currentVersion + "/check/" + uuid), StandardCharsets.UTF_8)
                 .split("\\r?\\n");
             HashMap<String, String> props = toLowerCaseTrimmedProperties(lines);
             String latestVersion = props.get("version");
