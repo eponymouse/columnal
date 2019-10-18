@@ -1,8 +1,8 @@
-= Tagged types
+== Tagged types
 
 // Different uses: Enums, Optional, Wrapped types
 
-== What are tagged types?
+=== What are tagged types?
 Tagged types allow you to specify that a value can have several different options.  Whenever you describe data as being a limited choice between something *or* something else, the "or" is a sign you may want a tagged type.  For example:
 
 * A car may be left-hand drive *or* right-hand drive.
@@ -18,7 +18,7 @@ A researcher may collect data from a patient such as age.  But there may be a pa
 The fix is to use a tagged type.  Age is either a number or it is a special missing tag.  This eliminates confusion on entry and forces the analysis to confront the issue of missing data.
 ====
 
-== Tagged types for categories
+=== Tagged types for categories
 Many data columns have a very limited set of values they can take.  For example, day of the week only has seven possible values; a soccer result can only be win, loss or draw; a product might be classified into available, out of stock and discontinued.  Tagged types are ideal for these scenarios.  The type contains a list of the individual tags.
 
 .How not to do it: categories as text.
@@ -30,10 +30,10 @@ The fix is to use a tagged type with two possibilities, Red and Black.  That way
 
 // TODO screenshot
 
-== Tagged types for choices
+=== Tagged types for choices
 
-// TODO content
+Missing content.
 
-== Tagged types for optional items
+=== Tagged types for optional items
 
-// TODO content
+Missing content.

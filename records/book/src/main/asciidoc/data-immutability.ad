@@ -1,14 +1,14 @@
-= Immutability
+== Immutability
 
 Immutability means that data values are not changed (it's the opposite of mutable, which comes from mutate, meaning to change).  Columnal is deliberately designed to support immutability.  The ideal in Columnal is that you enter or import an initial data table (or tables), but thereafter that data is never modified directly.
 
-== Why is immutability useful?
+=== Why is immutability useful?
 
 In some spreadsheet software, once you sort some data, that operation cannot be reversed later on, especially after you have made further changes to the spreadsheet.  This can cause serious problems if you need to restore the original data ordering.  Columnal instead leaves the data in place, and creates a sorted copy.  If you need to get the original data back, you still have it.
 
 The original data being unchanged within Columnal also means that if you need to re-import the data (for example, because you have updated sales figures, or collected data from more participants) the other transformations will re-run automatically on the new data.
 
-== What if the data needs to be manually altered?
+=== What if the data needs to be manually altered?
 
 Although never altering the data sounds good, there are several circumstances where you may want to correct imported data.  The data may contain a mistake that needs correcting.  The same immutability principle still applies: rather than correcting the imported data table, the best thing to do is leave the mistake visible, but then use a "manual edit" transform to make the correction.  This has two particular advantages:
 

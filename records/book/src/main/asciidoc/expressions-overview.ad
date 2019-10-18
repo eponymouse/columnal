@@ -1,4 +1,4 @@
-= Expressions
+== Expressions
 
 An expression specifies the calculation of a value.  For example, `1 + 2` is an expression; `Price * 1.2` is another.  Expressions are similar to formulas in spreadsheets.  Expressions can be made up of several constituent parts:
 
@@ -14,7 +14,7 @@ An expression specifies the calculation of a value.  For example, `1 + 2` is an 
 
 These parts are explained in more detail in the following sections.  The important thing to first understand about Columnal's expressions is that they are type-checked.
 
-== Type-checking
+=== Type-checking
 
 Every expression in Columnal has a type.  For example, `482.245` has type `Number` as does `3 / 4.5`, `"Hello"` has type `Text`, `1 < 2` has type `Boolean`.
 

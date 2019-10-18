@@ -1,4 +1,4 @@
-= Units
+== Units
 
 Numbers are often a measure in a particular unit.  You might have a price in dollars, a length in centimetres, a duration in seconds, an angle in degrees, or a staff count in number of people.
 
@@ -10,10 +10,10 @@ Columnal lets you explicitly state the units for a particular column.  This give
 
 Several units are provided by default, and you can also create your own units.
 
-== Creating units
+=== Creating units
 
-// TODO content
+Missing content
 
-== Converting between units
+=== Converting between units
 
-// TODO content
+Missing content

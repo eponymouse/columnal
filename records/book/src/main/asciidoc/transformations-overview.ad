@@ -1,4 +1,4 @@
-= Transformations
+== Transformations
 
 The last section explained the principle of immutability.  All data processing in Columnal leaves the source data table(s) untouched and instead produces a new table with the results of the calculation.  This processing is called a transformation, and there are several different types.  They are explained in some more detail in the following sections, but summarised here:
 

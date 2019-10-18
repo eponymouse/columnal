@@ -1,4 +1,4 @@
-= Record types
+== Record types
 
 Sometimes a value will have multiple consituent parts.  For example, a GPS position will have latitude and longitude.  A colour may be represented as red, green and blue values.  It can be useful to represent such compound values as a record type.
 

@@ -1,8 +1,8 @@
-= Date and time types
+== Date and time types
 
 Columnal has a set of types specifically to deal with dates and times.  Some of these types require some further understanding - time zones in particular are surprisingly complex.
 
-== Local times and dates
+=== Local times and dates
 
 The `Time` type is straightforward: a `Time` is a time of day, like 03:10:23 or 14:15.  The time stores seconds and fractions of seconds, although this may be zero.  Internally Columnal deals with the 24-hour clock, although conversion functions can deal with AM/PM times instead.  Only valid times are allowed: 35:15
 
@@ -12,7 +12,7 @@ Sometimes you only need a year and month, for example if you are keeping track o
 
 The `DateTime` type glues together a date and a time, for example 2005-03-21 14:24:02.993.  It uses the internal representations for date and time discussed above.
 
-== Time zones
+=== Time zones
 
 The `DateTime` type has no mention of time zone.  Often if you are dealing with date-times in one location the time zone is irrelevant.  If you own a shop and are recording the time of sale, you may be fine to just assume it is always local time.  However, if you have a data set of social media messages which are recording what time they are sent, and you want to order this, it's important to know which time zone the date-time was in.  That's where `DateTimeZoned` is useful.
 

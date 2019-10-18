@@ -1,5 +1,5 @@
-= Introduction
+== Introduction
 
 Columnal is a tool for processing tables of data.  While it is intended to be operatable without reading a giant tutorial first, it does help at several points to understand the underlying concepts behind the software.  Data processing can be complex, and no amount of software interface design can substitute for understanding useful concepts of data processing, and types in particular.
 
-This mini book is a concise reference to explain some of the concepts in Columnal, which will help when designing data tables and processing that data.  It is not intended as a full tutorial on how to operate the software.  
+This mini book is intended to be a reference to explain some of the concepts in Columnal, which will help when designing data tables and processing that data.  It is not intended as a full tutorial on how to operate the software.  

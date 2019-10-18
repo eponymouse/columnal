@@ -1,7 +1,7 @@
-= The Book
+= Columnal Book (Early Access)
 :doctype: book
 Neil Brown
-v1.0, 2019-10-01
+v0.5, 2019-10-18
 :toc:
 ////
 Rules of writing:
@@ -11,7 +11,17 @@ Rules of writing:
  - Justify why features are useful, and why the alternative is not as good
 ////
 
+== Early Access
+
+Like the software, this book is still a work in progress, so some sections are marked as "missing content".  Check back in future for further content.
+
 include::introduction.ad[]
+
+= Types
+
+== Why types? (missing content)
+
+Missing content.
 
 // Types
 
@@ -29,12 +39,69 @@ include::types-summary.ad[]
 
 // Transformations
 
+= Data tables and transformations
+
+== Import and export (missing content)
+
+Missing content.
+
 include::data-immutability.ad[]
 
 include::transformations-overview.ad[]
 
+== Filter and sort (missing content)
+
+Missing content.
+
+== Calculate (missing content)
+
+Missing content.
+
+== Aggregate (missing content)
+
+Missing content.
+
+== Concat and join (missing content)
+
+Missing content.
+
+== Reshaping summary -- what to use when (missing content)
+
+Missing content.
+
 // Expressions
+= Expressions
 
 include::expressions-overview.ad[]
 
+== Operators (missing content)
+
+Missing content.
+
 include::expressions-literals.ad[]
+
+== Functions (missing content)
+
+Missing content.
+
+== Control structures (missing content)
+
+Missing content.
+
+== Define (missing content)
+
+Missing content.
+
+== User-defined functions (missing content)
+
+Missing content.
+
+== Version control (missing content)
+
+Missing content.
+
+////
+1. What is version control and why should you use it
+2. Diffing: understanding diffs
+3. Merging: how to merge and what to do it if goes wrong.
+////
