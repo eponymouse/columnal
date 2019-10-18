@@ -1089,7 +1089,7 @@ public abstract class DataType implements StyledShowable
         if (tagContext == null)
             throw new ParseException("tagged value", p);
 
-        return tagContext.mapEx(b -> {
+        return tagContext.flatMapEx(b -> {
             String constructor = b.STRING() != null ? b.STRING().getText() : b.UNQUOTED_IDENT().getText();
             for (int i = 0; i < tags.size(); i++)
             {
@@ -1104,13 +1104,13 @@ public abstract class DataType implements StyledShowable
                         @Value Object innerValue = loadSingleItem(innerType, p, true).getRight("Invalid nested invalid");
                         if (tryParse(() -> p.closeRound()) == null)
                             throw new ParseException("Closing tagged value bracket for " + constructor, p);
-                        return new TaggedValue(i, innerValue);
+                        return Either.right(new TaggedValue(i, innerValue));
                     }
 
-                    return new TaggedValue(i, null);
+                    return Either.right(new TaggedValue(i, null));
                 }
             }
-            throw new UserException("Could not find matching tag for: \"" + constructor + "\" in: " + tags.stream().map(t -> "\"" + t.getName() + "\"").collect(Collectors.joining(", ")));
+            return Either.left(constructor);
         });
     }
     
