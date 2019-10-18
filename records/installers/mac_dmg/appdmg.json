@@ -14,7 +14,8 @@
   },
   "icon-size": 100,
   "contents": [
-    { "x": 470, "y": 300, "type": "link", "path": "/Applications" },
-    { "x": 130, "y": 300, "type": "file", "path": "Columnal.app" }
+    { "x": 465, "y": 250, "type": "link", "path": "/Applications" },
+    { "x": 135, "y": 250, "type": "file", "path": "Columnal.app" },
+    { "x": 300, "y": 350, "type": "file", "path": "licence.rtf" } 
   ]
 }

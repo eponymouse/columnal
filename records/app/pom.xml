@@ -626,6 +626,8 @@
                                     <arg value="sign-app.sh"/>
                                     <arg value="Columnal.app"/>
                                 </exec>
+
+                                <copy todir="../installers/mac_dmg/" file="../installers/licence.rtf"/>
                                 
                                 <delete file="../installers/mac_dmg/Columnal-${columnal.version}.dmg"/>
                                 <!-- This needs appdmg, see https://github.com/LinusU/node-appdmg -->
@@ -748,6 +750,8 @@
                                 <copy todir="../installers/windows_msi/SourceDir/jre"  overwrite="true">
                                     <fileset dir="${jre_location}"/>
                                 </copy>
+                                
+                                <copy todir="../installers/windows_msi/" file="../installers/licence.rtf"/>
 
                                 <!-- The heat tool scans all the files in the JRE and generates
                                      a WiX file that has a list of all the files -->
@@ -758,7 +762,7 @@
                                     <arg line="-arch x64"/>
                                     <arg line="jre-files.wxs"/>
                                 </exec>
-
+                                
                                 <exec dir="../installers/windows_msi" executable="${wix_bin}/light.exe">
                                     <arg line="-ext WixUIExtension -ext WixUtilExtension main_versioned.wixobj jre-files.wixobj -o columnal-${columnal.version}.msi"/>
                                 </exec>
