@@ -430,7 +430,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             Either<String, Pair<DataType, @Value Object>> entry;
             final String invalidChar;
             final int invalidPos;
-            if (r.nextInt(8) != 1)
+            if (r.nextInt(8) != 1 || typeAndValueGen.getType().equals(DataType.TEXT))
             {
                 @Value Object value = typeAndValueGen.makeValue();
                 entry = Either.right(new Pair<DataType, @Value Object>(typeAndValueGen.getType(), value));

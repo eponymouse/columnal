@@ -101,7 +101,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             public UnitType text() throws InternalException, UserException
             {
                 @Value String stringValue = Utility.cast(value, String.class);
-                if (topLevel && !stringValue.startsWith("\"") && !stringValue.endsWith("\"") && r.nextBoolean())
+                if (topLevel && !stringValue.isEmpty() && !stringValue.startsWith("\"") && !stringValue.endsWith("\"") && r.nextBoolean())
                     writeOrPaste(stringValue);
                 else
                     writeOrPaste("\"" + GrammarUtility.escapeChars(stringValue) + "\"");
