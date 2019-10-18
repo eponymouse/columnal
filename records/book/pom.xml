@@ -31,13 +31,13 @@
                     <backend>html5</backend>
                     <doctype>book</doctype>
                     <attributes>
-                        <!--
                         <stylesheet>columnal.css</stylesheet>
                         <stylesdir>../../../../../../asciidoctor-stylesheet-factory/stylesheets/</stylesdir>
-                        -->
                         <!-- Temporary while creating style: -->
+                        <!--
                         <linkcss/>
                         <stylesheet>../../../../../asciidoctor-stylesheet-factory/stylesheets/columnal.css</stylesheet>
+                        -->
                     </attributes>
                 </configuration>
             </plugin>
