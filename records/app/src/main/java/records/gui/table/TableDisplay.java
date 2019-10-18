@@ -883,7 +883,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(FunctionList.getFunctionLookup(tableManager.getUnitManager()), Mean.NAME, IdentExpression.column(c)))), ImmutableList.of());
                 })::makeMenuItem);
             }
-            r.add(columnQuickTransform(tableManager, table, "recipe.frequency", "Frequency", c, (newId, insertPos) -> {
+            r.add(columnQuickTransform(tableManager, table, "recipe.frequency", "Freq", c, (newId, insertPos) -> {
                 return new Aggregate(tableManager, new InitialLoadDetails(null, null, insertPos, null), table.getId(), ImmutableList.of(new Pair<>(newId, IdentExpression.load(TypeState.GROUP_COUNT))), ImmutableList.of(c));
             })::makeMenuItem);
             r.add(columnQuickTransform(tableManager, table, "recipe.sort", insertPos -> {
