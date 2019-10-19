@@ -92,14 +92,18 @@
             </ProgId>
         </Component>
         
-        <Component Id='Licences' Directory="INSTALLDIR">
-            <File Id='Licence' Name='licence.rtf' DiskId='1' Source='licence.rtf' />
-            <File Id='Licence' Name='thirdpartylicences.txt' DiskId='1' Source='thirdpartylicences.txt' />
+        <Component Id='CompLicence' Directory="INSTALLDIR">
+            <File Id='FileLicence' Name='licence.rtf' KeyPath='yes' DiskId='1' Source='licence.rtf' />
+        </Component>
+        <Component Id='CompThirdPartyLicence' Directory="INSTALLDIR">
+            <File Id='FileThirdPartyLicence' Name='thirdpartylicenses.txt' KeyPath='yes' DiskId='1' Source='thirdpartylicenses.txt' />
         </Component>
         
         <Feature Title='Columnal' Id='FeatureCore' Level='1' ConfigurableDirectory="INSTALLDIR">
             <ComponentGroupRef Id='JREFiles' />
             <ComponentRef Id='CompLauncher' />
+            <ComponentRef Id='CompLicence' />
+            <ComponentRef Id='CompThirdPartyLicence' />
             <ComponentRef Id='ProgramMenuShortcut' />
             <ComponentRef Id='DesktopShortcut' />
         </Feature>

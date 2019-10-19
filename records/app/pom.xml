@@ -531,6 +531,63 @@
             </plugin>
 
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.0.0</version>
+                <executions>
+                    <execution>
+                        <id>make-thirdpartylicense-file</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <force>true</force>
+                            <!-- Not sure why xalan shows up anyway; think it's part of the JDK -->
+                            <excludedArtifacts>xalan</excludedArtifacts>
+                            <excludedGroups>groupId|org.bluej|net.jcip</excludedGroups>
+                        </configuration>
+                        <goals>
+                            <goal>add-third-party</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>shade-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>app-shaded.jar</finalName>
+                            <minimizeJar>true</minimizeJar>
+                            <filters>
+                                <filter>
+                                    <artifact>org.apache.logging.log4j:log4j-api</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.logging.log4j:log4j-core</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
+
+            <!-- This must come last because it's the same plugin that does MSI, DMG etc, which needs the steps above to come first -->
+            <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.8</version>
                 <executions>
@@ -558,12 +615,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <version>2.0.0</version>
             </plugin>
         </plugins>
     </build>
@@ -753,6 +804,7 @@
                                 </copy>
                                 
                                 <copy todir="../installers/windows_msi/" file="../installers/licence.rtf"/>
+                                <copy tofile="../installers/windows_msi/thirdpartylicenses.txt" file="target/generated-sources/license/THIRD-PARTY.txt"/>
 
                                 <!-- The heat tool scans all the files in the JRE and generates
                                      a WiX file that has a list of all the files -->
