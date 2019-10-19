@@ -1,5 +1,6 @@
 package test.gui.table;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -8,6 +9,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import com.sun.javafx.tk.Toolkit;
 import javafx.application.Platform;
@@ -22,6 +24,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
@@ -39,6 +42,7 @@ import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.lexeditor.EditorDisplay;
 import records.gui.table.TableDisplay;
+import records.transformations.Aggregate;
 import records.transformations.Calculate;
 import records.transformations.Filter;
 import records.transformations.ManualEdit;
@@ -46,7 +50,9 @@ import records.transformations.Sort;
 import records.transformations.Sort.Direction;
 import records.transformations.expression.Expression;
 import records.transformations.expression.IdentExpression;
+import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.visitor.ExpressionVisitorFlat;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
@@ -229,16 +235,39 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         dummyManager.record(calc);
         transformPositions.put(calculateId, targetPos);
         targetPos = nextPos(calc);
+        postRenameChecks.put(calculateId, (t, c) -> {
+            assertEquals(IdentExpression.column(c), ((Calculate)t).getCalculatedColumns().values().iterator().next());
+        });
 
         TableId manualId = new TableId(ch(r) + srcId.getRaw() + " then Edit");
         ManualEdit manualEdit = new ManualEdit(dummyManager, new InitialLoadDetails(manualId, null, targetPos, null), srcId, null, ImmutableMap.of());
         dummyManager.record(manualEdit);
         transformPositions.put(manualId, targetPos);
         targetPos = nextPos(manualEdit);
+
+        TableId agg1Id = new TableId(ch(r) + srcId.getRaw() + " then Aggregate1");
+        // Must have two columns to make counts right
+        Aggregate agg1 = new Aggregate(dummyManager, new InitialLoadDetails(agg1Id, null, targetPos, null), srcId, ImmutableList.of(new Pair<>(new ColumnId("AggCol"), new NumericLiteral(0L, null))), ImmutableList.of(new ColumnId("Boolean")));
+        dummyManager.record(agg1);
+        transformPositions.put(agg1Id, targetPos);
+        targetPos = nextPos(agg1);
+        postRenameChecks.put(agg1Id, (t, newCol) -> {
+            assertEquals(((Aggregate)t).getSplitBy().get(0), newCol);
+        });
+
+        TableId agg2Id = new TableId(ch(r) + srcId.getRaw() + " then Aggregate2");
+        // Must have two columns to make counts right
+        Aggregate agg2 = new Aggregate(dummyManager, new InitialLoadDetails(agg2Id, null, targetPos, null), srcId, ImmutableList.of(new Pair<>(new ColumnId("AggCol"), IdentExpression.column(new ColumnId("Boolean")))), ImmutableList.of(new ColumnId("Number")));
+        dummyManager.record(agg2);
+        transformPositions.put(agg2Id, targetPos);
+        targetPos = nextPos(agg2);
+        postRenameChecks.put(agg2Id, (t, newCol) -> {
+            assertSameLastIdent(newCol, ((Aggregate)t).getColumnExpressions().get(0).getSecond());
+        });
         
         // TODO concatenate some of the others
 
-        ImmutableList<TableId> derived = ImmutableList.of(sortId, filterId, calculateId, manualId);
+        ImmutableList<TableId> derived = ImmutableList.of(sortId, filterId, calculateId, manualId, agg1Id, agg2Id);
         for (TableId tableId : derived)
         {
             unavailableTables.put(srcId, tableId);
@@ -250,11 +279,31 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         {
             for (TableId tableId : derived)
             {
-                targetPos = addTransforms(dummyManager, tableId, depth, targetPos, unavailableTables, r);
+                // Can't build on Aggregate as different columns: 
+                if (!tableId.equals(agg1Id) && !tableId.equals(agg2Id))
+                    targetPos = addTransforms(dummyManager, tableId, depth, targetPos, unavailableTables, r);
             }
         }
         
         return targetPos;
+    }
+
+    private void assertSameLastIdent(ColumnId column, Expression expression)
+    {
+        assertEquals(column.getRaw(), expression.visit(new ExpressionVisitorFlat<@Nullable @ExpressionIdentifier String>()
+        {
+            @Override
+            protected @Nullable @ExpressionIdentifier String makeDef(Expression expression)
+            {
+                return null;
+            }
+
+            @Override
+            public @Nullable @ExpressionIdentifier String ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            {
+                return idents.get(idents.size() - 1);
+            }
+        }));
     }
 
     private String ch(Random r)
@@ -347,7 +396,9 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         // Fetch the sorted transformation and check the column names (checks rename, and propagation):
         for (Entry<TableId, CellPosition> entry : transformPositions.entrySet())
         {
-            assertEquals(entry.getKey().getRaw(), ImmutableSet.<ColumnId>of(new ColumnId("Number"), newColumnId), ImmutableSet.copyOf(tableManager.getSingleTableOrThrow(entry.getKey()).getData().getColumnIds()));
+            Table table = tableManager.getSingleTableOrThrow(entry.getKey());
+            if (!(table instanceof Aggregate))
+                assertEquals(entry.getKey().getRaw(), ImmutableSet.<ColumnId>of(new ColumnId("Number"), newColumnId), ImmutableSet.copyOf(table.getData().getColumnIds()));
         }
 
         for (Entry<TableId, BiConsumer<Table, ColumnId>> e : postRenameChecks.entrySet())
@@ -451,6 +502,9 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         
         for (Table table : tableManager.getAllTables())
         {
+            if (table instanceof Aggregate)
+                continue;
+            
             // Check that the column count is now right on all tables:
             List<Column> columns = table.getData().getColumns();
             assertEquals(originalColumns + 1, columns.size());
@@ -466,7 +520,13 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
 
     @Property(trials=4, shrink = false)
     @OnThread(Tag.Simulation)
-    public void testAddColumnBeforeAfter(int positionIndicator, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    public void testAddColumnBeforeAfter(
+        @When(seed=3237919701795101471L)
+        int positionIndicator,
+        @When(seed=5841154326228353674L)
+        @From(GenColumnId.class) ColumnId name,
+        @When(seed=6562332032147499639L)
+        @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         tableManager.getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
         // N tables, 2 columns each:
@@ -709,7 +769,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         ColumnId changedColumnId = new ColumnId(changeBoolean ? "Boolean" : "Number");
         for (Table table : tableManager.getAllTables())
         {
-            assertEquals(table.getId().getRaw(), swappedType.getDataType(), table.getData().getColumn(changedColumnId).getType().getType());
+            if (!(table instanceof Aggregate))
+                assertEquals(table.getId().getRaw(), swappedType.getDataType(), table.getData().getColumn(changedColumnId).getType().getType());
         }
         
         // Work out what values we now expect in that column:
