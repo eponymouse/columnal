@@ -259,7 +259,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
 
     private String ch(Random r)
     {
-        return "" + (char)(r.nextInt(26));
+        return "" + (char)('A' + (char)(r.nextInt(26)));
     }
 
     // unavailableTables points from a table to all its directly derived tables that shouldn't be available to it
