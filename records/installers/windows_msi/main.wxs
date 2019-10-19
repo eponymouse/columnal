@@ -93,8 +93,8 @@
         </Component>
         
         <Component Id='Licences' Directory="INSTALLDIR">
-            <File Id='Licence' Name='licence.rtf' DiskId='1' Source='licence.rtf' KeyPath='yes'>
-            <File Id='Licence' Name='thirdpartylicences.txt' DiskId='1' Source='thirdpartylicences.txt' KeyPath='yes'>
+            <File Id='Licence' Name='licence.rtf' DiskId='1' Source='licence.rtf' KeyPath='yes'/>
+            <File Id='Licence' Name='thirdpartylicences.txt' DiskId='1' Source='thirdpartylicences.txt' KeyPath='yes'/>
         </Component>
         
         <Feature Title='Columnal' Id='FeatureCore' Level='1' ConfigurableDirectory="INSTALLDIR">
