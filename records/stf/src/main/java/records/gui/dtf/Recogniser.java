@@ -1,7 +1,6 @@
 package records.gui.dtf;
 
 import annotation.qual.ImmediateValue;
-import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -47,24 +46,21 @@ public abstract class Recogniser<T>
     public static class SuccessDetails<T>
     {
         public final @NonNull @ImmediateValue T value;
+        public final @Nullable String immediateReplacementText;
         public final ImmutableList<StyleSpanInfo> styles;
         public final ParseProgress parseProgress;
 
-        private SuccessDetails(@NonNull @ImmediateValue T value, ImmutableList<StyleSpanInfo> styles, ParseProgress parseProgress)
+        private SuccessDetails(@NonNull @ImmediateValue T value, @Nullable String immediateReplacementText, ImmutableList<StyleSpanInfo> styles, ParseProgress parseProgress)
         {
             this.value = value;
+            this.immediateReplacementText = immediateReplacementText;
             this.styles = styles;
             this.parseProgress = parseProgress;
         }
 
-        private SuccessDetails(@NonNull @ImmediateValue T value, ParseProgress parseProgress)
-        {
-            this(value, ImmutableList.of(), parseProgress);
-        }
-        
         public SuccessDetails<@ImmediateValue Object> asObject()
         {
-            return new SuccessDetails<>(value, styles, parseProgress);
+            return new SuccessDetails<>(value, immediateReplacementText, styles, parseProgress);
         }
 
         // Makes sure there are no non-spaces left to be processed
@@ -101,11 +97,16 @@ public abstract class Recogniser<T>
 
     protected Either<ErrorDetails, SuccessDetails<T>> success(@NonNull @ImmediateValue T value, ParseProgress parseProgress)
     {
-        return Either.right(new SuccessDetails<T>(value, parseProgress));
+        return Either.right(new SuccessDetails<T>(value, null, ImmutableList.of(), parseProgress));
+    }
+
+    protected Either<ErrorDetails, SuccessDetails<T>> success(@NonNull @ImmediateValue T value, @Nullable String replacementText, ParseProgress parseProgress)
+    {
+        return Either.right(new SuccessDetails<T>(value, replacementText, ImmutableList.of(), parseProgress));
     }
 
     protected Either<ErrorDetails, SuccessDetails<T>> success(@NonNull @ImmediateValue T value, ImmutableList<StyleSpanInfo> styleSpanInfos, ParseProgress parseProgress)
     {
-        return Either.right(new SuccessDetails<T>(value, styleSpanInfos, parseProgress));
+        return Either.right(new SuccessDetails<T>(value, null, styleSpanInfos, parseProgress));
     }
 }

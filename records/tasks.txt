@@ -13,8 +13,6 @@ High Priority (major bugs/deficiencies, cannot do beta without fixing)
 - The =~ completion should have an explanation of patterns, or a link to explain patterns.  Should be a guide?
 - Need a better solution for accessing values from previous row.
 
-- Need to auto-add quotes around text values that are missing them (in the recogniser)
-  - Recognising unquoted, but should also correct display to add them, I think?
 - Need to be able to override types back to Text, e.g. https://www.w3.org/TR/css-color-3/#azure the table there has 0,255,255 which is not a number with thousands.
 - Can't import from clipboard, or seemingly paste table data from clipboard?
 - Need way to duplicate calculate column
@@ -372,6 +370,8 @@ Done after Phil B & Jon A:
 - If number column has a wikipedia footnote but otherwise is all valid, removing the footnotes still imports as Optional(Number), rather than Number.
 - Usage stats logging
 - Autocomplete for making a new column doesn't show user tagged types (or any tagged types?)
+- Need to auto-add quotes around text values that are missing them (in the recogniser)
+  - Recognising unquoted, but should also correct display to add them, I think?
 
 Changelog since 0.5.1
 ===

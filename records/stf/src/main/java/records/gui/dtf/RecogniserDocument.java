@@ -1,5 +1,7 @@
 package records.gui.dtf;
 
+import annotation.qual.ImmediateValue;
+import annotation.qual.UnknownIfValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import javafx.application.Platform;
@@ -8,8 +10,10 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyCode;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.error.InternalException;
@@ -41,7 +45,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
     private String valueOnFocusGain;
     private Either<ErrorDetails, SuccessDetails<V>> latestValue;
     private @Nullable FXPlatformRunnable onFocusLost;
-    private Pair<ImmutableList<Pair<Set<String>, String>>, CaretPositionMapper> unfocusedDocument;
+    private @MonotonicNonNull Pair<ImmutableList<Pair<Set<String>, String>>, CaretPositionMapper> unfocusedDocument;
 
     public RecogniserDocument(String initialContent, Class<V> valueClass, Recogniser<V> recogniser, @Nullable SimulationSupplierInt<Boolean> checkStartEdit, Saver<V> saveChange, FXPlatformConsumer<KeyCode> relinquishFocus)
     {
@@ -108,6 +112,9 @@ public final class RecogniserDocument<V> extends DisplayDocument
         String text = getText();
         latestValue = recogniser.process(ParseProgress.fromStart(text), false)
                         .flatMap(SuccessDetails::requireEnd);
+        // Once latestValue is set, we're fully initialised but checker doesn't know this:
+        @SuppressWarnings("initialization")
+        @Initialized RecogniserDocument<V> initialized = this;
         FXPlatformRunnable reset = () -> {
             Utility.later(this).replaceText(0, Utility.later(this).getLength(), valueOnFocusGain);
             recognise(false);
@@ -115,24 +122,23 @@ public final class RecogniserDocument<V> extends DisplayDocument
             if (onFocusLost != null)
                 onFocusLost.run();
         };
-        latestValue.ifLeft(err -> {
+        Pair<String, @Nullable V> saveDetails;
+        saveDetails = latestValue.<Pair<String, @Nullable V>>either(err -> {
             curErrorPosition = OptionalInt.of(err.errorPosition);
-            if (save)
-                saveChange.save(text, null, reset);
-        });
-        latestValue.ifRight((SuccessDetails<V> x) -> {
+            return new Pair<String, @Nullable V>(text, null);
+        }, (SuccessDetails<V> x) -> {
             curErrorPosition = OptionalInt.empty();
-            save(save, text, reset, x);
+            @SuppressWarnings("valuetype")
+            V value = x.value;
+            return new Pair<String, @Nullable V>(x.immediateReplacementText != null ? x.immediateReplacementText : text, value);
         });
-        this.unfocusedDocument = new Pair<>(makeStyledSpans(curErrorPosition, text).collect(ImmutableList.<Pair<Set<String>, String>>toImmutableList()), n -> n);
-    }
-
-    @SuppressWarnings("valuetype")
-    @RequiresNonNull("saveChange")
-    private void save(@UnknownInitialization(DisplayDocument.class) RecogniserDocument<V> this, boolean save, String text, FXPlatformRunnable reset, SuccessDetails<V> x)
-    {
+        this.unfocusedDocument = new Pair<>(makeStyledSpans(curErrorPosition, saveDetails.getFirst()).collect(ImmutableList.<Pair<Set<String>, String>>toImmutableList()), n -> n);
         if (save)
-            saveChange.save(text, x.value, reset);
+        {
+            if (!saveDetails.getFirst().equals(text))
+                initialized.replaceText(0, text.length(), saveDetails.getFirst());
+            saveChange.save(saveDetails.getFirst(), saveDetails.getSecond(), reset);
+        }
     }
 
     @Override
