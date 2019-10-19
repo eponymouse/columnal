@@ -180,6 +180,7 @@ editColumnData : editColumnDataKW value value;
 editColumn : editColumnHeader editColumnData+;
 edit : editHeader editColumn*;
          */
+        renames.useColumnsFromTo(srcTableId, getId());
         OutputBuilder r = new OutputBuilder();
         r.raw("EDIT");
         DataType keyType;

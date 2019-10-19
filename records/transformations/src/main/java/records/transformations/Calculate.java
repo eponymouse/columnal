@@ -231,6 +231,7 @@ public class Calculate extends Transformation implements SingleSourceTransformat
     @Override
     protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
+        renames.useColumnsFromTo(srcTableId, getId());
         return newColumns.entrySet().stream().map(entry -> {
             OutputBuilder b = new OutputBuilder();
             Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(getId(), entry.getKey(), srcTableId);

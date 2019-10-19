@@ -136,6 +136,7 @@ public class HideColumns extends Transformation implements SingleSourceTransform
     @Override
     protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
+        renames.useColumnsFromTo(srcTableId, getId());
         OutputBuilder b = new OutputBuilder();
         for (ColumnId c : hideIds)
             b.kw("HIDE").id(renames.columnId(getId(), c, srcTableId).getSecond()).nl();

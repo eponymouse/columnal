@@ -370,6 +370,7 @@ public class Sort extends Transformation implements SingleSourceTransformation
     @Override
     protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
+        renames.useColumnsFromTo(srcTableId, getId());
         OutputBuilder b = new OutputBuilder();
         for (Pair<ColumnId, Direction> c : originalSortBy)
             b.kw(c.getSecond().toString()).id(renames.columnId(getId(), c.getFirst(), srcTableId).getSecond()).nl();
