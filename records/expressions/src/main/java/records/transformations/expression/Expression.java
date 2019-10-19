@@ -761,6 +761,11 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         return toDisplay(DisplayType.FULL, BracketedStatus.DONT_NEED_BRACKETS, (s, e) -> s);
     }
 
+    public final StyledString toSimpleStyledString()
+    {
+        return toDisplay(DisplayType.SIMPLE, BracketedStatus.DONT_NEED_BRACKETS, (s, e) -> s);
+    }
+
     public static interface ExpressionStyler
     {
         public StyledString styleExpression(StyledString display, Expression src);
