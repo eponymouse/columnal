@@ -47,7 +47,7 @@
                 <version>2.7</version>
                 <executions>
                     <execution>
-                        <id>copy-external-jars</id>
+                        <id>copy-html</id>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>copy-resources</goal>
