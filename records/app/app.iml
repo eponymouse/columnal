@@ -32,7 +32,7 @@
     <orderEntry type="library" name="Maven: xerces:xercesImpl:2.8.0" level="project" />
     <orderEntry type="library" name="Maven: xalan:xalan:2.7.0" level="project" />
     <orderEntry type="module" module-name="parsers" />
-    <orderEntry type="module" module-name="anns" />
+    <orderEntry type="module" module-name="anns" scope="PROVIDED" />
     <orderEntry type="module" module-name="data" />
     <orderEntry type="module" module-name="stf" />
     <orderEntry type="module" module-name="expressions" />
