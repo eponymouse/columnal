@@ -189,7 +189,7 @@
     <xsl:template match="literal">
         <xsl:variable name="literalName" select="@name"/>
         <div class="literal-item">
-            <span class="literal-name-header" id="literal-@name"><xsl:value-of select="@name"/>{...}</span>
+            <span class="literal-name-header" id="literal-{@name}"><xsl:value-of select="@name"/>{...}</span>
             <div class="description"><xsl:apply-templates select="description"/></div>
             <div class="examples">
                 <xsl:copy-of select="$examples-header"/>

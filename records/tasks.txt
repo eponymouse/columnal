@@ -373,7 +373,7 @@ Done after Phil B & Jon A:
 - Need to auto-add quotes around text values that are missing them (in the recogniser)
   - Recognising unquoted, but should also correct display to add them, I think?
 
-Changelog since 0.5.1
+Changelog since 0.5.1 for 0.6.0
 ===
 - Added a new "Exclude Columns" transformation.
 - Added a "split text" function.

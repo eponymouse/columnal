@@ -147,6 +147,7 @@
                 <xs:element ref="variable"/>
             </xs:choice>
             <xs:attribute name="namespace" type="xs:string" use="required"/>
+            <xs:attribute name="toc" type="xs:string" use="optional"/>
             <!-- For when it's imported by XInclude -->
             <xs:attribute ref="xml:base"/>
         </xs:complexType>

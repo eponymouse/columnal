@@ -13,15 +13,45 @@
                 <link rel="stylesheet" href="web.css"/>
             </head>
             <body>
+                <h1>Columnal Documentation: Table of Contents</h1>
                 <!-- Index -->
                 <div class="index">
                     <xsl:for-each select=".//functionDocumentation|//functionDocumentation">
-                        <xsl:variable name="namespace" select="@namespace"/>
-                        <div class="index-namespace">
-                            <xsl:for-each select="function">
-                                <a class="index-entry" href="#function-{@name}"><xsl:value-of select="@name"/></a>
-                            </xsl:for-each>
-                        </div>
+                        <xsl:if test="@namespace!=''">
+                            <xsl:variable name="namespace" select="@namespace"/>
+                            <div class="index-namespace">
+                                <h2><xsl:value-of select="@namespace"/> functions</h2>
+                                <xsl:for-each select="function">
+                                    <a class="index-entry" href="#function-{@name}"><xsl:value-of select="@name"/></a>
+                                </xsl:for-each>
+                            </div>
+                        </xsl:if>
+                        <xsl:if test="@toc">
+                            <div class="index-toc">
+                                <h2><xsl:value-of select="@toc"/></h2>
+                                <xsl:for-each select="binaryOperator|naryOperatorGroup|literal|type|syntax|variable">
+                                    <xsl:if test="local-name(.)='type'">
+                                        <a class="index-entry" href="#type-{@name}"><xsl:value-of select="@name"/> type</a>
+                                    </xsl:if>
+                                    <xsl:if test="local-name(.)='literal'">
+                                        <a class="index-entry" href="#literal-{@name}"><xsl:value-of select="@name"/>{..} literal</a>
+                                    </xsl:if>
+                                    <xsl:if test="local-name(.)='syntax'">
+                                        <a class="index-entry" href="#syntax-{@id}"><xsl:value-of select="@title"/></a>
+                                    </xsl:if>
+                                    <xsl:if test="local-name(.)='naryOperatorGroup'">
+                                        <xsl:for-each select="operator">
+                                            <a class="index-entry" href="#operator-{string-join(string-to-codepoints(.), '-')}">Operator <xsl:value-of select="."/></a>
+                                        </xsl:for-each>
+                                    </xsl:if>
+                                    <xsl:if test="local-name(.)='binaryOperator'">
+                                        <xsl:for-each select="operator">
+                                            <a class="index-entry" href="#operator-{string-join(string-to-codepoints(.), '-')}">Operator <xsl:value-of select="."/></a>
+                                        </xsl:for-each>
+                                    </xsl:if>
+                                </xsl:for-each>
+                            </div>
+                        </xsl:if>
                     </xsl:for-each>
                 </div>
                 
@@ -31,7 +61,7 @@
                     <div class="namespace" id="namespace-{@namespace}">
                         <xsl:apply-templates select="function"/>
                     </div>
-                    <xsl:apply-templates select="binaryOperator|naryOperatorGroup|type"/>
+                    <xsl:apply-templates select="binaryOperator|naryOperatorGroup|type|literal|syntax|variable"/>
                 </xsl:for-each>
             </body>
         </html>

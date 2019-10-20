@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <all xmlns:xi="http://www.w3.org/2001/XInclude">
+    <xi:include href="types.xml"/>
+    <xi:include href="literals.xml"/>
+    <xi:include href="syntax.xml"/>
+    <xi:include href="operators.xml"/>
+
     <xi:include href="boolean.xml"/>
     <xi:include href="comparison.xml"/>
     <xi:include href="conversion.xml"/>
     <xi:include href="core.xml"/>
     <xi:include href="datetime.xml"/>
-    <xi:include href="guides.xml"/>
     <xi:include href="list.xml"/>
     <xi:include href="listprocess.xml"/>
-    <xi:include href="literals.xml"/>
     <xi:include href="lookup.xml"/>
     <xi:include href="math.xml"/>
     <xi:include href="number.xml"/>
-    <xi:include href="operators.xml"/>
     <xi:include href="optional.xml"/>
-    <xi:include href="syntax.xml"/>
     <xi:include href="text.xml"/>
-    <xi:include href="types.xml"/>
+    
+    <xi:include href="guides.xml"/>
 </all>

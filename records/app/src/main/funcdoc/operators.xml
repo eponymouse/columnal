@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
-                       namespace="">
+                       namespace="" toc="Operators">
     <naryOperatorGroup title="Adding and Subtracting">
         <operator>+</operator>
         <operator>-</operator>

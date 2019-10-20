@@ -17,16 +17,16 @@ body {
 .function-group-item {
     display: none;
 }
-.function-item, .operator-item, .type-item {
+.function-item, .operator-item, .type-item, .syntax-item, .variable-item, .literal-item {
     padding: 25pt;
 }
 body.indiv {
-    .function-item, .operator-item, .type-item, .column-item {
+    .function-item, .operator-item, .type-item, .column-item, .syntax-item, .variable-item, .literal-item {
         padding: 5pt;
     }
 }
 
-.function-item, .operator-item, .type-item, .column-item {
+.function-item, .operator-item, .type-item, .column-item, .syntax-item, .variable-item, .literal-item {
     border-width: 0 0 1px 0;
     border-color: lightgray;
     border-style: solid;
@@ -38,11 +38,11 @@ body.indiv {
     }
 }
 
-.syntax-keyword, .type-name-header, .operator-name-header, .variable-name-header, .column-header {
+.syntax-keyword, .type-name-header, .operator-name-header, .variable-name-header, .column-header, .literal-name-header {
     font-weight: bold;
 }
 .function-header, .function-type, 
-.syntax-type, .operator-type, .operator-name-header, .syntax-name-header, .column-header {
+.syntax-type, .operator-type, .operator-name-header, .syntax-name-header, .column-header, .variable-name-header, .literal-name-header, .type-name-header {
     display:block;
 }
 .type-name-header, .function-header, .operator-type, .syntax-name-header, .operator-name-header, .variable-name-header, .literal-name-header, .column-header {

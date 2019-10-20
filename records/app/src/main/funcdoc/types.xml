@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
-                       namespace="">
+                       namespace="" toc="Types">
     <type name="Boolean">
         <description>
             <p>A Boolean value is one that is either true, or false.</p>
@@ -120,6 +120,7 @@
         </seeAlso>
     </type>
     
+    <!--
     <type name="Tuple">
         <description>
             <p>A collection of a fixed set of values, written in round brackets, separated by commas, e.g. (Text, Number, Boolean) is a text, number and boolean value.</p>
@@ -130,6 +131,7 @@
             <link namespace="tuple"/>
         </seeAlso>
     </type>
+    -->
     
     <type name="Tagged">
         <description>
