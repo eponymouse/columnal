@@ -547,6 +547,8 @@
                                     <directory>target/classes</directory>
                                     <includes>
                                         <include>_all.html</include>
+                                        <include>funcdoc.css</include>
+                                        <include>web.css</include>
                                     </includes>
                                 </resource>
                             </resources>
