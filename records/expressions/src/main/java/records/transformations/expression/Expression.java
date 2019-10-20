@@ -298,6 +298,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     // Calls check with EXPRESSION kind, and returns just the type, discarding the state.
     public final @Nullable TypeExp checkExpression(@Recorded Expression this, ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
+        IdentExpression.resolveThroughout(this, dataLookup, typeState.getFunctionLookup(), typeState.getTypeManager());        
         @Nullable CheckedExp check = check(dataLookup, typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (check == null)
             return null;
@@ -500,7 +501,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
          * @param idents
          * @return
          */
-        Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isPattern);
+        Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents);
 
         /**
          * Makes a new save destination with the given names defined (namespace plus idents for each entry) 
@@ -518,7 +519,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public static final SaveDestination TO_STRING = new SaveDestination()
         {
             @Override
-            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isPattern)
+            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
             {
                 // Give everything in full:
                 return new Pair<>(namespace, idents);
@@ -542,7 +543,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public static final SaveDestination TO_FILE = new SaveDestination()
         {
             @Override
-            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isPattern)
+            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
             {
                 // Give everything in full:
                 return new Pair<>(namespace, idents);
@@ -571,10 +572,10 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             }
 
             @Override
-            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isPattern)
+            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
             {
                 // Need to keep adding idents backwards from end until it is not ambigious:
-                boolean usingNamespace = isPattern && !Objects.equals(namespace, "var");
+                boolean usingNamespace = false; //isPattern && !Objects.equals(namespace, "var");
                 int firstIdentUsed = idents.size() - 1;
                 // Can only increase scoping if we're not using the namespace or are not yet using all idents
                 increaseScoping: while (!usingNamespace || firstIdentUsed > 0)

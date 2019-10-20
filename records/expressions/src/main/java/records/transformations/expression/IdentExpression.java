@@ -26,9 +26,11 @@ import records.loadsave.OutputBuilder;
 import records.transformations.expression.Expression.ColumnLookup.FoundTable;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.explanation.ExplanationLocation;
+import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.function.ValueFunction;
 import records.transformations.expression.visitor.ExpressionVisitor;
+import records.transformations.expression.visitor.ExpressionVisitorStream;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -129,6 +131,35 @@ public class IdentExpression extends NonOperatorExpression
         return new FieldAccessExpression(IdentExpression.table(tableId.getRaw()), load(columnId.getRaw()));
     }
 
+    // Resolves all IdentExpression recursively throughout the
+    // whole expression:
+    public static void resolveThroughout(Expression expression, ColumnLookup columnLookup, FunctionLookup functionLookup, TypeManager typeManager) throws InternalException, UserException
+    {
+        Either<InternalException, UserException> ex = expression.visit(new ExpressionVisitorStream<Either<InternalException, UserException>>() {
+            @Override
+            public Stream<Either<InternalException, UserException>> ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            {
+                try
+                {
+                    @Nullable Resolution res = self.resolve(columnLookup, functionLookup, typeManager);
+                    if (res != null)
+                        self.resolution = res;
+                    return super.ident(self, namespace, idents, isVariable);
+                }
+                catch (InternalException e)
+                {
+                    return Stream.<Either<InternalException, UserException>>of(Either.<InternalException, UserException>left(e));
+                }
+                catch (UserException e)
+                {
+                    return Stream.<Either<InternalException, UserException>>of(Either.<InternalException, UserException>right(e));
+                }
+            }
+        }).findFirst().orElse(null);
+        if (ex != null)
+            ex.eitherEx_(e -> {throw e;}, e -> {throw e;});
+    }
+
 
     @Override
     public @Nullable CheckedExp check(@Recorded IdentExpression this, ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
@@ -140,6 +171,24 @@ public class IdentExpression extends NonOperatorExpression
             onError.recordError(this, StyledString.s("Invalid identifier: \"" + invalid + "\""));
             return null;
         }
+        
+        if (resolution == null)
+        {
+            // Didn't find it anywhere:
+            onError.recordError(this, StyledString.s("Unknown name: \"" + idents.stream().collect(Collectors.joining("\\")) + "\""));
+            @Nullable QuickFix<Expression> fix = dataLookup.getFixForIdent(namespace, idents, this);
+            if (fix != null)
+            {
+                onError.recordQuickFixes(this, ImmutableList.<QuickFix<Expression>>of(fix));
+            }
+            return null;
+        }
+        else
+            return resolution.checkType(original, onError);
+    }
+    
+    private @Nullable Resolution resolve(ColumnLookup dataLookup, FunctionLookup functionLookup, TypeManager typeManager) throws InternalException, UserException
+    {
         // Possible lookup destinations, in order of preference:
         // (Preference is roughly how likely it is that the user defined it and wants it)
         // - Local variable (cannot be scoped)
@@ -148,13 +197,12 @@ public class IdentExpression extends NonOperatorExpression
         // - Tag name (Scope: "tag")
         // - Standard function name (Scope: "function")
 
-        @Nullable TypeState state = original;
         boolean couldBeVar = (namespace == null || Objects.equals(namespace, "var")) && idents.size() == 1;
-        List<TypeExp> varType = couldBeVar ? state.findVarType(idents.get(0)) : null;
+        List<TypeExp> varType = null; //couldBeVar ? state.findVarType(idents.get(0)) : null;
 
         if (varType != null)
         {
-            resolution = new Resolution()
+            return new Resolution()
             {
                 @Override
                 public boolean hideFromExplanation(boolean skipIfTrivial)
@@ -195,11 +243,16 @@ public class IdentExpression extends NonOperatorExpression
                 @Override
                 public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
                 {
-                    return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName(), kind == ExpressionKind.PATTERN);
+                    return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
+                }
+
+                @Override
+                public @Nullable CheckedExp checkType(TypeState state, ErrorAndTypeRecorder onError) throws InternalException
+                {
+                    // If they're trying to use a variable with many types, it justifies us trying to unify all the types:
+                    return onError.recordTypeAndError(IdentExpression.this, TypeExp.unifyTypes(varType), state);
                 }
             };
-            // If they're trying to use a variable with many types, it justifies us trying to unify all the types:
-            return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType), state);
         }
 
         if (namespace == null || namespace.equals("column"))
@@ -218,18 +271,14 @@ public class IdentExpression extends NonOperatorExpression
             }
             if (col == null && Objects.equals(namespace, "column"))
             {
-                onError.recordError(this, StyledString.s("Could not find source column " + toText(namespace, idents)));
+                //onError.recordError(this, StyledString.s("Could not find source column " + toText(namespace, idents)));
                 return null;
             }
             else if (col != null)
             {
-                if (col.information != null)
-                {
-                    onError.recordInformation(this, col.information);
-                }
                 TableId resolvedTableName = col.tableCanBeOmitted ? null : col.tableId;
                 DataTypeValue column = col.dataTypeValue;
-                resolution = new Resolution()
+                return new Resolution()
                 {
                     @Override
                     public boolean hideFromExplanation(boolean skipIfTrivial)
@@ -271,10 +320,19 @@ public class IdentExpression extends NonOperatorExpression
                         final @Nullable TableId renamedTableId = renamed.getFirst();
                         ImmutableList<@ExpressionIdentifier String> tablePlusColumn = renamedTableId != null ? ImmutableList.of(renamedTableId.getRaw(), renamed.getSecond().getRaw()) : ImmutableList.of(renamed.getSecond().getRaw());
 
-                        return saveDestination.disambiguate(getFoundNamespace(), tablePlusColumn, kind == ExpressionKind.PATTERN);
+                        return saveDestination.disambiguate(getFoundNamespace(), tablePlusColumn);
+                    }
+
+                    @Override
+                    public @Nullable CheckedExp checkType(TypeState state, ErrorAndTypeRecorder onError) throws InternalException
+                    {
+                        if (col.information != null)
+                        {
+                            onError.recordInformation(IdentExpression.this, col.information);
+                        }
+                        return onError.recordType(IdentExpression.this, state, TypeExp.fromDataType(IdentExpression.this, column.getType()));
                     }
                 };
-                return onError.recordType(this, state, TypeExp.fromDataType(this, column.getType()));
             }
         }
         if (namespace == null || namespace.equals("table"))
@@ -282,7 +340,6 @@ public class IdentExpression extends NonOperatorExpression
             FoundTable table = dataLookup.getTable(new TableId(idents.get(0)));
             if (table == null && Objects.equals(namespace, "table"))
             {
-                onError.recordError(this, StyledString.s("Unknown table: " + idents.get(0)));
                 return null;
             }
             else if (table != null)
@@ -305,7 +362,7 @@ public class IdentExpression extends NonOperatorExpression
                 else
                     includeRows = false;
                 FoundTable resolvedTable = table;
-                resolution = new Resolution()
+                return new Resolution()
                 {
                     @Override
                     public @ExpressionIdentifier String getFoundNamespace()
@@ -329,7 +386,7 @@ public class IdentExpression extends NonOperatorExpression
                     @Override
                     public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
                     {
-                        return saveDestination.disambiguate(getFoundNamespace(), ImmutableList.of(renames.tableId(new TableId(idents.get(0))).getRaw()), kind == ExpressionKind.PATTERN);
+                        return saveDestination.disambiguate(getFoundNamespace(), ImmutableList.of(renames.tableId(new TableId(idents.get(0))).getRaw()));
                     }
 
                     @Override
@@ -421,8 +478,13 @@ public class IdentExpression extends NonOperatorExpression
                     {
                         return false;
                     }
+
+                    @Override
+                    public @Nullable CheckedExp checkType(TypeState state, ErrorAndTypeRecorder onError)
+                    {
+                        return new CheckedExp(onError.recordType(IdentExpression.this, TypeExp.record(IdentExpression.this, fieldsAsList, true)), state);
+                    }
                 };
-                return new CheckedExp(onError.recordType(this, TypeExp.record(this, fieldsAsList, true)), state);
             }
         }
         if (namespace == null || namespace.equals("tag"))
@@ -431,15 +493,15 @@ public class IdentExpression extends NonOperatorExpression
             switch (idents.size())
             {
                 case 1:
-                    tag = state.getTypeManager().lookupTag(null, idents.get(0)).leftToNull();
+                    tag = typeManager.lookupTag(null, idents.get(0)).leftToNull();
                     break;
                 case 2:
-                    tag = state.getTypeManager().lookupTag(idents.get(0), idents.get(1)).leftToNull();
+                    tag = typeManager.lookupTag(idents.get(0), idents.get(1)).leftToNull();
                     break;
                 default:
                     if (Objects.equals(namespace, "tag"))
                     {
-                        onError.recordError(this, StyledString.s("Found " + idents.size() + " identifiers but tags should either have one (tag name) or two (type name, tag name)"));
+                        //onError.recordError(this, StyledString.s("Found " + idents.size() + " identifiers but tags should either have one (tag name) or two (type name, tag name)"));
                         return null;
                     }
                     break;
@@ -447,7 +509,7 @@ public class IdentExpression extends NonOperatorExpression
             if (tag != null)
             {
                 TagInfo tagFinal = tag;
-                resolution = new Resolution()
+                return new Resolution()
                 {
                     @Override
                     public boolean isVariable()
@@ -483,7 +545,7 @@ public class IdentExpression extends NonOperatorExpression
                     @Override
                     public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
                     {
-                        return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName(), kind == ExpressionKind.PATTERN);
+                        return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
                     }
 
                     @Override
@@ -504,17 +566,22 @@ public class IdentExpression extends NonOperatorExpression
                                 });
                         return result(value, state, ImmutableList.of());
                     }
+
+                    @Override
+                    public @Nullable CheckedExp checkType(TypeState state, ErrorAndTypeRecorder onError) throws InternalException
+                    {
+                        return onError.recordType(IdentExpression.this, state, IdentExpression.this.makeTagType(tagFinal));
+                    }
                 };
-                return onError.recordType(this, state, makeTagType(tagFinal));
             }
         }
         if (namespace == null || namespace.equals("function"))
         {
-            StandardFunctionDefinition functionDefinition = state.getFunctionLookup().lookup(idents.stream().collect(Collectors.joining("\\")));
+            StandardFunctionDefinition functionDefinition = functionLookup.lookup(idents.stream().collect(Collectors.joining("\\")));
             if (functionDefinition != null)
             {
-                Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> type = functionDefinition.getType(state.getTypeManager());
-                resolution = new Resolution()
+                Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> type = functionDefinition.getType(typeManager);
+                return new Resolution()
                 {
                     @Override
                     public boolean hideFromExplanation(boolean skipIfTrivial)
@@ -544,7 +611,7 @@ public class IdentExpression extends NonOperatorExpression
                     @Override
                     public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
                     {
-                        return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName(), kind == ExpressionKind.PATTERN);
+                        return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
                     }
 
                     @Override
@@ -573,18 +640,19 @@ public class IdentExpression extends NonOperatorExpression
                             ));
                         })), state);
                     }
+
+                    @Override
+                    public @Nullable CheckedExp checkType(TypeState state, ErrorAndTypeRecorder onError) throws InternalException
+                    {
+                        return onError.recordType(IdentExpression.this, state, type.getFirst());
+                    }
                 };
-                return onError.recordType(this, state, type.getFirst());
             }
         }
 
-        if (couldBeVar && kind == ExpressionKind.PATTERN)
+        if (couldBeVar /* && kind == ExpressionKind.PATTERN */)
         {
-            MutVar patternType = new MutVar(this);
-            state = state.add(idents.get(0), patternType, s -> onError.recordError(this, s));
-            if (state == null)
-                return null;
-            resolution = new Resolution()
+            return new Resolution()
             {
                 @Override
                 public boolean hideFromExplanation(boolean skipIfTrivial)
@@ -621,7 +689,7 @@ public class IdentExpression extends NonOperatorExpression
                 @Override
                 public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
                 {
-                    return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName(), kind == ExpressionKind.PATTERN);
+                    return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
                 }
 
                 @Override
@@ -629,26 +697,26 @@ public class IdentExpression extends NonOperatorExpression
                 {
                     throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
                 }
+
+                @Override
+                public @Nullable CheckedExp checkType(TypeState original, ErrorAndTypeRecorder onError) throws InternalException
+                {
+                    MutVar patternType = new MutVar(IdentExpression.this);
+                    @Nullable TypeState state = original.add(idents.get(0), patternType, s -> onError.recordError(this, s));
+                    if (state == null)
+                        return null;
+                    return onError.recordType(IdentExpression.this, state, patternType);
+                }
             };
-            return onError.recordType(this, state, patternType);
         }
 
 
         if (namespace != null && !ImmutableList.of("column", "table", "tag", "function").contains(namespace))
         {
-            onError.recordError(this, StyledString.s("Unknown namespace or identifier: \"" + namespace + "\".  Known namespaces: column, table, tag, function."));
+            //onError.recordError(this, StyledString.s("Unknown namespace or identifier: \"" + namespace + "\".  Known namespaces: column, table, tag, function."));
             return null;
         }
-        
-        // Didn't find it anywhere:
-        onError.recordError(this, StyledString.s("Unknown name: \"" + idents.stream().collect(Collectors.joining("\\")) + "\""));
-        @Nullable QuickFix<Expression> fix = dataLookup.getFixForIdent(namespace, idents, this);
-        if (fix != null)
-        {
-            onError.recordQuickFixes(this, ImmutableList.<QuickFix<Expression>>of(fix));
-        }
         return null;
-        
     }
 
     private Stream<@ExpressionIdentifier String> streamAllParts()
@@ -658,7 +726,6 @@ public class IdentExpression extends NonOperatorExpression
 
     private TypeExp makeTagType(TagInfo t) throws InternalException
     {
-        TagType<JellyType> tt = t.getTagInfo();
         Pair<TypeExp, ImmutableList<TypeExp>> taggedType = TypeExp.fromTagged(this, t.wholeType);
         return taggedType.getSecond().get(t.tagIndex);
     }
@@ -696,7 +763,7 @@ public class IdentExpression extends NonOperatorExpression
     public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
         // TODO not sure this should rely on type-checking for the renames
-        return toText(resolution == null ? saveDestination.disambiguate(namespace, idents, true) : resolution.save(saveDestination, renames));
+        return toText(resolution == null ? saveDestination.disambiguate(namespace, idents) : resolution.save(saveDestination, renames));
     }
 
     private static String toText(Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> namespaceAndIdents)
@@ -816,6 +883,8 @@ public class IdentExpression extends NonOperatorExpression
         {
             return null;
         }
+
+        public @Nullable CheckedExp checkType(TypeState state, ErrorAndTypeRecorder onError) throws InternalException;
     }
     
     // If parameter is IdentExpression with single ident and no namespace, return the ident
