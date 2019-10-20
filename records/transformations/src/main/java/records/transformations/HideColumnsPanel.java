@@ -6,7 +6,10 @@ import com.google.common.collect.Sets;
 import javafx.beans.binding.ObjectExpression;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -15,6 +18,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -50,7 +54,7 @@ import java.util.List;
  * two lists, and there's also a button to hide columns.
  */
 @OnThread(Tag.FXPlatform)
-public class HideColumnsPanel
+public final class HideColumnsPanel
 {
     private final ListView<ColumnId> hiddenColumns;
     private final ObservableList<ColumnId> allSourceColumns = FXCollections.observableArrayList();
@@ -64,6 +68,41 @@ public class HideColumnsPanel
         this.shownColumns = new ListView<>();
         Label shownMessage = new Label("Loading...");
         this.shownColumns.setPlaceholder(shownMessage);
+
+        Button add = new Button("Transfer");
+        add.getStyleClass().add("add-button");
+        add.setMinWidth(Region.USE_PREF_SIZE);
+        GridPane.setValignment(add, VPos.TOP);
+        GridPane.setMargin(add, new Insets(30, 0, 0, 0));
+        GridPane.setHalignment(add, HPos.CENTER);
+        
+        GridPane gridPane = new GridPane();
+        GridPane.setHgrow(shownColumns, Priority.ALWAYS);
+        GridPane.setHgrow(hiddenColumns, Priority.ALWAYS);
+        Label hiddenLabel = GUI.label("transformEditor.hide.hiddenColumns");
+        GridPane.setHalignment(hiddenLabel, HPos.CENTER);
+        GridPane.setMargin(hiddenLabel, new Insets(0, 0, 10, 0));
+        gridPane.add(hiddenLabel, 0, 0);
+        Label showingLabel = GUI.label("transformEditor.hide.srcColumns");
+        GridPane.setMargin(showingLabel, new Insets(0, 0, 10, 0));
+        GridPane.setHalignment(showingLabel, HPos.CENTER);
+        gridPane.add(showingLabel, 2, 0);
+        gridPane.add(hiddenColumns, 0, 1);
+        gridPane.add(add, 1, 1);
+        gridPane.add(shownColumns, 2, 1);
+        gridPane.getStyleClass().add("hide-columns-lists");
+        this.pane = gridPane;
+
+        ColumnConstraints column1 = new ColumnConstraints();
+        column1.setPercentWidth(40);
+        ColumnConstraints column2 = new ColumnConstraints();
+        column2.setPercentWidth(20);
+        ColumnConstraints column3 = new ColumnConstraints();
+        column3.setPercentWidth(40);
+        gridPane.getColumnConstraints().setAll(column1, column2, column3);
+        
+        updateButton(add);
+        
         Workers.onWorkerThread("Fetching column names", Workers.Priority.FETCH, () -> {
             Table src = srcId == null ? null : mgr.getSingleTableOrNull(srcId);
             if (src == null)
@@ -75,7 +114,10 @@ public class HideColumnsPanel
                 try
                 {
                     ImmutableList<ColumnId> columnIds = src.getData().getColumns().stream().map(c -> c.getName()).collect(ImmutableList.<ColumnId>toImmutableList());
-                    FXUtility.runFX(() -> allSourceColumns.setAll(columnIds));
+                    FXUtility.runFX(() -> {
+                        allSourceColumns.setAll(columnIds);
+                        shownMessage.setText("None");
+                    });
                 }
                 catch (InternalException | UserException e)
                 {
@@ -85,10 +127,8 @@ public class HideColumnsPanel
                 }
             }
         });
-        shownColumns.setItems(
-            allSourceColumns.filtered(c -> !hiddenColumns.getItems().contains(c))
-        );
-        
+        updateShownColumns();
+
         shownColumns.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         shownColumns.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ENTER)
@@ -99,24 +139,15 @@ public class HideColumnsPanel
         // Don't need to remove here because we already filter by the items from hiddenColumns
         FXUtility.enableDragFrom(shownColumns, "ColumnId", TransferMode.MOVE);
 
-
-        Button add = new Button("<< Hide");
-        add.getStyleClass().add("add-button");
-        add.setMinWidth(Region.USE_PREF_SIZE);
-        VBox addWrapper = new VBox(add);
-        addWrapper.getStyleClass().add("add-column-wrapper");
-
         this.shownColumns.getStyleClass().add("shown-columns-list-view");
         this.hiddenColumns.getStyleClass().add("hidden-columns-list-view");
-        this.hiddenColumns.setOnMouseClicked(e -> {
-            if (e.getClickCount() == 2)
+        FXUtility.listViewDoubleClick(hiddenColumns,c -> {
+            // Take copy to avoid problems with concurrent modifications:
+            List<ColumnId> selectedItems = new ArrayList<>(hiddenColumns.getSelectionModel().getSelectedItems());
+            if (!selectedItems.isEmpty())
             {
-                // Take copy to avoid problems with concurrent modifications:
-                List<ColumnId> selectedItems = new ArrayList<>(hiddenColumns.getSelectionModel().getSelectedItems());
-                if (!selectedItems.isEmpty())
-                {
-                    hiddenColumns.getItems().removeAll(selectedItems);
-                }
+                hiddenColumns.getItems().removeAll(selectedItems);
+                updateShownColumns();
             }
         });
 
@@ -129,7 +160,7 @@ public class HideColumnsPanel
                 @Nullable Object content = db.getContent(FXUtility.getTextDataFormat("ColumnId"));
                 if (content != null && content instanceof List)
                 {
-                    addAllItemsToHidden((List<ColumnId>) content);
+                    FXUtility.mouse(HideColumnsPanel.this).addAllItemsToHidden((List<ColumnId>) content);
                     return true;
                 }
                 return false;
@@ -138,30 +169,61 @@ public class HideColumnsPanel
 
         add.setOnAction(e -> {
             ObservableList<ColumnId> selectedItems = shownColumns.getSelectionModel().getSelectedItems();
-            addAllItemsToHidden(selectedItems);
-            //sortHiddenColumns();
+            if (!selectedItems.isEmpty())
+                addAllItemsToHidden(selectedItems);
+            else
+            {
+                selectedItems = hiddenColumns.getSelectionModel().getSelectedItems();
+                hiddenColumns.getItems().removeAll(selectedItems);
+                updateShownColumns();
+            }
         });
         FXUtility.listViewDoubleClick(shownColumns, c -> {
             addAllItemsToHidden(ImmutableList.of(c));
         });
+        
+        FXUtility.listen(shownColumns.getSelectionModel().getSelectedItems(), c -> {
+            if (!shownColumns.getSelectionModel().getSelectedItems().isEmpty())
+                hiddenColumns.getSelectionModel().clearSelection();
+            
+            updateButton(add);
+        });
+        FXUtility.listen(hiddenColumns.getSelectionModel().getSelectedItems(), c -> {
+            if (!hiddenColumns.getSelectionModel().getSelectedItems().isEmpty())
+                shownColumns.getSelectionModel().clearSelection();
+            updateButton(add);
+        });
+    }
 
-        GridPane gridPane = new GridPane();
+    private void updateButton(Button add)
+    {
+        if (!shownColumns.getSelectionModel().isEmpty())
+        {
+            add.setDisable(false);
+            add.setText("<< Hide");
+        }
+        else if (!hiddenColumns.getSelectionModel().isEmpty())
+        {
+            add.setDisable(false);
+            add.setText("Show >>");
+        }
+        else
+        {
+            add.setDisable(true);
+            add.setText("Transfer");
+        }
+    }
 
-        GridPane.setHgrow(shownColumns, Priority.ALWAYS);
-        GridPane.setHgrow(hiddenColumns, Priority.ALWAYS);
-        gridPane.add(GUI.label("transformEditor.hide.hiddenColumns"), 0, 0);
-        gridPane.add(GUI.label("transformEditor.hide.srcColumns"), 2, 0);
-        gridPane.add(hiddenColumns, 0, 1);
-        gridPane.add(addWrapper, 1, 1);
-        gridPane.add(shownColumns, 2, 1);
-        gridPane.getStyleClass().add("hide-columns-lists");
-        this.pane = gridPane;
+    private void updateShownColumns()
+    {
+        shownColumns.setItems(
+            allSourceColumns.filtered(c -> !hiddenColumns.getItems().contains(c))
+        );
     }
 
 
     @OnThread(Tag.FXPlatform)
-    @SuppressWarnings("initialization")
-    public void addAllItemsToHidden(@UnknownInitialization(Object.class) HideColumnsPanel this, List<ColumnId> items)
+    public void addAllItemsToHidden(List<ColumnId> items)
     {
         for (ColumnId selected : items)
         {
@@ -178,6 +240,8 @@ public class HideColumnsPanel
             int srcIndex = srcList.indexOf(col);
             return new Pair<Integer, ColumnId>(srcIndex, col);
         }, Pair.<Integer, ColumnId>comparator()));
+        
+        updateShownColumns();
     }
 
     public Node getNode()
