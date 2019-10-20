@@ -50,14 +50,16 @@ import static org.junit.Assert.*;
 
 public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerTrait
 {
+    // Returns true if the content should be unaltered after focus leaves
     @OnThread(Tag.Any)
-    default public void enterStructuredValue(DataType dataType, @Value Object value, Random r, boolean deleteAllFirst, boolean allowFieldShuffle) throws InternalException, UserException
+    default public boolean enterStructuredValue(DataType dataType, @Value Object value, Random r, boolean deleteAllFirst, boolean allowFieldShuffle) throws InternalException, UserException
     {
-        enterStructuredValue_Impl(dataType, value, r, deleteAllFirst, allowFieldShuffle, true);
+        return enterStructuredValue_Impl(dataType, value, r, deleteAllFirst, allowFieldShuffle, true);
     }
-    
+
+    // Returns true if the content should be unaltered after focus leaves
     @OnThread(Tag.Any)
-    default public void enterStructuredValue_Impl(DataType dataType, @Value Object value, Random r, boolean deleteAllFirst, boolean allowFieldShuffle, boolean topLevel) throws InternalException, UserException
+    default public boolean enterStructuredValue_Impl(DataType dataType, @Value Object value, Random r, boolean deleteAllFirst, boolean allowFieldShuffle, boolean topLevel) throws InternalException, UserException
     {
         final int DELAY = 1;
         
@@ -68,7 +70,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             push(KeyCode.DELETE);
             push(KeyCode.HOME);
         }
-        dataType.apply(new DataTypeVisitor<UnitType>()
+        return dataType.apply(new DataTypeVisitor<Boolean>()
         {
             // Can't paste as first item, in case unfocused
             boolean haveWritten = false;
@@ -90,27 +92,32 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             }
             
             @Override
-            public UnitType number(NumberInfo numberInfo) throws InternalException, UserException
+            public Boolean number(NumberInfo numberInfo) throws InternalException, UserException
             {                
                 String num = Utility.toBigDecimal(Utility.cast(value, Number.class)).toPlainString();
                 writeOrPaste(num);
-                return UnitType.UNIT;
+                return !topLevel;
             }
 
             @Override
-            public UnitType text() throws InternalException, UserException
+            public Boolean text() throws InternalException, UserException
             {
                 @Value String stringValue = Utility.cast(value, String.class);
                 if (topLevel && !stringValue.isEmpty() && !stringValue.startsWith("\"") && !stringValue.endsWith("\"") && r.nextBoolean())
+                {
                     writeOrPaste(stringValue);
+                    return false;
+                }
                 else
+                {
                     writeOrPaste("\"" + GrammarUtility.escapeChars(stringValue) + "\"");
-                return UnitType.UNIT;
+                    return true;
+                }
             }
 
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public UnitType date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public Boolean date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 TemporalAccessor t = (TemporalAccessor) value;
                 if (dateTimeInfo.getType().hasYearMonth())
@@ -159,27 +166,27 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                 
                 haveWritten = true;
                 
-                return UnitType.UNIT;
+                return true;
             }
 
             @Override
-            public UnitType bool() throws InternalException, UserException
+            public Boolean bool() throws InternalException, UserException
             {
                 // Delete the false which is a placeholder:
                 writeOrPaste(Boolean.toString(Utility.cast(value, Boolean.class)));
-                return UnitType.UNIT;
+                return true;
             }
             
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Boolean tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 writeOrPaste(DataTypeUtility.valueToString(dataType, value, null));
-                return UnitType.UNIT;
+                return true;
             }
 
             @Override
-            public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+            public Boolean record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
             {
                 write("(");
                 haveWritten = true;
@@ -204,12 +211,12 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                 }
 
                 write(")");
-                return UnitType.UNIT;
+                return true;
             }
 
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public UnitType array(@Nullable DataType inner) throws InternalException, UserException
+            public Boolean array(@Nullable DataType inner) throws InternalException, UserException
             {
                 if (inner != null)
                 {
@@ -228,7 +235,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                     }
                     write("]");
                 }
-                return UnitType.UNIT;
+                return true;
             }
         });
     }

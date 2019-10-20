@@ -188,8 +188,8 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             push(KeyCode.ESCAPE);
             push(KeyCode.ESCAPE);
             push(KeyCode.TAB);
-            enterStructuredValue(dataTypeAndDefault.getFirst(), dataTypeAndDefault.getSecond(), new Random(1), true, true);
-            defocusSTFAndCheck(true, () -> push(KeyCode.TAB));
+            boolean expectSame = enterStructuredValue(dataTypeAndDefault.getFirst(), dataTypeAndDefault.getSecond(), new Random(1), true, true);
+            defocusSTFAndCheck(expectSame, () -> push(KeyCode.TAB));
         }
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
@@ -517,7 +517,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         {
             assertFocusOwner("Choice: " + choice, textField);
         }
-        value.eitherEx(s -> {
+        boolean expectSame = value.eitherEx(s -> {
             if (needDeleteAll)
             {
                 push(TestUtil.ctrlCmd(), KeyCode.A);
@@ -526,13 +526,13 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             }
             write(s);
             assertFocusOwner("Writing complete invalid", textField);
-            return UnitType.UNIT;
+            return true;
         }, p -> {
-            enterStructuredValue(p.getFirst(), p.getSecond(), random, needDeleteAll, true);
+            boolean expectSameVal = enterStructuredValue(p.getFirst(), p.getSecond(), random, needDeleteAll, true);
             assertFocusOwner("Written structured value: " + DataTypeUtility.valueToString(p.getFirst(),p.getSecond(), null) + " after choice " + choice, textField);
-            return UnitType.UNIT;
+            return expectSameVal;
         });
-        defocusSTFAndCheck(value.eitherInt(s -> true, p -> !hasNumber(p.getFirst())), () -> {
+        defocusSTFAndCheck(expectSame && value.eitherInt(s -> true, p -> !hasNumber(p.getFirst())), () -> {
             // One to get rid of any code completion:
             //push(KeyCode.ESCAPE);
             // Enter to finish editing:
