@@ -133,11 +133,11 @@ public class IdentExpression extends NonOperatorExpression
 
     // Resolves all IdentExpression recursively throughout the
     // whole expression:
-    public static void resolveThroughout(Expression expression, ColumnLookup columnLookup, FunctionLookup functionLookup, TypeManager typeManager) throws InternalException, UserException
+    public static void resolveThroughout(@Recorded Expression expression, ColumnLookup columnLookup, FunctionLookup functionLookup, TypeManager typeManager) throws InternalException, UserException
     {
         Either<InternalException, UserException> ex = expression.visit(new ExpressionVisitorStream<Either<InternalException, UserException>>() {
             @Override
-            public Stream<Either<InternalException, UserException>> ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            public Stream<Either<InternalException, UserException>> ident(@Recorded IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
             {
                 try
                 {
@@ -187,7 +187,7 @@ public class IdentExpression extends NonOperatorExpression
             return resolution.checkType(original, onError);
     }
     
-    private @Nullable Resolution resolve(ColumnLookup dataLookup, FunctionLookup functionLookup, TypeManager typeManager) throws InternalException, UserException
+    private @Nullable Resolution resolve(@Recorded IdentExpression this, ColumnLookup dataLookup, FunctionLookup functionLookup, TypeManager typeManager) throws InternalException, UserException
     {
         // Possible lookup destinations, in order of preference:
         // (Preference is roughly how likely it is that the user defined it and wants it)
@@ -825,7 +825,7 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public <T> T visit(ExpressionVisitor<T> visitor)
+    public <T> T visit(@Recorded IdentExpression this, ExpressionVisitor<T> visitor)
     {
         return visitor.ident(this, namespace, idents, resolution != null && resolution.isVariable());
     }

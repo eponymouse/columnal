@@ -43,7 +43,7 @@ public interface ExpressionVisitor<T>
     // Singular name to avoid clash with Object.equals
     T equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern);
 
-    T ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable);
+    T ident(@Recorded IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable);
 
     T ifThenElse(IfThenElseExpression self, @Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression);
 
