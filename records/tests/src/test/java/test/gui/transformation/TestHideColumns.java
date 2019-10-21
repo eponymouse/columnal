@@ -42,8 +42,8 @@ public class TestHideColumns extends FXApplicationTest implements ScrollToTrait,
 {
     @Property(trials=3)
     @OnThread(Tag.Simulation)
-    public void testHideColumns(@When(seed=1L) @NumTables(minTables = 1, maxTables = 1) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
-            @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+    public void testHideColumns(@NumTables(minTables = 1, maxTables = 1) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
+            @From(GenRandom.class) Random r) throws Exception
     {
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original.mgr).get();
