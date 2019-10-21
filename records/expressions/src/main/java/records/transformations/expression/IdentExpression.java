@@ -184,7 +184,7 @@ public class IdentExpression extends NonOperatorExpression
             return null;
         }
         else
-            return resolution.checkType(original, kind, onError);
+            return resolution.checkType(this, original, kind, onError);
     }
     
     private @Nullable Resolution resolve(@Recorded IdentExpression this, ColumnLookup dataLookup, FunctionLookup functionLookup, TypeManager typeManager) throws InternalException, UserException
@@ -467,7 +467,7 @@ public class IdentExpression extends NonOperatorExpression
             return null;
         }
 
-        public @Nullable CheckedExp checkType(TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException;
+        public @Nullable CheckedExp checkType(@Recorded IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException;
     }
     
     // If parameter is IdentExpression with single ident and no namespace, return the ident
@@ -541,13 +541,13 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
-        public @Nullable CheckedExp checkType(TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
+        public @Nullable CheckedExp checkType(@Recorded IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
         {
             if (col.information != null)
             {
-                onError.recordInformation(IdentExpression.this, col.information);
+                onError.recordInformation(identExpression, col.information);
             }
-            return onError.recordType(IdentExpression.this, state, TypeExp.fromDataType(IdentExpression.this, column.getType()));
+            return onError.recordType(identExpression, state, TypeExp.fromDataType(IdentExpression.this, column.getType()));
         }
     }
 
@@ -680,7 +680,7 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
-        public @Nullable CheckedExp checkType(TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError)
+        public @Nullable CheckedExp checkType(@Recorded IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError)
         {
             return new CheckedExp(onError.recordType(IdentExpression.this, TypeExp.record(IdentExpression.this, fieldsAsList, true)), state);
         }
@@ -752,7 +752,7 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
-        public @Nullable CheckedExp checkType(TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
+        public @Nullable CheckedExp checkType(@Recorded IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
         {
             return onError.recordType(IdentExpression.this, state, IdentExpression.this.makeTagType(tagFinal));
         }
@@ -828,7 +828,7 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
-        public @Nullable CheckedExp checkType(TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
+        public @Nullable CheckedExp checkType(@Recorded IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
         {
             return onError.recordType(IdentExpression.this, state, type.getFirst());
         }
@@ -887,26 +887,26 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
-        public @Nullable CheckedExp checkType(TypeState original, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
+        public @Nullable CheckedExp checkType(@Recorded IdentExpression identExpression, TypeState original, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
         {
             List<TypeExp> varType = original.findVarType(idents.get(0));
             patternMatch = varType == null && expressionKind == ExpressionKind.PATTERN;
             if (varType != null)
             {
                 // If they're trying to use a variable with many types, it justifies us trying to unify all the types:
-                return onError.recordTypeAndError(IdentExpression.this, TypeExp.unifyTypes(varType), original);
+                return onError.recordTypeAndError(identExpression, TypeExp.unifyTypes(varType), original);
             }
             else if (patternMatch)
             {
-                MutVar patternType = new MutVar(IdentExpression.this);
+                MutVar patternType = new MutVar(identExpression);
                 @Nullable TypeState state = original.add(idents.get(0), patternType, s -> onError.recordError(this, s));
                 if (state == null)
                     return null;
-                return onError.recordType(IdentExpression.this, state, patternType);
+                return onError.recordType(identExpression, state, patternType);
             }
             else
             {
-                onError.recordError(IdentExpression.this, StyledString.s("Unknown variable: \"" + idents.get(0) + "\""));
+                onError.recordError(identExpression, StyledString.s("Unknown variable: \"" + idents.get(0) + "\""));
                 return null;
             }
         }
