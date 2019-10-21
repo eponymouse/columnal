@@ -184,7 +184,7 @@ public class IdentExpression extends NonOperatorExpression
             return null;
         }
         else
-            return resolution.checkType(original, onError);
+            return resolution.checkType(original, kind, onError);
     }
     
     private @Nullable Resolution resolve(@Recorded IdentExpression this, ColumnLookup dataLookup, FunctionLookup functionLookup, TypeManager typeManager) throws InternalException, UserException
@@ -196,64 +196,6 @@ public class IdentExpression extends NonOperatorExpression
         // - Table name (Scope: "table")
         // - Tag name (Scope: "tag")
         // - Standard function name (Scope: "function")
-
-        boolean couldBeVar = (namespace == null || Objects.equals(namespace, "var")) && idents.size() == 1;
-        List<TypeExp> varType = null; //couldBeVar ? state.findVarType(idents.get(0)) : null;
-
-        if (varType != null)
-        {
-            return new Resolution()
-            {
-                @Override
-                public boolean hideFromExplanation(boolean skipIfTrivial)
-                {
-                    return false;
-                }
-
-                @Override
-                public boolean isDeclarationInMatch()
-                {
-                    return false;
-                }
-
-                @Override
-                public boolean isVariable()
-                {
-                    return true;
-                }
-
-                @Override
-                public @ExpressionIdentifier String getFoundNamespace()
-                {
-                    return "var";
-                }
-
-                @Override
-                public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
-                {
-                    return idents;
-                }
-
-                @Override
-                public ValueResult getValue(EvaluateState state) throws InternalException
-                {
-                    return result(state.get(idents.get(0)), state);
-                }
-
-                @Override
-                public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
-                {
-                    return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
-                }
-
-                @Override
-                public @Nullable CheckedExp checkType(TypeState state, ErrorAndTypeRecorder onError) throws InternalException
-                {
-                    // If they're trying to use a variable with many types, it justifies us trying to unify all the types:
-                    return onError.recordTypeAndError(IdentExpression.this, TypeExp.unifyTypes(varType), state);
-                }
-            };
-        }
 
         if (namespace == null || namespace.equals("column"))
         {
@@ -278,61 +220,7 @@ public class IdentExpression extends NonOperatorExpression
             {
                 TableId resolvedTableName = col.tableCanBeOmitted ? null : col.tableId;
                 DataTypeValue column = col.dataTypeValue;
-                return new Resolution()
-                {
-                    @Override
-                    public boolean hideFromExplanation(boolean skipIfTrivial)
-                    {
-                        return skipIfTrivial;
-                    }
-
-                    @Override
-                    public ValueResult getValue(EvaluateState state) throws InternalException, UserException
-                    {
-                        if (column == null)
-                            throw new InternalException("Attempting to fetch value despite type check failure");
-                        return result(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(col.tableId, columnName, state.getRowIndex())), false);
-                    }
-
-                    @Override
-                    public boolean isVariable()
-                    {
-                        return false;
-                    }
-
-                    @Override
-                    public @ExpressionIdentifier String getFoundNamespace()
-                    {
-                        return "column";
-                    }
-
-                    @Override
-                    public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
-                    {
-                        return ImmutableList.of(col.tableId.getRaw(), columnName.getRaw());
-                    }
-
-                    @Override
-                    public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
-                    {
-                        final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(resolvedTableName, columnName, null);
-
-                        final @Nullable TableId renamedTableId = renamed.getFirst();
-                        ImmutableList<@ExpressionIdentifier String> tablePlusColumn = renamedTableId != null ? ImmutableList.of(renamedTableId.getRaw(), renamed.getSecond().getRaw()) : ImmutableList.of(renamed.getSecond().getRaw());
-
-                        return saveDestination.disambiguate(getFoundNamespace(), tablePlusColumn);
-                    }
-
-                    @Override
-                    public @Nullable CheckedExp checkType(TypeState state, ErrorAndTypeRecorder onError) throws InternalException
-                    {
-                        if (col.information != null)
-                        {
-                            onError.recordInformation(IdentExpression.this, col.information);
-                        }
-                        return onError.recordType(IdentExpression.this, state, TypeExp.fromDataType(IdentExpression.this, column.getType()));
-                    }
-                };
+                return new ColumnResolution(column, col, columnName, resolvedTableName);
             }
         }
         if (namespace == null || namespace.equals("table"))
@@ -362,129 +250,7 @@ public class IdentExpression extends NonOperatorExpression
                 else
                     includeRows = false;
                 FoundTable resolvedTable = table;
-                return new Resolution()
-                {
-                    @Override
-                    public @ExpressionIdentifier String getFoundNamespace()
-                    {
-                        return "table";
-                    }
-
-                    @Override
-                    public boolean hideFromExplanation(boolean skipIfTrivial)
-                    {
-                        // We never want to see a full table in an explanation
-                        return true;
-                    }
-
-                    @Override
-                    public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
-                    {
-                        return ImmutableList.of(resolvedTable.getTableId().getRaw());
-                    }
-
-                    @Override
-                    public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
-                    {
-                        return saveDestination.disambiguate(getFoundNamespace(), ImmutableList.of(renames.tableId(new TableId(idents.get(0))).getRaw()));
-                    }
-
-                    @Override
-                    public ValueResult getValue(EvaluateState state) throws InternalException, UserException
-                    {
-                        if (resolvedTable == null)
-                            throw new InternalException("Attempting to fetch value despite type check failure");
-                        final FoundTable resolvedTableNN = resolvedTable;
-                        final ImmutableMap<ColumnId, DataTypeValue> columnTypes = resolvedTableNN.getColumnTypes();
-                        @Value Record result = DataTypeUtility.value(new Record()
-                        {
-                            @Override
-                            public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
-                            {
-                                if (includeRows && name.equals(ROWS))
-                                    return DataTypeUtility.value(new RowsAsList());
-                                return DataTypeUtility.value(new ColumnAsList(Utility.getOrThrow(columnTypes, new ColumnId(name), () -> new InternalException("Cannot find column " + name))));
-                            }
-
-                            class RowsAsList extends ListEx
-                            {
-                                @Override
-                                public int size() throws InternalException, UserException
-                                {
-                                    return resolvedTableNN.getRowCount();
-                                }
-
-                                @Override
-                                public @Value Object get(int index) throws InternalException, UserException
-                                {
-                                    ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> rowValuesBuilder = ImmutableMap.builder();
-                                    for (Entry<ColumnId, DataTypeValue> entry : columnTypes.entrySet())
-                                    {
-                                        rowValuesBuilder.put(entry.getKey().getRaw(), entry.getValue().getCollapsed(index));
-                                    }
-                                    ImmutableMap<@ExpressionIdentifier String, @Value Object> rowValues = rowValuesBuilder.build();
-
-                                    return DataTypeUtility.value(new Record()
-                                    {
-                                        @Override
-                                        public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
-                                        {
-                                            return Utility.getOrThrow(rowValues, name, () -> new InternalException("Cannot find column " + name));
-                                        }
-
-                                        @Override
-                                        public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
-                                        {
-                                            return rowValues;
-                                        }
-                                    });
-                                }
-                            }
-
-                            class ColumnAsList extends ListEx
-                            {
-                                private final DataTypeValue dataTypeValue;
-
-                                ColumnAsList(DataTypeValue dataTypeValue)
-                                {
-                                    this.dataTypeValue = dataTypeValue;
-                                }
-
-                                @Override
-                                public int size() throws InternalException, UserException
-                                {
-                                    return resolvedTableNN.getRowCount();
-                                }
-
-                                @Override
-                                public @Value Object get(int index) throws InternalException, UserException
-                                {
-                                    return dataTypeValue.getCollapsed(index);
-                                }
-                            }
-
-                            @Override
-                            public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
-                            {
-                                return columnTypes.entrySet().stream().collect(ImmutableMap.<Entry<ColumnId, DataTypeValue>, @ExpressionIdentifier String, @Value Object>toImmutableMap(e -> e.getKey().getRaw(), e -> DataTypeUtility.value(new ColumnAsList(e.getValue()))));
-                            }
-                        });
-
-                        return result(result, state, ImmutableList.of(), ImmutableList.of(/*new ExplanationLocation(resolvedTableName, columnName)*/), true);
-                    }
-
-                    @Override
-                    public boolean isVariable()
-                    {
-                        return false;
-                    }
-
-                    @Override
-                    public @Nullable CheckedExp checkType(TypeState state, ErrorAndTypeRecorder onError)
-                    {
-                        return new CheckedExp(onError.recordType(IdentExpression.this, TypeExp.record(IdentExpression.this, fieldsAsList, true)), state);
-                    }
-                };
+                return new TableResolution(resolvedTable, includeRows, fieldsAsList);
             }
         }
         if (namespace == null || namespace.equals("tag"))
@@ -509,70 +275,7 @@ public class IdentExpression extends NonOperatorExpression
             if (tag != null)
             {
                 TagInfo tagFinal = tag;
-                return new Resolution()
-                {
-                    @Override
-                    public boolean isVariable()
-                    {
-                        return false;
-                    }
-
-                    @Override
-                    public @ExpressionIdentifier String getFoundNamespace()
-                    {
-                        return "tag";
-                    }
-
-                    @Override
-                    public boolean hideFromExplanation(boolean skipIfTrivial)
-                    {
-                        // Tags themselves are always trivial as they are literals
-                        return true;
-                    }
-
-                    @Override
-                    public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
-                    {
-                        return ImmutableList.of(tagFinal.getTypeName().getRaw(), tagFinal.getTagInfo().getName());
-                    }
-
-                    @Override
-                    public @Nullable TagInfo getResolvedConstructor()
-                    {
-                        return tagFinal;
-                    }
-
-                    @Override
-                    public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
-                    {
-                        return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
-                    }
-
-                    @Override
-                    public ValueResult getValue(EvaluateState state) throws InternalException, UserException
-                    {
-                        @Value Object value;
-                        if (tagFinal.getTagInfo().getInner() == null)
-                            value = new TaggedValue(tagFinal.tagIndex, null);
-                        else
-                            value = ValueFunction.value(new ValueFunction()
-                                {
-                                    @Override
-                                    public @OnThread(Tag.Simulation)
-                                    @Value Object _call() throws InternalException, UserException
-                                    {
-                                    return new TaggedValue(tagFinal.tagIndex, arg(0));
-                        }
-                                });
-                        return result(value, state, ImmutableList.of());
-                    }
-
-                    @Override
-                    public @Nullable CheckedExp checkType(TypeState state, ErrorAndTypeRecorder onError) throws InternalException
-                    {
-                        return onError.recordType(IdentExpression.this, state, IdentExpression.this.makeTagType(tagFinal));
-                    }
-                };
+                return new TagResolution(tagFinal);
             }
         }
         if (namespace == null || namespace.equals("function"))
@@ -581,138 +284,19 @@ public class IdentExpression extends NonOperatorExpression
             if (functionDefinition != null)
             {
                 Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> type = functionDefinition.getType(typeManager);
-                return new Resolution()
-                {
-                    @Override
-                    public boolean hideFromExplanation(boolean skipIfTrivial)
-                    {
-                        // Functions can't be explained anyway:
-                        return true;
-                    }
-
-                    @Override
-                    public boolean isVariable()
-                    {
-                        return false;
-                    }
-
-                    @Override
-                    public @ExpressionIdentifier String getFoundNamespace()
-                    {
-                        return "function";
-                    }
-
-                    @Override
-                    public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
-                    {
-                        return functionDefinition.getFullName();
-                    }
-
-                    @Override
-                    public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
-                    {
-                        return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
-                    }
-
-                    @Override
-                    public @Nullable StandardFunctionDefinition getResolvedFunctionDefinition()
-                    {
-                        return functionDefinition;
-                    }
-
-                    @Override
-                    public ValueResult getValue(EvaluateState state) throws InternalException, UserException
-                    {
-                        return result(ValueFunction.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
-                            Either<MutUnitVar, MutVar> typeExp = type.getSecond().get(s);
-                            if (typeExp == null)
-                                throw new InternalException("Type " + s + " cannot be found for function " + functionDefinition.getName());
-                            return typeExp.<Unit, DataType>mapBothEx(u -> {
-                                Unit concrete = u.toConcreteUnit();
-                                if (concrete == null)
-                                    throw new UserException("Could not resolve unit " + s + " to a concrete unit from " + u);
-                                return concrete;
-                            }, t -> t.toConcreteType(state.getTypeManager(), false).eitherEx(
-                                    l -> {
-                                        throw new UserException(StyledString.concat(StyledString.s("Ambiguous type for call to " + functionDefinition.getName() + " "), l.getErrorText()));
-                                    },
-                                    t2 -> t2
-                            ));
-                        })), state);
-                    }
-
-                    @Override
-                    public @Nullable CheckedExp checkType(TypeState state, ErrorAndTypeRecorder onError) throws InternalException
-                    {
-                        return onError.recordType(IdentExpression.this, state, type.getFirst());
-                    }
-                };
+                return new FunctionResolution(functionDefinition, type);
             }
         }
 
-        if (couldBeVar /* && kind == ExpressionKind.PATTERN */)
+        if ((namespace == null || namespace.equals("var")) && idents.size() == 1)
         {
-            return new Resolution()
-            {
-                @Override
-                public boolean hideFromExplanation(boolean skipIfTrivial)
-                {
-                    // We are a trivial match, no point saying _foo matched successfully if
-                    // we appear inside a tuple, etc.
-                    return skipIfTrivial;
-                }
-
-                @Override
-                public boolean isDeclarationInMatch()
-                {
-                    return true;
-                }
-
-                @Override
-                public boolean isVariable()
-                {
-                    return true;
-                }
-
-                @Override
-                public @ExpressionIdentifier String getFoundNamespace()
-                {
-                    return "var";
-                }
-
-                @Override
-                public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
-                {
-                    return idents;
-                }
-
-                @Override
-                public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
-                {
-                    return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
-                }
-
-                @Override
-                public ValueResult getValue(EvaluateState state) throws InternalException
-                {
-                    throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
-                }
-
-                @Override
-                public @Nullable CheckedExp checkType(TypeState original, ErrorAndTypeRecorder onError) throws InternalException
-                {
-                    MutVar patternType = new MutVar(IdentExpression.this);
-                    @Nullable TypeState state = original.add(idents.get(0), patternType, s -> onError.recordError(this, s));
-                    if (state == null)
-                        return null;
-                    return onError.recordType(IdentExpression.this, state, patternType);
-                }
-            };
+            return new VariableResolution();
         }
 
 
-        if (namespace != null && !ImmutableList.of("column", "table", "tag", "function").contains(namespace))
+        if (namespace != null && !ImmutableList.of("column", "table", "tag", "function", "var").contains(namespace))
         {
+            // TODO give more specific error during checkType:
             //onError.recordError(this, StyledString.s("Unknown namespace or identifier: \"" + namespace + "\".  Known namespaces: column, table, tag, function."));
             return null;
         }
@@ -762,7 +346,6 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        // TODO not sure this should rely on type-checking for the renames
         return toText(resolution == null ? saveDestination.disambiguate(namespace, idents) : resolution.save(saveDestination, renames));
     }
 
@@ -884,7 +467,7 @@ public class IdentExpression extends NonOperatorExpression
             return null;
         }
 
-        public @Nullable CheckedExp checkType(TypeState state, ErrorAndTypeRecorder onError) throws InternalException;
+        public @Nullable CheckedExp checkType(TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException;
     }
     
     // If parameter is IdentExpression with single ident and no namespace, return the ident
@@ -897,5 +480,435 @@ public class IdentExpression extends NonOperatorExpression
                 return identExpression.idents.get(0);
         }
         return null;
+    }
+
+    private class ColumnResolution implements Resolution
+    {
+        private final DataTypeValue column;
+        private final Expression.ColumnLookup.FoundColumn col;
+        private final ColumnId columnName;
+        private final @Nullable TableId resolvedTableName;
+
+        public ColumnResolution(DataTypeValue column, Expression.ColumnLookup.FoundColumn col, ColumnId columnName, @Nullable TableId resolvedTableName)
+        {
+            this.column = column;
+            this.col = col;
+            this.columnName = columnName;
+            this.resolvedTableName = resolvedTableName;
+        }
+
+        @Override
+        public boolean hideFromExplanation(boolean skipIfTrivial)
+        {
+            return skipIfTrivial;
+        }
+
+        @Override
+        public ValueResult getValue(EvaluateState state) throws InternalException, UserException
+        {
+            if (column == null)
+                throw new InternalException("Attempting to fetch value despite type check failure");
+            return result(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(col.tableId, columnName, state.getRowIndex())), false);
+        }
+
+        @Override
+        public boolean isVariable()
+        {
+            return false;
+        }
+
+        @Override
+        public @ExpressionIdentifier String getFoundNamespace()
+        {
+            return "column";
+        }
+
+        @Override
+        public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        {
+            return ImmutableList.of(col.tableId.getRaw(), columnName.getRaw());
+        }
+
+        @Override
+        public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+        {
+            final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(resolvedTableName, columnName, null);
+
+            final @Nullable TableId renamedTableId = renamed.getFirst();
+            ImmutableList<@ExpressionIdentifier String> tablePlusColumn = renamedTableId != null ? ImmutableList.of(renamedTableId.getRaw(), renamed.getSecond().getRaw()) : ImmutableList.of(renamed.getSecond().getRaw());
+
+            return saveDestination.disambiguate(getFoundNamespace(), tablePlusColumn);
+        }
+
+        @Override
+        public @Nullable CheckedExp checkType(TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
+        {
+            if (col.information != null)
+            {
+                onError.recordInformation(IdentExpression.this, col.information);
+            }
+            return onError.recordType(IdentExpression.this, state, TypeExp.fromDataType(IdentExpression.this, column.getType()));
+        }
+    }
+
+    private class TableResolution implements Resolution
+    {
+        private final FoundTable resolvedTable;
+        private final boolean includeRows;
+        private final HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsList;
+
+        public TableResolution(FoundTable resolvedTable, boolean includeRows, HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsList)
+        {
+            this.resolvedTable = resolvedTable;
+            this.includeRows = includeRows;
+            this.fieldsAsList = fieldsAsList;
+        }
+
+        @Override
+        public @ExpressionIdentifier String getFoundNamespace()
+        {
+            return "table";
+        }
+
+        @Override
+        public boolean hideFromExplanation(boolean skipIfTrivial)
+        {
+            // We never want to see a full table in an explanation
+            return true;
+        }
+
+        @Override
+        public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        {
+            return ImmutableList.of(resolvedTable.getTableId().getRaw());
+        }
+
+        @Override
+        public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+        {
+            return saveDestination.disambiguate(getFoundNamespace(), ImmutableList.of(renames.tableId(new TableId(idents.get(0))).getRaw()));
+        }
+
+        @Override
+        public ValueResult getValue(EvaluateState state) throws InternalException, UserException
+        {
+            if (resolvedTable == null)
+                throw new InternalException("Attempting to fetch value despite type check failure");
+            final FoundTable resolvedTableNN = resolvedTable;
+            final ImmutableMap<ColumnId, DataTypeValue> columnTypes = resolvedTableNN.getColumnTypes();
+            @Value Record result = DataTypeUtility.value(new Record()
+            {
+                @Override
+                public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
+                {
+                    if (includeRows && name.equals(ROWS))
+                        return DataTypeUtility.value(new RowsAsList());
+                    return DataTypeUtility.value(new ColumnAsList(Utility.getOrThrow(columnTypes, new ColumnId(name), () -> new InternalException("Cannot find column " + name))));
+                }
+
+                class RowsAsList extends ListEx
+                {
+                    @Override
+                    public int size() throws InternalException, UserException
+                    {
+                        return resolvedTableNN.getRowCount();
+                    }
+
+                    @Override
+                    public @Value Object get(int index) throws InternalException, UserException
+                    {
+                        ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> rowValuesBuilder = ImmutableMap.builder();
+                        for (Entry<ColumnId, DataTypeValue> entry : columnTypes.entrySet())
+                        {
+                            rowValuesBuilder.put(entry.getKey().getRaw(), entry.getValue().getCollapsed(index));
+                        }
+                        ImmutableMap<@ExpressionIdentifier String, @Value Object> rowValues = rowValuesBuilder.build();
+
+                        return DataTypeUtility.value(new Record()
+                        {
+                            @Override
+                            public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
+                            {
+                                return Utility.getOrThrow(rowValues, name, () -> new InternalException("Cannot find column " + name));
+                            }
+
+                            @Override
+                            public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
+                            {
+                                return rowValues;
+                            }
+                        });
+                    }
+                }
+
+                class ColumnAsList extends ListEx
+                {
+                    private final DataTypeValue dataTypeValue;
+
+                    ColumnAsList(DataTypeValue dataTypeValue)
+                    {
+                        this.dataTypeValue = dataTypeValue;
+                    }
+
+                    @Override
+                    public int size() throws InternalException, UserException
+                    {
+                        return resolvedTableNN.getRowCount();
+                    }
+
+                    @Override
+                    public @Value Object get(int index) throws InternalException, UserException
+                    {
+                        return dataTypeValue.getCollapsed(index);
+                    }
+                }
+
+                @Override
+                public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
+                {
+                    return columnTypes.entrySet().stream().collect(ImmutableMap.<Entry<ColumnId, DataTypeValue>, @ExpressionIdentifier String, @Value Object>toImmutableMap(e -> e.getKey().getRaw(), e -> DataTypeUtility.value(new ColumnAsList(e.getValue()))));
+                }
+            });
+
+            return result(result, state, ImmutableList.of(), ImmutableList.of(/*new ExplanationLocation(resolvedTableName, columnName)*/), true);
+        }
+
+        @Override
+        public boolean isVariable()
+        {
+            return false;
+        }
+
+        @Override
+        public @Nullable CheckedExp checkType(TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError)
+        {
+            return new CheckedExp(onError.recordType(IdentExpression.this, TypeExp.record(IdentExpression.this, fieldsAsList, true)), state);
+        }
+    }
+
+    private class TagResolution implements Resolution
+    {
+        private final TagInfo tagFinal;
+
+        public TagResolution(TagInfo tagFinal)
+        {
+            this.tagFinal = tagFinal;
+        }
+
+        @Override
+        public boolean isVariable()
+        {
+            return false;
+        }
+
+        @Override
+        public @ExpressionIdentifier String getFoundNamespace()
+        {
+            return "tag";
+        }
+
+        @Override
+        public boolean hideFromExplanation(boolean skipIfTrivial)
+        {
+            // Tags themselves are always trivial as they are literals
+            return true;
+        }
+
+        @Override
+        public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        {
+            return ImmutableList.of(tagFinal.getTypeName().getRaw(), tagFinal.getTagInfo().getName());
+        }
+
+        @Override
+        public @Nullable TagInfo getResolvedConstructor()
+        {
+            return tagFinal;
+        }
+
+        @Override
+        public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+        {
+            return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
+        }
+
+        @Override
+        public ValueResult getValue(EvaluateState state) throws InternalException, UserException
+        {
+            @Value Object value;
+            if (tagFinal.getTagInfo().getInner() == null)
+                value = new TaggedValue(tagFinal.tagIndex, null);
+            else
+                value = ValueFunction.value(new ValueFunction()
+                    {
+                        @Override
+                        public @OnThread(Tag.Simulation)
+                        @Value Object _call() throws InternalException, UserException
+                        {
+                        return new TaggedValue(tagFinal.tagIndex, arg(0));
+            }
+                    });
+            return result(value, state, ImmutableList.of());
+        }
+
+        @Override
+        public @Nullable CheckedExp checkType(TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
+        {
+            return onError.recordType(IdentExpression.this, state, IdentExpression.this.makeTagType(tagFinal));
+        }
+    }
+
+    private class FunctionResolution implements Resolution
+    {
+        private final StandardFunctionDefinition functionDefinition;
+        private final Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> type;
+
+        public FunctionResolution(StandardFunctionDefinition functionDefinition, Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> type)
+        {
+            this.functionDefinition = functionDefinition;
+            this.type = type;
+        }
+
+        @Override
+        public boolean hideFromExplanation(boolean skipIfTrivial)
+        {
+            // Functions can't be explained anyway:
+            return true;
+        }
+
+        @Override
+        public boolean isVariable()
+        {
+            return false;
+        }
+
+        @Override
+        public @ExpressionIdentifier String getFoundNamespace()
+        {
+            return "function";
+        }
+
+        @Override
+        public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        {
+            return functionDefinition.getFullName();
+        }
+
+        @Override
+        public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+        {
+            return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
+        }
+
+        @Override
+        public @Nullable StandardFunctionDefinition getResolvedFunctionDefinition()
+        {
+            return functionDefinition;
+        }
+
+        @Override
+        public ValueResult getValue(EvaluateState state) throws InternalException, UserException
+        {
+            return result(ValueFunction.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
+                Either<MutUnitVar, MutVar> typeExp = type.getSecond().get(s);
+                if (typeExp == null)
+                    throw new InternalException("Type " + s + " cannot be found for function " + functionDefinition.getName());
+                return typeExp.<Unit, DataType>mapBothEx(u -> {
+                    Unit concrete = u.toConcreteUnit();
+                    if (concrete == null)
+                        throw new UserException("Could not resolve unit " + s + " to a concrete unit from " + u);
+                    return concrete;
+                }, t -> t.toConcreteType(state.getTypeManager(), false).eitherEx(
+                        l -> {
+                            throw new UserException(StyledString.concat(StyledString.s("Ambiguous type for call to " + functionDefinition.getName() + " "), l.getErrorText()));
+                        },
+                        t2 -> t2
+                ));
+            })), state);
+        }
+
+        @Override
+        public @Nullable CheckedExp checkType(TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
+        {
+            return onError.recordType(IdentExpression.this, state, type.getFirst());
+        }
+    }
+
+    private class VariableResolution implements Resolution
+    {
+        private boolean patternMatch = false;
+
+        public VariableResolution()
+        {
+        }
+
+        @Override
+        public boolean hideFromExplanation(boolean skipIfTrivial)
+        {
+            return skipIfTrivial && patternMatch;
+        }
+
+        @Override
+        public boolean isDeclarationInMatch()
+        {
+            return patternMatch;
+        }
+
+        @Override
+        public boolean isVariable()
+        {
+            return true;
+        }
+
+        @Override
+        public @ExpressionIdentifier String getFoundNamespace()
+        {
+            return "var";
+        }
+
+        @Override
+        public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        {
+            return idents;
+        }
+
+        @Override
+        public ValueResult getValue(EvaluateState state) throws InternalException
+        {
+            if (patternMatch)
+                throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
+            return result(state.get(idents.get(0)), state);
+        }
+
+        @Override
+        public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+        {
+            return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
+        }
+
+        @Override
+        public @Nullable CheckedExp checkType(TypeState original, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
+        {
+            List<TypeExp> varType = original.findVarType(idents.get(0));
+            patternMatch = varType == null && expressionKind == ExpressionKind.PATTERN;
+            if (varType != null)
+            {
+                // If they're trying to use a variable with many types, it justifies us trying to unify all the types:
+                return onError.recordTypeAndError(IdentExpression.this, TypeExp.unifyTypes(varType), original);
+            }
+            else if (patternMatch)
+            {
+                MutVar patternType = new MutVar(IdentExpression.this);
+                @Nullable TypeState state = original.add(idents.get(0), patternType, s -> onError.recordError(this, s));
+                if (state == null)
+                    return null;
+                return onError.recordType(IdentExpression.this, state, patternType);
+            }
+            else
+            {
+                onError.recordError(IdentExpression.this, StyledString.s("Unknown variable: \"" + idents.get(0) + "\""));
+                return null;
+            }
+        }
     }
 }

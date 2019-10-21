@@ -127,23 +127,13 @@ public class PropLoadSaveExpression extends FXApplicationTest
             @Override
             public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
             {
-                return ExpressionUtil.columnsFromExpressions(Stream.of(expression));
+                return Stream.of();
             }
 
             @Override
             public Stream<TableId> getAvailableTableReferences()
             {
-                return expression.visit(new ExpressionVisitorStream<TableId>() {
-                    @Override
-                    public Stream<TableId> ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
-                    {
-                        if (Objects.equals(namespace, "table"))
-                        {
-                            return Stream.of(new TableId(idents.get(0)));
-                        }
-                        return super.ident(self, namespace, idents, isVariable);
-                    }
-                }).distinct();
+                return Stream.of();
             }
 
             @Override

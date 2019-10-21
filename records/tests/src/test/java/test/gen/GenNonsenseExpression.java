@@ -152,7 +152,10 @@ public class GenNonsenseExpression extends Generator<Expression>
         {
             // Call targets:
             ArrayList<ExSupplier<Expression>> items = new ArrayList<ExSupplier<Expression>>(Arrays.<ExSupplier<Expression>>asList(
-                () -> IdentExpression.tag(genTag(r).getSecond().getTagInfo().getName()),
+                () -> {
+                    TagInfo tagInfo = genTag(r).getSecond();
+                    return IdentExpression.tag(tagInfo.getTypeName().getRaw(), tagInfo.getTagInfo().getName());
+                },
                 () -> IdentExpression.function(r.choose(FunctionList.getAllFunctions(tableManager.getUnitManager())).getFullName()),
                 () -> {
                     while (true)
@@ -212,6 +215,9 @@ public class GenNonsenseExpression extends Generator<Expression>
         List<Pair<DataType, TagInfo>> list = new ArrayList<>();
         for (TaggedTypeDefinition vs : tableManager.getTypeManager().getKnownTaggedTypes().values())
         {
+            if (vs.getTaggedTypeName().getRaw().equals("Type") || vs.getTaggedTypeName().getRaw().equals("Unit"))
+                continue;
+            
             for (TagInfo info : vs._test_getTagInfos())
             {
                 Pair<DataType, TagInfo> dataTypeTagInfoPair = new Pair<>(vs.instantiate(Utility.mapListI(vs.getTypeArguments(), p -> p.getFirst() == TypeVariableKind.UNIT ? Either.<@NonNull Unit, @NonNull DataType>left(Unit.SCALAR) : Either.<@NonNull Unit, @NonNull DataType>right(DataType.TEXT)), tableManager.getTypeManager()), info);

@@ -143,9 +143,11 @@ public class PropTypecheckIndividual
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public <T> T visit(ExpressionVisitor<T> visitor)
         {
-            throw new RuntimeException("DummyExpression.visit");
+            // Hack -- we know we should only be called with Stream visitors:
+            return (T)Stream.of();
         }
     }
 
@@ -437,9 +439,11 @@ public class PropTypecheckIndividual
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public <T> T visit(ExpressionVisitor<T> visitor)
         {
-            throw new RuntimeException("DummyPatternMatch.visit");
+            // Hack -- we know we should only be called with Stream visitors:
+            return (T)Stream.of();
         }
     }
     

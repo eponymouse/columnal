@@ -606,15 +606,23 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                     {
                         firstIdentUsed -= 1;
                     }
+                    else if (matchCount == 1)
+                    {
+                        // Match just one name
+                        break increaseScoping;
+                    }
                     else
                     {
+                        // Match nothing; preserve fully as-is:
+                        usingNamespace = true;
+                        firstIdentUsed = 0;
                         break increaseScoping;
                     }
                 }
                 return new Pair<>(usingNamespace ? namespace : null, idents.subList(firstIdentUsed, idents.size()));
             }
 
-            private boolean couldMatch(ImmutableList<@ExpressionIdentifier String> currentCandidateScoping, ImmutableList<@ExpressionIdentifier String> fullName)
+            private static boolean couldMatch(ImmutableList<@ExpressionIdentifier String> currentCandidateScoping, ImmutableList<@ExpressionIdentifier String> fullName)
             {
                 if (currentCandidateScoping.size() > fullName.size())
                     return false; // Already scoped enough to avoid the confusion
