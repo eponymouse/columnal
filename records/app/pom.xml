@@ -270,6 +270,12 @@
                                 <include>*_versioned.*</include>
                             </includes>
                         </fileset>
+                        <fileset>
+                            <directory>../installers/linux</directory>
+                            <includes>
+                                <include>**</include>
+                            </includes>
+                        </fileset>
                     </filesets>
                 </configuration>
             </plugin>
@@ -761,6 +767,82 @@
                                 <exec dir="../installers/mac_dmg" executable="scp" failonerror="true">
                                     <arg line="columnal-${columnal.version}.dmg"/>
                                     <arg line="neil@columnal.xyz:/home/neil/columnal-live/download/columnal-${columnal.version}.dmg"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        </build>
+    </profile>
+        <profile>
+            <id>package_linux</id>
+        <activation>
+            <os>
+                <family>linux</family>
+            </os>
+        </activation>
+        <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>build-linux-app</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <property file="../installers/tools_${os.name}.properties"/>
+                                <property file="../installers/package.properties"/>
+                                <property name="compile_classpath" refid="maven.compile.classpath"/>
+
+                                <mkdir dir="../installers/linux/totar"/>
+
+                                <copy file="target/app-1.0-SNAPSHOT-jar-with-dependencies.jar" tofile="target/columnal-${columnal.version}.jar"/>
+
+                                <java fork="true" classname="com.badlogicgames.packr.Packr" dir="../" failonerror="true">
+                                    <classpath refid="maven.compile.classpath"/>
+                                    <arg value="--platform"/><arg value="linux64"/>
+                                    <arg value="--jdk"/><arg value="${jdk_location}"/>
+                                    <arg value="--executable"/><arg value="columnal"/>
+                                    <arg value="--vmargs"/><arg value="Dcolumnal.version=${columnal.version}"/><arg value="Dcolumnal.production=true"/>
+                                    <arg value="--classpath"/><arg value="app/target/columnal-${columnal.version}.jar"/>
+                                    <arg value="--mainclass"/><arg value="records.gui.Main"/>
+                                    <arg value="--output"/><arg value="installers/linux/totar"/>
+                                </java>
+
+                                <copy todir="../installers/linux/totar" file="../installers/licence.rtf"/>
+
+                                <tar compression="gzip" longfile="posix" destfile="../installers/linux/columnal-${columnal.version}.tar.gz">
+                                  <tarfileset dir="../installers/linux/totar">
+                                     <include name="**"/>
+                                     <exclude name="columnal"/>
+                                  </tarfileset>
+                                  <tarfileset dir="../installers/linux/totar" filemode="550">
+                                     <include name="columnal"/>
+                                  </tarfileset>
+                                </tar>
+
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <!-- Must be run manually using mvn antrun:run@publish-tar -->
+                        <id>publish-tar</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <property file="../installers/tools_${os.name}.properties"/>
+                                <property file="../installers/package.properties"/>
+
+                                <exec dir="../installers/linux" executable="scp" failonerror="true">
+                                    <arg line="columnal-${columnal.version}.tar.gz"/>
+                                    <arg line="neil@columnal.xyz:/home/neil/columnal-live/download/columnal-${columnal.version}.tar.gz"/>
                                 </exec>
                             </target>
                         </configuration>
