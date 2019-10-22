@@ -40,20 +40,20 @@ public class FieldAccessExpression extends Expression
         this.fieldName = fieldName;
     }
 
-    public static Expression fromBinary(Expression lhs, Expression rhs)
+    @SuppressWarnings("recorded")
+    public static @Recorded Expression fromBinary(@Recorded Expression lhs, @Recorded Expression rhs)
     {
         return rhs.visit(new ExpressionVisitorFlat<Expression>()
         {
             @Override
             protected Expression makeDef(Expression rhs)
             {
-                return new InvalidOperatorExpression(ImmutableList.of(lhs, new InvalidIdentExpression("#"), rhs));
+                return new InvalidOperatorExpression(ImmutableList.<@Recorded Expression>of(lhs, new InvalidIdentExpression("#"), rhs));
             }
 
             @Override
             public Expression ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
             {
-                
                 return new FieldAccessExpression(lhs, idents.get(idents.size() - 1));
             }
         });
