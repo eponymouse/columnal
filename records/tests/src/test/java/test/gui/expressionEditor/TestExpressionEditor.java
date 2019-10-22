@@ -607,7 +607,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testRecordList() throws Exception
     {
-        testSimple("@call function\\\\conversion\\from text(@call function\\\\text\\replace many([(find:\"nw\",replace:\"0\"),(find:\"~\",replace:\"-\")],Wind m s))");
+        testSimple("@call function\\\\conversion\\from text(@call function\\\\text\\replace many([(find:\"nw\",replace:\"0\"),(find:\"~\",replace:\"-\")],column\\\\Wind m s))");
     }
 
     @Test
