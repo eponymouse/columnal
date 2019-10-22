@@ -95,6 +95,11 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Property(trials = 10)
     public void testEntry(@When(satisfies = "#_.expressionLength < 500") @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @From(GenRandom.class) Random r) throws Exception
     {
+        testEntry_Impl(expressionValue, r);
+    }
+
+    private void testEntry_Impl(ExpressionValue expressionValue, Random r, String... qualifiedIdentsToEnterInFull) throws Exception
+    {
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet);
         try
         {
@@ -115,7 +120,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             // Focus expression editor:
             push(KeyCode.TAB);
             Log.normal("Entering expression:\n" + expressionValue.expression.toString() + "\n");
-            enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), expressionValue.expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
+            enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), expressionValue.expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r, qualifiedIdentsToEnterInFull);
             
             // We check this twice, once for original entry, once for no-op edit:
             for (int i = 0; i < 2; i++)
@@ -227,13 +232,13 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
 
     // TODO test that nonsense is preserved after load (which will change it all to invalid) -> save -> load (which should load invalid version)
 
-    private void testSimple(String expressionSrc) throws Exception
+    private void testSimpleQ(String expressionSrc, String... qualifiedIdentsToEnterInFull) throws Exception
     {
         DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
         Expression expression = TestUtil.parseExpression(expressionSrc, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         
         // Check once using structured entry:
-        testEntry(new ExpressionValue(
+        testEntry_Impl(new ExpressionValue(
             DataType.BOOLEAN, // Type is unused here
             ImmutableList.of(),
             dummyManager.getTypeManager(),
@@ -241,7 +246,12 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             new KnownLengthRecordSet(ImmutableList.of(rs -> new MemoryBooleanColumn(rs, new ColumnId("Col1"), ImmutableList.of(), true)), 0),
             expression,
             null
-        ), new Random(0));
+        ), new Random(0), qualifiedIdentsToEnterInFull);
+    }
+
+    private void testSimple(String expressionSrc) throws Exception
+    {
+        testSimpleQ(expressionSrc);
     }
 
     private void testSimple(String expressionSrc, String plainEntry) throws Exception
@@ -607,7 +617,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testRecordList() throws Exception
     {
-        testSimple("@call function\\\\conversion\\from text(@call function\\\\text\\replace many([(find:\"nw\",replace:\"0\"),(find:\"~\",replace:\"-\")],column\\\\Wind m s))");
+        testSimpleQ("@call function\\\\conversion\\from text(@call function\\\\text\\replace many([(find:\"nw\",replace:\"0\"),(find:\"~\",replace:\"-\")],column\\\\Wind m s))", "column\\\\Wind m s");
     }
 
     @Test
