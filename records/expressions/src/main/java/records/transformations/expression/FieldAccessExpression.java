@@ -32,12 +32,31 @@ import java.util.stream.Stream;
 public class FieldAccessExpression extends Expression
 {
     private final @Recorded Expression lhsRecord;
-    private final @Recorded Expression fieldName;
+    private final @ExpressionIdentifier String fieldName;
 
-    public FieldAccessExpression(@Recorded Expression lhsRecord, @Recorded Expression fieldName)
+    public FieldAccessExpression(@Recorded Expression lhsRecord, @ExpressionIdentifier String fieldName)
     {
         this.lhsRecord = lhsRecord;
         this.fieldName = fieldName;
+    }
+
+    public static Expression fromBinary(Expression lhs, Expression rhs)
+    {
+        return rhs.visit(new ExpressionVisitorFlat<Expression>()
+        {
+            @Override
+            protected Expression makeDef(Expression rhs)
+            {
+                return new InvalidOperatorExpression(ImmutableList.of(lhs, new InvalidIdentExpression("#"), rhs));
+            }
+
+            @Override
+            public Expression ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            {
+                
+                return new FieldAccessExpression(lhs, idents.get(idents.size() - 1));
+            }
+        });
     }
 
     @Override
@@ -49,17 +68,15 @@ public class FieldAccessExpression extends Expression
         CheckedExp lhsChecked = lhsRecord.check(dataLookup, typeState, ExpressionKind.EXPRESSION, locationInfo, onError);
         if (lhsChecked == null)
             return null;
-        
-        @ExpressionIdentifier String fieldText = IdentExpression.getSingleIdent(fieldName);
-        
-        if (fieldText == null)
+
+        if (fieldName == null)
         {
             onError.recordError(fieldName, StyledString.s("Field name must be a valid name by itself"));
             return null;
         }
         
         @Recorded TypeExp fieldType = onError.recordTypeNN(this, new MutVar(this));
-        TypeExp recordType = TypeExp.record(this, ImmutableMap.of(fieldText, fieldType), false);
+        TypeExp recordType = TypeExp.record(this, ImmutableMap.<@ExpressionIdentifier String, TypeExp>of(fieldName, fieldType), false);
         
         if (onError.recordError(this, TypeExp.unifyTypes(recordType, lhsChecked.typeExp)) == null)
             return null;
@@ -73,10 +90,9 @@ public class FieldAccessExpression extends Expression
         ValueResult lhsResult = lhsRecord.calculateValue(state);
         @Value Record record = Utility.cast(lhsResult.value, Record.class);
 
-        @ExpressionIdentifier String fieldText = IdentExpression.getSingleIdent(fieldName);
-        if (fieldText == null)
+        if (fieldName == null)
             throw new InternalException("Field is not single name despite being after type-check: " + fieldName.toString());
-        return result(record.getField(fieldText), state, ImmutableList.of(lhsResult));
+        return result(record.getField(fieldName), state, ImmutableList.of(lhsResult));
     }
 
     @Override
@@ -88,7 +104,7 @@ public class FieldAccessExpression extends Expression
     @Override
     public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String content = lhsRecord.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + "#" + fieldName.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames);
+        String content = lhsRecord.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + "#" + fieldName;
         if (surround == BracketedStatus.NEED_BRACKETS)
             return "(" + content + ")";
         else
@@ -155,6 +171,6 @@ public class FieldAccessExpression extends Expression
         if (this == toReplace)
             return replaceWith;
         else
-            return new FieldAccessExpression(lhsRecord.replaceSubExpression(toReplace, replaceWith), fieldName.replaceSubExpression(toReplace, replaceWith));
+            return new FieldAccessExpression(lhsRecord.replaceSubExpression(toReplace, replaceWith), fieldName);
     }
 }

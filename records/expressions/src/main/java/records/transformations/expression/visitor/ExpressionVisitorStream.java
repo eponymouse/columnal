@@ -230,9 +230,9 @@ public class ExpressionVisitorStream<T> implements ExpressionVisitor<Stream<T>>
     }
 
     @Override
-    public Stream<T> field(FieldAccessExpression self, @Recorded Expression lhsRecord, @Recorded Expression fieldName)
+    public Stream<T> field(FieldAccessExpression self, @Recorded Expression lhsRecord, String fieldName)
     {
-        return Stream.<T>concat(lhsRecord.<Stream<T>>visit(this), fieldName.<Stream<T>>visit(this));
+        return lhsRecord.<Stream<T>>visit(this);
     }
 
     protected Stream<T> visitPattern(Pattern pattern)

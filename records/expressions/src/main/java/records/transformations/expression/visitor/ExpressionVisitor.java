@@ -83,5 +83,5 @@ public interface ExpressionVisitor<T>
 
     T record(RecordExpression self, ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members);
 
-    T field(FieldAccessExpression self, @Recorded Expression lhsRecord, @Recorded Expression fieldName);
+    T field(FieldAccessExpression self, @Recorded Expression lhsRecord, String fieldName);
 }

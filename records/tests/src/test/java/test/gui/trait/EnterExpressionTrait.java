@@ -35,6 +35,7 @@ import utility.UnitType;
 import utility.Utility;
 
 import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -58,7 +59,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
     }
     
     @OnThread(Tag.Any)
-    public default void enterExpression(TypeManager typeManager, Expression expression, EntryBracketStatus bracketedStatus, Random r)
+    public default void enterExpression(TypeManager typeManager, Expression expression, EntryBracketStatus bracketedStatus, Random r, String... qualifiedIdentsToEnterInFull)
     {
         expression.visit(new ExpressionVisitorFlat<UnitType>()
         {
@@ -319,12 +320,21 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
                     write(namespace + "\\\\", DELAY);
                 }
                 write(idents.stream().collect(Collectors.joining("\\")), DELAY);*/
-                // A hack!
-                if (idents.size() >= 2 && idents.get(idents.size() - 1).equals("Single"))
-                    write(idents.get(idents.size() - 2) + "\\", DELAY);
-                
-                
-                write(idents.get(idents.size() - 1), DELAY);
+                String full = (namespace == null ? "" : namespace + "\\\\") + idents.stream().collect(Collectors.joining("\\"));
+                if (Arrays.asList(qualifiedIdentsToEnterInFull).contains(full))
+                {
+                    write(full, DELAY);
+                }
+                else
+                {
+
+                    // A hack!
+                    if (idents.size() >= 2 && idents.get(idents.size() - 1).equals("Single"))
+                        write(idents.get(idents.size() - 2) + "\\", DELAY);
+
+
+                    write(idents.get(idents.size() - 1), DELAY);
+                }
                 
                 return UnitType.UNIT;
             }
@@ -478,7 +488,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType field(FieldAccessExpression self, Expression lhsRecord, Expression fieldName)
+            public UnitType field(FieldAccessExpression self, Expression lhsRecord, String fieldName)
             {
                 if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
                 {
@@ -487,7 +497,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
                 }
                 enterExpression(typeManager, lhsRecord, EntryBracketStatus.SUB_EXPRESSION, r);
                 write("#");
-                enterExpression(typeManager, fieldName, EntryBracketStatus.SUB_EXPRESSION, r);
+                write (fieldName);
                 if (bracketedStatus == EntryBracketStatus.SUB_EXPRESSION)
                     write(")");
                 return UnitType.UNIT;

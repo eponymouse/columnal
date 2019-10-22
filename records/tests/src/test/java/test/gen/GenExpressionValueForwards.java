@@ -740,7 +740,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                 else
                 {
                     // Use #rows
-                    return new Pair<List<@Value Object>, Expression>(value, new FieldAccessExpression(new CallExpression(functionLookup, "element", new FieldAccessExpression(IdentExpression.table(tableId.getRaw()), IdentExpression.load("rows")), IdentExpression.load("row")), IdentExpression.load(name.getRaw())));
+                    return new Pair<List<@Value Object>, Expression>(value, new FieldAccessExpression(new CallExpression(functionLookup, "element", new FieldAccessExpression(IdentExpression.table(tableId.getRaw()), "rows"), IdentExpression.load("row")), name.getRaw()));
                 }
             }
         };

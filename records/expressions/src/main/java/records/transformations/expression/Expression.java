@@ -575,7 +575,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
             {
                 // Need to keep adding idents backwards from end until it is not ambigious:
-                boolean usingNamespace = false; //isPattern && !Objects.equals(namespace, "var");
+                boolean usingNamespace = false;
                 int firstIdentUsed = idents.size() - 1;
                 // Can only increase scoping if we're not using the namespace or are not yet using all idents
                 increaseScoping: while (!usingNamespace || firstIdentUsed > 0)
@@ -614,7 +614,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                     else
                     {
                         // Match nothing; preserve fully as-is:
-                        usingNamespace = true;
+                        usingNamespace = !Objects.equals(namespace, "var");
                         firstIdentUsed = 0;
                         break increaseScoping;
                     }

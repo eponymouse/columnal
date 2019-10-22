@@ -619,7 +619,7 @@ public class ExpressionUtil
         @Override
         public Expression visitFieldAccessExpression(FieldAccessExpressionContext ctx)
         {
-            return new FieldAccessExpression(visitExpression(ctx.expression()), IdentExpression.load(IdentifierUtility.fromParsed(ctx.ident())));
+            return new FieldAccessExpression(visitExpression(ctx.expression()), IdentifierUtility.fromParsed(ctx.ident()));
         }
 
         @Override
@@ -1006,7 +1006,9 @@ public class ExpressionUtil
         @Override
         public Expression visitFieldAccessExpression(ExpressionParser2.FieldAccessExpressionContext ctx)
         {
-            return new FieldAccessExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+            Expression lhs = visitExpression(ctx.expression(0));
+            Expression rhs = visitExpression(ctx.expression(1));
+            return FieldAccessExpression.fromBinary(lhs, rhs);
         }
 
         @Override

@@ -128,7 +128,7 @@ public class IdentExpression extends NonOperatorExpression
     @SuppressWarnings("recorded") // Only used for items which will be reloaded anyway
     public static @Recorded Expression makeEntireColumnReference(TableId tableId, ColumnId columnId)
     {
-        return new FieldAccessExpression(IdentExpression.table(tableId.getRaw()), load(columnId.getRaw()));
+        return new FieldAccessExpression(IdentExpression.table(tableId.getRaw()), columnId.getRaw());
     }
 
     // Resolves all IdentExpression recursively throughout the

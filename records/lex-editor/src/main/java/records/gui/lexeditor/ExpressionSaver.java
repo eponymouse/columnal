@@ -816,7 +816,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     @SuppressWarnings("recorded")
     final ImmutableList<ImmutableList<OperatorExpressionInfo>> OPERATORS = ImmutableList.<ImmutableList<OperatorExpressionInfo>>of(
         ImmutableList.<OperatorExpressionInfo>of(
-            new OperatorExpressionInfo(Op.FIELD_ACCESS, (lhs, _n, rhs) -> new FieldAccessExpression(lhs, rhs))
+            new OperatorExpressionInfo(Op.FIELD_ACCESS, (lhs, _n, rhs) -> FieldAccessExpression.fromBinary(lhs, rhs))
         ),
             
             
