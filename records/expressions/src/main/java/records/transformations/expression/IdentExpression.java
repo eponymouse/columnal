@@ -290,7 +290,7 @@ public class IdentExpression extends NonOperatorExpression
 
         if ((namespace == null || namespace.equals("var")) && idents.size() == 1)
         {
-            return new VariableResolution();
+            return new VariableResolution(Objects.equals(namespace, "var"));
         }
 
 
@@ -450,9 +450,6 @@ public class IdentExpression extends NonOperatorExpression
 
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException;
         
-        public @ExpressionIdentifier String getFoundNamespace();
-        public ImmutableList<@ExpressionIdentifier String> getFoundFullName();
-        
         public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames);
 
         public boolean isVariable();
@@ -517,14 +514,12 @@ public class IdentExpression extends NonOperatorExpression
             return false;
         }
 
-        @Override
-        public @ExpressionIdentifier String getFoundNamespace()
+        private @ExpressionIdentifier String getFoundNamespace()
         {
             return "column";
         }
 
-        @Override
-        public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        private ImmutableList<@ExpressionIdentifier String> getFoundFullName()
         {
             return ImmutableList.of(col.tableId.getRaw(), columnName.getRaw());
         }
@@ -564,8 +559,7 @@ public class IdentExpression extends NonOperatorExpression
             this.fieldsAsList = fieldsAsList;
         }
 
-        @Override
-        public @ExpressionIdentifier String getFoundNamespace()
+        private @ExpressionIdentifier String getFoundNamespace()
         {
             return "table";
         }
@@ -577,8 +571,7 @@ public class IdentExpression extends NonOperatorExpression
             return true;
         }
 
-        @Override
-        public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        private ImmutableList<@ExpressionIdentifier String> getFoundFullName()
         {
             return ImmutableList.of(resolvedTable.getTableId().getRaw());
         }
@@ -701,8 +694,7 @@ public class IdentExpression extends NonOperatorExpression
             return false;
         }
 
-        @Override
-        public @ExpressionIdentifier String getFoundNamespace()
+        private @ExpressionIdentifier String getFoundNamespace()
         {
             return "tag";
         }
@@ -714,8 +706,7 @@ public class IdentExpression extends NonOperatorExpression
             return true;
         }
 
-        @Override
-        public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        private ImmutableList<@ExpressionIdentifier String> getFoundFullName()
         {
             return ImmutableList.of(tagFinal.getTypeName().getRaw(), tagFinal.getTagInfo().getName());
         }
@@ -782,14 +773,12 @@ public class IdentExpression extends NonOperatorExpression
             return false;
         }
 
-        @Override
-        public @ExpressionIdentifier String getFoundNamespace()
+        private @ExpressionIdentifier String getFoundNamespace()
         {
             return "function";
         }
 
-        @Override
-        public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        private ImmutableList<@ExpressionIdentifier String> getFoundFullName()
         {
             return functionDefinition.getFullName();
         }
@@ -836,10 +825,12 @@ public class IdentExpression extends NonOperatorExpression
 
     private class VariableResolution implements Resolution
     {
+        private boolean explicitVarNamespace;
         private boolean patternMatch = false;
 
-        public VariableResolution()
+        public VariableResolution(boolean explicitVarNamespace)
         {
+            this.explicitVarNamespace = explicitVarNamespace;
         }
 
         @Override
@@ -860,14 +851,12 @@ public class IdentExpression extends NonOperatorExpression
             return true;
         }
 
-        @Override
-        public @ExpressionIdentifier String getFoundNamespace()
+        private @Nullable @ExpressionIdentifier String getFoundNamespace()
         {
-            return "var";
+            return explicitVarNamespace ? "var" : null;
         }
 
-        @Override
-        public ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        private ImmutableList<@ExpressionIdentifier String> getFoundFullName()
         {
             return idents;
         }
@@ -893,11 +882,17 @@ public class IdentExpression extends NonOperatorExpression
             patternMatch = varType == null && expressionKind == ExpressionKind.PATTERN;
             if (varType != null)
             {
+                // Now confident it's a var:
+                explicitVarNamespace = true;
+                
                 // If they're trying to use a variable with many types, it justifies us trying to unify all the types:
                 return onError.recordTypeAndError(identExpression, TypeExp.unifyTypes(varType), original);
             }
             else if (patternMatch)
             {
+                // Assume it's a var:
+                explicitVarNamespace = true;
+                
                 MutVar patternType = new MutVar(identExpression);
                 @Nullable TypeState state = original.add(idents.get(0), patternType, s -> onError.recordError(this, s));
                 if (state == null)
