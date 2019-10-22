@@ -479,9 +479,9 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType hasType(@Recorded HasTypeExpression self, @Recorded Expression lhsVar, @Recorded Expression rhsType)
+            public UnitType hasType(@Recorded HasTypeExpression self, @ExpressionIdentifier String lhsVar, @Recorded Expression rhsType)
             {
-                enterExpression(typeManager, lhsVar, EntryBracketStatus.SUB_EXPRESSION, r, qualifiedIdentsToEnterInFull);
+                write(lhsVar);
                 write("::");
                 enterExpression(typeManager, rhsType, EntryBracketStatus.SUB_EXPRESSION, r, qualifiedIdentsToEnterInFull);
                 return UnitType.UNIT;

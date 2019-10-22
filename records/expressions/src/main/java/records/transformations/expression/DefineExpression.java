@@ -167,12 +167,7 @@ public class DefineExpression extends Expression
                 if (checkedExp == null)
                     return null;
                 @ExpressionIdentifier String varName = hasType.getVarName();
-                if (varName == null)
-                {
-                    // Should already be error
-                    return null;
-                }
-                else if (!shouldBeDeclaredInNextDefine.add(varName))
+                if (!shouldBeDeclaredInNextDefine.add(varName))
                 {
                     onError.recordError(hasType, StyledString.s("Duplicate type for variable " + varName));
                     return null;

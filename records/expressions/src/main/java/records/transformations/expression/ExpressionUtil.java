@@ -484,7 +484,7 @@ public class ExpressionUtil
         public Expression visitHasTypeExpression(HasTypeExpressionContext ctx)
         {
             Expression customLiteralExpression = visitCustomLiteralExpression(ctx.customLiteralExpression());
-            return new HasTypeExpression(IdentExpression.load(IdentifierUtility.fromParsed(ctx.varRef().ident())), customLiteralExpression);
+            return new HasTypeExpression(IdentifierUtility.fromParsed(ctx.varRef().ident()), customLiteralExpression);
         }
 
         @Override
@@ -869,7 +869,7 @@ public class ExpressionUtil
         public Expression visitHasTypeExpression(ExpressionParser2.HasTypeExpressionContext ctx)
         {
             Expression customLiteralExpression = visitCustomLiteralExpression(ctx.customLiteralExpression());
-            return new HasTypeExpression(visit(ctx.ident()), customLiteralExpression);
+            return new HasTypeExpression(IdentifierUtility.fromParsed(ctx.ident().singleIdent(ctx.ident().singleIdent().size() - 1)), customLiteralExpression);
         }
 
         @Override

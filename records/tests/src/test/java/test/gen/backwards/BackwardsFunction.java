@@ -69,7 +69,7 @@ public class BackwardsFunction extends BackwardsProvider
             
             Either<@Recorded HasTypeExpression, Definition> definition = Either.right(new Definition(IdentExpression.load(funcName), function));
             return DefineExpression.unrecorded(paramsAndBody.actualParameterTypes == null ? ImmutableList.of(definition)
-                : ImmutableList.of(Either.left(new HasTypeExpression(IdentExpression.load(funcName), new TypeLiteralExpression(TypeExpression.fromDataType(DataType.function(paramsAndBody.actualParameterTypes, targetType))))), definition)
+                : ImmutableList.of(Either.left(new HasTypeExpression(funcName, new TypeLiteralExpression(TypeExpression.fromDataType(DataType.function(paramsAndBody.actualParameterTypes, targetType))))), definition)
                 , new CallExpression(IdentExpression.load(funcName), paramsAndBody.callActualParameters));
         });
     }

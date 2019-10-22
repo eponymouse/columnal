@@ -862,7 +862,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         ),
 
         ImmutableList.<OperatorExpressionInfo>of(
-            new OperatorExpressionInfo(Op.HAS_TYPE, (lhs, opLoc, rhs) -> new HasTypeExpression(lhs, rhs))
+            new OperatorExpressionInfo(Op.HAS_TYPE, (lhs, opLoc, rhs) -> makeHasType(lhs, rhs))
         ),
         
         ImmutableList.<OperatorExpressionInfo>of(
@@ -929,6 +929,26 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     private static Expression makeOr(ImmutableList<@Recorded Expression> args, List<Pair<Op, CanonicalSpan>> _ops)
     {
         return new OrExpression(args);
+    }
+    
+    private static Expression makeHasType(Expression lhs, Expression rhs)
+    {
+        return lhs.visit(new ExpressionVisitorFlat<Expression>()
+        {
+            @Override
+            public Expression ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            {
+                if (namespace == null || namespace.equals("var"))
+                    return new HasTypeExpression(idents.get(idents.size() - 1), rhs);
+                return makeDef(self);
+            }
+
+            @Override
+            protected Expression makeDef(Expression expression)
+            {
+                return new InvalidOperatorExpression(ImmutableList.of(lhs, new InvalidIdentExpression("::"), rhs));
+            }
+        });
     }
 
     @Override
@@ -1233,7 +1253,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             }
 
             @Override
-            public @Nullable ArrayList<DefineItem> hasType(@Recorded HasTypeExpression self, @Recorded Expression lhsVar, @Recorded Expression rhsType)
+            public @Nullable ArrayList<DefineItem> hasType(@Recorded HasTypeExpression self, @ExpressionIdentifier String lhsVar, @Recorded Expression rhsType)
             {
                 definitions.add(new DefineItem(Either.left(self), terminatorLocation));
                 return definitions;

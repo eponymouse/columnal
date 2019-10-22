@@ -34,11 +34,10 @@ import java.util.stream.Stream;
 public class HasTypeExpression extends Expression
 {
     // Var name, without the leading decorator
-    private final @Recorded Expression lhsVar;
+    private final @ExpressionIdentifier String lhsVar;
     private final @Recorded Expression rhsType;
-    private @MonotonicNonNull @ExpressionIdentifier String checkedVarName;
 
-    public HasTypeExpression(@Recorded Expression lhsVar, @Recorded Expression rhsType)
+    public HasTypeExpression(@ExpressionIdentifier String lhsVar, @Recorded Expression rhsType)
     {
         this.lhsVar = lhsVar;
         this.rhsType = rhsType;
@@ -47,9 +46,8 @@ public class HasTypeExpression extends Expression
     @Override
     public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable @ExpressionIdentifier String varName = IdentExpression.getSingleIdent(lhsVar);
-        if (varName == null)
-            onError.recordError(lhsVar, StyledString.s("Left-hand side of :: must be a valid name"));
+        if (lhsVar == null)
+            onError.recordError(this, StyledString.s("Left-hand side of :: must be a valid name"));
         
         @Nullable @Recorded TypeExpression rhsTypeExpression = rhsType.visit(new ExpressionVisitorFlat<@Nullable @Recorded TypeExpression>()
         {
@@ -67,11 +65,10 @@ public class HasTypeExpression extends Expression
             }
         });
         
-        if (varName == null || rhsTypeExpression == null)
+        if (rhsTypeExpression == null)
             return null;
-        this.checkedVarName = varName;
         
-        TypeState typeState = original.addPreType(varName, rhsTypeExpression.toJellyType(original.getTypeManager(), new JellyRecorder()
+        TypeState typeState = original.addPreType(lhsVar, rhsTypeExpression.toJellyType(original.getTypeManager(), new JellyRecorder()
         {
             @SuppressWarnings("recorded")
             @Override
@@ -103,7 +100,7 @@ public class HasTypeExpression extends Expression
     @Override
     public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return lhsVar.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames) + " :: " + rhsType.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames);
+        return lhsVar + " :: " + rhsType.save(saveDestination, BracketedStatus.NEED_BRACKETS, renames);
     }
 
     @Override
@@ -137,7 +134,7 @@ public class HasTypeExpression extends Expression
     @Override
     protected StyledString toDisplay(DisplayType displayType, BracketedStatus bracketedStatus, ExpressionStyler expressionStyler)
     {
-        return expressionStyler.styleExpression(StyledString.concat(lhsVar.toDisplay(displayType, BracketedStatus.NEED_BRACKETS, expressionStyler), StyledString.s(" :: "), rhsType.toDisplay(displayType, BracketedStatus.NEED_BRACKETS, expressionStyler)), this);
+        return expressionStyler.styleExpression(StyledString.concat(StyledString.s(lhsVar), StyledString.s(" :: "), rhsType.toDisplay(displayType, BracketedStatus.NEED_BRACKETS, expressionStyler)), this);
     }
 
     @SuppressWarnings("recorded")
@@ -147,11 +144,11 @@ public class HasTypeExpression extends Expression
         if (toReplace == this)
             return replaceWith;
         else
-            return new HasTypeExpression(lhsVar.replaceSubExpression(toReplace, replaceWith), rhsType.replaceSubExpression(toReplace, replaceWith));
+            return new HasTypeExpression(lhsVar, rhsType.replaceSubExpression(toReplace, replaceWith));
     }
 
-    public @Nullable @ExpressionIdentifier String getVarName()
+    public @ExpressionIdentifier String getVarName()
     {
-        return checkedVarName;
+        return lhsVar;
     }
 }

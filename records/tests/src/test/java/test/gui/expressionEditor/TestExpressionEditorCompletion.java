@@ -510,6 +510,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         FunctionLookup functionLookup = FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager());
         IdentExpression fromTextTo = IdentExpression.function(TestUtil.checkNonNull(functionLookup.lookup("from text to")).getFullName());
         // Should still have trailing x:
-        assertEquals(TestUtil.parseExpression("@invalidops(@call from text to(1), x)", mainWindowActions._test_getTableManager().getTypeManager(), functionLookup), finish());
+        assertEquals(TestUtil.parseExpression("@invalidops(@call function\\\\conversion\\from text to(1), x)", mainWindowActions._test_getTableManager().getTypeManager(), functionLookup), finish());
     }
 }

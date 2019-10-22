@@ -100,6 +100,8 @@ public class TestHideColumns extends FXApplicationTest implements ScrollToTrait,
         hide = (HideColumns)mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof HideColumns).findFirst().orElseThrow(() -> new AssertionError("No HideColumns found"));
 
         assertEquals(new HashSet<>(toHide), new HashSet<>(hide.getHiddenColumns()));
+        columnIdsLeft = new ArrayList<>(originalColumnIds);
+        columnIdsLeft.removeAll(toHide);
         checkActualVisibleColumns(mainWindowActions, columnIdsLeft, hide);
     }
 
