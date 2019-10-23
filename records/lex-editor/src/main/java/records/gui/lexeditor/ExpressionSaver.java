@@ -931,7 +931,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         return new OrExpression(args);
     }
     
-    private static Expression makeHasType(Expression lhs, Expression rhs)
+    private static Expression makeHasType(@Recorded Expression lhs, @Recorded Expression rhs)
     {
         return lhs.visit(new ExpressionVisitorFlat<Expression>()
         {
@@ -944,6 +944,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             }
 
             @Override
+            @SuppressWarnings("recorded")
             protected Expression makeDef(Expression expression)
             {
                 return new InvalidOperatorExpression(ImmutableList.of(lhs, new InvalidIdentExpression("::"), rhs));
