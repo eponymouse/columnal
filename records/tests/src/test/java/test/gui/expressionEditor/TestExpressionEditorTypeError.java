@@ -123,7 +123,7 @@ public class TestExpressionEditorTypeError extends BaseTestExpressionEditorError
     @Test
     public void testVarNoError()
     {
-        testError("@ifOptional\\None=~Optional\\Is(x)@thensingle(x)@else@ifOptional\\None=~Optional\\Is(x)@thenx+1{m/s}@else0{m/s}@endif@endif");
+        testError("@ifOptional\\None=~Optional\\Is(x)@thenget single(x)@else@ifOptional\\None=~Optional\\Is(x)@thenx+1{m/s}@else0{m/s}@endif@endif");
     }
 
     @Test
