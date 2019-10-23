@@ -135,10 +135,11 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
         {
             content += explanationLocation.tableId.getRaw() + ":";
         }
-        content += explanationLocation.columnId.getRaw();
+        if (explanationLocation.columnId != null)
+            content += explanationLocation.columnId.getRaw();
         // +1 to turn back into user index:
-        if (explanationLocation.rowIndex.isPresent())
-            content += " (row " + (explanationLocation.rowIndex.get() + 1) + ")";
+        if (explanationLocation.rowIndex != null)
+            content += " (row " + (explanationLocation.rowIndex + 1) + ")";
         
         Clickable click = new Clickable("click.to.view")
         {

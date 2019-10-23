@@ -105,7 +105,7 @@ public class TestExpressionExplanation
         testExplanation("@call function\\\\list\\element(table\\\\T1#all true, 3)", e("@call function\\\\list\\element(table\\\\T1#all true, 3)", null, true, l("T1", "all true", 2), entire("T1", "all true"), lit(3)));
         testExplanation("@call function\\\\list\\element(table\\\\T2#asc, 2) > 5", e("@call function\\\\list\\element(table\\\\T2#asc, 2) > 5", null, false, null, e("@call function\\\\list\\element(table\\\\T2#asc, 2)", null, 2, l("T2", "asc", 1), entire("T2", "asc"), lit(2)), lit(5)));
         testExplanation("(@call function\\\\list\\element(table\\\\T2#asc, 1) < 5) & (@call function\\\\list\\element(table\\\\T2#asc, 2) = 5)",
-            e("(@call function\\\\element(table\\\\T2#asc, 1) < 5) & (@call function\\\\list\\element(table\\\\T2#asc, 2) = 5)", null, false, null,
+            e("(@call function\\\\list\\element(table\\\\T2#asc, 1) < 5) & (@call function\\\\list\\element(table\\\\T2#asc, 2) = 5)", null, false, null,
                 e("@call function\\\\list\\element(table\\\\T2#asc, 1) < 5", null, true, null,
                     e("@call function\\\\list\\element(table\\\\T2#asc, 1)", null, 1, l("T2", "asc", 0), entire("T2", "asc"), lit(1)),
                     lit(5)),
@@ -118,57 +118,57 @@ public class TestExpressionExplanation
 
     protected Explanation entire(@ExpressionIdentifier String table, @ExpressionIdentifier String column, Object... values) throws InternalException, UserException
     {
-        return e("table\\\\" + table + "#" + column, null, new ListExList(TestUtil.streamFlattened(tableManager.getSingleTableOrThrow(new TableId(table)).getData().getColumn(new ColumnId(column))).collect(ImmutableList.toImmutableList())), l(table, column));
+        return e("table\\\\" + table + "#" + column, null, new ListExList(TestUtil.streamFlattened(tableManager.getSingleTableOrThrow(new TableId(table)).getData().getColumn(new ColumnId(column))).collect(ImmutableList.toImmutableList())), l(table, column), e("table\\\\" + table, null, null, new ExplanationLocation(new TableId(table))));
     }
 
     @Test
     public void testExplainedAll() throws Exception
     {
         testExplanation("@call function\\\\listprocess\\all(table\\\\T1#all false, (? = true))", 
-            e("@call function\\\\listprocess\\all(table\\\\T1#all false, (? = true))", null, false, l("T1", "all false", 0),
+            explanation("@call function\\\\listprocess\\all(table\\\\T1#all false, (? = true))", ExecutionType.VALUE, null, false, l("T1", "all false", 0), false,
                 entire("T1", "all false"),
                     // Once for the function, once for the function call:
                     e("? = true", null, null, null),
-                    explanation("? = true", ExecutionType.CALL_IMPLICIT, q(false), false, null, e("?", q(false), false, null), lit(true))));
-        testExplanation("@call function\\\\listprocess\\all(table\\\\T1#half false, function\\\\not)",
-            e("@call function\\\\listprocess\\all(table\\\\T1#half false, function\\\\not)", null, false, l("T1", "half false", 1), entire("T1", "half false"), e("function\\\\boolean\\not", null, null, null)));
+                    explanation("? = true", ExecutionType.CALL_IMPLICIT, q(false), false, null, false, e("?", q(false), false, null), lit(true))));
+        testExplanation("@call function\\\\listprocess\\all(table\\\\T1#half false, function\\\\boolean\\not)",
+            explanation("@call function\\\\listprocess\\all(table\\\\T1#half false, function\\\\boolean\\not)", ExecutionType.VALUE, null, false, l("T1", "half false", 1), false, entire("T1", "half false"), e("function\\\\boolean\\not", null, null, null)));
         testExplanation("@call function\\\\listprocess\\all(table\\\\T2#asc, (? < 3))",
-            e("@call function\\\\listprocess\\all(table\\\\T2#asc, (? < 3))", null, false, l("T2", "asc", 2), entire("T2", "asc"),
+            explanation("@call function\\\\listprocess\\all(table\\\\T2#asc, (? < 3))", ExecutionType.VALUE, null, false, l("T2", "asc", 2), false, entire("T2", "asc"),
                 // Once for function, once for function call:
                 e("? < 3", null, null, null),
-                explanation("? < 3", ExecutionType.CALL_IMPLICIT, q(3), false, null, e("?", q(3), 3, null), lit(3))));
+                explanation("? < 3", ExecutionType.CALL_IMPLICIT, q(3), false, null, false, e("?", q(3), 3, null), lit(3))));
         testExplanation("@call function\\\\listprocess\\all(table\\\\T2#asc, (? =~ (1.8 \u00B1 1.2)))",
-                e("@call function\\\\listprocess\\all(table\\\\T2#asc, (? =~ (1.8 \u00B1 1.2)))", null, false, l("T2", "asc", 3), entire("T2", "asc"),
+                explanation("@call function\\\\listprocess\\all(table\\\\T2#asc, (? =~ (1.8 \u00B1 1.2)))", ExecutionType.VALUE,  null, false, l("T2", "asc", 3), false, entire("T2", "asc"),
                     // Once for function, once for call:
                     e("? =~ (1.8 \u00B1 1.2)", null, null, null),
-                    explanation("? =~ (1.8 \u00B1 1.2)", ExecutionType.CALL_IMPLICIT, q(4), false, null, 
+                    explanation("? =~ (1.8 \u00B1 1.2)", ExecutionType.CALL_IMPLICIT, q(4), false, null, false,
                         e("?", q(4), 4, null),
                         m("1.8 \u00B1 1.2", null, false, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("1.2")))
         )));
-        testExplanation("@call function\\\\listprocess\\none(table\\\\T2#asc, @function(x) @then @call function\\\\boolean\\not(x =~ (1.8 \u00B1 0.9)) @endfunction)",
-                e("@call function\\\\listprocess\\none(table\\\\T2#asc, @function(x) @then @call function\\\\boolean\\not(x =~ (1.8 \u00B1 0.9)) @endfunction)", null, false, l("T2", "asc", 2), entire("T2", "asc"),
+        testExplanation("@call function\\\\listprocess\\none(table\\\\T2#asc, @function(var\\\\x) @then @call function\\\\boolean\\not(var\\\\x =~ (1.8 \u00B1 0.9)) @endfunction)",
+                explanation("@call function\\\\listprocess\\none(table\\\\T2#asc, @function(var\\\\x) @then @call function\\\\boolean\\not(var\\\\x =~ (1.8 \u00B1 0.9)) @endfunction)", ExecutionType.VALUE, null, false, l("T2", "asc", 2), false, entire("T2", "asc"),
                     // Once for function, once for call:
-                    e("@function(x) @then @call function\\\\not(x =~ (1.8 \u00B1 0.9)) @endfunction", null, null, null),
-                    e("@call function\\\\boolean\\not(x =~ (1.8 \u00B1 0.9))", vv("x", 3), null, null,
-                        explanation("x =~ (1.8 \u00B1 0.9)", ExecutionType.VALUE, vv("x", 3), false, null, 
-                        e("x", vv("x", 3), 3, null),
+                    e("@function(var\\\\x) @then @call function\\\\boolean\\not(var\\\\x =~ (1.8 \u00B1 0.9)) @endfunction", null, null, null),
+                    e("@call function\\\\boolean\\not(var\\\\x =~ (1.8 \u00B1 0.9))", vv("x", 3), null, null,
+                        explanation("var\\\\x =~ (1.8 \u00B1 0.9)", ExecutionType.VALUE, vv("x", 3), false, null, false, 
+                        e("var\\\\x", vv("x", 3), 3, null),
                         m("1.8 \u00B1 0.9", null, false, null, lit(new BigDecimal("1.8")), lit(new BigDecimal("0.9")))
         ))));
         
-        testCheckExplanation("T1", "column\\half false", CheckType.ALL_ROWS, e("column\\\\half false", r(0), false, l("T1", "half false", 0)));
+        testCheckExplanation("T1", "column\\\\half false", CheckType.ALL_ROWS, e("column\\\\T1\\half false", r(0), false, l("T1", "half false", 0)));
 
-        testCheckExplanation("T1", "@if column\\\\half false @then column\\\\all false @else column\\\\all true @endif", CheckType.ALL_ROWS, e("@if column\\\\half false @then column\\\\all false @else column\\\\all true @endif", r(1), false, null,
-            e("column\\\\half false", r(1), true, l("T1", "half false", 1)),
-            e("column\\\\all false", r(1), false, l("T1", "all false", 1))
+        testCheckExplanation("T1", "@if column\\\\half false @then column\\\\all false @else column\\\\all true @endif", CheckType.ALL_ROWS, e("@if column\\\\T1\\half false @then column\\\\T1\\all false @else column\\\\T1\\all true @endif", r(1), false, null,
+            e("column\\\\T1\\half false", r(1), true, l("T1", "half false", 1)),
+            e("column\\\\T1\\all false", r(1), false, l("T1", "all false", 1))
                 ));
 
-        testCheckExplanation("T1", "@match column\\\\half false @case true @then column\\\\all false @case false @then column\\\\all true @endmatch", CheckType.ALL_ROWS, e("@match column\\\\half false @case true @then column\\\\all false @case false @then column\\\\all true @endmatch", r(1), false, null,
-                e("column\\\\half false", r(1), true, l("T1", "half false", 1)),
-                clause(ImmutableList.of(new MatchExpression.Pattern(new BooleanLiteral(true), null)), "column\\\\all false", r(1), true,
+        testCheckExplanation("T1", "@match column\\\\half false @case true @then column\\\\all false @case false @then column\\\\all true @endmatch", CheckType.ALL_ROWS, e("@match column\\\\T1\\half false @case true @then column\\\\T1\\all false @case false @then column\\\\T1\\all true @endmatch", r(1), false, null,
+                e("column\\\\T1\\half false", r(1), true, l("T1", "half false", 1)),
+                clause(ImmutableList.of(new MatchExpression.Pattern(new BooleanLiteral(true), null)), "column\\\\T1\\all false", r(1), true,
                     // Bit confusing; outer true is result of pattern match,
                     // inner true is the literal that it was matched against
                     m("true", r(1), true, null, e("true", r(1), true, null))),
-                e("column\\\\all false", r(1), false, l("T1", "all false", 1)))
+                e("column\\\\T1\\all false", r(1), false, l("T1", "all false", 1)))
         );
         
         // This is a mega-match clause with multiple clauses that won't match.
@@ -176,13 +176,13 @@ public class TestExpressionExplanation
         // The value being matched against is (asc, alphabet animals)
         
         // First clause is (n, a) @given n > text length(a)
-        Explanation megaClause1Expl = clause(ImmutableList.of(pattern("(a: n, b: a)", "n > @call function\\\\text length(a)")), "true", r(2), false,
-                m("(a: n, b: a)", r(2, v("n", 3), v("a", "Cat")), true, null,
-                    m("n", r(2, v("n", 3)), true, null),
-                    m("a", r(2, v("a", "Cat")), true, null)),
-                e("n > @call function\\\\text length(a)", r(2, v("n", 3), v("a", "Cat")), false, null,
-                    e("n", r(2, v("n", 3)), 3, null),
-                    e("@call function\\\\text length(a)", r(2, v("a", "Cat")), 3, null, e("a", r(2, v("a", "Cat")), "Cat", null))
+        Explanation megaClause1Expl = clause(ImmutableList.of(pattern("(a: var\\\\n, b: var\\\\a)", "var\\\\n > @call function\\\\text\\text length(var\\\\a)")), "true", r(2), false,
+                m("(a: var\\\\n, b: var\\\\a)", r(2, v("n", 3), v("a", "Cat")), true, null,
+                    m("var\\\\n", r(2, v("n", 3)), true, null),
+                    m("var\\\\a", r(2, v("a", "Cat")), true, null)),
+                e("var\\\\n > @call function\\\\text\\text length(var\\\\a)", r(2, v("n", 3), v("a", "Cat")), false, null,
+                    e("var\\\\n", r(2, v("n", 3)), 3, null),
+                    e("@call function\\\\text\\text length(var\\\\a)", r(2, v("a", "Cat")), 3, null, e("a", r(2, v("a", "Cat")), "Cat", null))
                     )
                 );
         // Second clause is (3,  _ ; "t") @given false @then 1 > 0
@@ -198,18 +198,18 @@ public class TestExpressionExplanation
         );
         
         // Third clause is @case (_n, "Cat") @then n > 2
-        Explanation megaClause3Expl = clause(ImmutableList.of(pattern("(a: n, b: \"Cat\")", null)), "n > 2", r(2, v("n", 3)), true,
-            m("(a: n, b: \"Cat\")", r(2, v("n", 3)), true, null, 
-                    m("n", r(2, v("n", 3)), true, null),
+        Explanation megaClause3Expl = clause(ImmutableList.of(pattern("(a: var\\\\n, b: \"Cat\")", null)), "n > 2", r(2, v("n", 3)), true,
+            m("(a: var\\\\n, b: \"Cat\")", r(2, v("n", 3)), true, null, 
+                    m("var\\\\n", r(2, v("n", 3)), true, null),
                     m("\"Cat\"", r(2), true, null, e("\"Cat\"", r(2), "Cat", null)))    
         );
-        Explanation outcome = e("n > 2", r(2, v("n", 3)), true, null, e("n", r(2, v("n", 3)), 3, null), e("2", r(2), 2, null));
+        Explanation outcome = e("var\\\\n > 2", r(2, v("n", 3)), true, null, e("n", r(2, v("n", 3)), 3, null), e("2", r(2), 2, null));
         
-        String fullMega = "@match (a:column\\\\asc, b:column\\\\alphabet animals) @case (a:n, b:a) @given n > @call function\\\\text length(a) @then true @case (a:3,  b:(_ ; \"t\")) @given false @then 1 > 0 @case (a:n, b:\"Cat\") @then n > 2 @case _ @then false @endmatch";
+        String fullMega = "@match (a:column\\\\T2\\asc, b:column\\\\T2\\alphabet animals) @case (a:n, b:a) @given n > @call function\\\\text length(a) @then true @case (a:3,  b:(_ ; \"t\")) @given false @then 1 > 0 @case (a:n, b:\"Cat\") @then n > 2 @case _ @then false @endmatch";
         testCheckExplanation("T2", fullMega, CheckType.NO_ROWS, e(fullMega, r(2), true, null, 
-            e("(a:column\\\\asc, b:column\\\\alphabet animals)", r(2), new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("a", DataTypeUtility.value(3), "b", DataTypeUtility.value("Cat"))), null,
-                e("column\\\\asc", r(2), 3, l("T2", "asc", 2)),
-                e("column\\\\alphabet animals", r(2), "Cat", l("T2", "alphabet animals", 2))
+            e("(a:column\\\\T2\\asc, b:column\\\\T2\\alphabet animals)", r(2), new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("a", DataTypeUtility.value(3), "b", DataTypeUtility.value("Cat"))), null,
+                e("column\\\\T2\\asc", r(2), 3, l("T2", "asc", 2)),
+                e("column\\\\T2\\alphabet animals", r(2), "Cat", l("T2", "alphabet animals", 2))
                 ),
             megaClause1Expl, megaClause2Expl, megaClause3Expl, outcome));
     }
@@ -270,7 +270,7 @@ public class TestExpressionExplanation
     {
         TypeManager typeManager = tableManager.getTypeManager();
         Expression outcomeExpression = TestUtil.parseExpression(outcomeSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
-        return new Explanation(MatchClause.unrecorded(patterns, outcomeExpression), ExecutionType.MATCH, makeEvaluateState(rowIndexAndVars, typeManager), DataTypeUtility.value(result), ImmutableList.of())
+        return new Explanation(MatchClause.unrecorded(patterns, outcomeExpression), ExecutionType.MATCH, makeEvaluateState(rowIndexAndVars, typeManager), DataTypeUtility.value(result), ImmutableList.of(), null)
         {
             @Override
             public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
@@ -288,21 +288,21 @@ public class TestExpressionExplanation
 
     private Explanation m(String expressionSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
     {
-        return explanation(expressionSrc, ExecutionType.MATCH, rowIndexAndVars, result, location, children);
+        return explanation(expressionSrc, ExecutionType.MATCH, rowIndexAndVars, result, location, false, children);
     }
     
     private Explanation e(String expressionSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
     {
-        return explanation(expressionSrc, ExecutionType.VALUE, rowIndexAndVars, result, location, children);
+        return explanation(expressionSrc, ExecutionType.VALUE, rowIndexAndVars, result, location, true, children);
     }
     
     @SuppressWarnings("valuetype")
-    private Explanation explanation(String expressionSrc, ExecutionType executionType, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
+    private Explanation explanation(String expressionSrc, ExecutionType executionType, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, boolean locationIsResult, Explanation... children) throws InternalException, UserException
     {
         TypeManager typeManager = tableManager.getTypeManager();
         Expression expression = TestUtil.parseExpression(expressionSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         EvaluateState evaluateState = makeEvaluateState(rowIndexAndVars, typeManager);
-        return new Explanation(expression, executionType, evaluateState, result, Utility.streamNullable(location).collect(ImmutableList.<ExplanationLocation>toImmutableList()))
+        return new Explanation(expression, executionType, evaluateState, result, Utility.streamNullable(location).collect(ImmutableList.<ExplanationLocation>toImmutableList()), locationIsResult ? location : null)
         {
             @Override
             public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException

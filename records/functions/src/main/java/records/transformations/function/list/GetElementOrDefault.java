@@ -8,6 +8,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.transformations.expression.function.ValueFunction;
 import records.transformations.function.FunctionDefinition;
 import utility.Either;
@@ -45,7 +46,12 @@ public class GetElementOrDefault extends FunctionDefinition
                 return def;
             else
             {
-                addUsedLocations(locs -> Utility.streamNullable(locs.get(0).getListElementLocation(oneBasedIndex - 1)));
+                addUsedLocations(locs -> {
+                    ExplanationLocation resultLoc = locs.get(0).getListElementLocation(oneBasedIndex - 1);
+                    if (resultLoc != null)
+                        setResultIsLocation(resultLoc);
+                    return Utility.streamNullable(resultLoc);
+                });
                 return Utility.getAtIndex(list, userIndex);
             }
         }

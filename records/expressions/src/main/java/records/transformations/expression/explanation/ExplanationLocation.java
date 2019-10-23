@@ -10,26 +10,38 @@ import threadchecker.Tag;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * A location can be:
+ *  - A whole table (only tableId is present)
+ *  - A whole column (tableId and columnId is present)
+ *  - A specific location (tableId, columnId and rowIndex are present)
+ */
 @OnThread(Tag.Any)
 public class ExplanationLocation
 {
     public final TableId tableId;
-    public final ColumnId columnId;
-    @SuppressWarnings("optional.field")
-    public final Optional<@TableDataRowIndex Integer> rowIndex;
+    public final @Nullable ColumnId columnId;
+    public final @Nullable @TableDataRowIndex Integer rowIndex;
+
+    public ExplanationLocation(TableId tableId)
+    {
+        this.tableId = tableId;
+        this.columnId = null;
+        this.rowIndex = null;
+    }
 
     public ExplanationLocation(TableId tableId, ColumnId columnId)
     {
         this.tableId = tableId;
         this.columnId = columnId;
-        this.rowIndex = Optional.empty();
+        this.rowIndex = null;
     }
     
-    public ExplanationLocation(TableId tableId, ColumnId columnId, @TableDataRowIndex int rowIndex)
+    public ExplanationLocation(TableId tableId, @Nullable ColumnId columnId, @Nullable @TableDataRowIndex Integer rowIndex)
     {
         this.tableId = tableId;
         this.columnId = columnId;
-        this.rowIndex = Optional.of(rowIndex);
+        this.rowIndex = rowIndex;
     }
 
     @Override
@@ -52,6 +64,6 @@ public class ExplanationLocation
     @Override
     public String toString()
     {
-        return tableId + "\\" + columnId + (rowIndex.isPresent() ? ":" + rowIndex.get() : "");
+        return tableId + (columnId != null ? ("\\" + columnId + (rowIndex != null ? ":" + rowIndex : "")) : null);
     }
 }

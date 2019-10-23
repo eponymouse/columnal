@@ -505,7 +505,8 @@ public class IdentExpression extends NonOperatorExpression
         {
             if (column == null)
                 throw new InternalException("Attempting to fetch value despite type check failure");
-            return result(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), ImmutableList.of(new ExplanationLocation(col.tableId, columnName, state.getRowIndex())), false);
+            ExplanationLocation explanationLocation = new ExplanationLocation(col.tableId, columnName, state.getRowIndex());
+            return resultIsLocation(column.getCollapsed(state.getRowIndex()), state, ImmutableList.of(), explanationLocation, false);
         }
 
         @Override
@@ -663,7 +664,8 @@ public class IdentExpression extends NonOperatorExpression
                 }
             });
 
-            return result(result, state, ImmutableList.of(), ImmutableList.of(/*new ExplanationLocation(resolvedTableName, columnName)*/), true);
+            ExplanationLocation loc = new ExplanationLocation(new TableId(idents.get(0)));
+            return resultIsLocation(result, state, ImmutableList.of(), loc, true);
         }
 
         @Override

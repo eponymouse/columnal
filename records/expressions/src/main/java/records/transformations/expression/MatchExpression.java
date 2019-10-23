@@ -131,7 +131,7 @@ public class MatchExpression extends NonOperatorExpression
                 @Override
                 public Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType) throws InternalException
                 {
-                    return new Explanation(MatchClause.this, overrideExecutionType != null ? overrideExecutionType : ExecutionType.MATCH, evaluateState, value, ImmutableList.of())
+                    return new Explanation(MatchClause.this, overrideExecutionType != null ? overrideExecutionType : ExecutionType.MATCH, evaluateState, value, ImmutableList.of(), null)
                     {
                         @Override
                         public @OnThread(Tag.Simulation) @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException

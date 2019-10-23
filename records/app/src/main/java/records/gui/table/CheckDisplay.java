@@ -138,9 +138,9 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                     
                     explanationDisplay = new ExplanationDisplay(check.getSrcTableId(), getPosition().offsetByRowCols(1, 0), explanation, l -> {
                         Table t = parent.getManager().getSingleTableOrNull(l.tableId);
-                        if (t != null && l.rowIndex.isPresent() && t.getDisplay() instanceof DataDisplay)
+                        if (t != null && l.columnId != null && l.rowIndex != null && t.getDisplay() instanceof DataDisplay)
                         {
-                            CellSelection selection = ((DataDisplay)t.getDisplay()).getSelectionForSingleCell(l.columnId, l.rowIndex.get());
+                            CellSelection selection = ((DataDisplay)t.getDisplay()).getSelectionForSingleCell(l.columnId, l.rowIndex);
                             if (selection != null)
                                 withParent_(g -> g.select(selection));
                         }

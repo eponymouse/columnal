@@ -6,11 +6,16 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnId;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
+import records.transformations.expression.explanation.Explanation.ExplanationSource;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.transformations.expression.visitor.ExpressionVisitorFlat;
 import records.typeExp.MutVar;
@@ -24,6 +29,7 @@ import utility.Utility.Record;
 
 import java.util.Objects;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
@@ -92,7 +98,52 @@ public class FieldAccessExpression extends Expression
 
         if (fieldName == null)
             throw new InternalException("Field is not single name despite being after type-check: " + fieldName.toString());
-        return result(record.getField(fieldName), state, ImmutableList.of(lhsResult));
+        @Value Object result = record.getField(fieldName);
+        return new ValueResult(result, state)
+        {
+            @Override
+            public Explanation makeExplanation(Explanation.@Nullable ExecutionType overrideExecutionType) throws InternalException
+            {
+                Explanation lhsExplanation = lhsResult.makeExplanation(overrideExecutionType);
+                ExplanationLocation lhsIsLoc = lhsExplanation.getResultIsLocation();
+                ImmutableList<ExplanationLocation> directLocs;
+                @Nullable ExplanationLocation usIsLoc;
+                if (lhsIsLoc != null && lhsIsLoc.columnId == null)
+                {
+                    // If it's a table...
+                    usIsLoc = new ExplanationLocation(lhsIsLoc.tableId, new ColumnId(fieldName), lhsIsLoc.rowIndex);
+                    directLocs = ImmutableList.of(usIsLoc);
+                }
+                else
+                {
+                    usIsLoc = null;
+                    directLocs = ImmutableList.of();
+                }
+                
+                return new Explanation(FieldAccessExpression.this, overrideExecutionType != null ? overrideExecutionType : ExecutionType.VALUE, state, result, directLocs, usIsLoc)
+                {
+                    @Override
+                    @OnThread(Tag.Simulation)
+                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
+                    {
+                        return FieldAccessExpression.this.describe(value,this.executionType, evaluateState, hyperlinkLocation, expressionStyler, Utility.concatI(directLocs, extraLocations), skipIfTrivial);
+                    }
+
+                    @Override
+                    @OnThread(Tag.Simulation)
+                    public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
+                    {
+                        return ImmutableList.of(lhsExplanation);
+                    }
+
+                    @Override
+                    public boolean excludeChildrenIfTrivial()
+                    {
+                        return true;
+                    }
+                };
+            };
+        };
     }
 
     @Override

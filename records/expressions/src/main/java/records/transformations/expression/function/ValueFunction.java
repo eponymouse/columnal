@@ -37,6 +37,8 @@ public abstract class ValueFunction
     // null if we are not recording
     private @Nullable ArrayList<Explanation> extraExplanations;
     
+    private @Nullable ExplanationLocation resultIsLocation;
+    
     // Non-null once we are executing:
     private @Value Object @MonotonicNonNull[] curArgs;
     
@@ -70,7 +72,7 @@ public abstract class ValueFunction
         this.usedLocations = new ArrayList<>();
         ArrayList<Explanation> extra = this.extraExplanations = new ArrayList<>();
         @Value Object result = _call();
-        return new RecordedFunctionResult(result, Utility.<Explanation>concatI(argumentExplanations == null ? ImmutableList.<Explanation>of() : Utility.<ArgumentExplanation, Explanation>mapListInt(argumentExplanations, e -> e.getValueExplanation()), extra), usedLocations != null ? ImmutableList.copyOf(usedLocations) : ImmutableList.of());
+        return new RecordedFunctionResult(result, Utility.<Explanation>concatI(argumentExplanations == null ? ImmutableList.<Explanation>of() : Utility.<ArgumentExplanation, Explanation>mapListInt(argumentExplanations, e -> e.getValueExplanation()), extra), usedLocations != null ? ImmutableList.copyOf(usedLocations) : ImmutableList.of(), resultIsLocation);
     }
 
     protected final <T> @Value T arg(int index, Class<T> tClass) throws InternalException
@@ -138,6 +140,12 @@ public abstract class ValueFunction
             this.usedLocations.addAll(extractLocations.apply(argExplanations).collect(ImmutableList.<ExplanationLocation>toImmutableList()));
     }
     
+    protected final void setResultIsLocation(ExplanationLocation explanationLocation)
+    {
+        if (this.usedLocations != null)
+            this.resultIsLocation = explanationLocation;
+    }
+    
     @OnThread(Tag.Simulation)
     protected final void addExtraExplanation(SimulationSupplierInt<Explanation> makeExplanation) throws InternalException
     {
@@ -158,12 +166,14 @@ public abstract class ValueFunction
         public final @Value Object result;
         public final ImmutableList<Explanation> childExplanations;
         public final ImmutableList<ExplanationLocation> usedLocations;
+        public final @Nullable ExplanationLocation resultIsLocation;
 
-        public RecordedFunctionResult(@Value Object result, ImmutableList<Explanation> childExplanations, ImmutableList<ExplanationLocation> usedLocations)
+        public RecordedFunctionResult(@Value Object result, ImmutableList<Explanation> childExplanations, ImmutableList<ExplanationLocation> usedLocations, @Nullable ExplanationLocation resultIsLocation)
         {
             this.result = result;
             this.childExplanations = childExplanations;
             this.usedLocations = usedLocations;
+            this.resultIsLocation = resultIsLocation;
         }
     }
 }

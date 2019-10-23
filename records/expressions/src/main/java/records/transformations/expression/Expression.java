@@ -314,17 +314,23 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     @OnThread(Tag.Simulation)
     protected final ValueResult result(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations)
     {
-        return result(value, state, childrenForExplanations, ImmutableList.of(), false);
+        return explanation(value, ExecutionType.VALUE, state, childrenForExplanations, ImmutableList.of(), false, null);
     }
 
     @OnThread(Tag.Simulation)
-    protected final ValueResult result(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations, boolean skipChildrenIfTrivial)
+    protected final ValueResult resultIsLocation(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ExplanationLocation resultLocation, boolean skipChildrenIfTrivial)
     {
-        return explanation(value, ExecutionType.VALUE, state, childrenForExplanations, usedLocations, skipChildrenIfTrivial);
+        return explanation(value, ExecutionType.VALUE, state, childrenForExplanations, ImmutableList.of(resultLocation), skipChildrenIfTrivial, resultLocation);
     }
 
     @OnThread(Tag.Simulation)
     protected final ValueResult explanation(@Value Object value, ExecutionType executionType, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations, boolean skipChildrenIfTrivial)
+    {
+        return explanation(value, executionType, state, childrenForExplanations, usedLocations, skipChildrenIfTrivial, null);
+    }
+
+    @OnThread(Tag.Simulation)
+    protected final ValueResult explanation(@Value Object value, ExecutionType executionType, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations, boolean skipChildrenIfTrivial, @Nullable ExplanationLocation resultIsLocation)
     {
         if (!state.recordExplanation())
         {
@@ -343,7 +349,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             @Override
             public Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType)
             {
-                return new Explanation(Expression.this, overrideExecutionType != null ? overrideExecutionType : executionType, evaluateState, value, usedLocations)
+                return new Explanation(Expression.this, overrideExecutionType != null ? overrideExecutionType : executionType, evaluateState, value, usedLocations, resultIsLocation)
                 {
                     @Override
                     @OnThread(Tag.Simulation)
@@ -377,7 +383,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
     @OnThread(Tag.Simulation)
     @Nullable
-    private StyledString describe(@Value Object value, ExecutionType executionType, EvaluateState evaluateState,  Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> usedLocations, boolean skipIfTrivial) throws UserException, InternalException
+    protected final StyledString describe(@Value Object value, ExecutionType executionType, EvaluateState evaluateState,  Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> usedLocations, boolean skipIfTrivial) throws UserException, InternalException
     {
         // Don't bother explaining literals, or trivial if we are skipping trivial:
         if (Expression.this.hideFromExplanation(skipIfTrivial))
@@ -387,7 +393,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         if (value instanceof ValueFunction)
             return null;
 
-        StyledString using = usedLocations.isEmpty() ? StyledString.s("") : StyledString.concat(StyledString.s(", using "), usedLocations.stream().filter(l -> l.rowIndex.isPresent()).map(hyperlinkLocation).collect(StyledString.joining(", ")));
+        StyledString using = usedLocations.isEmpty() ? StyledString.s("") : StyledString.concat(StyledString.s(", using "), usedLocations.stream().filter(l -> l.rowIndex != null).map(hyperlinkLocation).collect(StyledString.joining(", ")));
 
         if (executionType == ExecutionType.MATCH && value instanceof Boolean)
         {
@@ -407,7 +413,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             @Override
             public Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType)
             {
-                return new Explanation(Expression.this, overrideExecutionType != null ? overrideExecutionType : ExecutionType.VALUE, evaluateState, value, recordedFunctionResult.usedLocations)
+                return new Explanation(Expression.this, overrideExecutionType != null ? overrideExecutionType : ExecutionType.VALUE, evaluateState, value, recordedFunctionResult.usedLocations, recordedFunctionResult.resultIsLocation)
                 {
                     @Override
                     @OnThread(Tag.Simulation)

@@ -77,7 +77,7 @@ public class RecordExpression extends Expression
             fieldValues.put(member.getFirst(), valuesBuilder.add(member.getSecond().calculateValue(state)).value);
         }
         
-        return result(DataTypeUtility.value(new RecordMap(fieldValues)), state, valuesBuilder.build(), ImmutableList.of(), true);
+        return explanation(DataTypeUtility.value(new RecordMap(fieldValues)), ExecutionType.VALUE, state, valuesBuilder.build(), ImmutableList.of(), true);
     }
 
     @Override

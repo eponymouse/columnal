@@ -17,6 +17,7 @@ import threadchecker.Tag;
 import utility.Utility;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -40,14 +41,16 @@ public abstract class Explanation
     private final EvaluateState evaluateState;
     private final @Nullable @Value Object result;
     private final ImmutableList<ExplanationLocation> directlyUsedLocations;
+    private final @Nullable ExplanationLocation resultIsLocation;
 
-    protected Explanation(ExplanationSource expression, ExecutionType executionType, EvaluateState evaluateState, @Nullable @Value Object result,  ImmutableList<ExplanationLocation> directlyUsedLocations)
+    protected Explanation(ExplanationSource expression, ExecutionType executionType, EvaluateState evaluateState, @Nullable @Value Object result,  ImmutableList<ExplanationLocation> directlyUsedLocations, @Nullable ExplanationLocation resultIsLocation)
     {
         this.expression = expression;
         this.executionType = executionType;
         this.evaluateState = evaluateState;
         this.result = result;
         this.directlyUsedLocations = directlyUsedLocations;
+        this.resultIsLocation = resultIsLocation;
     }
 
     /**
@@ -66,9 +69,14 @@ public abstract class Explanation
     @OnThread(Tag.Simulation)
     public abstract @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException;
 
-    public ImmutableList<ExplanationLocation> getDirectlyUsedLocations()
+    public final ImmutableList<ExplanationLocation> getDirectlyUsedLocations()
     {
         return directlyUsedLocations;
+    }
+
+    public final @Nullable ExplanationLocation getResultIsLocation()
+    {
+        return resultIsLocation;
     }
 
     @OnThread(Tag.Simulation)
@@ -100,6 +108,7 @@ public abstract class Explanation
         ImmutableSet<String> usedVars = expression.allVariableReferences().collect(ImmutableSet.<String>toImmutableSet());
         if (!evaluateState.varFilteredTo(usedVars).equals(that.evaluateState.varFilteredTo(usedVars))) return false;
         if (!directlyUsedLocations.equals(that.directlyUsedLocations)) return false;
+        if (!Objects.equals(resultIsLocation, that.resultIsLocation)) return false;
         try
         {
             if (!getDirectSubExplanations().equals(that.getDirectSubExplanations())) return false;
@@ -123,6 +132,7 @@ public abstract class Explanation
         result1 = 31 * result1 + executionType.hashCode();
         result1 = 31 * result1 + evaluateState.hashCode();
         result1 = 31 * result1 + directlyUsedLocations.hashCode();
+        result1 = 31 * result1 + Objects.hash(resultIsLocation);
         try
         {
             result1 = 31 * result1 + getDirectSubExplanations().hashCode();
@@ -150,6 +160,7 @@ public abstract class Explanation
                     ", evaluateState.vars=" + evaluateState._test_getVariables() +
                     ", result=" + result +
                     ", directlyUsedLocations=" + directlyUsedLocations +
+                    ", resultIsLocation=" + resultIsLocation +
                     ", directSubExplanations:{\n" + getDirectSubExplanations().stream().map(o -> Arrays.stream(o.toString().split("\n", -1)).map(s -> "    " + s + "\n").collect(Collectors.joining()) + "\n").collect(Collectors.joining()) +
                     '}';
         }

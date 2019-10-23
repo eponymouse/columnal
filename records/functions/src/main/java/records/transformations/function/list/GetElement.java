@@ -5,6 +5,7 @@ import annotation.userindex.qual.UserIndex;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.explanation.ExplanationLocation;
 import records.transformations.expression.function.ValueFunction;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -48,7 +49,12 @@ public class GetElement extends FunctionDefinition
         {
             @Value int oneBasedIndex = intArg(1);
             @UserIndex int userIndex = DataTypeUtility.userIndex(oneBasedIndex);
-            addUsedLocations(locs -> Utility.streamNullable(locs.get(0).getListElementLocation(oneBasedIndex - 1)));
+            addUsedLocations(locs -> {
+                ExplanationLocation resultLoc = locs.get(0).getListElementLocation(oneBasedIndex - 1);
+                if (resultLoc != null)
+                    setResultIsLocation(resultLoc);
+                return Utility.streamNullable(resultLoc);
+            });
             return Utility.getAtIndex(arg(0, ListEx.class), userIndex);
         }
     }

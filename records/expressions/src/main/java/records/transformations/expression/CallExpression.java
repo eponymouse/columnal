@@ -281,9 +281,9 @@ public class CallExpression extends Expression
                     @OnThread(Tag.Simulation)
                     public @Nullable ExplanationLocation getListElementLocation(int index) throws InternalException
                     {
-                        @Nullable Pair<@Nullable TableId, ColumnId> details = getColumn(arg);
-                        if (details != null && details.getFirst() != null)
-                            return new ExplanationLocation(details.getFirst(), details.getSecond(), DataItemPosition.row(index));
+                        ExplanationLocation details = paramValueResults.get(iFinal).makeExplanation(null).getResultIsLocation();
+                        if (details != null && details.rowIndex == null)
+                            return new ExplanationLocation(details.tableId, details.columnId, DataItemPosition.row(index));
                         else
                             return null;
                     }
