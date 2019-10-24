@@ -274,11 +274,12 @@ public class FXUtility
     {
         return new ExtensionFilter(TranslationUtility.getString("extension.projects"), "*" + extensionInclDot);
     }
-
-    @OnThread(Tag.Any)
-    public static String getStylesheet(String stylesheetName)
+    
+    // Default theme fetches it from the standard directory:
+    private static Theme theme = new Theme()
     {
-        try
+        @Override
+        public String getStylesheetURL(String stylesheetName) throws Throwable
         {
             URL resource = ResourceUtility.getResource(stylesheetName);
             if (resource == null)
@@ -288,11 +289,33 @@ public class FXUtility
             }
             return resource.toString();
         }
-        catch (NullPointerException e)
+
+        @Override
+        public String getName()
+        {
+            return "default";
+        }
+    };
+    
+    public static void setTheme(Theme theme)
+    {
+        Log.normal("Setting theme to: " + theme.getName());
+        FXUtility.theme = theme;
+    }
+
+    @OnThread(Tag.Any)
+    public static String getStylesheet(String stylesheetName)
+    {
+        try
+        {
+            if (theme != null)
+                return theme.getStylesheetURL(stylesheetName);
+        }
+        catch (Throwable e)
         {
             Log.log("Problem loading stylesheet: " + stylesheetName, e);
-            return "";
         }
+        return "";
     }
 
     @SuppressWarnings("nullness")
