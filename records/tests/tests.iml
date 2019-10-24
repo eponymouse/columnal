@@ -62,15 +62,6 @@
     <orderEntry type="library" name="Maven: one.util:streamex:0.6.3" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna:5.4.0" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna-platform:5.4.0" level="project" />
-    <orderEntry type="module-library">
-      <library name="Maven: com.fxexperience:scenic-view:8.7.0">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/scenicView.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="library" name="Maven: com.badlogicgames.packr:packr:2.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.zeroturnaround:zt-zip:1.10" level="project" />
     <orderEntry type="library" name="Maven: com.eclipsesource.minimal-json:minimal-json:0.9.1" level="project" />

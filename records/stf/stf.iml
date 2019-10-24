@@ -54,14 +54,5 @@
     <orderEntry type="library" name="Maven: xerces:xercesImpl:2.8.0" level="project" />
     <orderEntry type="library" name="Maven: xalan:xalan:2.7.0" level="project" />
     <orderEntry type="module" module-name="annsthreadchecker" scope="PROVIDED" />
-    <orderEntry type="module-library">
-      <library name="Maven: com.fxexperience:scenic-view:8.7.0">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/scenicView.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
   </component>
 </module>

@@ -80,13 +80,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.fxexperience</groupId>
-            <artifactId>scenic-view</artifactId>
-            <version>8.7.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/../lib/scenicView.jar</systemPath>
-        </dependency>
-        <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna-platform</artifactId>
             <version>5.4.0</version>
