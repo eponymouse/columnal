@@ -215,7 +215,7 @@ public class TestExpressionQuickFixSyntax extends BaseTestQuickFix
     public void testBracketFix8() throws UserException, InternalException
     {
         // Test minuses:
-        testFix("@if true @then abs(-5 - -6 * -7) @else 8 @endif", "*", dotCssClassFor("-5 - (-6 * -7)"), "@if true @then @call function\\\\abs(-5 - (-6 * -7)) @else 8 @endif");
+        testFix("@if true @then abs(-5 - -6 * -7) @else 8 @endif", "*", dotCssClassFor("-5 - (-6 * -7)"), "@if true @then @call function\\\\number\\abs(-5 - (-6 * -7)) @else 8 @endif");
     }
     
     @Test
@@ -232,7 +232,7 @@ public class TestExpressionQuickFixSyntax extends BaseTestQuickFix
     {
         // If a function takes a list, and the user passes either one item (which is not of list type)
         // or a tuple, offer to switch to list brackets:
-        testFix("sum(2, 3, 4)", "2", dotCssClassFor("@call function\\\\sum([2, 3, 4])"), "@call function\\\\sum([2, 3, 4])");
+        testFix("sum(2, 3, 4)", "2", dotCssClassFor("@call function\\\\number\\sum([2, 3, 4])"), "@call function\\\\number\\sum([2, 3, 4])");
     }
 
     @Ignore // Disabled since move to @table references
