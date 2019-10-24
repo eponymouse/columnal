@@ -287,13 +287,44 @@
                 </executions>
             </plugin>
 
+            <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>2.7</version>
+            <executions>
+            <execution>
+                <id>copy-scss</id>
+                <phase>generate-resources</phase>
+                <goals>
+                    <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/generated-sources/scss/light</outputDirectory>
+                    <resources>
+                        <resource>
+                            <directory>${basedir}/src/main/scss</directory>
+                            <includes>
+                                <include>*.scss</include>
+                            </includes>
+                        </resource>
+                        <resource>
+                            <directory>${basedir}/src/main/scss/light</directory>
+                            <includes>
+                                <include>*.scss</include>
+                            </includes>
+                        </resource>
+                    </resources>
+                </configuration>
+            </execution>
+            </executions>
+            </plugin>
+
             <!-- Sass compiler -->
             <plugin>
                 <groupId>nl.geodienstencentrum.maven</groupId>
                 <artifactId>sass-maven-plugin</artifactId>
                 <version>2.23</version>
                 <configuration>
-                    <sassSourceDirectory>${basedir}/src/main/scss</sassSourceDirectory>
+                    <sassSourceDirectory>${project.build.directory}/generated-sources/scss/light</sassSourceDirectory>
                     <destination>${project.build.directory}/classes</destination>
                 </configuration>
                 <executions>
