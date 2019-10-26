@@ -25,12 +25,6 @@
 .virt-grid-col-header:hover, .virt-grid-row-number:hover{
     -fx-background-color: $table-header-hover;
 }
-.virt-grid-col-header:primary-selected-cell, .virt-grid-row-number:primary-selected-cell {
-    -fx-background-color: $focus-color;
-}
-.virt-grid-col-header:secondary-selected-cell, .virt-grid-row-number:secondary-selected-cell {
-    -fx-background-color: $focus-color-secondary;
-}
 
 .virt-grid-col-header {
     -fx-border-color: transparent $table-header-divider $table-header-border transparent;
@@ -184,25 +178,6 @@
         & .text {
             -fx-fill: black;
         }
-    }
-}
-
-/* focused-cell means the cell wrapper has focus (cell selected) */
-.virt-grid:focused {
-    & .structured-text-field:primary-selected-cell {
-        /* Must beat hover, above */
-        -fx-background-color: $focus-color !important;
-        & .text {
-            -fx-fill: $focus-color-text;
-        }
-    }
-    & .structured-text-field:secondary-selected-cell {
-        -fx-background-color: $focus-color-secondary !important;
-    }
-}
-.virt-grid {
-    & .virt-grid-cell:editing-row-col {
-        -fx-background-color: $focus-color-row-col;
     }
 }
 
