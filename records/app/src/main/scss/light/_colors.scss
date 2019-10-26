@@ -15,6 +15,14 @@ $focus-color-text: white;
 $faint-focus-color: rgba($focus-color, 0.25);
 $control-background: grey(95%);
 $control-background-dark: grey(92%);
+  /* From modena: */
+$pane-background: derive(#ececec,26.4%);
+$text-color: #333;
+
+/* Initial/logo */
+$initial-heading-color: #777;
+$logo-border: grey(60%);
+$logo-background: white;
 
 /* Lists: */
 $list-even: grey(99%);

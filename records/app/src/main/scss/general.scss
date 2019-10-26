@@ -7,6 +7,9 @@
 
     -fx-focus-color: $focus-color;
     -fx-faint-focus-color: $faint-focus-color;
+    
+    -fx-background: $pane-background;
+    -fx-text-background-color: $text-color;
 }
 
 /* Need this for case when context menu shows on something with

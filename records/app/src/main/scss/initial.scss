@@ -1,18 +1,18 @@
 @import 'colors';
 
 .initial-heading {
-    -fx-text-fill: #777;
+    -fx-text-fill: $initial-heading-color;
     -fx-font-size: 200%;
 }
 .initial-subheading {
-    -fx-text-fill: #777;
+    -fx-text-fill: $initial-heading-color;
     -fx-font-size: 140%;
 }
 .initial-content {
     .logo-container {
         -fx-padding: 1em 2.5em 1em 2.5em; 
         -fx-spacing: 2.5em;
-        -fx-background-color: grey(60%), white;
+        -fx-background-color: $logo-border, $logo-background;
         -fx-background-insets: 0, 0 0 1 0;
     }
     .body-container {
