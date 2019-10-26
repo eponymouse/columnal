@@ -10,6 +10,10 @@
     
     -fx-background: $pane-background;
     -fx-text-background-color: $text-color;
+    
+    -fx-control-inner-background: $control-background;
+        /* Version of -fx-control-inner-background for alternative rows */
+    -fx-control-inner-background-alt: $control-background-dark;
 }
 
 /* Need this for case when context menu shows on something with
