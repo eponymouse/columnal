@@ -1,17 +1,5 @@
 @import 'colors';
 
-.initial-title {
-    -fx-text-fill: #555;
-    -fx-font-size: 60pt;
-    -fx-content-display: left;
-    -fx-graphic-text-gap: 20pt;
-    -fx-alignment: center;
-    -fx-max-width: 99999.0;
-    .text {
-        -fx-font-smoothing-type: gray; /* Needed for Windows */
-    }
-}
-
 .initial-heading {
     -fx-text-fill: #777;
     -fx-font-size: 200%;
