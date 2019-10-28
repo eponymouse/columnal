@@ -1,0 +1,12 @@
+NOTE: This file has a very particular syntax.  Follow the existing format exactly; each item must be Version X.Y.Z.A (YYYY-MM-DD) header, followed by one line of the short version shown in the news and upgrade banner, followed by arbitary Markdown for the fuller description (usually bullet list, but doesn't have to be).
+
+Version 0.6.0 (2019-10-20)
+==========================
+First public release, starting the early access phase.
+
+Version 0.6.1 (UNRELEASED)
+==========================
+Add Linux version, fix name resolution bugs.
+
+- Linux build is now available for x64 architecture.
+- Fixed some name resolution bugs.

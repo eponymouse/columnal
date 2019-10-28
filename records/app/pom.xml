@@ -228,7 +228,6 @@
                             <directory>../installers</directory>
                             <includes>
                                 <include>*.icns</include>
-                                <include>columnal.version</include>
                             </includes>
                         </fileset>
                         <fileset>
@@ -578,6 +577,12 @@
                                         <include>_all.html</include>
                                         <include>funcdoc.css</include>
                                         <include>web.css</include>
+                                    </includes>
+                                </resource>
+                                <resource>
+                                    <directory>..</directory>
+                                    <includes>
+                                        <include>changelog.txt</include>
                                     </includes>
                                 </resource>
                             </resources>
@@ -971,23 +976,6 @@
                                 <exec dir="../installers/windows_msi" executable="${putty_bin}/pscp.exe" failonerror="true">
                                     <arg line="columnal-${columnal.version}.msi"/>
                                     <arg line="neil@columnal.xyz:/home/neil/columnal-live/download/columnal-${columnal.version}.msi"/>
-                                </exec>
-                            </target>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <!-- Must be run manually using mvn antrun:run@publish-version -->
-                        <id>publish-version</id>
-                        <phase>package</phase>
-                        <configuration>
-                            <target>
-                                <property file="../installers/tools_${os.name}.properties"/>
-                                <property file="../installers/package.properties"/>
-                                
-                                <echo file="../installers/columnal.version" append="false" message="${columnal.version}${line.separator}${columnal.description}"/>
-                                <exec dir="../installers" executable="${putty_bin}/pscp.exe" failonerror="true">
-                                    <arg line="columnal.version"/>
-                                    <arg line="neil@columnal.xyz:/home/neil/columnal-live/columnal.version"/>
                                 </exec>
                             </target>
                         </configuration>
