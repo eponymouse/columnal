@@ -55,7 +55,7 @@ import java.util.stream.Stream;
  * by evaluating an expression for each.
  */
 @OnThread(Tag.Simulation)
-public class Calculate extends Transformation implements SingleSourceTransformation
+public class Calculate extends VisitableTransformation implements SingleSourceTransformation
 {
     // If any columns overlap the source table's columns, they are shown in that position.
     // If they are new, they are shown at the end, in the order provided by this list
@@ -339,5 +339,11 @@ public class Calculate extends Transformation implements SingleSourceTransformat
         {
             return new Calculate(mgr, new InitialLoadDetails(null, null, destination, null), srcTable.getId(), ImmutableMap.of());
         }
+    }
+
+    @Override
+    public <T> T visit(TransformationVisitor<T> visitor)
+    {
+        return visitor.calculate(this);
     }
 }

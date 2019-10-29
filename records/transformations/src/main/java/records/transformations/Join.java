@@ -38,7 +38,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class Join extends Transformation
+public class Join extends VisitableTransformation
 {
     private final TableId primarySource;
     private final TableId secondarySource;
@@ -328,5 +328,11 @@ public class Join extends Transformation
         {
             return () -> new Join(mgr, new InitialLoadDetails(null, null, destination, null), new TableId(""), new TableId(""), false, ImmutableList.of());
         }
+    }
+
+    @Override
+    public <T> T visit(TransformationVisitor<T> visitor)
+    {
+        return visitor.join(this);
     }
 }

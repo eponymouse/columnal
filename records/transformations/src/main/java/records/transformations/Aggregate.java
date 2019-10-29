@@ -56,7 +56,7 @@ import java.util.stream.Stream;
  * Created by neil on 21/10/2016.
  */
 @OnThread(Tag.Simulation)
-public class Aggregate extends Transformation implements SingleSourceTransformation
+public class Aggregate extends VisitableTransformation implements SingleSourceTransformation
 {
     public static final String NAME = "aggregate";
     private final @Nullable Table src;
@@ -1030,5 +1030,11 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
                 return tableManager.getAllTablesAvailableTo(getId(), false).stream().map(t -> t.getId());
             }
         };
+    }
+
+    @Override
+    public <T> T visit(TransformationVisitor<T> visitor)
+    {
+        return visitor.aggregate(this);
     }
 }

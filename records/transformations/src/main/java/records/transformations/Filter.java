@@ -46,7 +46,7 @@ import java.util.stream.Stream;
  * Created by neil on 23/11/2016.
  */
 @OnThread(Tag.Simulation)
-public class Filter extends Transformation implements SingleSourceTransformation
+public class Filter extends VisitableTransformation implements SingleSourceTransformation
 {
     private static final String PREFIX = "KEEPIF";
     public static final String NAME = "filter";
@@ -284,5 +284,11 @@ public class Filter extends Transformation implements SingleSourceTransformation
         int result = srcTableId.hashCode();
         result = 31 * result + filterExpression.hashCode();
         return result;
+    }
+
+    @Override
+    public <T> T visit(TransformationVisitor<T> visitor)
+    {
+        return visitor.filter(this);
     }
 }

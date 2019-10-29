@@ -43,7 +43,7 @@ import java.util.stream.Stream;
  *   - Errors in every place if the sort-by columns can't be found.
  */
 @OnThread(Tag.Simulation)
-public class Sort extends Transformation implements SingleSourceTransformation
+public class Sort extends VisitableTransformation implements SingleSourceTransformation
 {
 
     public static final String NAME = "sort";
@@ -399,5 +399,11 @@ public class Sort extends Transformation implements SingleSourceTransformation
         int result = srcTableId.hashCode();
         result = 31 * result + originalSortBy.hashCode();
         return result;
+    }
+
+    @Override
+    public <T> T visit(TransformationVisitor<T> visitor)
+    {
+        return visitor.sort(this);
     }
 }

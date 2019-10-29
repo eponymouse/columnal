@@ -44,7 +44,7 @@ import java.util.stream.Stream;
  * Created by neil on 18/01/2017.
  */
 @OnThread(Tag.Simulation)
-public class Concatenate extends Transformation
+public class Concatenate extends VisitableTransformation
 {
     // Note: these names are used directly for saving, so must match the parser.
     public static enum IncompleteColumnHandling
@@ -364,5 +364,11 @@ public class Concatenate extends Transformation
         int result = sources.hashCode();
         result = 31 * result + incompleteColumnHandling.hashCode();
         return result;
+    }
+
+    @Override
+    public <T> T visit(TransformationVisitor<T> visitor)
+    {
+        return visitor.concatenate(this);
     }
 }

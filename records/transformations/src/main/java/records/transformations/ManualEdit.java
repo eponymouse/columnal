@@ -57,7 +57,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 @OnThread(Tag.Simulation)
-public class ManualEdit extends Transformation implements SingleSourceTransformation
+public class ManualEdit extends VisitableTransformation implements SingleSourceTransformation
 {
     public static final String NAME = "correct";
     
@@ -662,5 +662,11 @@ edit : editHeader editColumn*;
         {
             return new ManualEdit(mgr, new InitialLoadDetails(null, null, destination, null), srcTable.getId(), null, ImmutableMap.of());
         }
+    }
+
+    @Override
+    public <T> T visit(TransformationVisitor<T> visitor)
+    {
+        return visitor.manualEdit(this);
     }
 }

@@ -50,7 +50,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 @OnThread(Tag.Simulation)
-public class Check extends Transformation implements SingleSourceTransformation
+public class Check extends VisitableTransformation implements SingleSourceTransformation
 {
     public static final String NAME = "check";
     private static final String PREFIX = "CHECK";
@@ -437,5 +437,11 @@ public class Check extends Transformation implements SingleSourceTransformation
         {
             return new Check(mgr, new InitialLoadDetails(null, null, destination, null), srcTable.getId(), CheckType.STANDALONE, new BooleanLiteral(true));
         }
+    }
+
+    @Override
+    public <T> T visit(TransformationVisitor<T> visitor)
+    {
+        return visitor.check(this);
     }
 }

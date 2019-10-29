@@ -28,7 +28,7 @@ import java.util.stream.Stream;
  * data set.  Hidden is decided by black-list.
  */
 @OnThread(Tag.Simulation)
-public class HideColumns extends Transformation implements SingleSourceTransformation
+public class HideColumns extends VisitableTransformation implements SingleSourceTransformation
 {
     public static final String NAME = "drop.columns";
     @OnThread(Tag.Any)
@@ -207,5 +207,11 @@ public class HideColumns extends Transformation implements SingleSourceTransform
         int result = srcTableId.hashCode();
         result = 31 * result + hideIds.hashCode();
         return result;
+    }
+
+    @Override
+    public <T> T visit(TransformationVisitor<T> visitor)
+    {
+        return visitor.hideColumns(this);
     }
 }
