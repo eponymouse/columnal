@@ -138,7 +138,7 @@ public abstract class GenValueBase<T> extends Generator<T>
                     o = makeValue(inner);
                 else
                     o = null;
-                return new TaggedValue(tagIndex, o);
+                return new TaggedValue(tagIndex, o, DataTypeUtility.fromTags(tags));
             }
 
             @Override

@@ -274,7 +274,7 @@ public class Aggregate extends Transformation implements SingleSourceTransformat
 
     private static EvaluateState makeEvaluateState(JoinedSplit splits, TableManager mgr, ErrorAndTypeRecorderStorer errors, int rowIndex) throws InternalException
     {
-        EvaluateState evaluateState = new EvaluateState(mgr.getTypeManager(), OptionalInt.of(rowIndex), errors);
+        EvaluateState evaluateState = new EvaluateState(mgr.getTypeManager(), OptionalInt.of(rowIndex));
         evaluateState = evaluateState.add(TypeState.GROUP_COUNT, DataTypeUtility.value(splits.valuesAndOccurrences.get(rowIndex).getSecond().bitSet.cardinality()));
         return evaluateState;
     }

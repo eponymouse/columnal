@@ -201,11 +201,11 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
                     {
                         if (src.getSecond().isPresent())
                         {
-                            expected.add(TestUtil.getSingleCollapsedData(srcCol, src.getSecond().getAsInt()).<@Value Object>map(v -> new TaggedValue(1, v)));
+                            expected.add(TestUtil.getSingleCollapsedData(srcCol, src.getSecond().getAsInt()).<@Value Object>map(v -> new TaggedValue(1, v, srcMgr.getTypeManager().getMaybeType())));
                         }
                         else
                         {
-                            expected.add(Either.right(new TaggedValue(0, null)));
+                            expected.add(Either.right(new TaggedValue(0, null, srcMgr.getTypeManager().getMaybeType())));
                         }
                     }
                     else

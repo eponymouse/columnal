@@ -1208,7 +1208,7 @@ public class TestUtil
         DummyManager mgr = managerWithTestTypes().getFirst();
         Expression expression = TestUtil.parseExpression(expressionSrc, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()));
         assertNotNull(expression.checkExpression(TestUtil.dummyColumnLookup(), createTypeState(mgr.getTypeManager()), excOnError()));
-        return expression.calculateValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty(), (m, e) -> {throw new InternalException("No type lookup in runExpression");})).value;
+        return expression.calculateValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty())).value;
     }
 
     public static ColumnLookup dummyColumnLookup()

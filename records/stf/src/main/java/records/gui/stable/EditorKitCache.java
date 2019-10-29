@@ -346,7 +346,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
                 };
                 prog.progressUpdate(0.0);
                 @Value V val = getValue.getWithProgress(originalIndex, prog);
-                String valAsStr = DataTypeUtility.valueToString(dataType, val, null);
+                String valAsStr = DataTypeUtility.valueToString(val);
                 Platform.runLater(() -> displayCacheItem.update(valAsStr, val));
             }
             catch (InvalidImmediateValueException e)

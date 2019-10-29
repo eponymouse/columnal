@@ -22,6 +22,7 @@ import records.data.RecordColumnStorage;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.FlatDataTypeVisitor;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
@@ -38,12 +39,14 @@ import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.ParseProgress;
 import utility.TaggedValue;
+import utility.TaggedValue.TaggedTypeDefinitionBase;
 import utility.UnitType;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
 import utility.Utility.Record;
 import utility.Utility.RecordMap;
+import utility.Utility.ValueFunctionBase;
 import utility.Utility.WrappedCharSequence;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -350,141 +353,167 @@ public class DataTypeUtility
     }
 
     @OnThread(Tag.Simulation)
-    public static String valueToString(DataType dataType, @Value Object item, @Nullable DataType parent) throws UserException, InternalException
+    public static String valueToString(@Value Object item) throws UserException, InternalException
     {
-        return valueToString(dataType, item, parent, false);
+        return valueToString(item, null, false);
     }
 
     @OnThread(Tag.FXPlatform)
-    public static String valueToStringFX(DataType dataType, @ImmediateValue Object item) throws UserException, InternalException
+    public static String valueToStringFX(@ImmediateValue Object item) throws UserException, InternalException
     {
-        return Utility.launderSimulationEx(() -> valueToString(dataType, item, null, false));
+        return Utility.launderSimulationEx(() -> valueToString(item));
     }
 
+    // If asExpressionOfType != null, convert to Expression, else convert just to value
     @OnThread(Tag.Simulation)
-    public static String valueToString(DataType dataType, @Value Object item, @Nullable DataType parent, boolean asExpression) throws UserException, InternalException
+    public static String valueToString(@Value Object item, @Nullable DataType asExpressionOfType, boolean surroundedByBrackets) throws UserException, InternalException
     {
-        return dataType.apply(new DataTypeVisitor<String>()
+        if (item instanceof Number)
         {
-            @Override
-            public String number(NumberInfo numberInfo) throws InternalException, UserException
+            String number;
+            if (item instanceof BigDecimal)
             {
-                String number;
-                if (item instanceof BigDecimal)
+                if (Utility.isIntegral(item))
                 {
-                    if (Utility.isIntegral(item))
-                    {
-                        number = ((BigDecimal) item).toBigInteger().toString();
-                    }
-                    else
-                        number = ((BigDecimal) item).toPlainString();
+                    number = ((BigDecimal) item).toBigInteger().toString();
                 }
                 else
-                    number = item.toString();
-                return number + (asExpression && !numberInfo.getUnit().equals(Unit.SCALAR) ? "{" + numberInfo.getUnit().toString() + "}" : "");
+                    number = ((BigDecimal) item).toPlainString();
             }
-
-            @Override
-            public String text() throws InternalException, UserException
+            else
+                number = item.toString();
+            Unit asExpressionOfUnit = asExpressionOfType == null ? null : asExpressionOfType.apply(new SpecificDataTypeVisitor<Unit>() {
+                @Override
+                public Unit number(NumberInfo displayInfo) throws InternalException
+                {
+                    return displayInfo.getUnit();
+                }
+            });
+            return number + (asExpressionOfUnit != null && !asExpressionOfUnit.equals(Unit.SCALAR) ? "{" + asExpressionOfUnit.toString() + "}" : "");
+        }
+        else if (item instanceof String)
+        {
+            return "\"" + GrammarUtility.escapeChars(item.toString()) + "\"";
+        }
+        else if (item instanceof Boolean)
+        {
+            return item.toString();
+        }
+        else if (item instanceof TemporalAccessor)
+        {
+            @Value TemporalAccessor t = Utility.cast(item, TemporalAccessor.class);
+            DateTimeType type;
+            if (item instanceof LocalDate)
             {
-                return "\"" + GrammarUtility.escapeChars(item.toString()) + "\"";
+                type = DateTimeType.YEARMONTHDAY;
             }
-
-            @Override
-            public String date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            else if (item instanceof YearMonth)
             {
-                String s = dateTimeInfo.getStrictFormatter().format(Utility.cast(item, TemporalAccessor.class));
-                if (asExpression)
-                    return dateTimeInfo.getType().literalPrefix() + "{" + s + "}";
+                type = DateTimeType.YEARMONTH;
+            }
+            else if (item instanceof LocalTime)
+            {
+                type = DateTimeType.TIMEOFDAY;
+            }
+            else if (item instanceof LocalDateTime)
+            {
+                type = DateTimeType.DATETIME;
+            }
+            else if (item instanceof ZonedDateTime)
+            {
+                type = DateTimeType.DATETIMEZONED;
+            }
+            else
+            {
+                throw new InternalException("Unknown internal temporal type: " + item.getClass());
+            }
+            DateTimeInfo dateTimeInfo = new DateTimeInfo(type);
+            String s = dateTimeInfo.getStrictFormatter().format(t);
+            if (asExpressionOfType != null)
+                return dateTimeInfo.getType().literalPrefix() + "{" + s + "}";
+            else
+                return s;
+        }
+        else if (item instanceof TaggedValue)
+        {
+            @Value TaggedValue tv = Utility.cast(item, TaggedValue.class);
+            Pair<TypeId, ImmutableList<TagType<DataType>>> asExpressionOfTaggedType = asExpressionOfType == null ? null : asExpressionOfType.apply(new SpecificDataTypeVisitor<Pair<TypeId, ImmutableList<TagType<DataType>>>>() {
+                @Override
+                public Pair<TypeId, ImmutableList<TagType<DataType>>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
+                {
+                    return new Pair<>(typeName, tags);
+                }
+            });
+            String tagName = (asExpressionOfTaggedType != null ? ("tag\\\\" + asExpressionOfTaggedType.getFirst().getRaw() + "\\") : "") + tv.getTagName();
+            @Nullable @Value Object tvInner = tv.getInner();
+            if (tvInner != null)
+            {
+                @Nullable DataType typeInner = asExpressionOfTaggedType == null ? null : Utility.getI(asExpressionOfTaggedType.getSecond(), tv.getTagIndex()).getInner();
+                if (asExpressionOfTaggedType != null)
+                    return "@call " + tagName + "(" + valueToString(tvInner, typeInner, true) + ")";
                 else
-                    return s;
+                    return tagName + "(" + valueToString(tvInner, null, true) + ")";
             }
-
-            @Override
-            public String bool() throws InternalException, UserException
+            else
             {
-                return item.toString();
+                return tagName;
             }
+        }
+        else if (item instanceof Record)
+        {
+            @Value Record record = Utility.cast(item, Record.class);
+            StringBuilder s = new StringBuilder();
+            if (!surroundedByBrackets)
+                s.append("(");
+            boolean first = true;
 
-            @Override
-            @OnThread(Tag.Simulation)
-            public String tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                @Value TaggedValue tv = Utility.cast(item, TaggedValue.class);
-                String tagName = (asExpression ? ("tag\\\\" + typeName.getRaw() + "\\") : "") + tags.get(tv.getTagIndex()).getName();
-                @Nullable @Value Object tvInner = tv.getInner();
-                if (tvInner != null)
+            ImmutableMap<@ExpressionIdentifier String, DataType> fieldTypes = asExpressionOfType == null ? null : asExpressionOfType.apply(new SpecificDataTypeVisitor<ImmutableMap<@ExpressionIdentifier String, DataType>>() {
+                @Override
+                public ImmutableMap<@ExpressionIdentifier String, DataType> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
                 {
-                    @Nullable DataType typeInner = tags.get(tv.getTagIndex()).getInner();
-                    if (typeInner == null)
-                        throw new InternalException("Tag value inner but missing type inner: " + typeName + " " + tagName);
-                    if (asExpression)
-                        return "@call " + tagName + "(" + valueToString(typeInner, tvInner, dataType, asExpression) + ")";
-                    else
-                        return tagName + "(" + valueToString(typeInner, tvInner, dataType, asExpression) + ")";
+                    return fields;
                 }
-                else
-                {
-                    return tagName;
-                }
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public String record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
-            {
-                @Value Record record = Utility.cast(item, Record.class);
-                StringBuilder s = new StringBuilder();
-                if (parent == null || !isTagged(parent))
-                    s.append("(");
-                boolean first = true;
-                for (Entry<@ExpressionIdentifier String, DataType> entry : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
-                {
-                    if (!first)
-                        s.append(", ");
-                    first = false;
-                    s.append(entry.getKey()).append(": ");
-                    s.append(valueToString(entry.getValue(), record.getField(entry.getKey()), dataType, asExpression));
-                }
-                if (parent == null || !isTagged(parent))
-                    s.append(")");
-                return s.toString();
-            }
+            });
             
-            private boolean isTagged(DataType type) throws InternalException
+            for (Entry<@ExpressionIdentifier String, @Value Object> entry : Utility.iterableStream(record.getFullContent().entrySet().stream().sorted(Comparator.<Entry<@ExpressionIdentifier String, @Value Object>, @ExpressionIdentifier String>comparing(e -> e.getKey()))))
             {
-                return type.apply(new FlatDataTypeVisitor<Boolean>(false) {
+                if (!first)
+                    s.append(", ");
+                first = false;
+                s.append(entry.getKey()).append(": ");
+                s.append(valueToString(entry.getValue(), fieldTypes == null ? null : Utility.get(fieldTypes, entry.getKey()), false));
+            }
+            if (!surroundedByBrackets)
+                s.append(")");
+            return s.toString();
+        }
+        else if (item instanceof ListEx)
+        {
+            StringBuilder s = new StringBuilder("[");
+            ListEx listEx = Utility.cast(item, ListEx.class);
+            for (int i = 0; i < listEx.size(); i++)
+            {
+                if (i != 0)
+                    s.append(", ");
+                DataType innerType = asExpressionOfType == null ? null : asExpressionOfType.apply(new SpecificDataTypeVisitor<DataType>() {
                     @Override
-                    public Boolean tagged(TypeId typeName, ImmutableList typeVars, ImmutableList tags) throws InternalException, InternalException
+                    public DataType array(DataType inner) throws InternalException
                     {
-                        return true;
+                        return inner;
                     }
                 });
+                s.append(valueToString(listEx.get(i), innerType, false));
             }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public String array(@Nullable DataType inner) throws InternalException, UserException
-            {
-                StringBuilder s = new StringBuilder("[");
-                ListEx listEx = Utility.cast(item, ListEx.class);
-                for (int i = 0; i < listEx.size(); i++)
-                {
-                    if (i != 0)
-                        s.append(", ");
-                    if (inner == null)
-                        throw new InternalException("Array has empty type but is not empty");
-                    s.append(valueToString(inner, listEx.get(i), dataType, asExpression));
-                }
-                return s.append("]").toString();
-            }
-
-            @Override
-            public String function(ImmutableList<DataType> argType, DataType resultType) throws InternalException, UserException
-            {
-                return "<function>";
-            }
-        });
+            return s.append("]").toString();
+        }
+        else if (item instanceof ValueFunctionBase)
+        {
+            return "<function>";
+        }
+        else
+        {
+            throw new InternalException("Unknown internal type: " + item.getClass());
+        }
     }
 
     public static DataTypeValue listToType(DataType elementType, ListEx listEx) throws InternalException, UserException
@@ -497,14 +526,14 @@ public class DataTypeUtility
         OptionalInt noInnerIndex = Utility.findFirstIndex(tagTypes, tt -> tt.getInner() == null);
         if (noInnerIndex.isPresent())
         {
-            return TaggedValue.immediate(noInnerIndex.getAsInt(), null);
+            return TaggedValue.immediate(noInnerIndex.getAsInt(), null, DataTypeUtility.fromTags(tagTypes));
         }
         else
         {
             @Nullable DataType inner = tagTypes.get(0).getInner();
             if (inner == null)
                 throw new InternalException("Impossible: no tags without inner value, yet no inner value!");
-            return TaggedValue.immediate(0, makeDefaultValue(inner));
+            return TaggedValue.immediate(0, makeDefaultValue(inner), DataTypeUtility.fromTags(tagTypes));
         }
     }
 
@@ -1072,5 +1101,14 @@ public class DataTypeUtility
                     "value=" + DataTypeUtility._test_valueToString(value) +
                     '}';
         }
+    }
+    
+    public static <T> TaggedTypeDefinitionBase fromTags(ImmutableList<TagType<T>> tags)
+    {
+        return tagIndex -> {
+            if (tagIndex >=0 && tagIndex < tags.size())
+                return tags.get(tagIndex).getName();
+            return "InvalidTag" + (tagIndex < 0 ? "Neg" : "") + Math.abs(tagIndex);
+        };
     }
 }

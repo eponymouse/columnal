@@ -112,7 +112,7 @@ public class ManualEdit extends Transformation implements SingleSourceTransforma
                         @Value Object value = keyColType.getCollapsed(i);
                         if (!keyValues.add(new ComparableValue(value)))
                         {
-                            throw new UserException("Duplicate keys: " + DataTypeUtility.valueToString(keyColType.getType(), value, null));
+                            throw new UserException("Duplicate keys: " + DataTypeUtility.valueToString(value));
                         }
                     }
                     catch (UserException e)

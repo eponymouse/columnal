@@ -195,7 +195,7 @@ public class ExcelExporter implements Exporter
                         @OnThread(Tag.Simulation)
                         private UnitType putString(DataType dataType, GetValue<?> g) throws InternalException, UserException
                         {
-                            cell.setCellValue(DataTypeUtility.valueToString(dataType, g.get(rowIndexFinal), null));
+                            cell.setCellValue(DataTypeUtility.valueToString(g.get(rowIndexFinal)));
                             return UnitType.UNIT;
                         }
                     });

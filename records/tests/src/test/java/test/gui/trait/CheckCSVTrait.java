@@ -116,7 +116,7 @@ public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnT
         for (int i = 0; i < length; i++)
         {
             if (!Ints.contains(excluding, i))
-                r.add(DataTypeUtility.valueToString(type.getType(), type.getCollapsed(i), null));
+                r.add(DataTypeUtility.valueToString(type.getCollapsed(i)));
         }
         return r;
     }

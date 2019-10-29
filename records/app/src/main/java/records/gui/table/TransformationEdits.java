@@ -142,7 +142,7 @@ public class TransformationEdits
                 ImmutableList.Builder<String> stringItems = ImmutableList.builder();
                 for (ComparableValue value : Utility.iterableStream(values.stream().limit(3)))
                 {
-                    stringItems.add(DataTypeUtility.valueToString(columnType.getType(), value.getValue(), null));
+                    stringItems.add(DataTypeUtility.valueToString(value.getValue()));
                 }
                 bestGuess = new Pair<>(column.getName(), stringItems.build());
                 bestGuessSize = values.size();
@@ -213,7 +213,7 @@ public class TransformationEdits
                                     String stringVersion;
                                     try
                                     {
-                                        stringVersion = DataTypeUtility.valueToString(c.getType().getType(), c.getType().getCollapsed(i), null);
+                                        stringVersion = DataTypeUtility.valueToString(c.getType().getCollapsed(i));
                                     }
                                     catch (InvalidImmediateValueException e)
                                     {

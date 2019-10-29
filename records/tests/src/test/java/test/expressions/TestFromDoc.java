@@ -213,7 +213,7 @@ public class TestFromDoc
                 if (!errorLine)
                     assertEquals(line, Either.right(DataType.BOOLEAN), concreteReturnType);
 
-                EvaluateState evaluateState = new EvaluateState(typeManager, OptionalInt.empty(), errors);
+                EvaluateState evaluateState = new EvaluateState(typeManager, OptionalInt.empty());
                 List<Pair<String, String>> varValues = new ArrayList<>();
                 for (Entry<String, TypeExp> e : variables.entrySet())
                 {
@@ -238,7 +238,7 @@ public class TestFromDoc
                     }
                     while (parsedMinMax != null && (Utility.compareValues(parsedMinMax.getFirst(), value) > 0 || Utility.compareValues(parsedMinMax.getSecond(), value) < 0));
                     evaluateState = evaluateState.add(e.getKey(), value);
-                    varValues.add(new Pair<>(e.getKey(), DataTypeUtility.valueToString(concreteVarType, value, null)));
+                    varValues.add(new Pair<>(e.getKey(), DataTypeUtility.valueToString(value)));
                 }
                 
                 if (errorLine)

@@ -5,6 +5,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeUtility;
 import records.gui.dtf.Recogniser;
 import utility.Either;
 import utility.Pair;
@@ -44,7 +45,7 @@ public class TaggedRecogniser extends Recogniser<@ImmediateValue TaggedValue>
             {
                 @Nullable Recogniser<@ImmediateValue ?> inner = tag.getInner();
                 if (inner == null)
-                    return success(TaggedValue.immediate(tagInfo.getFirst(), null), afterTag);
+                    return success(TaggedValue.immediate(tagInfo.getFirst(), null, DataTypeUtility.fromTags(tags)), afterTag);
                 
                 pp = afterTag.consumeNext("(");
                 if (pp == null)
@@ -53,7 +54,7 @@ public class TaggedRecogniser extends Recogniser<@ImmediateValue TaggedValue>
                     ParseProgress afterBracket = succ.parseProgress.consumeNext(")");
                     if (afterBracket == null)
                         return error("Expected closing ')' after an inner value", succ.parseProgress.curCharIndex);
-                    return success(TaggedValue.immediate(tagInfo.getFirst(), succ.value), afterBracket);
+                    return success(TaggedValue.immediate(tagInfo.getFirst(), succ.value, DataTypeUtility.fromTags(tags)), afterBracket);
                 });
                 
             }

@@ -730,7 +730,7 @@ public class IdentExpression extends NonOperatorExpression
         {
             @Value Object value;
             if (tagFinal.getTagInfo().getInner() == null)
-                value = new TaggedValue(tagFinal.tagIndex, null);
+                value = new TaggedValue(tagFinal.tagIndex, null, tagFinal.wholeType);
             else
                 value = ValueFunction.value(new ValueFunction()
                     {
@@ -738,7 +738,7 @@ public class IdentExpression extends NonOperatorExpression
                         public @OnThread(Tag.Simulation)
                         @Value Object _call() throws InternalException, UserException
                         {
-                        return new TaggedValue(tagFinal.tagIndex, arg(0));
+                        return new TaggedValue(tagFinal.tagIndex, arg(0), tagFinal.wholeType);
             }
                     });
             return result(value, state, ImmutableList.of());

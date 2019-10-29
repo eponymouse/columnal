@@ -562,7 +562,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
-                    terminals.add(() -> literal(new TaggedValue(tagIndex, null), TestUtil.tagged(dummyManager.getUnitManager(), tagInfo, null, type, true)));
+                    terminals.add(() -> literal(new TaggedValue(tagIndex, null, DataTypeUtility.fromTags(tags)), TestUtil.tagged(dummyManager.getUnitManager(), tagInfo, null, type, true)));
                 }
                 else
                 {
@@ -570,7 +570,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     nonTerm.add(() ->
                     {
                         Pair<List<@Value Object>, Expression> innerVal = make(nonNullInner, maxLevels - 1);
-                        return map(innerVal, v -> new TaggedValue(tagIndex, v), e -> TestUtil.tagged(dummyManager.getUnitManager(), tagInfo, e, type, true));
+                        return map(innerVal, v -> new TaggedValue(tagIndex, v, DataTypeUtility.fromTags(tags)), e -> TestUtil.tagged(dummyManager.getUnitManager(), tagInfo, e, type, true));
                     });
                 }
                 return termDeep(maxLevels, type, terminals, nonTerm);

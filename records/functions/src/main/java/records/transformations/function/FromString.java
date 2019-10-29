@@ -189,14 +189,14 @@ public class FromString
                             {
                                 if (!src.tryRead("("))
                                     throw new UserException("Tag name must be followed by round brackets around inner value");
-                                @Value TaggedValue r = new TaggedValue(indexedTag.getFirst(), convertFromString(innerType, src));
+                                @Value TaggedValue r = new TaggedValue(indexedTag.getFirst(), convertFromString(innerType, src), DataTypeUtility.fromTags(tags));
                                 if (!src.tryRead(")"))
                                     throw new UserException("Missing closing round bracket around tag's inner value");
                                 return r;
                             }
                             else
                             {
-                                return new TaggedValue(indexedTag.getFirst(), null);
+                                return new TaggedValue(indexedTag.getFirst(), null, DataTypeUtility.fromTags(tags));
                             }
                         }
                     }

@@ -1,7 +1,10 @@
 package records.transformations.function.core;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
@@ -33,7 +36,7 @@ public class TypeOf extends FunctionDefinition
         public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
         {
             // TODO return the actual type literal once we define the GADT
-            return new TaggedValue(0, null);
+            return new TaggedValue(0, null, DataTypeUtility.fromTags(ImmutableList.<TagType<Object>>of(new TagType<Object>("Type", null))));
         }
     }
 }

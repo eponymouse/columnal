@@ -17,6 +17,7 @@ import utility.FunctionInt;
 import utility.Pair;
 import utility.SimulationSupplierInt;
 import utility.Utility;
+import utility.Utility.ValueFunctionBase;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +26,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 // I want to label this class @Value but I don't seem able to.  Perhaps because it is abstract?
-public abstract class ValueFunction
+public abstract class ValueFunction extends ValueFunctionBase
 {
     // All fields are used temporarily while _call() is executing.
     // This means that an individual ValueFunction is not re-entrant.

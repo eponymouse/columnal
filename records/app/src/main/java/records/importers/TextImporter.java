@@ -193,12 +193,12 @@ public class TextImporter implements Importer
                         return TextFileColumn.<DataType>taggedColumn(rs, reader, format.initialTextFormat.separator, format.initialTextFormat.quote, columnInfo.title, columnIndexInSrc, totalColumns, DataTypeUtility.getTaggedTypeName(numberOrBlank), ImmutableList.of(Either.<Unit, DataType>right(numberType)), DataTypeUtility.getTagTypes(numberOrBlank), str -> {
                             if (str.equals(orBlankColumnType.getBlankString()))
                             {
-                                return Either.<String, TaggedValue>right(new TaggedValue(0, null));
+                                return Either.<String, TaggedValue>right(new TaggedValue(0, null, typeManager.getMaybeType()));
                             }
                             else
                             {
                                 return Utility.parseNumberOpt(str).map(n -> {
-                                    return Either.<String, TaggedValue>right(new TaggedValue(1, DataTypeUtility.value(n)));
+                                    return Either.<String, TaggedValue>right(new TaggedValue(1, DataTypeUtility.value(n), typeManager.getMaybeType()));
                                 }).orElse(Either.<String, TaggedValue>left(str));
                             }
                         });

@@ -14,22 +14,25 @@ import threadchecker.Tag;
 public final @Value class TaggedValue
 {
     private final int tagIndex;
-    private @Nullable @Value Object innerItem;
+    // The tagIndex is the canonical value, the tagName is for info only:
+    private final String tagName;
+    private final @Nullable @Value Object innerItem;
 
     @SuppressWarnings("valuetype")
-    public @Value TaggedValue(int tagIndex, @Nullable @Value Object innerItem)
+    public @Value TaggedValue(int tagIndex, @Nullable @Value Object innerItem, TaggedTypeDefinitionBase taggedTypeDefinition)
     {
         this.tagIndex = tagIndex;
         this.innerItem = innerItem;
+        this.tagName = taggedTypeDefinition.getTagName(tagIndex);
     }
     
     @SuppressWarnings("valuetype")
-    public static @ImmediateValue TaggedValue immediate(int tagIndex, @Nullable @ImmediateValue Object innerItem)
+    public static @ImmediateValue TaggedValue immediate(int tagIndex, @Nullable @ImmediateValue Object innerItem, TaggedTypeDefinitionBase taggedTypeDefinition)
     {
-        return new TaggedValue(tagIndex, innerItem);
+        return new TaggedValue(tagIndex, innerItem, taggedTypeDefinition);
     }    
 
-    public int getTagIndex()
+    public @Pure int getTagIndex()
     {
         return tagIndex;
     }
@@ -38,6 +41,11 @@ public final @Value class TaggedValue
     public @Nullable @Value Object getInner()
     {
         return innerItem;
+    }
+
+    public @Pure String getTagName()
+    {
+        return tagName;
     }
 
     @Override
@@ -67,5 +75,10 @@ public final @Value class TaggedValue
             tagIndex +
             ": " + innerItem +
             '}';
+    }
+    
+    public static interface TaggedTypeDefinitionBase
+    {
+        public String getTagName(int tagIndex);
     }
 }

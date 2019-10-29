@@ -18,7 +18,6 @@ import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
-import records.transformations.expression.EvaluateState.TypeLookup;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
@@ -64,7 +63,7 @@ public class Filter extends Transformation implements SingleSourceTransformation
     private int nextIndexToExamine = 0;
     @OnThread(Tag.Any)
     private final Expression filterExpression;
-    private @MonotonicNonNull Pair<TypeLookup, DataType> type;
+    private @MonotonicNonNull DataType type;
     private boolean typeChecked = false;
 
     public Filter(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, Expression filterExpression) throws InternalException
@@ -159,12 +158,12 @@ public class Filter extends Transformation implements SingleSourceTransformation
                         }
                     });
                 
-                type = new Pair<>(typeRecorder, typeFinal);
+                type = typeFinal;
             }
             if (type == null)
                 return;
         }
-        ensureBoolean(type.getSecond());
+        ensureBoolean(type);
 
         int start = indexMap.filled();
         while (indexMap.filled() <= index && recordSet.indexValid(nextIndexToExamine))
@@ -172,7 +171,7 @@ public class Filter extends Transformation implements SingleSourceTransformation
             boolean keep;
             try
             {
-                keep = Utility.cast(filterExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(nextIndexToExamine), type.getFirst())).value, Boolean.class);
+                keep = Utility.cast(filterExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(nextIndexToExamine))).value, Boolean.class);
             }
             catch (UserException e)
             {

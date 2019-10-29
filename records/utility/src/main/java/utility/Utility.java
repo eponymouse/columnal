@@ -1861,6 +1861,10 @@ public class Utility
                     '}';
         }
     }
+    
+    public static abstract class ValueFunctionBase
+    {
+    }
 
     @OnThread(Tag.Simulation)
     public static abstract class ListEx

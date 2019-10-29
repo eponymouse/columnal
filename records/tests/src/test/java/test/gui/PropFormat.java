@@ -31,7 +31,9 @@ import records.data.columntype.OrBlankColumnType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
+import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.grid.RectangleBounds;
@@ -303,13 +305,14 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
     @Test
     public void testNumOrMissing() throws Exception
     {
+        TypeManager typeManager = new TypeManager(new UnitManager());
         ImmutableList<String> textRows = ImmutableList.of("1", "3", "NA", "-8910.444", "NA");
         ImmutableList<List<@Value Object>> target = Utility.mapListI(ImmutableList.of(
-            new TaggedValue(1, DataTypeUtility.value(1)),
-            new TaggedValue(1, DataTypeUtility.value(3)),
-            new TaggedValue(0, null),
-            new TaggedValue(1, DataTypeUtility.value(new BigDecimal ("-8910.444"))),
-            new TaggedValue(0, null)
+            new TaggedValue(1, DataTypeUtility.value(1), typeManager.getMaybeType()),
+            new TaggedValue(1, DataTypeUtility.value(3), typeManager.getMaybeType()),
+            new TaggedValue(0, null, typeManager.getMaybeType()),
+            new TaggedValue(1, DataTypeUtility.value(new BigDecimal ("-8910.444")), typeManager.getMaybeType()),
+            new TaggedValue(0, null, typeManager.getMaybeType())
                 ), ImmutableList::of);
         
         testGuessFormatGUI(new FormatAndData(

@@ -46,7 +46,7 @@ public class HTMLExporter implements Exporter
                 if (collapsed instanceof String)
                     tableBody.append(e((String)collapsed));
                 else
-                    tableBody.append(e(DataTypeUtility.valueToString(column.getType().getType(), collapsed, null)));
+                    tableBody.append(e(DataTypeUtility.valueToString(collapsed)));
                 tableBody.append("</td>\n");
             }
             tableBody.append("</tr>\n");

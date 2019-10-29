@@ -109,7 +109,7 @@ public class GenFile extends Generator<GeneratedTextFile>
                     }
                     else
                     {
-                        string = DataTypeUtility.valueToString(columnTypes[column].getType(), value, null);
+                        string = DataTypeUtility.valueToString(value);
                     }
 
                     boolean quote = string.contains(sep) || string.contains(quot) || rnd.nextInt(3) == 1;

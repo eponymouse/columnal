@@ -56,7 +56,7 @@ public class CSVExporter implements Exporter
             {
                 for (int i = 0; i < columns.size(); i++)
                 {
-                    out.write(quoteCSV(DataTypeUtility.valueToString(columns.get(i).getType().getType(), columns.get(i).getType().getCollapsed(row), null)));
+                    out.write(quoteCSV(DataTypeUtility.valueToString(columns.get(i).getType().getCollapsed(row))));
                     if (i < columns.size() - 1)
                         out.write(",");
                 }

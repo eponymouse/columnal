@@ -6,6 +6,8 @@ import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -111,7 +113,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
     public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
     {
         // TODO return the actual type literal once we define the GADT
-        return result(new TaggedValue(0, null), state);
+        return result(new TaggedValue(0, null, DataTypeUtility.fromTags(ImmutableList.<TagType<Object>>of(new TagType<Object>("Type", null)))), state);
     }
 
     @Override

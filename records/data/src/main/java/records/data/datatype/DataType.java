@@ -1052,7 +1052,7 @@ public abstract class DataType implements StyledShowable
         return numberContext.<@Value Number>mapEx(number -> DataTypeUtility.value(Utility.parseNumber(number.getText().trim())));
     }
 
-    private static Either<String, TaggedValue> loadTaggedValue(List<TagType<DataType>> tags, DataParser p) throws UserException, InternalException
+    private static Either<String, TaggedValue> loadTaggedValue(ImmutableList<TagType<DataType>> tags, DataParser p) throws UserException, InternalException
     {
         Either<String, TagContext> tagContext = tryParse(p, DataParser::tagOrInvalid, TagOrInvalidContext::invalidItem, TagOrInvalidContext::tag);
         if (tagContext == null)
@@ -1073,17 +1073,17 @@ public abstract class DataType implements StyledShowable
                         @Value Object innerValue = loadSingleItem(innerType, p, true).getRight("Invalid nested invalid");
                         if (tryParse(() -> p.closeRound()) == null)
                             throw new ParseException("Closing tagged value bracket for " + constructor, p);
-                        return new TaggedValue(i, innerValue);
+                        return new TaggedValue(i, innerValue, DataTypeUtility.fromTags(tags));
                     }
 
-                    return new TaggedValue(i, null);
+                    return new TaggedValue(i, null, DataTypeUtility.fromTags(tags));
                 }
             }
             throw new UserException("Could not find matching tag for: \"" + constructor + "\" in: " + tags.stream().map(t -> "\"" + t.getName() + "\"").collect(Collectors.joining(", ")));
         });
     }
 
-    private static Either<String, TaggedValue> loadTaggedValue(List<TagType<DataType>> tags, DataParser2 p) throws UserException, InternalException
+    private static Either<String, TaggedValue> loadTaggedValue(ImmutableList<TagType<DataType>> tags, DataParser2 p) throws UserException, InternalException
     {
         Either<String, DataParser2.TagContext> tagContext = tryParse(p, DataParser2::tagOrInvalid, DataParser2.TagOrInvalidContext::invalidItem, DataParser2.TagOrInvalidContext::tag);
         if (tagContext == null)
@@ -1104,10 +1104,10 @@ public abstract class DataType implements StyledShowable
                         @Value Object innerValue = loadSingleItem(innerType, p, true).getRight("Invalid nested invalid");
                         if (tryParse(() -> p.closeRound()) == null)
                             throw new ParseException("Closing tagged value bracket for " + constructor, p);
-                        return Either.right(new TaggedValue(i, innerValue));
+                        return Either.right(new TaggedValue(i, innerValue, DataTypeUtility.fromTags(tags)));
                     }
 
-                    return Either.right(new TaggedValue(i, null));
+                    return Either.right(new TaggedValue(i, null, DataTypeUtility.fromTags(tags)));
                 }
             }
             return Either.left(constructor);

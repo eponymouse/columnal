@@ -98,7 +98,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             TestUtil.delay(2000);
             String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
-            String valueFromData = DataTypeUtility.valueToString(columnDTV.getType(), columnDTV.getCollapsed(row), null);
+            String valueFromData = DataTypeUtility.valueToString(columnDTV.getCollapsed(row));
             assertEquals("Location " + pos + " row : " + row + " col: " + column, valueFromData, copiedFromTable);
         }
     }
@@ -138,7 +138,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             Column col = table.getData().getColumns().get(column);
             DataTypeValue columnDTV = col.getType();
-            String valueFromData = DataTypeUtility.valueToString(columnDTV.getType(), TestUtil.checkNonNull(col.getDefaultValue()), null);
+            String valueFromData = DataTypeUtility.valueToString(TestUtil.checkNonNull(col.getDefaultValue()));
             assertEquals("Location " + pos + " row : " + row + " col: " + column,valueFromData, copiedFromTable);
         }
     }
@@ -245,7 +245,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             TestUtil.delay(10000);
             String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             
-            String valueEntered = value.eitherEx(s -> "@INVALID\"" + s + "\"", v -> DataTypeUtility.valueToString(columnDTV.getType(), v, null));
+            String valueEntered = value.eitherEx(s -> "@INVALID\"" + s + "\"", v -> DataTypeUtility.valueToString(v));
             assertEquals(valueEntered, copiedFromTable);
             writtenData.put(new Location(table.getId(), row, column), new Pair<>(valueEntered, value.isLeft()));
             assertErrorShowing(target, value.isLeft());
@@ -296,7 +296,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             Column col = table.getData().getColumns().get(column);
             @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(tableLen));
             CellPosition pos = keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
-            String valueFromData = DataTypeUtility.valueToString(col.getType().getType(), col.getType().getCollapsed(row), null);
+            String valueFromData = DataTypeUtility.valueToString(col.getType().getCollapsed(row));
             // Clear clipboard to prevent tests interfering:
             TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
             // Check original has the right string:
@@ -326,7 +326,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             TestUtil.delay(2000);
             copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             
-            valueFromData = DataTypeUtility.valueToString(col.getType().getType(), col.getType().getCollapsed(row), null);
+            valueFromData = DataTypeUtility.valueToString(col.getType().getCollapsed(row));
             assertEquals("Location " + pos + " row : " + row + " col: " + column + " escape: " + escape, valueFromData, copiedFromTable);
         }
     }

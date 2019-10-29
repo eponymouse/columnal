@@ -272,7 +272,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     @OnThread(Tag.Simulation)
     private static String defaultAsString(DataType dataType, @Value Object defValue) throws UserException, InternalException
     {
-        return DataTypeUtility.valueToString(dataType, defValue, null, false);
+        return DataTypeUtility.valueToString(defValue);
     }
 
     private <@NonNull @ImmediateValue T> RecogniserDocument<@Value T> makeEditorKit(@UnknownInitialization(LightDialog.class) EditImmediateColumnDialog this, String initialValue, RecogniserAndType<T> recogniser)

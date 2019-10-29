@@ -34,7 +34,7 @@ public class EnterValueDialog<@NonNull V> extends ErrorableLightDialog<V>
         String initialContent;
         try
         {
-            initialContent = DataTypeUtility.valueToStringFX(dataType, DataTypeUtility.makeDefaultValue(dataType));
+            initialContent = DataTypeUtility.valueToStringFX(DataTypeUtility.makeDefaultValue(dataType));
         }
         catch (UserException e)
         {

@@ -36,25 +36,23 @@ public final class EvaluateState
     private final ImmutableMap<String, @Value Object> variables;
     private final OptionalInt rowIndex;
     private final boolean recordExplanation;
-    private final TypeLookup typeLookup;
 
-    public EvaluateState(TypeManager typeManager, OptionalInt rowIndex, TypeLookup typeLookup)
+    public EvaluateState(TypeManager typeManager, OptionalInt rowIndex)
     {
-        this(makeVariables(rowIndex), typeManager, rowIndex, false, typeLookup);
+        this(makeVariables(rowIndex), typeManager, rowIndex, false);
     }
 
-    public EvaluateState(TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation, TypeLookup typeLookup)
+    public EvaluateState(TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation)
     {
-        this(makeVariables(rowIndex), typeManager, rowIndex, recordExplanation, typeLookup);
+        this(makeVariables(rowIndex), typeManager, rowIndex, recordExplanation);
     }
 
-    private EvaluateState(ImmutableMap<String, @Value Object> variables, TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation, TypeLookup typeLookup)
+    private EvaluateState(ImmutableMap<String, @Value Object> variables, TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation)
     {
         this.variables = variables;
         this.typeManager = typeManager;
         this.rowIndex = rowIndex;
         this.recordExplanation = recordExplanation;
-        this.typeLookup = typeLookup;
     }
 
     private static ImmutableMap<String, @Value Object> makeVariables(OptionalInt rowIndex)
@@ -71,7 +69,7 @@ public final class EvaluateState
         }
         copy.putAll(variables);
         copy.put(varName, value);
-        return new EvaluateState(ImmutableMap.copyOf(copy), typeManager, rowIndex, recordExplanation, typeLookup);
+        return new EvaluateState(ImmutableMap.copyOf(copy), typeManager, rowIndex, recordExplanation);
     }
 
     /**
@@ -114,32 +112,7 @@ public final class EvaluateState
 
     public EvaluateState varFilteredTo(ImmutableSet<String> variableNames)
     {
-        return new EvaluateState(ImmutableMap.<String, @Value Object>copyOf(Maps.<String, @Value Object>filterEntries(variables, (Entry<String, @Value Object> e) -> e != null && variableNames.contains(e.getKey()))), typeManager, rowIndex, recordExplanation, typeLookup);
-    }
-
-    // Allows run-time lookup of the final data type that was assigned
-    // to a given expression during type-checking.
-    public static interface TypeLookup
-    {
-        DataType getTypeFor(TypeManager typeManager, Expression expression) throws InternalException, UserException;
-    }
-    
-    public DataType getTypeFor(Expression expression, ExecutionType executionType) throws InternalException, UserException
-    {
-        if (executionType == ExecutionType.MATCH)
-            return DataType.BOOLEAN;
-
-        DataType dataType = typeLookup.getTypeFor(typeManager, expression);
-        return dataType.apply(new FlatDataTypeVisitor<DataType>(dataType) {
-            @Override
-            public DataType function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, InternalException
-            {
-                if (executionType == ExecutionType.CALL_IMPLICIT)
-                    return resultType;
-                else
-                    return super.function(argTypes, resultType);
-            }
-        });
+        return new EvaluateState(ImmutableMap.<String, @Value Object>copyOf(Maps.<String, @Value Object>filterEntries(variables, (Entry<String, @Value Object> e) -> e != null && variableNames.contains(e.getKey()))), typeManager, rowIndex, recordExplanation);
     }
 
     // Equals and hashCode on EvaluateState are only used by

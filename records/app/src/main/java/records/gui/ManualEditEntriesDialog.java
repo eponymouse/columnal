@@ -59,8 +59,8 @@ public class ManualEditEntriesDialog extends LightDialog<Pair<Optional<Pair<Comp
                 Workers.onWorkerThread("Loading replacement values", Priority.FETCH, () -> {
                     try
                     {
-                        String keyValue = DataTypeUtility.valueToString(keyColumn == null ? DataType.NUMBER /* row number */ : lookupColumnType.apply(keyColumn), initialContent.identifierValue.getValue(), null);
-                        String replacementValue = initialContent.replacementValue.eitherEx(err -> err, v -> DataTypeUtility.valueToString(lookupColumnType.apply(initialContent.replacementColumn), v.getValue(), null));
+                        String keyValue = DataTypeUtility.valueToString(initialContent.identifierValue.getValue());
+                        String replacementValue = initialContent.replacementValue.eitherEx(err -> err, v -> DataTypeUtility.valueToString(v.getValue()));
                         FXPlatformRunnable jumpTo = () -> {
                             ImmutableList<Entry> items = getItems();
                             ManualEditEntriesDialog.this.setResult(new Pair<>(Optional.of(new Pair<>(initialContent.identifierValue, initialContent.getReplacementColumn())), () -> fromEntries(items, lookupColumnType)));

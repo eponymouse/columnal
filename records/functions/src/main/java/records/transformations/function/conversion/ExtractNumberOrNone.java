@@ -31,11 +31,11 @@ public class ExtractNumberOrNone extends FunctionDefinition
     @Override
     public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
-        return getInstance();
+        return getInstance(typeManager);
     }
 
     @OnThread(Tag.Simulation)
-    public ValueFunction getInstance()
+    public ValueFunction getInstance(TypeManager typeManager)
     {
         return new ValueFunction1<String>(String.class) {
             @Override
@@ -73,7 +73,7 @@ public class ExtractNumberOrNone extends FunctionDefinition
                         if (parsed != null)
                         {
                             if (result != null)
-                                return new TaggedValue(0, null);
+                                return new TaggedValue(0, null, typeManager.getMaybeType());
                             result = parsed;
                         }
                         
@@ -83,9 +83,9 @@ public class ExtractNumberOrNone extends FunctionDefinition
                 }
                 
                 if (result == null)
-                    return new TaggedValue(0, null);
+                    return new TaggedValue(0, null, typeManager.getMaybeType());
                 else
-                    return new TaggedValue(1, result);
+                    return new TaggedValue(1, result, typeManager.getMaybeType());
             }
         };
     }

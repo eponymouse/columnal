@@ -70,7 +70,7 @@ public class TypeManager
             new TagType<>("None", null),
             new TagType<>("Is", JellyType.typeVariable("a"))
         ));
-        maybeMissing = new TaggedValue(0, null);
+        maybeMissing = new TaggedValue(0, null, maybeType);
         builtInTypes.put(maybeType.getTaggedTypeName(), maybeType);
         voidType = new TaggedTypeDefinition(new TypeId("Void"), ImmutableList.of(), ImmutableList.of());
         builtInTypes.put(voidType.getTaggedTypeName(), voidType);
@@ -90,7 +90,7 @@ public class TypeManager
     
     public TaggedValue maybePresent(@Value Object content)
     {
-        return new TaggedValue(1, content);
+        return new TaggedValue(1, content, maybeType);
     }
     
     public void unregisterTaggedType(TypeId typeName)

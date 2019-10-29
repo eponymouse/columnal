@@ -207,7 +207,7 @@ public class ClipboardUtils
                             plainText.append(", ");
                         try
                         {
-                            plainText.append(DataTypeUtility.valueToString(c.getSecond().getType(), c.getSecond().getCollapsed(i), null));
+                            plainText.append(DataTypeUtility.valueToString(c.getSecond().getCollapsed(i)));
                         }
                         catch (InvalidImmediateValueException e)
                         {

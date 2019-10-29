@@ -124,10 +124,10 @@ public class ImporterUtility
                 @NonNull DataType typeFinal = type;
                 columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, DataTypeUtility.getTaggedTypeName(typeFinal), ImmutableList.of(Either.<Unit, DataType>right(numberType)), DataTypeUtility.getTagTypes(typeFinal), Utility.mapListEx(slice, (String item) -> {
                     if (item.isEmpty() || item.trim().equals(or.getBlankString()))
-                        return Either.<String, TaggedValue>right(new TaggedValue(0, null));
+                        return Either.<String, TaggedValue>right(new TaggedValue(0, null, mgr.getMaybeType()));
                     else
-                        return Utility.parseNumberOpt(inner.removePrefixAndSuffix(item)).map(n -> Either.<String, TaggedValue>right(new TaggedValue(1, DataTypeUtility.value(n)))).orElse(Either.left(item));
-                }), new TaggedValue(0, null)));
+                        return Utility.parseNumberOpt(inner.removePrefixAndSuffix(item)).map(n -> Either.<String, TaggedValue>right(new TaggedValue(1, DataTypeUtility.value(n), mgr.getMaybeType()))).orElse(Either.left(item));
+                }), new TaggedValue(0, null, mgr.getMaybeType())));
             }
             else
             {

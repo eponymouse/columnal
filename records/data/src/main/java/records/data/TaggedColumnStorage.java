@@ -35,7 +35,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedV
     // This stores the tag index of each item.
     private final NumericColumnStorage tagStore;
     // This stores the inner values
-    private final List<TagType<ColumnStorage<?>>> tagTypes;
+    private final ImmutableList<TagType<ColumnStorage<?>>> tagTypes;
     // Effectively a cached version of tagTypes:
     @OnThread(Tag.Any)
     private final DataTypeValue dataType;
@@ -44,7 +44,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedV
     {
         super(isImmediateData);
         tagStore = new NumericColumnStorage(isImmediateData);
-        tagTypes = new ArrayList<>();
+        ImmutableList.Builder<TagType<ColumnStorage<?>>> tagTypesBuilder = ImmutableList.builder();
         for (int i = 0; i < copyTagTypes.size(); i++)
         {
             TagType<? extends DataType> tagType = copyTagTypes.get(i);
@@ -52,13 +52,14 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedV
             if (inner != null)
             {
                 ColumnStorage<?> result = DataTypeUtility.makeColumnStorage(inner, null, isImmediateData);
-                tagTypes.add(new TagType<>(tagType.getName(), result));
+                tagTypesBuilder.add(new TagType<>(tagType.getName(), result));
             }
             else
             {
-                tagTypes.add(new TagType<>(tagType.getName(), null));
+                tagTypesBuilder.add(new TagType<>(tagType.getName(), null));
             }
         }
+        tagTypes = tagTypesBuilder.build();
         dataType = DataTypeValue.tagged(typeName, typeVars, Utility.<TagType<ColumnStorage<?>>, TagType<DataType>>mapListI(tagTypes, (TagType<ColumnStorage<?>> tt) -> tt.<DataType>map(t -> t.getType().getType())), new GetValueOrError<TaggedValue>()
         {
             @Override
@@ -74,9 +75,9 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedV
                 int tagIndex = tagStore.getInt(i);
                 ColumnStorage<?> innerStorage = tagTypes.get(tagIndex).getInner();
                 if (innerStorage == null)
-                    return new TaggedValue(tagIndex, null);
+                    return new TaggedValue(tagIndex, null, DataTypeUtility.fromTags(tagTypes));
                 else
-                    return new TaggedValue(tagIndex, innerStorage.getType().getCollapsed(i));
+                    return new TaggedValue(tagIndex, innerStorage.getType().getCollapsed(i), DataTypeUtility.fromTags(tagTypes));
             }
 
             @Override

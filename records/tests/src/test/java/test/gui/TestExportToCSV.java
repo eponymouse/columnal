@@ -61,7 +61,7 @@ public class TestExportToCSV extends FXApplicationTest implements ScrollToTrait,
         {
             expectedContent.add(new Pair<>(column.getName().getRaw(), CheckCSVTrait.collapse(expressionValue.recordSet.getLength(), column.getType())));
         }
-        expectedContent.add(new Pair<>("Result", Utility.mapListEx(expressionValue.value, o -> DataTypeUtility.valueToString(expressionValue.type, o, null))));
+        expectedContent.add(new Pair<>("Result", Utility.mapListEx(expressionValue.value, o -> DataTypeUtility.valueToString(o))));
 
         exportToCSVAndCheck(details._test_getVirtualGrid(), details._test_getTableManager(),"", expectedContent, calculated.getId());
     }

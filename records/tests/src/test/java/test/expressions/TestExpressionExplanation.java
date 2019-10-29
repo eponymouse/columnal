@@ -320,9 +320,7 @@ public class TestExpressionExplanation
 
     private EvaluateState makeEvaluateState(@Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, TypeManager typeManager) throws InternalException
     {
-        EvaluateState evaluateState = new EvaluateState(typeManager, rowIndexAndVars == null ? OptionalInt.empty() : rowIndexAndVars.getFirst(), (m, e) -> {
-            throw new InternalException("No type lookup in TestExpressionExplanation");
-        });
+        EvaluateState evaluateState = new EvaluateState(typeManager, rowIndexAndVars == null ? OptionalInt.empty() : rowIndexAndVars.getFirst());
         if (rowIndexAndVars != null)
         {
             for (Entry<String, @Value Object> var : rowIndexAndVars.getSecond().entrySet())
@@ -356,7 +354,7 @@ public class TestExpressionExplanation
         ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer = new ErrorAndTypeRecorderStorer();
         TypeExp typeCheck = expression.checkExpression(new MultipleTableLookup(null, tableManager, null, null), TestUtil.createTypeState(typeManager), errorAndTypeRecorderStorer);
         assertNotNull(errorAndTypeRecorderStorer.getAllErrors().collect(StyledString.joining("\n")).toPlain(), typeCheck);
-        Explanation actual = expression.calculateValue(new EvaluateState(typeManager, OptionalInt.empty(), true, errorAndTypeRecorderStorer)).makeExplanation(null);
+        Explanation actual = expression.calculateValue(new EvaluateState(typeManager, OptionalInt.empty(), true)).makeExplanation(null);
         assertEquals(expectedExplanation, actual);
     }
 

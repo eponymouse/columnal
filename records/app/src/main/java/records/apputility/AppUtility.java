@@ -61,7 +61,7 @@ public class AppUtility
             @OnThread(Tag.Simulation)
             public Expression date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return new TemporalLiteral(dateTimeInfo.getType(), DataTypeUtility.valueToString(dataType, value, null, false));
+                return new TemporalLiteral(dateTimeInfo.getType(), DataTypeUtility.valueToString(value));
             }
 
             @Override

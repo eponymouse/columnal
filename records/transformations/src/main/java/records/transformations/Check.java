@@ -23,7 +23,6 @@ import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
-import records.transformations.expression.EvaluateState.TypeLookup;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.FoundTableActual;
@@ -86,7 +85,7 @@ public class Check extends Transformation implements SingleSourceTransformation
     private final CheckType checkType;
     @OnThread(Tag.Any)
     private final Expression checkExpression;
-    private @MonotonicNonNull Pair<TypeLookup, DataType> type;
+    private @MonotonicNonNull DataType type;
     private @MonotonicNonNull Explanation explanation;
     
     public Check(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, CheckType checkType, Expression checkExpression) throws InternalException
@@ -136,14 +135,14 @@ public class Check extends Transformation implements SingleSourceTransformation
                     }
                 });
 
-            type = new Pair<>(errors, typeFinal);
+            type = typeFinal;
         }
         
-        ensureBoolean(type.getSecond());
+        ensureBoolean(type);
         
         if (checkType == CheckType.STANDALONE)
         {
-            ValueResult r = checkExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty(), true, type.getFirst()));
+            ValueResult r = checkExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty(), true));
             explanation = r.makeExplanation(null);
             return r.value;
         }
@@ -155,7 +154,7 @@ public class Check extends Transformation implements SingleSourceTransformation
                 int length = srcTable.getData().getLength();
                 for (int row = 0; row < length; row++)
                 {
-                    ValueResult r = checkExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(row), true, type.getFirst()));
+                    ValueResult r = checkExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(row), true));
                     boolean thisRow = Utility.cast(r.value, Boolean.class);
                     if (thisRow && checkType == CheckType.NO_ROWS)
                     {

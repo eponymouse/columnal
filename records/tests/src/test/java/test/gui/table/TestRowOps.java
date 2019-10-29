@@ -136,7 +136,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         {
             if (i != randomRow)
             {
-                calcValuesFiltered.add(DataTypeUtility.valueToString(expressionValue.type, expressionValue.value.get(i), null));
+                calcValuesFiltered.add(DataTypeUtility.valueToString(expressionValue.value.get(i)));
             }
         }
         expectedCalcContent.add(new Pair<>("Result", calcValuesFiltered));
@@ -281,7 +281,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             else
             {
                 @NonNull @Value Object defaultValue = defaultValue_;
-                String defaultAsString = TestUtil.sim(() -> DataTypeUtility.valueToString(columnType.getType(), defaultValue, null));
+                String defaultAsString = TestUtil.sim(() -> DataTypeUtility.valueToString(defaultValue));
                 expectedSrcContent.add(colData.mapSecond(d -> {
                     ArrayList<String> xs = new ArrayList<>(d);
                     xs.add(targetNewRow, defaultAsString);
@@ -324,7 +324,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         for (int i = 0; i < rowCells.size(); i++)
         {
             int iFinal = i;
-            assertEquals(prefix + " " + i + ": ", DataTypeUtility.valueToString(expected.get(i).getFirst(), expected.get(i).getSecond(), null), TestUtil.fx(() -> ((DocumentTextField)rowCells.get(iFinal))._test_getGraphicalText()));
+            assertEquals(prefix + " " + i + ": ", DataTypeUtility.valueToString(expected.get(i).getSecond()), TestUtil.fx(() -> ((DocumentTextField)rowCells.get(iFinal))._test_getGraphicalText()));
         }
     }
 

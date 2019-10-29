@@ -1515,7 +1515,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     {
                         if (defaultValue != null)
                         {
-                            String string = DataTypeUtility.valueToString(column.getType().getType(), defaultValue, null);
+                            String string = DataTypeUtility.valueToString(defaultValue);
                             Platform.runLater(() -> {
                                 DataCellSupplier.@Nullable VersionedSTF cell = parent.getDataCellSupplier().getItemAt(getDataPosition(rowIndex, colIndex));
                                 if (cell != null)

@@ -7,7 +7,6 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.EvaluateState.TypeLookup;
 import records.transformations.expression.function.FunctionLookup;
 import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeExp;
@@ -28,7 +27,7 @@ import java.util.stream.Stream;
  * An implementation of ErrorAndTypeRecorder which just stores the errors encountered
  * in a list.
  */
-public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder, TypeLookup
+public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder
 {
     private final List<StyledString> errorMessages = new ArrayList<>();
     private final IdentityHashMap<Expression, TypeExp> types = new IdentityHashMap<>();
@@ -76,15 +75,5 @@ public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder, TypeLoo
     public <T> @Nullable T recordLeftError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, Either<TypeConcretisationError, T> errorOrVal)
     {
         return ErrorAndTypeRecorder.super.recordLeftError(typeManager, functionLookup, src, errorOrVal);
-    }
-
-    @Override
-    public DataType getTypeFor(TypeManager typeManager, Expression expression) throws InternalException, UserException
-    {
-        TypeExp typeExp = types.get(expression);
-        if (typeExp == null)
-            throw new InternalException("Could not find type for expression: " + expression + "\nFound: " + types.keySet().stream().map(e -> "\n  " + e.toString()).collect(Collectors.joining()));
-        return typeExp.toConcreteType(typeManager, false)
-            .eitherInt(e -> {throw new InternalException("Could not deduce concrete type for " + expression);}, t -> t);
     }
 }

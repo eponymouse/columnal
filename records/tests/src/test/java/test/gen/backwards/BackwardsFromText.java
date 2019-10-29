@@ -28,7 +28,7 @@ public class BackwardsFromText extends BackwardsProvider
     @Override
     public List<ExpressionMaker> terminals(DataType targetType, @Value Object targetValue) throws InternalException, UserException
     {
-        String val = DataTypeUtility.valueToString(targetType, targetValue, null);
+        String val = DataTypeUtility.valueToString(targetValue);
         return ImmutableList.of(
             () -> new CallExpression(FunctionList.getFunctionLookup(parent.getTypeManager().getUnitManager()), "from text to",
                 new TypeLiteralExpression(TypeExpression.fromDataType(targetType)),
@@ -40,7 +40,7 @@ public class BackwardsFromText extends BackwardsProvider
     @Override
     public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
     {        
-        String val = DataTypeUtility.valueToString(targetType, targetValue, null);
+        String val = DataTypeUtility.valueToString(targetValue);
         return ImmutableList.of(
                 () -> new CallExpression(FunctionList.getFunctionLookup(parent.getTypeManager().getUnitManager()), "from text to",
                         new TypeLiteralExpression(TypeExpression.fromDataType(targetType)),

@@ -43,7 +43,7 @@ public class LookupFunctions
                             if (listA.size() != listB.size())
                                 throw new UserException("Lists passed to lookup function must be the same size, but first list was size: " + listA.size() + " and second list was size: " + listB.size());
                             
-                            int index = getSingleItem(lookupIndexes(listA, arg(1)), paramTypes.apply("a").getRight("Variable a should be type but was unit"), arg(1));
+                            int index = getSingleItem(lookupIndexes(listA, arg(1)), arg(1));
                             return listB.get(index);
                         }
                     });
@@ -102,15 +102,15 @@ public class LookupFunctions
     }
 
     @OnThread(Tag.Simulation)
-    private static int getSingleItem(SimulationSupplier<OptionalInt> nextIndex, DataType targetType, @Value Object target) throws InternalException, UserException
+    private static int getSingleItem(SimulationSupplier<OptionalInt> nextIndex, @Value Object target) throws InternalException, UserException
     {
         // Check that there's one:
         OptionalInt first = nextIndex.get();
         if (!first.isPresent())
-            throw new UserException("No matching item found in lookup function for " + DataTypeUtility.valueToString(targetType, target, null));
+            throw new UserException("No matching item found in lookup function for " + DataTypeUtility.valueToString(target));
         OptionalInt second = nextIndex.get();
         if (second.isPresent())
-            throw new UserException("More than one matching item found in lookup function for " + DataTypeUtility.valueToString(targetType, target, null));
+            throw new UserException("More than one matching item found in lookup function for " + DataTypeUtility.valueToString(target));
         return first.getAsInt();
     }
 

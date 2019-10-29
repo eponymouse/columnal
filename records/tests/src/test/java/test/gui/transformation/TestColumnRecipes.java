@@ -259,8 +259,10 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     @OnThread(Tag.Simulation)
     public void testOptionalNumberToNumber() throws Exception
     {
-        Unit s = new UnitManager().loadUse("s");
-        testTypeTransform(optional(DataType.number(new NumberInfo(s))), DataType.number(new NumberInfo(s)), c -> new CallExpression(getFunctionLookup(), "get optional or", IdentExpression.column(c), new NumericLiteral(34, UnitExpression.load(s))), ImmutableList.of(new TaggedValue(0, null)), () -> {
+        UnitManager unitManager = new UnitManager();
+        Unit s = unitManager.loadUse("s");
+        TypeManager typeManager = new TypeManager(unitManager);
+        testTypeTransform(optional(DataType.number(new NumberInfo(s))), DataType.number(new NumberInfo(s)), c -> new CallExpression(getFunctionLookup(), "get optional or", IdentExpression.column(c), new NumericLiteral(34, UnitExpression.load(s))), ImmutableList.of(new TaggedValue(0, null, typeManager.getMaybeType())), () -> {
             write("34");
             clickOn(".ok-button");
         });

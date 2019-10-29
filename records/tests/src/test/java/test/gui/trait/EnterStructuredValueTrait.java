@@ -181,7 +181,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             @OnThread(value = Tag.Simulation, ignoreParent = true)
             public Boolean tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                writeOrPaste(DataTypeUtility.valueToString(dataType, value, null));
+                writeOrPaste(DataTypeUtility.valueToString(value));
                 return true;
             }
 

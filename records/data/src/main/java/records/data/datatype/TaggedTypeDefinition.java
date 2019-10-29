@@ -16,12 +16,13 @@ import records.jellytype.JellyType.UnknownTypeException;
 import records.loadsave.OutputBuilder;
 import utility.Either;
 import utility.Pair;
+import utility.TaggedValue.TaggedTypeDefinitionBase;
 import utility.Utility;
 
 import java.util.HashSet;
 import java.util.Objects;
 
-public class TaggedTypeDefinition
+public class TaggedTypeDefinition implements TaggedTypeDefinitionBase
 {
     public static enum TypeVariableKind { TYPE, UNIT }
     
@@ -180,5 +181,13 @@ public class TaggedTypeDefinition
         {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public String getTagName(int tagIndex)
+    {
+        if (tagIndex >=0 && tagIndex < tags.size())
+            return tags.get(tagIndex).getName();
+        return "InvalidTag" + (tagIndex < 0 ? "Neg" : "") + Math.abs(tagIndex);
     }
 }

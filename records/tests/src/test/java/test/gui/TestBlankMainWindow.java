@@ -452,7 +452,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 }
                 else
                 {
-                    String content = DataTypeUtility.valueToString(typeAndValueGen.getType(), typeAndValueGen.makeValue(), null, false);
+                    String content = DataTypeUtility.valueToString(typeAndValueGen.makeValue());
                     if (r.nextBoolean())
                     {
                         entry = Either.left(invalidChar + content);
@@ -529,7 +529,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             return true;
         }, p -> {
             boolean expectSameVal = enterStructuredValue(p.getFirst(), p.getSecond(), random, needDeleteAll, true);
-            assertFocusOwner("Written structured value: " + DataTypeUtility.valueToString(p.getFirst(),p.getSecond(), null) + " after choice " + choice, textField);
+            assertFocusOwner("Written structured value: " + DataTypeUtility.valueToString(p.getSecond()) + " after choice " + choice, textField);
             return expectSameVal;
         });
         defocusSTFAndCheck(expectSame && value.eitherInt(s -> true, p -> !hasNumber(p.getFirst())), () -> {
