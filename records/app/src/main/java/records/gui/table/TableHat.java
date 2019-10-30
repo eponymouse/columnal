@@ -596,6 +596,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         //    the column names.
         
         final double INDENT = 20;
+        final double MIN_WIDTH = 200;
         
         double veryTopY = visibleBounds.getYCoord(CellPosition.row(0));
         
@@ -605,7 +606,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         double wholeTableWidth = visibleBounds.getXCoordAfter(tableDisplay.getBottomRightIncl().columnIndex) - tableX;
 
         double idealWidth = item.prefWidth(-1);
-        double idealWidthAbove = Math.min(wholeTableWidth - INDENT, idealWidth);
+        double idealWidthAbove = Math.min(Math.max(MIN_WIDTH, wholeTableWidth - INDENT), idealWidth);
         double heightAbove = item.prefHeight(idealWidthAbove);
         
         if (tableY - heightAbove >= veryTopY - 2)
