@@ -13,12 +13,14 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
+import records.gui.grid.RectangleBounds;
 import records.transformations.Check;
 import records.transformations.Check.CheckType;
 import records.transformations.expression.Expression;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
+import test.gui.trait.ClickOnTableHeaderTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
@@ -36,7 +38,7 @@ import static org.junit.Assert.*;
 import static test.TestUtil.fx_;
 
 @OnThread(Tag.Simulation)
-public class TestExplanationDisplay extends FXApplicationTest implements ScrollToTrait
+public class TestExplanationDisplay extends FXApplicationTest implements ScrollToTrait, ClickOnTableHeaderTrait
 {
     private static final CellPosition CHECK_POS = new CellPosition(CellPosition.row(20), CellPosition.col(9));
     
@@ -124,6 +126,31 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     }
 
     @Test
+    public void testExplanationError() throws UserException, InternalException
+    {
+        addCheck("T2", CheckType.ALL_ROWS, "(1 / (column\\\\asc - 3)) < 1.1");
+        testFailureExplanation(
+                "asc was 3, using asc (row 3)",
+                "asc - 3 was 0",
+                "Division by zero in: 1 / (column\\\\asc - 3)",
+                "In: (1 / (column\\\\asc - 3)) < 1.1");
+    }
+
+    @Test
+    public void testExplanationError2() throws UserException, InternalException
+    {
+        addCheck("T2", CheckType.ALL_ROWS, "@if (column\\\\asc > 2) @then (1 / (column\\\\asc - 3)) @else 0 @endif < 1.1");
+        testFailureExplanation(
+                
+                "asc was 3, using asc (row 3)",
+                "asc > 2 was true",
+                "asc - 3 was 0",
+                "Division by zero in: 1 / (column\\\\asc - 3)",
+                "In: @if column\\\\asc > 2 @then 1 / (column\\\\asc - 3) @else 0 @endif",
+                "In: @if column\\\\asc > 2 @then 1 / (column\\\\asc - 3) @else 0 @endif < 1.1");
+    }
+
+    @Test
     public void testExplanationMatch() throws UserException, InternalException
     {
         addCheck("T2", CheckType.NO_ROWS, "@match (num: column\\\\asc, animal: column\\\\alphabet animals) @case (num: n) @given n > 5 @then false @case (num: _, animal: animal) @then (@call function\\\\text length(animal) =~ n) & (n > 5) @endmatch");
@@ -140,7 +167,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
                 "n was 8",
                 "n > 5 was true",
                 "(text length(animal) =~ n) & (n > 5) was true",
-                "match (num: asc, animal: alphabet animals) case (num: n) given n > 5 then false case (num: _, animal: animal) then (text length(animal) =~ n) & (n > 5) endmatch was true");
+                "@match (num: asc, animal: alphabet animals) @case (num: n) @given n > 5 @then false @case (num: _, animal: animal) @then (text length(animal) =~ n) & (n > 5) @endmatch was true");
     }
 
     @Test
@@ -152,7 +179,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
                 "asc + 1 was 5",
                 "(asc + 1) > 3 was true",
                 "(asc + 1) > 4 was true",
-                "if (asc + 1) > 3 then (asc + 1) > 4 else (asc + 1) > 3 endif was true"
+                "@if (asc + 1) > 3 @then (asc + 1) > 4 @else (asc + 1) > 3 @endif was true"
         );
     }  
 
@@ -160,7 +187,8 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     {
         TestUtil.fx_(() -> mainWindowActions._test_getVirtualGrid().findAndSelect(Either.left(CellPosition.ORIGIN.offsetByRowCols(1, 1))));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), CHECK_POS);
-        clickOn("Fail");
+        CellPosition resultPos = CHECK_POS.offsetByRowCols(1, 0);
+        clickOnItemInBounds(lookup(".check-result"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(resultPos, resultPos));
         sleep(1000);
         TextFlow textFlow = lookup(".explanation-flow").query();
         assertNotNull(textFlow);

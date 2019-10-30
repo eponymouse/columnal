@@ -13,6 +13,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.EvaluationException;
 import records.transformations.expression.Expression.ExpressionStyler;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
@@ -90,6 +91,24 @@ public class TestExpressionExplanation
     private static SimulationFunction<RecordSet, EditableColumn> text(@ExpressionIdentifier String name, String... values)
     {
         return rs -> new MemoryStringColumn(rs, new ColumnId(name), Utility.<String, Either<String, String>>mapList(Arrays.asList(values), Either::right), "");
+    }
+    
+    @Test
+    public void testException() throws Exception
+    {
+        testExplanation("(1 / 2) + 3",
+            e("(1 / 2) + 3", null, null, null,
+                e("1 / 2", null, null, null,
+                    lit(1), lit(2)),
+                lit(3)
+        ));
+
+        testExplanation("(1 / 0) + 3",
+                e("(1 / 0) + 3", null, null, null,
+                        e("1 / 0", null, null, null,
+                                lit(1), lit(0))
+                        // Should not have lit(3) child because of the exception
+                ));
     }
 
     @Test
@@ -354,7 +373,15 @@ public class TestExpressionExplanation
         ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer = new ErrorAndTypeRecorderStorer();
         TypeExp typeCheck = expression.checkExpression(new MultipleTableLookup(null, tableManager, null, null), TestUtil.createTypeState(typeManager), errorAndTypeRecorderStorer);
         assertNotNull(errorAndTypeRecorderStorer.getAllErrors().collect(StyledString.joining("\n")).toPlain(), typeCheck);
-        Explanation actual = expression.calculateValue(new EvaluateState(typeManager, OptionalInt.empty(), true)).makeExplanation(null);
+        Explanation actual;
+        try
+        {
+            actual = expression.calculateValue(new EvaluateState(typeManager, OptionalInt.empty(), true)).makeExplanation(null);
+        }
+        catch (EvaluationException e)
+        {
+            actual = e.makeExplanation();
+        }
         assertEquals(expectedExplanation, actual);
     }
 

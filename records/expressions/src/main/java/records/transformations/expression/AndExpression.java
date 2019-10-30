@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
@@ -10,7 +11,6 @@ import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Utility;
-import utility.Utility.TransparentBuilder;
 
 import java.util.List;
 import java.util.Random;
@@ -55,14 +55,14 @@ public class AndExpression extends NaryOpShortCircuitExpression
     }
 
     @Override
-    public ValueResult getValueNaryOp(final EvaluateState origState) throws UserException, InternalException
+    public ValueResult getValueNaryOp(final EvaluateState origState) throws EvaluationException, InternalException
     {
         EvaluateState state = origState;
-        TransparentBuilder<ValueResult> values = new TransparentBuilder<>(expressions.size());
+        ImmutableList.Builder<ValueResult> values = ImmutableList.builderWithExpectedSize(expressions.size());
         for (int i = 0; i < expressions.size(); i++)
         {
             Expression expression = expressions.get(i);
-            ValueResult valState = values.add(expression.calculateValue(state));
+            ValueResult valState = fetchSubExpression(expression, state, values);
             Boolean b = Utility.cast(valState.value, Boolean.class);
             if (b == false)
             {

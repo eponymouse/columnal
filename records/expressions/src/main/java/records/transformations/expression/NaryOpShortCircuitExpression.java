@@ -18,7 +18,7 @@ public abstract class NaryOpShortCircuitExpression extends NaryOpExpression
     }
 
     @Override
-    public final ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public final ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
         if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
         {
@@ -31,5 +31,5 @@ public abstract class NaryOpShortCircuitExpression extends NaryOpExpression
     }
 
     @OnThread(Tag.Simulation)
-    public abstract ValueResult getValueNaryOp(EvaluateState state) throws UserException, InternalException;
+    public abstract ValueResult getValueNaryOp(EvaluateState state) throws EvaluationException, InternalException;
 }

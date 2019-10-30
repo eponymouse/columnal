@@ -16,7 +16,6 @@ import records.typeExp.TypeExp.TypeError;
 import styled.StyledString;
 import utility.Either;
 import utility.Utility;
-import utility.Utility.TransparentBuilder;
 
 import java.util.List;
 import java.util.Random;
@@ -83,7 +82,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public ValueResult getValueNaryOp(ImmutableList<ValueResult> values, EvaluateState state) throws UserException, InternalException
+    public ValueResult getValueNaryOp(ImmutableList<ValueResult> values, EvaluateState state) throws InternalException
     {
         StringBuilder sb = new StringBuilder();
         for (ValueResult value : values)
@@ -95,12 +94,12 @@ public class StringConcatExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public ValueResult matchAsPattern(@Value Object value, final @NonNull EvaluateState originalState) throws InternalException, UserException
+    public ValueResult matchAsPattern(@Value Object value, final @NonNull EvaluateState originalState) throws InternalException, EvaluationException
     {
         String s = Utility.cast(value, String.class);
         int curOffset = 0;
 
-        TransparentBuilder<ValueResult> matches = new TransparentBuilder<>(expressions.size());
+        ImmutableList.Builder<ValueResult> matches = ImmutableList.builderWithExpectedSize(expressions.size());
         @Nullable Expression pendingMatch = null;
         EvaluateState threadedState = originalState;
         for (int i = 0; i < expressions.size(); i++)
@@ -112,7 +111,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
             else
             {
                 // It's a value; get that value:
-                ValueResult valueToFind = matches.add(expressions.get(i).calculateValue(threadedState));
+                ValueResult valueToFind = fetchSubExpression(expressions.get(i), threadedState, matches);
                 String subValue = Utility.cast(valueToFind.value, String.class);
                 if (subValue.isEmpty())
                 {
@@ -139,7 +138,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
                     int nextPos = s.indexOf(subValue, curOffset);
                     if (nextPos == -1)
                         return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of(), false);
-                    ValueResult match = matches.add(pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset, nextPos)), threadedState));
+                    ValueResult match = matchSubExpressionAsPattern(pendingMatch, DataTypeUtility.value(s.substring(curOffset, nextPos)), threadedState, matches);
                     if (Utility.cast(match.value, Boolean.class) == false)
                         return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of(), false);
                     threadedState = match.evaluateState;
@@ -150,7 +149,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
         }
         if (pendingMatch != null)
         {
-            ValueResult last = matches.add(pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset)), threadedState));
+            ValueResult last = matchSubExpressionAsPattern(pendingMatch, DataTypeUtility.value(s.substring(curOffset)), threadedState, matches);
             if (Utility.cast(last.value, Boolean.class) == false)
                 return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, originalState, matches.build(), ImmutableList.of(), false);
             threadedState = last.evaluateState;

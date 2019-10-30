@@ -196,10 +196,23 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             }
             catch (UserException | InternalException e)
             {
-                Log.log(e);
-                Platform.runLater(() -> {
-                    resultContent.set("ERR:" + e.getLocalizedMessage());
-                });
+                @Nullable Explanation errorExplanation = check.getExplanation();
+                if (errorExplanation != null)
+                {
+                    Platform.runLater(() -> {
+                        resultContent.set("Error");
+                        failExplanationProperty.set(errorExplanation);
+                        if (CheckDisplay.this.tableHeaderItem != null)
+                            CheckDisplay.this.tableHeaderItem.setPseudoclass("check-failing", true);
+                    });
+                }
+                else
+                {
+                    Log.log(e);
+                    Platform.runLater(() -> {
+                        resultContent.set("ERR:" + e.getLocalizedMessage());
+                    });
+                }
             }
         });
 

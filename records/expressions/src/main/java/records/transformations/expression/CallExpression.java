@@ -4,6 +4,7 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -248,19 +249,18 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
-        ValueFunction functionValue = Utility.cast(function.calculateValue(state).value, ValueFunction.class);
+        ValueFunction functionValue = Utility.cast(fetchSubExpression(function, state, ImmutableList.builder()).value, ValueFunction.class);
 
-        ArrayList<ValueResult> paramValueResults = new ArrayList<>(arguments.size()); 
+        ImmutableList.Builder<ValueResult> paramValueResultsBuilder = ImmutableList.builderWithExpectedSize(arguments.size()); 
         @Value Object[] paramValues = new Object[arguments.size()];
         for (int i = 0; i < arguments.size(); i++)
         {
             @Recorded Expression arg = arguments.get(i);
-            ValueResult r = arg.calculateValue(state);
-            paramValueResults.add(r);
-            paramValues[i] = r.value;
+            paramValues[i] = fetchSubExpression(arg, state, paramValueResultsBuilder).value;
         }
+        ImmutableList<ValueResult> paramValueResults = paramValueResultsBuilder.build();
         if (state.recordExplanation())
         {
             ImmutableList.Builder<ArgumentExplanation> paramLocations = ImmutableList.builderWithExpectedSize(arguments.size());
@@ -290,16 +290,30 @@ public class CallExpression extends Expression
                 });
             }
             
-            return result(state, functionValue.callRecord(paramValues, paramLocations.build()));
+            try
+            {
+                return result(state, functionValue.callRecord(paramValues, paramLocations.build()));
+            }
+            catch (UserException e)
+            {
+                throw new EvaluationException(e, this, ExecutionType.VALUE, state, paramValueResults);
+            }
         }
         else
         {
-            return result(functionValue.call(paramValues), state);
+            try
+            {
+                return result(functionValue.call(paramValues), state);
+            }
+            catch (UserException e)
+            {
+                throw new EvaluationException(e, this, ExecutionType.VALUE, state, ImmutableList.of());
+            }
         }
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
     {
         if (!(function instanceof IdentExpression))
             throw new InternalException("Matching invalid call target as pattern: " + function.toString());
@@ -318,10 +332,11 @@ public class CallExpression extends Expression
             {
                 @Value Object[] tuple = Utility.castTuple(value, arguments.size());
                 EvaluateState curState = state;
+                ImmutableList.Builder<ValueResult> argResults = ImmutableList.builderWithExpectedSize(arguments.size());
                 for (int i = 0; i < arguments.size(); i++)
                 {
                     Expression argument = arguments.get(i);
-                    ValueResult argMatch = argument.matchAsPattern(tuple[i], curState);
+                    ValueResult argMatch = matchSubExpressionAsPattern(argument, tuple[i], curState, argResults);
                     if (Utility.cast(argMatch.value, Boolean.class) == false)
                         return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of(), false);
                     curState = argMatch.evaluateState;

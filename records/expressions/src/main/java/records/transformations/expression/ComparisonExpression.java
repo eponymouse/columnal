@@ -9,6 +9,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.MutVar;
 import records.typeExp.NumTypeExp;
@@ -20,7 +21,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
-import utility.Utility.TransparentBuilder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -119,16 +119,23 @@ public class ComparisonExpression extends NaryOpShortCircuitExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public ValueResult getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    public ValueResult getValueNaryOp(EvaluateState state) throws EvaluationException, InternalException
     {
-        TransparentBuilder<ValueResult> usedValues = new TransparentBuilder<>(expressions.size());
-        @Value Object cur = usedValues.add(expressions.get(0).calculateValue(state)).value;
+        ImmutableList.Builder<ValueResult> usedValues = ImmutableList.builderWithExpectedSize(expressions.size());
+        @Value Object cur = fetchSubExpression(expressions.get(0), state, usedValues).value;
         for (int i = 1; i < expressions.size(); i++)
         {
-            @Value Object next = usedValues.add(expressions.get(i).calculateValue(state)).value;
-            if (!operators.get(i - 1).comparisonTrue(cur, next))
+            @Value Object next = fetchSubExpression(expressions.get(i),state, usedValues).value;
+            try
             {
-                return result(DataTypeUtility.value(false), state, usedValues.build());
+                if (!operators.get(i - 1).comparisonTrue(cur, next))
+                {
+                    return result(DataTypeUtility.value(false), state, usedValues.build());
+                }
+            }
+            catch (UserException e)
+            {
+                throw new EvaluationException(e, this, ExecutionType.VALUE, state, usedValues.build());
             }
             cur = next;
         }

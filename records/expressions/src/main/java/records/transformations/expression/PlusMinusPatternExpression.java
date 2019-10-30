@@ -67,20 +67,19 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    public Pair<@Value Object, ImmutableList<ValueResult>> getValueBinaryOp(EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws InternalException
     {
         throw new InternalException("Calling getValue on plus minus pattern (should only call matchAsPattern)");
     }
 
     @Override
-    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
     {
-        ValueResult lhsOutcome = lhs.calculateValue(state);
-        @Value Object lhsValue = lhsOutcome.value;
-        ValueResult rhsOutcome = rhs.calculateValue(state);
-        @Value Object rhsValue = rhsOutcome.value;
+        ImmutableList.Builder<ValueResult> lhsrhs = ImmutableList.builderWithExpectedSize(2);
+        @Value Object lhsValue = fetchSubExpression(lhs, state, lhsrhs).value;
+        @Value Object rhsValue = fetchSubExpression(rhs, state, lhsrhs).value;
         boolean match = Utility.compareNumbers(Utility.cast(value, Number.class), Utility.cast(lhsValue, Number.class), new Pair<>(EpsilonType.ABSOLUTE, Utility.toBigDecimal(Utility.cast(rhsValue, Number.class)))) == 0;
-        return explanation(DataTypeUtility.value(match), ExecutionType.MATCH, state, ImmutableList.of(lhsOutcome, rhsOutcome), ImmutableList.of(), false);
+        return explanation(DataTypeUtility.value(match), ExecutionType.MATCH, state, lhsrhs.build(), ImmutableList.of(), false);
     }
 
     @Override

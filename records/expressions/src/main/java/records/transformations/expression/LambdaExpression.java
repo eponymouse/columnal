@@ -60,22 +60,23 @@ public class LambdaExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState original) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState original) throws EvaluationException, InternalException
     {
         ValueFunction valueFunction = new ValueFunction()
         {
             @Override
             protected @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
             {
-                EvaluateState state = original;
-                for (int i = 0; i < parameters.size(); i++)
-                {
-                    ValueResult result = parameters.get(i).matchAsPattern(arg(i), state);
-                    state = result.evaluateState;
-                }
-                ValueResult bodyOutcome = body.calculateValue(state);
-                addExtraExplanation(() -> bodyOutcome.makeExplanation(ExecutionType.VALUE));
-                return bodyOutcome.value;
+            EvaluateState state = original;
+            ImmutableList.Builder<ValueResult> args = ImmutableList.builderWithExpectedSize(parameters.size());
+            for (int i = 0; i < parameters.size(); i++)
+            {
+                ValueResult result = matchSubExpressionAsPattern(parameters.get(i), arg(i), state, args);
+                state = result.evaluateState;
+            }
+            ValueResult bodyOutcome = fetchSubExpression(body, state, args);
+            addExtraExplanation(() -> bodyOutcome.makeExplanation(ExecutionType.VALUE));
+            return bodyOutcome.value;
             }
         };
         

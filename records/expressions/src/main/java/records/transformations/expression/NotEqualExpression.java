@@ -62,11 +62,9 @@ public class NotEqualExpression extends BinaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public Pair<@Value Object, ImmutableList<ValueResult>> getValueBinaryOp(EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws UserException, InternalException
     {
-        ValueResult lhsVal = lhs.calculateValue(state);
-        ValueResult rhsVal = rhs.calculateValue(state);
-        return new Pair<>(DataTypeUtility.value(0 != Utility.compareValues(lhsVal.value, rhsVal.value)), ImmutableList.of(lhsVal, rhsVal));
+        return DataTypeUtility.value(0 != Utility.compareValues(lhsValue.value, rhsValue.value));
     }
 
     @Override

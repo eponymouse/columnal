@@ -11,6 +11,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -55,7 +56,7 @@ public class DefineExpression extends Expression
         }
 
         @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState evaluate(EvaluateState state) throws InternalException, UserException
+        public @Nullable EvaluateState evaluate(EvaluateState state) throws InternalException, EvaluationException
         {
             ValueResult valueResult = rhsValue.calculateValue(state);
             valueResult = lhsPattern.matchAsPattern(valueResult.value, valueResult.evaluateState);
@@ -213,18 +214,26 @@ public class DefineExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
         for (Definition define : Either.<@Recorded HasTypeExpression, Definition>getRights(Utility.<DefineItem, Either<@Recorded HasTypeExpression, Definition>>mapListI(defines, d -> d.typeOrDefinition)))
         {
-            @Nullable EvaluateState outcome = define.evaluate(state);
-            if (outcome == null)
+            @Nullable EvaluateState outcome;
+            try
             {
-                throw new UserException(StyledString.concat(StyledString.s("Pattern did not match: "), define.lhsPattern.toStyledString()));
+                outcome = define.evaluate(state);
+                if (outcome == null)
+                {
+                    throw new UserException(StyledString.concat(StyledString.s("Pattern did not match: "), define.lhsPattern.toStyledString()));
+                }
+            }
+            catch (UserException e)
+            {
+                throw new EvaluationException(e, this, ExecutionType.VALUE, state, ImmutableList.of());
             }
             state = outcome;
         }
-        return body.calculateValue(state);
+        return fetchSubExpression(body, state, ImmutableList.builder());
     }
 
     @Override

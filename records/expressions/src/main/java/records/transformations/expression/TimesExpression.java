@@ -81,7 +81,7 @@ public class TimesExpression extends NaryOpTotalExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public ValueResult getValueNaryOp(ImmutableList<ValueResult> values, EvaluateState state) throws UserException, InternalException
+    public ValueResult getValueNaryOp(ImmutableList<ValueResult> values, EvaluateState state) throws InternalException
     {
         @Value Number n = Utility.cast(values.get(0).value, Number.class);
         for (int i = 1; i < expressions.size(); i++)

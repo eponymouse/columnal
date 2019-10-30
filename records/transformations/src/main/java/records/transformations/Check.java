@@ -23,6 +23,7 @@ import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
+import records.transformations.expression.EvaluationException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.FoundTableActual;
@@ -140,45 +141,53 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
         
         ensureBoolean(type);
         
-        if (checkType == CheckType.STANDALONE)
+        try
         {
-            ValueResult r = checkExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty(), true));
-            explanation = r.makeExplanation(null);
-            return r.value;
-        }
-        else
-        {
-            Table srcTable = getManager().getSingleTableOrNull(srcTableId);
-            if (srcTable != null)
+            if (checkType == CheckType.STANDALONE)
             {
-                int length = srcTable.getData().getLength();
-                for (int row = 0; row < length; row++)
-                {
-                    ValueResult r = checkExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(row), true));
-                    boolean thisRow = Utility.cast(r.value, Boolean.class);
-                    if (thisRow && checkType == CheckType.NO_ROWS)
-                    {
-                        explanation = r.makeExplanation(null);
-                        return DataTypeUtility.value(false);
-                    }
-                    else if (!thisRow && checkType == CheckType.ALL_ROWS)
-                    {
-                        explanation = r.makeExplanation(null);
-                        return DataTypeUtility.value(false);
-                    }
-                    else if (thisRow && checkType == CheckType.ANY_ROW)
-                    {
-                        explanation = r.makeExplanation(null);
-                        return DataTypeUtility.value(true);
-                    }
-                }
-                if (checkType == CheckType.ANY_ROW)
-                    return DataTypeUtility.value(false);
-                else
-                    return DataTypeUtility.value(true);
+                ValueResult r = checkExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty(), true));
+                explanation = r.makeExplanation(null);
+                return r.value;
             }
-            
-            throw new UserException("Cannot find table: " + srcTableId);
+            else
+            {
+                Table srcTable = getManager().getSingleTableOrNull(srcTableId);
+                if (srcTable != null)
+                {
+                    int length = srcTable.getData().getLength();
+                    for (int row = 0; row < length; row++)
+                    {
+                        ValueResult r = checkExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(row), true));
+                        boolean thisRow = Utility.cast(r.value, Boolean.class);
+                        if (thisRow && checkType == CheckType.NO_ROWS)
+                        {
+                            explanation = r.makeExplanation(null);
+                            return DataTypeUtility.value(false);
+                        }
+                        else if (!thisRow && checkType == CheckType.ALL_ROWS)
+                        {
+                            explanation = r.makeExplanation(null);
+                            return DataTypeUtility.value(false);
+                        }
+                        else if (thisRow && checkType == CheckType.ANY_ROW)
+                        {
+                            explanation = r.makeExplanation(null);
+                            return DataTypeUtility.value(true);
+                        }
+                    }
+                    if (checkType == CheckType.ANY_ROW)
+                        return DataTypeUtility.value(false);
+                    else
+                        return DataTypeUtility.value(true);
+                }
+
+                throw new UserException("Cannot find table: " + srcTableId);
+            }
+        }
+        catch (EvaluationException e)
+        {
+            explanation = e.makeExplanation();
+            throw e;
         }
     }
 
@@ -381,7 +390,7 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
     }
 
     // Only valid after fetching the result.
-    public @Nullable Explanation getExplanation() throws InternalException
+    public @Nullable Explanation getExplanation()
     {
         return explanation;
     }

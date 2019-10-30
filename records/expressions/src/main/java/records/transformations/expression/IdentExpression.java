@@ -315,7 +315,7 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
     {
         if (resolution == null)
             throw new InternalException("Calling matchAsPattern on variable without typecheck");
@@ -326,12 +326,21 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
         if (resolution == null)
             throw new InternalException("Calling getValue on variable without typecheck");
         else
-            return resolution.getValue(state);
+        {
+            try
+            {
+                return resolution.getValue(state);
+            }
+            catch (UserException e)
+            {
+                throw new EvaluationException(e, IdentExpression.this, ExecutionType.VALUE, state, ImmutableList.of());
+            }
+        }
     }
 
     @Override
@@ -726,7 +735,7 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
-        public ValueResult getValue(EvaluateState state) throws InternalException, UserException
+        public ValueResult getValue(EvaluateState state)
         {
             @Value Object value;
             if (tagFinal.getTagInfo().getInner() == null)

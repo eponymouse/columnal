@@ -94,7 +94,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+        public ValueResult calculateValue(EvaluateState state) throws InternalException
         {
             throw new InternalException("Testing");
         }
@@ -391,7 +391,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+        public ValueResult calculateValue(EvaluateState state) throws InternalException
         {
             throw new InternalException("Should not be called");
         }

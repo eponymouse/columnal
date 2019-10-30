@@ -11,6 +11,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -120,24 +121,47 @@ public abstract class BinaryOpExpression extends Expression
 
     @Override
     @OnThread(Tag.Simulation)
-    public final ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public final ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
         if (lhs instanceof ImplicitLambdaArg || rhs instanceof ImplicitLambdaArg)
         {
             return ImplicitLambdaArg.makeImplicitFunction(this, ImmutableList.of(lhs, rhs), state, s -> {
-                Pair<@Value Object, ImmutableList<ValueResult>> result = getValueBinaryOp(s);
-                return result(result.getFirst(), s, result.getSecond());
+                ImmutableList.Builder<ValueResult> lhsrhs = ImmutableList.builderWithExpectedSize(2);
+                ValueResult lhsValue = fetchSubExpression(lhs, s, lhsrhs);
+                ValueResult rhsValue = fetchSubExpression(rhs, s, lhsrhs);
+                try
+                {
+                    @Value Object result = getValueBinaryOp(lhsValue, rhsValue);
+                    return result(result, s, lhsrhs.build());
+                }
+                catch (UserException e)
+                {
+                    throw new EvaluationException(e, this, ExecutionType.VALUE, s, lhsrhs.build());
+                }
             });
         }
         else
         {
-            Pair<@Value Object, ImmutableList<ValueResult>> r = getValueBinaryOp(state);
-            return result(r.getFirst(), state, r.getSecond());
+            ImmutableList.Builder<ValueResult> lhsrhs = ImmutableList.builderWithExpectedSize(2);
+            ValueResult lhsValue = fetchSubExpression(lhs, state, lhsrhs);
+            ValueResult rhsValue = fetchSubExpression(rhs, state, lhsrhs);
+            @Value Object result;
+            try
+            {
+                result = getValueBinaryOp(lhsValue, rhsValue);
+            }
+            catch (UserException e)
+            {
+                throw new EvaluationException(e, this, ExecutionType.VALUE, state, lhsrhs.build());
+            }
+            return result(result, state, lhsrhs.build());
         }
     }
 
+    // This is allowed to throw UserException since it won't fetch any
+    // sub-expressions and thus we can assume it is top of a stack:
     @OnThread(Tag.Simulation)
-    public abstract Pair<@Value Object, ImmutableList<ValueResult>> getValueBinaryOp(EvaluateState state) throws UserException, InternalException;
+    public abstract @Value Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws UserException, InternalException;
 
     @Override
     public final @Nullable CheckedExp check(@Recorded BinaryOpExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException

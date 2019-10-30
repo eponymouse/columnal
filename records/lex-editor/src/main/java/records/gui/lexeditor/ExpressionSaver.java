@@ -1015,7 +1015,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+        public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws InternalException
         {
             // If we are executed directly, we are in the wrong place:
             throw new InternalException("Executing KeyValueExpression despite failed typecheck");

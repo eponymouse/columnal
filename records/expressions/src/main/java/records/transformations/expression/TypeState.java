@@ -96,7 +96,7 @@ public final class TypeState
         return new TypeState(ImmutableMap.<String, TypeExp>copyOf(Maps.<String, TypeExp>filterEntries(variablePreTypes, (Entry<String, TypeExp> e) -> e != null && !e.getKey().equals(varName))), copy.build(), typeManager, unitManager, functionLookup);
     }
 
-    public TypeState addImplicitLambdas(ImmutableList<@Recorded ImplicitLambdaArg> lambdaArgs, ImmutableList<TypeExp> argTypes)
+    public TypeState addImplicitLambdas(ImmutableList<@Recorded ImplicitLambdaArg> lambdaArgs, ImmutableList<TypeExp> argTypes) throws InternalException
     {
         TypeState typeState = this;
         for (int i = 0; i < lambdaArgs.size(); i++)

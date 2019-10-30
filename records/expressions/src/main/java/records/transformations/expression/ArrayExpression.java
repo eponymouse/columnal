@@ -23,7 +23,6 @@ import utility.Either;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.ListEx;
-import utility.Utility.TransparentBuilder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -74,35 +73,48 @@ public class ArrayExpression extends Expression
 
     @Override
     @OnThread(Tag.Simulation)
-    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
     {
-        if (value instanceof ListEx)
+        ListEx list = Utility.cast(value, ListEx.class);
+        try
         {
-            ListEx list = (ListEx)value;
             if (list.size() != items.size())
                 return result(DataTypeUtility.value(false), state); // Not an exception, just means the value has different size to the pattern, so can't match
-            @Nullable EvaluateState curState = state;
-            TransparentBuilder<ValueResult> itemValues = new TransparentBuilder<>(items.size());
-            for (int i = 0; i < items.size(); i++)
-            {
-                ValueResult latest = itemValues.add(items.get(i).matchAsPattern(list.get(i), curState));
-                if (Utility.cast(latest.value, Boolean.class) == false)
-                    return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, itemValues.build(), ImmutableList.of(), false);
-                curState = latest.evaluateState;
-            }
-            return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, curState, itemValues.build(), ImmutableList.of(), false);
         }
-        throw new InternalException("Expected array but found " + value.getClass());
+        catch (UserException e)
+        {
+            throw new EvaluationException(e, this, ExecutionType.MATCH, state, ImmutableList.of());
+        }
+        
+        @Nullable EvaluateState curState = state;
+        ImmutableList.Builder<ValueResult> itemValues = ImmutableList.builderWithExpectedSize(items.size());
+        for (int i = 0; i < items.size(); i++)
+        {
+            @Value Object matchAgainst;
+            try
+            {
+                matchAgainst = list.get(i);
+            }
+            catch (UserException e)
+            {
+                throw new EvaluationException(e, this, ExecutionType.MATCH, state, itemValues.build());
+            }
+            ValueResult latest = matchSubExpressionAsPattern(items.get(i), matchAgainst, curState, itemValues);
+            if (Utility.cast(latest.value, Boolean.class) == false)
+                return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, itemValues.build(), ImmutableList.of(), false);
+            curState = latest.evaluateState;
+        }
+        return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, curState, itemValues.build(), ImmutableList.of(), false);
     }
 
     @Override
     @OnThread(Tag.Simulation)
-    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
-        TransparentBuilder<ValueResult> valuesBuilder = new TransparentBuilder<>(items.size());
+        ImmutableList.Builder<ValueResult> valuesBuilder = ImmutableList.builderWithExpectedSize(items.size());
         for (Expression item : items)
         {
-            valuesBuilder.add(item.calculateValue(state));
+            fetchSubExpression(item, state, valuesBuilder);
         }
         ImmutableList<ValueResult> values = valuesBuilder.build();
         return result(DataTypeUtility.value(Utility.mapList(values, v -> v.value)), state, values);

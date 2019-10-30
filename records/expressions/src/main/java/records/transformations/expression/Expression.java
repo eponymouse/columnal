@@ -54,6 +54,7 @@ import utility.Pair;
 import utility.SimulationConsumer;
 import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -472,7 +473,36 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
      * Gets the value for this expression at the given evaluation state
      */
     @OnThread(Tag.Simulation)
-    public abstract ValueResult calculateValue(EvaluateState state) throws UserException, InternalException;
+    public abstract ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException;
+    
+    // Fetches a sub-expression and adjusts stack trace and explanation if there is an exception.  If not, adds to passed builder and returns
+    protected final ValueResult fetchSubExpression(Expression subExpression, EvaluateState state, ImmutableList.Builder<ValueResult> subExpressionsSoFar) throws EvaluationException, InternalException
+    {
+        try
+        {
+            ValueResult result = subExpression.calculateValue(state);
+            subExpressionsSoFar.add(result);
+            return result;
+        }
+        catch (EvaluationException e)
+        {
+            throw new EvaluationException(e, this, ExecutionType.VALUE, state, subExpressionsSoFar.build());
+        }
+    }
+
+    protected final ValueResult matchSubExpressionAsPattern(Expression subExpression, @Value Object matchAgainst, EvaluateState state, ImmutableList.Builder<ValueResult> subExpressionsSoFar) throws EvaluationException, InternalException
+    {
+        try
+        {
+            ValueResult result = subExpression.matchAsPattern(matchAgainst, state);
+            subExpressionsSoFar.add(result);
+            return result;
+        }
+        catch (EvaluationException e)
+        {
+            throw new EvaluationException(e, this, ExecutionType.MATCH, state, subExpressionsSoFar.build());
+        }
+    }
 
     // Note that there will be duplicates if referred to multiple times
     @Override
@@ -492,7 +522,15 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             @Override
             public Stream<String> implicitLambdaArg(ImplicitLambdaArg self)
             {
-                return Stream.of(self.getVarName());
+                try
+                {
+                    return Stream.of(self.getVarName());
+                }
+                catch (InternalException e)
+                {
+                    Log.log(e);
+                    return Stream.of();
+                }
             }
         });
     }
@@ -736,10 +774,17 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     // If you override this, you should also override checkAsPattern
     // If there is a match, returns result with true value.  If no match, returns a result with false value.
     @OnThread(Tag.Simulation)
-    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
     {
         ValueResult ourValue = calculateValue(state);
-        return explanation(DataTypeUtility.value(Utility.compareValues(value, ourValue.value) == 0), ExecutionType.MATCH, state, ImmutableList.of(ourValue), ourValue.getDirectlyUsedLocations(), false);
+        try
+        {
+            return explanation(DataTypeUtility.value(Utility.compareValues(value, ourValue.value) == 0), ExecutionType.MATCH, state, ImmutableList.of(ourValue), ourValue.getDirectlyUsedLocations(), false);
+        }
+        catch (UserException e)
+        {
+            throw new EvaluationException(e, this, ExecutionType.MATCH, state, ImmutableList.of(ourValue));
+        }
     }
 
     @Override

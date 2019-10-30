@@ -110,7 +110,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws InternalException
     {
         // TODO return the actual type literal once we define the GADT
         return result(new TaggedValue(0, null, DataTypeUtility.fromTags(ImmutableList.<TagType<Object>>of(new TagType<Object>("Type", null)))), state);

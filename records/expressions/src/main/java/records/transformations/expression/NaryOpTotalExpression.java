@@ -27,22 +27,30 @@ public abstract class NaryOpTotalExpression extends NaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public final ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public final ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
         if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
         {
             return ImplicitLambdaArg.makeImplicitFunction(this, expressions, state, s -> {
-                ImmutableList<ValueResult> expressionValues = Utility.mapListExI(expressions, e -> e.calculateValue(s));
-                return getValueNaryOp(expressionValues, s);
+                ImmutableList.Builder<ValueResult> expressionValues = ImmutableList.builderWithExpectedSize(expressions.size());
+                for (Expression expression : expressions)
+                {
+                    fetchSubExpression(expression, s, expressionValues);
+                }
+                return getValueNaryOp(expressionValues.build(), s);
             });
         }
         else
         {
-            ImmutableList<ValueResult> expressionValues = Utility.mapListExI(expressions, e -> e.calculateValue(state));
-            return getValueNaryOp(expressionValues, state);
+            ImmutableList.Builder<ValueResult> expressionValues = ImmutableList.builderWithExpectedSize(expressions.size());
+            for (Expression expression : expressions)
+            {
+                fetchSubExpression(expression, state, expressionValues);
+            }
+            return getValueNaryOp(expressionValues.build(), state);
         }
     }
 
     @OnThread(Tag.Simulation)
-    public abstract ValueResult getValueNaryOp(ImmutableList<ValueResult> expressionValues, EvaluateState state) throws UserException, InternalException;
+    public abstract ValueResult getValueNaryOp(ImmutableList<ValueResult> expressionValues, EvaluateState state) throws EvaluationException, InternalException;
 }

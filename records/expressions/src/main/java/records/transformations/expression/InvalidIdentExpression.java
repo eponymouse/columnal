@@ -47,7 +47,7 @@ public class InvalidIdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws InternalException
     {
         throw new InternalException("Cannot execute invalid ident expression");
     }

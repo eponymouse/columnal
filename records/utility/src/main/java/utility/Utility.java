@@ -2141,29 +2141,6 @@ public class Utility
         }
     }
     
-    // Like ImmutableList.Builder, but the add method
-    // returns the item added, not the builder.
-    public static class TransparentBuilder<T>
-    {
-        private final ImmutableList.Builder<T> builder;
-        
-        public TransparentBuilder(int expectedSize)
-        {
-            builder = ImmutableList.builderWithExpectedSize(expectedSize);
-        }
-        
-        public T add(T t)
-        {
-            builder.add(t);
-            return t;
-        }
-        
-        public ImmutableList<T> build()
-        {
-            return builder.build();
-        }
-    }
-    
     // Given an original user-entered String, and a stream of options
     // that can be converted to a String (or several alternatives), returns an ordered stream
     // (most likely first) of items that the user may have mis-spelt

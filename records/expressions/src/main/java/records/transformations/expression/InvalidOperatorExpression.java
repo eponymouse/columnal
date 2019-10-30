@@ -45,7 +45,7 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws InternalException
     {
         throw new InternalException("Cannot get value for invalid expression");
     }

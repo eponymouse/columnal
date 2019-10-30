@@ -86,7 +86,7 @@ public class HasTypeExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws InternalException
     {
         throw new InternalException("Type definitions have no value");
     }

@@ -91,9 +91,10 @@ public class FieldAccessExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
-        ValueResult lhsResult = lhsRecord.calculateValue(state);
+        ImmutableList.Builder<ValueResult> subResults = ImmutableList.builderWithExpectedSize(1);
+        ValueResult lhsResult = fetchSubExpression(lhsRecord, state, subResults);
         @Value Record record = Utility.cast(lhsResult.value, Record.class);
 
         if (fieldName == null)

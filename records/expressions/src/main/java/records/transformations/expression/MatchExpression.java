@@ -23,7 +23,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
-import utility.Utility.TransparentBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -108,14 +107,14 @@ public class MatchExpression extends NonOperatorExpression
 
         //Returns null if no match
         @OnThread(Tag.Simulation)
-        public ValueResult matches(@Value Object value, EvaluateState state) throws UserException, InternalException
+        public ValueResult matches(@Value Object value, EvaluateState state) throws EvaluationException, InternalException
         {
-            TransparentBuilder<ValueResult> patternsSoFar = new TransparentBuilder<>(patterns.size());
+            ImmutableList.Builder<ValueResult> patternsSoFar = ImmutableList.builderWithExpectedSize(patterns.size());
             for (int i = 0; i < patterns.size(); i++)
             {
                 Pattern p = patterns.get(i);
                 ImmutableList<ValueResult> matches = p.match(value, state);
-                matches.forEach(patternsSoFar::add);
+                patternsSoFar.addAll(matches);
                 ValueResult patternOutcome = matches.get(matches.size() - 1);
                 if (Utility.cast(patternOutcome.value, Boolean.class)) // Did it match?
                     return result(OptionalInt.of(i), patternOutcome.evaluateState, patternsSoFar.build());
@@ -160,9 +159,9 @@ public class MatchExpression extends NonOperatorExpression
         public StyledString toDisplay(DisplayType displayType, ExpressionStyler expressionStyler)
         {
             return StyledString.concat(
-                StyledString.s(" case "),
+                StyledString.s(" @case "),
                 patterns.stream().map(p -> p.toDisplay(displayType, expressionStyler)).collect(StyledString.joining(" or ")),
-                StyledString.s(" then "),
+                StyledString.s(" @then "),
                 outcome.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler)
             );
         }
@@ -260,7 +259,7 @@ public class MatchExpression extends NonOperatorExpression
         // Returns just pattern, or pattern + guard.
         // Either way, the real result is the one in last list item. 
         @OnThread(Tag.Simulation)
-        public ImmutableList<ValueResult> match(@Value Object value, EvaluateState state) throws InternalException, UserException
+        public ImmutableList<ValueResult> match(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
         {
             ValueResult patternOutcome = pattern.matchAsPattern(value, state);
             // Only check guard if initial match was valid:
@@ -280,7 +279,7 @@ public class MatchExpression extends NonOperatorExpression
         public StyledString toDisplay(DisplayType displayType, ExpressionStyler expressionStyler)
         {
             StyledString patternDisplay = pattern.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler);
-            return guard == null ? patternDisplay : StyledString.concat(patternDisplay, StyledString.s(" given "), guard.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler));
+            return guard == null ? patternDisplay : StyledString.concat(patternDisplay, StyledString.s(" @given "), guard.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler));
         }
 
         public @Recorded Expression getPattern()
@@ -344,23 +343,31 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
+        ImmutableList.Builder<ValueResult> subItems = ImmutableList.builderWithExpectedSize(1 + clauses.size() + 1);
         // It's type checked so can just copy first clause:
-        ValueResult originalResult = expression.calculateValue(state);
+        ValueResult originalResult = fetchSubExpression(expression, state, subItems);
         @Value Object value = originalResult.value;
-        TransparentBuilder<ValueResult> checkedClauses = new TransparentBuilder<>(clauses.size());
         for (MatchClause clause : clauses)
         {
-            ValueResult patternMatch = checkedClauses.add(clause.matches(value, state));
+            ValueResult patternMatch;
+            try
+            {
+                patternMatch = clause.matches(value, state);
+                subItems.add(patternMatch);
+            }
+            catch (EvaluationException e)
+            {
+                throw new EvaluationException(e, this, ExecutionType.MATCH, state, subItems.build());
+            }
             if (Utility.cast(patternMatch.value, Boolean.class))
             {
-                ValueResult clauseOutcomeResult = clause.outcome.calculateValue(patternMatch.evaluateState);
-                return result(clauseOutcomeResult.value, state, 
-                    Utility.<ValueResult>prependToList(originalResult, Utility.<ValueResult>appendToList(checkedClauses.build(), clauseOutcomeResult)));
+                ValueResult clauseOutcomeResult = fetchSubExpression(clause.outcome, patternMatch.evaluateState,subItems);
+                return result(clauseOutcomeResult.value, state, subItems.build());
             }
         }
-        throw new UserException("No matching clause found in expression: \"" + save(SaveDestination.TO_STRING, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY) + "\"");
+        throw new EvaluationException(new UserException("No matching clause found in expression: \"" + save(SaveDestination.TO_STRING, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY) + "\""), this, ExecutionType.MATCH, state, subItems.build());
     }
 
     @Override
@@ -373,7 +380,7 @@ public class MatchExpression extends NonOperatorExpression
     @Override
     public StyledString toDisplay(DisplayType displayType, BracketedStatus surround, ExpressionStyler expressionStyler)
     {
-        StyledString inner = StyledString.concat(StyledString.s("match "), expression.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), clauses.stream().map(c -> c.toDisplay(displayType, expressionStyler)).collect(StyledString.joining("")), StyledString.s(" endmatch"));
+        StyledString inner = StyledString.concat(StyledString.s("@match "), expression.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), clauses.stream().map(c -> c.toDisplay(displayType, expressionStyler)).collect(StyledString.joining("")), StyledString.s(" @endmatch"));
         return expressionStyler.styleExpression(inner, this); //(surround == BracketedStatus.DIRECT_ROUND_BRACKETED || surround == BracketedStatus.DONT_NEED_BRACKETS) ? inner : StyledString.roundBracket(inner);
     }
 

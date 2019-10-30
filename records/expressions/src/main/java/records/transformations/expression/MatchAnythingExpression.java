@@ -39,13 +39,13 @@ public class MatchAnythingExpression extends NonOperatorExpression
     }
 
     @Override
-    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws InternalException
     {
         throw new InternalException("Calling getValue on \"_\" pattern (should only call matchAsPattern)");
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state)
     {
         // Like the name says, we match anything:
         return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of(), false);

@@ -90,7 +90,7 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
         ImmutableList<@Recorded Expression> expressions = ImmutableList.of(condition, thenExpression, elseExpression);
         if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
@@ -104,21 +104,22 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @OnThread(Tag.Simulation)
-    private ValueResult getIfThenElseValue(EvaluateState state) throws UserException, InternalException
+    private ValueResult getIfThenElseValue(EvaluateState state) throws EvaluationException, InternalException
     {
-        ValueResult condValState = condition.calculateValue(state);
+        ImmutableList.Builder<ValueResult> valueResults = ImmutableList.builderWithExpectedSize(2);
+        ValueResult condValState = fetchSubExpression(condition, state, valueResults);
         Boolean b = Utility.cast(condValState.value, Boolean.class);
         // We always return original state to outermost,
         // but then-branch gets state from condition:
         if (b)
         {
-            ValueResult thenResult = thenExpression.calculateValue(condValState.evaluateState);
+            ValueResult thenResult = fetchSubExpression(thenExpression, condValState.evaluateState, valueResults);
             return result(thenResult.value, state, ImmutableList.of(condValState, thenResult));
         }
         else
         {
             // Else gets original state, condition didn't pass:
-            ValueResult elseResult = elseExpression.calculateValue(state);
+            ValueResult elseResult = fetchSubExpression(elseExpression,state, valueResults);
             return result(elseResult.value, state, ImmutableList.of(condValState, elseResult));
         }
     }
@@ -134,13 +135,13 @@ public class IfThenElseExpression extends NonOperatorExpression
     public StyledString toDisplay(DisplayType displayType, BracketedStatus surround, ExpressionStyler expressionStyler)
     {
         StyledString content = StyledString.concat(
-            StyledString.s("if "),
+            StyledString.s("@if "),
             condition.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler),
-            StyledString.s(" then "),
+            StyledString.s(" @then "),
             thenExpression.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler),
-            StyledString.s(" else "),
+            StyledString.s(" @else "),
             elseExpression.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler),
-            StyledString.s(" endif")
+            StyledString.s(" @endif")
         );
         return expressionStyler.styleExpression(content, this); //surround != BracketedStatus.NEED_BRACKETS ? content : StyledString.roundBracket(content);
     }

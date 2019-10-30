@@ -70,11 +70,9 @@ public class DivideExpression extends BinaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public Pair<@Value Object, ImmutableList<ValueResult>> getValueBinaryOp(EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws UserException, InternalException
     {
-        ValueResult lhsValue = lhs.calculateValue(state);
-        ValueResult rhsValue = rhs.calculateValue(state);
-        return new Pair<>(DataTypeUtility.value(Utility.divideNumbers(Utility.cast(lhsValue.value, Number.class), Utility.cast(rhsValue.value, Number.class))), ImmutableList.of(lhsValue, rhsValue));
+        return DataTypeUtility.value(Utility.divideNumbers(Utility.cast(lhsValue.value, Number.class), Utility.cast(rhsValue.value, Number.class)));
     }
 
     @Override

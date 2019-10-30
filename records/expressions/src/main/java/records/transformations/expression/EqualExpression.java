@@ -8,13 +8,13 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.MutVar;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Utility;
-import utility.Utility.TransparentBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -114,30 +114,40 @@ public class EqualExpression extends NaryOpShortCircuitExpression
     }
 
     @Override
-    public ValueResult getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    public ValueResult getValueNaryOp(EvaluateState state) throws EvaluationException, InternalException
     {
         if (lastIsPattern)
         {
-            if (expressions.size() > 2)
+            if (expressions.size() != 2)
                 throw new InternalException("Pattern present in equals despite having more than two operands");
-            ValueResult value = expressions.get(0).calculateValue(state);
-            ValueResult matchResult = expressions.get(1).matchAsPattern(value.value, state);
+            ImmutableList.Builder<ValueResult> lhsrhs = ImmutableList.builderWithExpectedSize(2);
+            ValueResult value = fetchSubExpression(expressions.get(0), state, lhsrhs);
+            ValueResult matchResult = matchSubExpressionAsPattern(expressions.get(1), value.value, state, lhsrhs);
             boolean matched = Utility.cast(matchResult.value, Boolean.class);
-            return result(DataTypeUtility.value(matched), matched ? matchResult.evaluateState : state, ImmutableList.of(value, matchResult));    
+            return result(DataTypeUtility.value(matched), matched ? matchResult.evaluateState : state, ImmutableList.of(value, matchResult));
         }
-
-        TransparentBuilder<ValueResult> values = new TransparentBuilder<>(expressions.size());
-        @Value Object first = values.add(expressions.get(0).calculateValue(state)).value;
-        for (int i = 1; i < expressions.size(); i++)
+        else
         {
-            @Value Object rhsVal = values.add(expressions.get(i).calculateValue(state)).value;
-            if (0 != Utility.compareValues(first, rhsVal))
+            ImmutableList.Builder<ValueResult> values = ImmutableList.builderWithExpectedSize(expressions.size());
+            @Value Object first = fetchSubExpression(expressions.get(0), state, values).value;
+            for (int i = 1; i < expressions.size(); i++)
             {
-                return result(DataTypeUtility.value(false), state, values.build());
+                @Value Object rhsVal = fetchSubExpression(expressions.get(i), state, values).value;
+                try
+                {
+                    if (0 != Utility.compareValues(first, rhsVal))
+                    {
+                        return result(DataTypeUtility.value(false), state, values.build());
+                    }
+                }
+                catch (UserException e)
+                {
+                    throw new EvaluationException(e, this, ExecutionType.VALUE, state, values.build());
+                }
             }
-        }
 
-        return result(DataTypeUtility.value(true), state, values.build());
+            return result(DataTypeUtility.value(true), state, values.build());
+        }
     }
 
     @Override

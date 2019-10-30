@@ -21,7 +21,6 @@ import utility.Pair;
 import utility.Utility;
 import utility.Utility.Record;
 import utility.Utility.RecordMap;
-import utility.Utility.TransparentBuilder;
 
 import java.util.HashMap;
 import java.util.Objects;
@@ -66,30 +65,30 @@ public class RecordExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
-        TransparentBuilder<ValueResult> valuesBuilder = new TransparentBuilder<>(members.size());
+        ImmutableList.Builder<ValueResult> valuesBuilder = ImmutableList.builderWithExpectedSize(members.size());
         // If it typechecked, assume no duplicate fields
         HashMap<@ExpressionIdentifier String, @Value Object> fieldValues = new HashMap<>();
 
         for (Pair<@ExpressionIdentifier String, @Recorded Expression> member : members)
         {
-            fieldValues.put(member.getFirst(), valuesBuilder.add(member.getSecond().calculateValue(state)).value);
+            fieldValues.put(member.getFirst(), fetchSubExpression(member.getSecond(), state, valuesBuilder).value);
         }
         
         return explanation(DataTypeUtility.value(new RecordMap(fieldValues)), ExecutionType.VALUE, state, valuesBuilder.build(), ImmutableList.of(), true);
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
     {
         @Value Record record = Utility.cast(value, Record.class);
-        TransparentBuilder<ValueResult> itemValues = new TransparentBuilder<>(members.size());
+        ImmutableList.Builder<ValueResult> itemValues = ImmutableList.builderWithExpectedSize(members.size());
         
         for (Pair<@ExpressionIdentifier String, Expression> member : members)
         {
             @Value Object fieldValue = record.getField(member.getFirst());
-            ValueResult result = itemValues.add(member.getSecond().matchAsPattern(fieldValue, state));
+            ValueResult result = matchSubExpressionAsPattern(member.getSecond(), fieldValue, state, itemValues);
             if (Utility.cast(result.value, Boolean.class) == false)
                 return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, itemValues.build(), ImmutableList.of(), false);
             state = result.evaluateState;
