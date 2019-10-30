@@ -41,7 +41,7 @@ public class EnterValueDialog<@NonNull V> extends ErrorableLightDialog<V>
             // Shouldn't happen when converting default value
             initialContent = "";
         }
-        document = new RecogniserDocument<@NonNull V>(initialContent, recogniserAndType.itemClass, recogniserAndType.recogniser, null, (a, b, c) -> {}, k -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
+        document = new RecogniserDocument<@NonNull V>(initialContent, recogniserAndType.itemClass, recogniserAndType.recogniser, null, (a, b, c) -> {}, k -> getDialogPane().lookupButton(ButtonType.OK).requestFocus(), null);
         DocumentTextField textField = new DocumentTextField(null);
         textField.setDocument(document);
         getDialogPane().setContent(GUI.borderTopCenterBottom(null, textField, getErrorLabel()));

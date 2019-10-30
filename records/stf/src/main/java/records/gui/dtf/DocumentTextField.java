@@ -12,6 +12,7 @@ import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.VPos;
+import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -647,5 +648,11 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             return StyledString.s(document.getText());
         else
             return null;
+    }
+
+    @Override
+    protected ImmutableList<MenuItem> getAdditionalMenuItems(boolean focused)
+    {
+        return document.getAdditionalMenuItems(focused);
     }
 }

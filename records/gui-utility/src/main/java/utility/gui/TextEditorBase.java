@@ -53,7 +53,8 @@ public abstract class TextEditorBase extends Region
     private final ContextMenu contextMenu = new ContextMenu();
     // Can't use contextMenu.isShowing() because it may return false at the point
     // we lose focus to the menu:
-    private boolean showingContextMenu;
+    // This is true if showing menu and was focused when requested:
+    private boolean showingContextMenuWhileFocused;
 
     // We only need these when we are focused, and only one field
     // can ever be focused at once.  So these are null while
@@ -239,43 +240,50 @@ public abstract class TextEditorBase extends Region
         
         getChildren().setAll(caretAndSelectionNodes.backgroundsPane, caretAndSelectionNodes.errorUnderlinePane, textFlow);
 
-        MenuItem cutItem = GUI.menuItem("cut", FXUtility.mouse(this)::cut);
-        MenuItem copyItem = GUI.menuItem("copy", FXUtility.mouse(this)::copy);
-        MenuItem pasteItem = GUI.menuItem("paste", FXUtility.mouse(this)::paste);
-        contextMenu.getItems().setAll(
-                cutItem,
-                copyItem,
-                pasteItem
-        );
+        
         setOnContextMenuRequested(e -> {
             if (!contextMenu.isShowing())
             {
-                showingContextMenu = true;
+                showingContextMenuWhileFocused = isFocused();
+                FXUtility.mouse(this).prepareContextMenu(isFocused());
                 FXUtility.mouse(this).focusChanged(isEffectivelyFocused());
                 contextMenu.show(textFlow, e.getScreenX(), e.getScreenY());
             }
         });
-        contextMenu.setOnShowing(e -> {
-            boolean hasSelection = !FXUtility.mouse(this).getSelectedText().isEmpty();
-            String clipContent = Clipboard.getSystemClipboard().getString();
-            boolean hasPaste = clipContent != null && !clipContent.isEmpty();
-            cutItem.setDisable(!hasSelection);
-            copyItem.setDisable(!hasSelection);
-            pasteItem.setDisable(!hasPaste);
-        });
         contextMenu.setOnHidden(e -> {
-            showingContextMenu = false;
+            showingContextMenuWhileFocused = false;
             FXUtility.mouse(this).focusChanged(isEffectivelyFocused());
         });
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
             FXUtility.mouse(this).focusChanged(isEffectivelyFocused());
         });
     }
+    
+    private void prepareContextMenu(boolean focused)
+    {
+        MenuItem cutItem = GUI.menuItem("cut", FXUtility.mouse(this)::cut);
+        MenuItem copyItem = GUI.menuItem("copy", FXUtility.mouse(this)::copy);
+        MenuItem pasteItem = GUI.menuItem("paste", FXUtility.mouse(this)::paste);
+        boolean hasSelection = !FXUtility.mouse(this).getSelectedText().isEmpty();
+        String clipContent = Clipboard.getSystemClipboard().getString();
+        boolean hasPaste = clipContent != null && !clipContent.isEmpty();
+        cutItem.setDisable(!(hasSelection || !focused));
+        copyItem.setDisable(!(hasSelection || !focused));
+        pasteItem.setDisable(!hasPaste);
+        contextMenu.getItems().setAll(
+                cutItem,
+                copyItem,
+                pasteItem
+        );
+        contextMenu.getItems().addAll(getAdditionalMenuItems(focused));
+    }
+
+    protected abstract ImmutableList<MenuItem> getAdditionalMenuItems(boolean focused);
 
     @OnThread(Tag.FXPlatform)
     protected boolean isEffectivelyFocused(@UnknownInitialization(Region.class) TextEditorBase this)
     {
-        return isFocused() || showingContextMenu;
+        return isFocused() || showingContextMenuWhileFocused;
     }
 
     @Override

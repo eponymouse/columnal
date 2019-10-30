@@ -179,7 +179,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                             }
                             // Because we are in a runLater, constructor will have finished by then:
                             Utility.later(this).updateDestPreview();
-                            ImmutableList<ColumnDetails> columnDetailsOrigLabels = TableDisplayUtility.makeStableViewColumns(loadedSrc.recordSet, new Pair<>(Display.ALL, c -> true), c -> null, makeGetDataPosition(), null);
+                            ImmutableList<ColumnDetails> columnDetailsOrigLabels = TableDisplayUtility.makeStableViewColumns(loadedSrc.recordSet, new Pair<>(Display.ALL, c -> true), c -> null, makeGetDataPosition(), null, null);
                             ImmutableList.Builder<ColumnDetails> columnsWithDisplayNames = ImmutableList.builderWithExpectedSize(columnDetailsOrigLabels.size());
                             ImmutableList<@Localized String> columnNameOverrides = loadedSrc.columnNameOverrides;
                             if (columnNameOverrides != null && columnNameOverrides.size() == columnDetailsOrigLabels.size())
@@ -316,7 +316,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 Platform.runLater(() -> {
                     destRecordSet.set(loadedDest.getSecond());
                     destFormat = loadedDest.getFirst();
-                    destData.setColumns(TableDisplayUtility.makeStableViewColumns(loadedDest.getSecond(), new Pair<>(Display.ALL, c -> true), c -> null, makeGetDataPosition(), null), null, null);
+                    destData.setColumns(TableDisplayUtility.makeStableViewColumns(loadedDest.getSecond(), new Pair<>(Display.ALL, c -> true), c -> null, makeGetDataPosition(), null, null), null, null);
                 });
             }
             catch (InternalException | UserException e)

@@ -10,6 +10,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
+import javafx.scene.control.MenuItem;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
@@ -660,5 +661,11 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     protected @OnThread(Tag.FXPlatform) String getSelectedText()
     {
         return content.getText().substring(Math.min(content.getCaretPosition(), content.getAnchorPosition()), Math.max(content.getCaretPosition(), content.getAnchorPosition()));
+    }
+
+    @Override
+    protected ImmutableList<MenuItem> getAdditionalMenuItems(boolean focused)
+    {
+        return ImmutableList.of();
     }
 }

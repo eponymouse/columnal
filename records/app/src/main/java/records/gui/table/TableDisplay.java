@@ -92,18 +92,12 @@ import records.gui.stable.SimpleColumnOperation;
 import records.gui.table.PickTypeTransformDialog.TypeTransform;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
-import records.transformations.Aggregate;
-import records.transformations.Calculate;
-import records.transformations.Concatenate;
-import records.transformations.Filter;
-import records.transformations.HideColumns;
-import records.transformations.Join;
-import records.transformations.ManualEdit;
+import records.transformations.*;
 import records.transformations.ManualEdit.ColumnReplacementValues;
-import records.transformations.Sort;
 import records.transformations.Sort.Direction;
 import records.transformations.expression.*;
 import records.transformations.expression.Expression.MultipleTableLookup;
+import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.ValueFunction;
 import records.transformations.expression.type.TypePrimitiveLiteral;
@@ -141,7 +135,7 @@ import java.util.stream.Collectors;
  * A specialisation of DataDisplay that links it to an actual Table.
  */
 @OnThread(Tag.FXPlatform)
-public class TableDisplay extends DataDisplay implements RecordSetListener, TableDisplayBase
+public final class TableDisplay extends DataDisplay implements RecordSetListener, TableDisplayBase
 {
     private static final int INITIAL_LOAD = 100;
     private static final int LOAD_CHUNK = 100;
@@ -317,15 +311,116 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @Override
     public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
     {
+        setColumns();
+    }
+
+    @RequiresNonNull({"parent", "table"})
+    private void setColumns(@UnknownInitialization(DataDisplay.class) TableDisplay this)
+    {
         if (recordSet != null)
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, makeGetDataPosition(), onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c));
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, makeGetDataPosition(), onModify, FXUtility.mouse(this)::getMenuItems), table.getOperations(), c -> getColumnActions(parent.getManager(), table, c));
+    }
+
+    private ImmutableList<MenuItem> getMenuItems(boolean focused, ColumnId columnId, @TableDataRowIndex int rowIndex)
+    {
+        OptionalInt colIndex = Utility.findFirstIndex(getDisplayColumns(), c -> c.getColumnId().equals(columnId));
+        if (!focused && table instanceof VisitableTransformation && colIndex.isPresent())
+        {
+            @SuppressWarnings("units")
+            @TableDataColIndex int columnIndex = colIndex.getAsInt();
+            CellPosition cellPosition = getDataPosition(rowIndex, columnIndex);
+            @Nullable FXPlatformRunnable why = ((VisitableTransformation)table).visit(new TransformationVisitor<@Nullable FXPlatformRunnable>()
+            {
+                @Override
+                public @Nullable FXPlatformRunnable aggregate(Aggregate aggregate)
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable FXPlatformRunnable calculate(Calculate calculate)
+                {
+                    Expression expression = calculate.getCalculatedColumns().get(columnId);
+                    if (expression != null)
+                    {
+                        return () -> {
+                            Workers.onWorkerThread("Explain Calculate", Priority.FETCH, () -> {
+                                Explanation explanation;
+                                try
+                                {
+                                    explanation = expression.calculateValue(new EvaluateState(parent.getManager().getTypeManager(), OptionalInt.of(rowIndex), true)).makeExplanation(null);
+                                }
+                                catch (EvaluationException e)
+                                {
+                                    explanation = e.makeExplanation();
+                                }
+                                catch (InternalException e)
+                                {
+                                    Log.log(e);
+                                    return;
+                                }
+                                Explanation explanationFinal = explanation;
+                                Platform.runLater(() -> {
+                                    parent.showExplanationDisplay(calculate, calculate.getSrcTableId(), cellPosition, explanationFinal);
+                                });
+                            });
+                        };
+                    }
+                    return null;
+                }
+
+                @Override
+                public @Nullable FXPlatformRunnable check(Check check)
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable FXPlatformRunnable concatenate(Concatenate concatenate)
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable FXPlatformRunnable filter(Filter filter)
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable FXPlatformRunnable hideColumns(HideColumns hideColumns)
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable FXPlatformRunnable join(Join join)
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable FXPlatformRunnable manualEdit(ManualEdit manualEdit)
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable FXPlatformRunnable sort(Sort sort)
+                {
+                    return null;
+                }
+            });
+            if (why != null)
+                return ImmutableList.of(new SeparatorMenuItem(), GUI.menuItem("cell.why", why));
+        }
+        return ImmutableList.of();
     }
 
     @Override
     public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
     {
-        if (recordSet != null) 
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, makeGetDataPosition(), onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c));
+        setColumns();
     }
 
     //TODO @Override
@@ -569,8 +664,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         };
         
         this.recordSet = recordSet;
-        if (recordSet != null)
-            setupWithRecordSet(parent.getManager(), table, recordSet);
+        if (this.recordSet != null)
+            setupWithRecordSet();
         
         // Hat:
         if (table instanceof Transformation)
@@ -618,11 +713,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         };
     }
     
-    @RequiresNonNull({"onModify", "parent"})
-    private void setupWithRecordSet(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, RecordSet recordSet)
+    @RequiresNonNull({"onModify", "parent", "recordSet", "table"})
+    private void setupWithRecordSet(@UnknownInitialization(DataDisplay.class) TableDisplay this)
     {
-        ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, makeGetDataPosition(), onModify);
-        setColumns(displayColumns, table.getOperations(), c -> getColumnActions(tableManager, table, c));
+        @NonNull RecordSet recordSetFinal = this.recordSet;
+        setColumns();
         //TODO restore editability on/off
         //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
         //boolean expandable = getColumns().stream().allMatch(TableColumn::isEditable);
@@ -631,11 +726,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             watchForError_(() -> {
                 for (int i = 0; i < INITIAL_LOAD; i++)
                 {
-                    if (recordSet.indexValid(i))
+                    if (recordSetFinal.indexValid(i))
                     {
                         indexesToAdd.add(Integer.valueOf(i));
                     }
-                    else if (i == 0 || recordSet.indexValid(i - 1))
+                    else if (i == 0 || recordSetFinal.indexValid(i - 1))
                     {
                         // This is the first row after.  If all columns are editable,
                         // add a false row which indicates that the data can be expanded:
@@ -652,7 +747,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
 
         FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), c -> null, makeGetDataPosition(), onModify), table.getOperations(), c -> getColumnActions(tableManager, table, c));
+            setColumns();
         });
 
         // Should be done last:

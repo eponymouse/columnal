@@ -8,6 +8,7 @@ import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -46,18 +47,9 @@ import records.gui.stable.EditorKitCache.MakeEditorKit;
 import records.gui.stable.EditorKitCallback;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.FXPlatformBiConsumer;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
-import utility.Pair;
-import utility.SimulationFunctionInt;
-import utility.SimulationSupplierInt;
-import utility.TaggedValue;
-import utility.Utility;
+import utility.*;
 import utility.Utility.ListEx;
 import utility.Utility.Record;
-import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
@@ -72,9 +64,15 @@ import java.util.function.Predicate;
 @OnThread(Tag.FXPlatform)
 public class TableDisplayUtility
 {
+    
+    public static interface GetAdditionalMenuItems
+    {
+        @OnThread(Tag.FXPlatform)
+        public ImmutableList<MenuItem> getAdditionalMenuItems(boolean focused, ColumnId columnId, @TableDataRowIndex int rowIndex);
+    }
 
     @OnThread(Tag.FXPlatform)
-    public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, Function<ColumnId, @Nullable FXPlatformConsumer<ColumnId>> renameColumn, GetDataPosition getTablePos, @Nullable FXPlatformRunnable onModify)
+    public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, Function<ColumnId, @Nullable FXPlatformConsumer<ColumnId>> renameColumn, GetDataPosition getTablePos, @Nullable FXPlatformRunnable onModify, @Nullable GetAdditionalMenuItems getAdditionalMenuItems)
     {
         ImmutableList.Builder<ColumnDetails> r = ImmutableList.builder();
         @TableDataColIndex int displayColumnIndex = displayCol(0);
@@ -86,7 +84,7 @@ public class TableDisplayUtility
                 ColumnDetails item;
                 try
                 {
-                    item = getDisplay(displayColumnIndex, col, renameColumn.apply(col.getName()), getTablePos, col.getAlteredState() == AlteredState.OVERWRITTEN ? ImmutableList.of("column-title-overwritten") : ImmutableList.of(), onModify != null ? onModify : FXPlatformRunnable.EMPTY);
+                    item = getDisplay(displayColumnIndex, col, renameColumn.apply(col.getName()), getTablePos, col.getAlteredState() == AlteredState.OVERWRITTEN ? ImmutableList.of("column-title-overwritten") : ImmutableList.of(), onModify != null ? onModify : FXPlatformRunnable.EMPTY, getAdditionalMenuItems);
                 }
                 catch (InternalException | UserException e)
                 {
@@ -152,9 +150,9 @@ public class TableDisplayUtility
     }
 
     @OnThread(Tag.FXPlatform)
-    private static ColumnDetails getDisplay(@TableDataColIndex int columnIndex, @NonNull Column column, @Nullable FXPlatformConsumer<ColumnId> rename, GetDataPosition getTablePos, ImmutableList<String> extraColumnStyles, FXPlatformRunnable onModify) throws UserException, InternalException
+    private static ColumnDetails getDisplay(@TableDataColIndex int columnIndex, @NonNull Column column, @Nullable FXPlatformConsumer<ColumnId> rename, GetDataPosition getTablePos, ImmutableList<String> extraColumnStyles, FXPlatformRunnable onModify, @Nullable GetAdditionalMenuItems getAdditionalMenuItems) throws UserException, InternalException
     {
-        return new ColumnDetails(column.getName(), column.getType().getType(), rename, makeField(columnIndex, column.getType(), column.getEditableStatus(), getTablePos, onModify), extraColumnStyles);
+        return new ColumnDetails(column.getName(), column.getType().getType(), rename, makeField(columnIndex, column.getType(), column.getEditableStatus(), getTablePos, onModify, getAdditionalMenuItems == null ? null : (FXPlatformBiFunction<@TableDataRowIndex Integer, Boolean, ImmutableList<MenuItem>>)(@TableDataRowIndex Integer r, Boolean f) -> getAdditionalMenuItems.getAdditionalMenuItems(f, column.getName(), r)), extraColumnStyles);
         /*column.getType().<ColumnHandler, UserException>applyGet(new DataTypeVisitorGetEx<ColumnHandler, UserException>()
         {
             @Override
@@ -345,7 +343,7 @@ public class TableDisplayUtility
         }
         
         @OnThread(Tag.Any)
-        public EditorKitCache<@Value T> makeDisplayCache(@TableDataColIndex int columnIndex, EditableStatus editableStatus, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify)
+        public EditorKitCache<@Value T> makeDisplayCache(@TableDataColIndex int columnIndex, EditableStatus editableStatus, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify, @Nullable FXPlatformBiFunction<@TableDataRowIndex Integer, Boolean, ImmutableList<MenuItem>> getAdditionalMenuItems)
         {
             MakeEditorKit<@Value T> makeEditorKit = (@TableDataRowIndex int rowIndex, Pair<String, @Nullable @Value T> value, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus) -> {
                 Saver<@Value T> saveChange = (String s, @Nullable @Value T v, FXPlatformRunnable reset) -> {};
@@ -374,7 +372,7 @@ public class TableDisplayUtility
                 {
                     SimulationSupplierInt<Boolean> checkEditable = makeCheckRow(editableStatus, rowIndex);
 
-                    editorKit = new RecogniserDocument<@Value T>(value.getFirst(), (Class<@Value T>) itemClass, (Recogniser<@Value T>)recogniser, checkEditable, saveChange, relinquishFocusRunnable); // stfStyles));
+                    editorKit = new RecogniserDocument<@Value T>(value.getFirst(), (Class<@Value T>) itemClass, (Recogniser<@Value T>)recogniser, checkEditable, saveChange, relinquishFocusRunnable, getAdditionalMenuItems == null ? null : focused -> getAdditionalMenuItems.apply(rowIndex, focused)); // stfStyles));
                 }
                 else
                 {
@@ -400,11 +398,10 @@ public class TableDisplayUtility
         }
     }
 
-    // public for testing:
     @OnThread(Tag.FXPlatform)
-    public static EditorKitCache<?> makeField(@TableDataColIndex int columnIndex, DataTypeValue dataTypeValue, EditableStatus editableStatus, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws InternalException
+    private static EditorKitCache<?> makeField(@TableDataColIndex int columnIndex, DataTypeValue dataTypeValue, EditableStatus editableStatus, GetDataPosition getTablePos, FXPlatformRunnable onModify, @Nullable FXPlatformBiFunction<@TableDataRowIndex Integer, Boolean, ImmutableList<MenuItem>> getAdditionalMenuItems) throws InternalException
     {
-        return valueAndComponent(dataTypeValue, true).makeDisplayCache(columnIndex, editableStatus, stfStylesFor(dataTypeValue.getType()), getTablePos, onModify);
+        return valueAndComponent(dataTypeValue, true).makeDisplayCache(columnIndex, editableStatus, stfStylesFor(dataTypeValue.getType()), getTablePos, onModify, getAdditionalMenuItems);
     }
 
     @OnThread(Tag.Any)

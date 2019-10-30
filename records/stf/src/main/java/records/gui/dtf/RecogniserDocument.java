@@ -8,6 +8,7 @@ import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
@@ -41,13 +42,14 @@ public final class RecogniserDocument<V> extends DisplayDocument
     private final FXPlatformConsumer<KeyCode> relinquishFocus;
     private final Class<V> itemClass;
     private final @Nullable SimulationSupplierInt<Boolean> checkEditable;
+    private final @Nullable FXPlatformFunction<Boolean, ImmutableList<MenuItem>> getAdditionalMenuItems;
     private OptionalInt curErrorPosition = OptionalInt.empty();
     private String valueOnFocusGain;
     private Either<ErrorDetails, SuccessDetails<V>> latestValue;
     private @Nullable FXPlatformRunnable onFocusLost;
     private @MonotonicNonNull Pair<ImmutableList<Pair<Set<String>, String>>, CaretPositionMapper> unfocusedDocument;
 
-    public RecogniserDocument(String initialContent, Class<V> valueClass, Recogniser<V> recogniser, @Nullable SimulationSupplierInt<Boolean> checkStartEdit, Saver<V> saveChange, FXPlatformConsumer<KeyCode> relinquishFocus)
+    public RecogniserDocument(String initialContent, Class<V> valueClass, Recogniser<V> recogniser, @Nullable SimulationSupplierInt<Boolean> checkStartEdit, Saver<V> saveChange, FXPlatformConsumer<KeyCode> relinquishFocus, @Nullable FXPlatformFunction<Boolean, ImmutableList<MenuItem>> getAdditionalMenuItems)
     {
         super(initialContent);
         this.itemClass = valueClass;
@@ -55,7 +57,8 @@ public final class RecogniserDocument<V> extends DisplayDocument
         this.saveChange = saveChange;
         this.relinquishFocus = relinquishFocus;
         this.checkEditable = checkStartEdit;
-        valueOnFocusGain = initialContent;
+        this.getAdditionalMenuItems = getAdditionalMenuItems;
+        this.valueOnFocusGain = initialContent;
         recognise(false);
         
     }
@@ -222,6 +225,12 @@ public final class RecogniserDocument<V> extends DisplayDocument
     public @Nullable String getUndo()
     {
         return valueOnFocusGain;
+    }
+
+    @Override
+    public ImmutableList<MenuItem> getAdditionalMenuItems(boolean focused)
+    {
+        return getAdditionalMenuItems == null ? ImmutableList.of() : getAdditionalMenuItems.apply(focused);
     }
 
     public static interface Saver<V>

@@ -59,7 +59,7 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
     private final FXPlatformConsumer<ExplanationDisplay> close;
     private final FXPlatformRunnable relayout;
 
-    protected ExplanationDisplay(TableId srcTableId, CellPosition attachedTo, Explanation explanation, FXPlatformConsumer<ExplanationLocation> jumpTo, FXPlatformConsumer<ExplanationDisplay> close, FXPlatformRunnable relayout)
+    public ExplanationDisplay(TableId srcTableId, CellPosition attachedTo, Explanation explanation, FXPlatformConsumer<ExplanationLocation> jumpTo, FXPlatformConsumer<ExplanationDisplay> close, FXPlatformRunnable relayout)
     {
         super(ViewOrder.POPUP);
         this.attachedTo = attachedTo;

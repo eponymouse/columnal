@@ -79,7 +79,6 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     private final FloatingItem<Label> resultFloatingItem;
     private final StringProperty resultContent = new SimpleStringProperty("");
     private final ObjectProperty<@Nullable Explanation> failExplanationProperty = new SimpleObjectProperty<>(null);
-    private @Nullable ExplanationDisplay explanationDisplay;
 
     public CheckDisplay(View parent, VirtualGridSupplierFloating floatingSupplier, Check check)
     {
@@ -133,25 +132,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                 @Nullable Explanation explanation = failExplanationProperty.get();
                 if (explanation != null)
                 {
-                    if (explanationDisplay != null)
-                        removeExplanationDisplay();
-                    
-                    explanationDisplay = new ExplanationDisplay(check.getSrcTableId(), getPosition().offsetByRowCols(1, 0), explanation, l -> {
-                        Table t = parent.getManager().getSingleTableOrNull(l.tableId);
-                        if (t != null && l.columnId != null && l.rowIndex != null && t.getDisplay() instanceof DataDisplay)
-                        {
-                            CellSelection selection = ((DataDisplay)t.getDisplay()).getSelectionForSingleCell(l.columnId, l.rowIndex);
-                            if (selection != null)
-                                withParent_(g -> g.select(selection));
-                        }
-                    }, item -> {
-                        removeExplanationDisplay();
-                    }, () -> withParent_(g -> g.positionOrAreaChanged()));
-                    withParent_(g -> {
-                        if (explanationDisplay != null)
-                            g.getFloatingSupplier().addItem(explanationDisplay);
-                        g.positionOrAreaChanged();
-                    });
+                    parent.showExplanationDisplay(check, check.getSrcTableId(), getPosition().offsetByRowCols(1, 0), explanation);
                 }
             }
 
@@ -221,18 +202,6 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         this.check.setDisplay(usInit);
     }
 
-    private void removeExplanationDisplay(@UnknownInitialization(HeadedDisplay.class) CheckDisplay this)
-    {
-        withParent_(g -> {
-            if (explanationDisplay != null)
-            {
-                g.getFloatingSupplier().removeItem(explanationDisplay);
-                explanationDisplay = null;
-            }
-            g.positionOrAreaChanged();
-        });
-    }
-
     /*
     private @Nullable CellSelection makeSelection(TableManager tableManager, ExplanationLocation explanationLocation)
     {
@@ -266,11 +235,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         floating.removeItem(tableBorderOverlay);
         floating.removeItem(tableHat);
         floating.removeItem(resultFloatingItem);
-        if (explanationDisplay != null)
-        {
-            floating.removeItem(explanationDisplay);
-            explanationDisplay = null;
-        }
+        parent.removeExplanationDisplayFor(check);
     }
 
     @Override

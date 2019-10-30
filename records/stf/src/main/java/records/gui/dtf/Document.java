@@ -2,6 +2,7 @@ package records.gui.dtf;
 
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
+import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.dtf.Document.TrackedPosition.Bias;
@@ -119,5 +120,10 @@ public abstract class Document
     public @Nullable String getUndo()
     {
         return null;
+    }
+    
+    public ImmutableList<MenuItem> getAdditionalMenuItems(boolean focused)
+    {
+        return ImmutableList.of();
     }
 }

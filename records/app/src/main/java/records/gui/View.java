@@ -36,6 +36,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.*;
 import records.data.Table.InitialLoadDetails;
 import records.data.Table.FullSaver;
@@ -46,6 +47,7 @@ import records.error.UserException;
 import records.gui.EditImmediateColumnDialog.InitialFocus;
 import records.gui.NewTableDialog.DataOrTransform;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
+import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
@@ -62,6 +64,8 @@ import records.gui.highlights.TableHighlights.PickResult;
 import records.gui.highlights.TableHighlights.Picker;
 import records.gui.lexeditor.ExpressionEditor;
 import records.gui.table.CheckDisplay;
+import records.gui.table.ExplanationDisplay;
+import records.gui.table.HeadedDisplay;
 import records.gui.table.TableDisplay;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
@@ -72,6 +76,7 @@ import records.transformations.Check;
 import records.transformations.Check.CheckType;
 import records.transformations.TransformationManager;
 import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.explanation.Explanation;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -116,6 +121,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     // The supplier for row labels:
     private final RowLabelSupplier rowLabelSupplier;
     private final HintMessage hintMessage;
+    private @Nullable Pair<Table, ExplanationDisplay> explanationDisplay;
 
     // This is only put into our children while we are doing special mouse capture, but it is always non-null.
     private @Nullable Pane pickPaneMouse;
@@ -252,6 +258,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     }
 
     @OnThread(Tag.Any)
+    @Pure
     public VirtualGrid getGrid()
     {
         return mainPane;
@@ -1107,6 +1114,42 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                 }
             });
         }
+    }
+
+    private void removeExplanationDisplay()
+    {
+        if (explanationDisplay != null)
+        {
+            getGrid().getFloatingSupplier().removeItem(explanationDisplay.getSecond());
+            this.explanationDisplay = null;
+        }
+        getGrid().positionOrAreaChanged();
+    }
+
+    public void removeExplanationDisplayFor(Table table)
+    {
+        if (explanationDisplay != null && explanationDisplay.getFirst() == table)
+        {
+            removeExplanationDisplay();
+        }
+    }
+    
+    public void showExplanationDisplay(Table table, TableId srcTableId, CellPosition attachedTo, Explanation explanation)
+    {
+        removeExplanationDisplay();
+        explanationDisplay = new Pair<>(table, new ExplanationDisplay(srcTableId, attachedTo, explanation, l -> {
+            Table t = getManager().getSingleTableOrNull(l.tableId);
+            if (t != null && l.columnId != null && l.rowIndex != null && t.getDisplay() instanceof DataDisplay)
+            {
+                CellSelection selection = ((DataDisplay)t.getDisplay()).getSelectionForSingleCell(l.columnId, l.rowIndex);
+                if (selection != null)
+                    getGrid().select(selection);
+            }
+        }, item -> {
+            removeExplanationDisplay();
+        }, () -> getGrid().positionOrAreaChanged()));
+        getGrid().getFloatingSupplier().addItem(explanationDisplay.getSecond());
+        getGrid().positionOrAreaChanged();
     }
 
     @OnThread(Tag.FXPlatform)
