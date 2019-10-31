@@ -22,7 +22,6 @@ import records.data.CellPosition;
 import records.data.TableId;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.grid.VirtualGridSupplier;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
@@ -74,7 +73,7 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
     protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
     {
         ExplanationPane node = getNode();
-        double width = Math.min(300.0, node == null ? 0.0 : node.prefWidth(-1));
+        double width = Math.min(500.0, Math.max(250.0, node == null ? 0.0 : node.prefWidth(-1)));
         double height = node == null ? 0 : node.prefHeight(width);
                 
         double middle = (visibleBounds.getXCoord(attachedTo.columnIndex) + visibleBounds.getXCoordAfter(attachedTo.columnIndex)) / 2.0;
@@ -193,7 +192,7 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
                 StyledString contentFinal = content;
                 Platform.runLater(() -> {
                     textFlow.getChildren().setAll(contentFinal.toGUI());
-                    FXUtility.runAfterDelay(Duration.millis(300), relayout);
+                    FXUtility.runAfterNextLayout(relayout);
                 });
             });
             textFlow.getStyleClass().add("explanation-flow");
@@ -214,6 +213,7 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
             
             getChildren().addAll(textFlow, deleteButton);
             getStyleClass().add("explanation-pane");
+            FXUtility.runAfterNextLayout(relayout);
         }
     }
     
