@@ -113,6 +113,8 @@ public abstract class VirtualGridSupplier<T extends Node>
         // because they also cast the drop shadow, and that must appear above
         // the other table items
         TABLE_BORDER,
+        // Table hats are in front of most other things but behind popups
+        TABLE_HAT,
         // Certain items look like popups, so they must go in front of all else.
         POPUP,
         // Then there's tooltips.

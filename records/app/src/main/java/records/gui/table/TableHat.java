@@ -96,7 +96,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
     
     public TableHat(@UnknownInitialization(HeadedDisplay.class) HeadedDisplay tableDisplay, View parent, Transformation table)
     {
-        super(ViewOrder.POPUP);
+        super(ViewOrder.TABLE_HAT);
         if (table instanceof Filter)
         {
             Filter filter = (Filter)table;
