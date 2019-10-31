@@ -15,6 +15,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.ListExDTV;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.TransformationLexer;
@@ -253,7 +254,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
                     if (type == null || concrete == null)
                         throw new UserException((@NonNull StyledString) errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
                     @NonNull DataType typeFinal = concrete;
-                    column = rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.calculateValue(makeEvaluateState(splits, mgr, errors, i)).value);
+                    column = rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.calculateValue(makeEvaluateState(splits, mgr.getTypeManager(), i, false)).value);
                     
                 }
                 catch (UserException ex)
@@ -272,11 +273,17 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
         this.result = theResult;
     }
 
-    private static EvaluateState makeEvaluateState(JoinedSplit splits, TableManager mgr, ErrorAndTypeRecorderStorer errors, int rowIndex) throws InternalException
+    private static EvaluateState makeEvaluateState(JoinedSplit splits, TypeManager mgr, int rowIndex, boolean recordExplanation) throws InternalException
     {
-        EvaluateState evaluateState = new EvaluateState(mgr.getTypeManager(), OptionalInt.of(rowIndex));
+        EvaluateState evaluateState = new EvaluateState(mgr, OptionalInt.of(rowIndex), recordExplanation);
         evaluateState = evaluateState.add(TypeState.GROUP_COUNT, DataTypeUtility.value(splits.valuesAndOccurrences.get(rowIndex).getSecond().bitSet.cardinality()));
         return evaluateState;
+    }
+    
+    // For re-running expressions for explanations:
+    public EvaluateState recreateEvaluateState(TypeManager typeManager, @TableDataRowIndex int rowIndex, boolean recordExplanation) throws InternalException
+    {
+        return makeEvaluateState(splits, typeManager, rowIndex, recordExplanation);
     }
 
     @OnThread(Tag.Any)

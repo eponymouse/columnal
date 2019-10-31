@@ -334,6 +334,32 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 @Override
                 public @Nullable FXPlatformRunnable aggregate(Aggregate aggregate)
                 {
+                    Expression expression = aggregate.getColumnExpressions().stream().filter(p -> p.getFirst().equals(columnId)).map(p -> p.getSecond()).findFirst().orElse(null);
+                    if (expression != null)
+                    {
+                        return () -> {
+                            Workers.onWorkerThread("Explain Calculate", Priority.FETCH, () -> {
+                                Explanation explanation;
+                                try
+                                {
+                                    explanation = expression.calculateValue(aggregate.recreateEvaluateState(parent.getManager().getTypeManager(), rowIndex, true)).makeExplanation(null);
+                                }
+                                catch (EvaluationException e)
+                                {
+                                    explanation = e.makeExplanation();
+                                }
+                                catch (InternalException e)
+                                {
+                                    Log.log(e);
+                                    return;
+                                }
+                                Explanation explanationFinal = explanation;
+                                Platform.runLater(() -> {
+                                    parent.showExplanationDisplay(aggregate, aggregate.getSrcTableId(), cellPosition, explanationFinal);
+                                });
+                            });
+                        };
+                    }
                     return null;
                 }
 
@@ -372,6 +398,11 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 @Override
                 public @Nullable FXPlatformRunnable check(Check check)
                 {
+                    Explanation explanation = check.getExplanation();
+                    if (explanation != null)
+                    {
+                        return () -> parent.showExplanationDisplay(check, check.getSrcTableId(), cellPosition, explanation);
+                    }
                     return null;
                 }
 
@@ -384,7 +415,39 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 @Override
                 public @Nullable FXPlatformRunnable filter(Filter filter)
                 {
-                    return null;
+                    return () -> {
+                        Workers.onWorkerThread("Explain Calculate", Priority.FETCH, () -> {
+                            try
+                            {
+                                @TableDataRowIndex Integer srcRowIndex = filter.getSourceRowFor(rowIndex);
+                                if (srcRowIndex != null)
+                                {
+                                    Explanation explanation;
+                                    try
+                                    {
+                                        explanation = filter.getFilterExpression().calculateValue(new EvaluateState(parent.getManager().getTypeManager(), OptionalInt.of(srcRowIndex), true)).makeExplanation(null);
+                                    }
+                                    catch (EvaluationException e)
+                                    {
+                                        explanation = e.makeExplanation();
+                                    }
+                                    catch (InternalException e)
+                                    {
+                                        Log.log(e);
+                                        return;
+                                    }
+                                    Explanation explanationFinal = explanation;
+                                    Platform.runLater(() -> {
+                                        parent.showExplanationDisplay(filter, filter.getSrcTableId(), cellPosition, explanationFinal);
+                                    });
+                                }
+                            }
+                            catch (InternalException | UserException e)
+                            {
+                                Log.log(e);
+                            }
+                        });
+                    };
                 }
 
                 @Override

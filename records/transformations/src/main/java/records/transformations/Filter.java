@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -186,6 +187,18 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
             //if (prog != null)
                 //prog.progressUpdate((double)(indexMap.filled() - start) / (double)(index - start));
         }
+    }
+    
+    // Given a row in this table, gets the index of the row in the source table that it came from.  Null if invalid or not yet available
+    @SuppressWarnings("units")
+    @OnThread(Tag.Simulation)
+    public @Nullable @TableDataRowIndex Integer getSourceRowFor(@TableDataRowIndex int rowInThisTable) throws InternalException, UserException
+    {
+        if (rowInThisTable >=0 && rowInThisTable < indexMap.filled())
+        {
+            return indexMap.getInt(rowInThisTable);
+        }
+        return null;
     }
 
     @OnThread(Tag.Any)
