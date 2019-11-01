@@ -15,6 +15,7 @@ $focus-color-text: white;
 $faint-focus-color: rgba($focus-color, 0.25);
 $control-background: grey(95%);
 $control-background-dark: grey(92%);
+$control-border: grey(50%);
   /* From modena: */
 $base-color: #ececec;
 $pane-background: derive($base-color,26.4%);
@@ -48,6 +49,8 @@ $table-header-background-color: rgb(154, 183, 237);
 $table-header-transformation-background-color: hsl(105, 35%, 50%);
 $table-header-background-color-selected: $focus-color;
 $table-header-background-color-check-failing: hsb(358, 76%, 50%);
+$table-header-name-border-color: grey(85%);
+$table-header-shadow: grey(70%);
 $table-border-color: grey(50%);
 $table-row-label-background-color: grey(90%);
 $table-row-label-border-color: $table-border-color;
@@ -59,6 +62,7 @@ $table-source-overlay-fill: hsla(105, 100%, 30%, 0.35);
 $column-header-background-color: hsb(218, 11%, 89%);
 $column-header-text-color: hsb(218, 41%, 30%);
 $expand-arrow-color: grey(60%);
+$expand-arrow-color-hover: white;
 $grid-comment: hsb(62, 20%, 95%);
 $grid-comment-hover: hsb(62, 20%, 99%);
 
@@ -82,3 +86,5 @@ $recipe-background: hsb(48, 25%, 95%);
 $recipe-text: hsb(57, 100%, 20%);
 
 $doc-header-background: hsl(260, 50%, 85%);
+
+$import-arrow: grey(50%);

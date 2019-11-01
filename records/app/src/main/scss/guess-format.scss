@@ -18,7 +18,7 @@
     -fx-padding: 8px 0 5px 0;
 }
 .import-arrow {
-    -fx-stroke: grey(50%);
+    -fx-stroke: $import-arrow;
     -fx-stroke-width: 3;
     -fx-stroke-line-join: round;
     -fx-stroke-line-cap: round;

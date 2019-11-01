@@ -21,7 +21,7 @@
 /* Need this for case when context menu shows on something with
    a custom text colour (e.g. selected column header) */
 .context-menu .label {
-    -fx-text-fill: black !important;
+    -fx-text-fill: $text-color !important;
 }
 
 /* Reduce the oversize padding on menu items that JavaFX adds by default: */
@@ -30,7 +30,7 @@
 }
 .context-menu {
     -fx-padding: 1;
-    -fx-background-color: grey(50%), $control-background;
+    -fx-background-color: $control-border, $control-background;
     -fx-background-insets: 0, 1;
 }
 /* Change menu colours to our scheme: */
@@ -39,23 +39,23 @@
         -fx-background-insets: 0;
         -fx-background-color: $focus-color;
         & .label {
-            -fx-text-fill: white !important; 
+            -fx-text-fill: $focus-color-text !important; 
         }
     }
 }
 .menu-bar {
-    -fx-background-color: grey(50%), $control-background;
+    -fx-background-color: $control-border, $control-background;
     -fx-background-insets: 0, 0 0 1 0;
 }
 .menu-bar > .container > .menu-button {
     -fx-background-color:  transparent;
-    -fx-text-fill: black;
+    -fx-text-fill: $text-color;
 }
 .menu-bar > .container > .menu-button:hover,
 .menu-bar > .container > .menu-button:focused,
 .menu-bar > .container > .menu-button:showing {
     -fx-background-color:  $focus-color;
-    -fx-text-fill: white;
+    -fx-text-fill: $focus-color-text;
 }
 
 .list-view {
@@ -70,13 +70,13 @@
     }
     &:filled:selected {
         -fx-background-color: $list-selection-unfocused;
-        -fx-text-fill: white;
+        -fx-text-fill: $focus-color-text;
     }
 }
 .list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell {
     &:filled:selected {
         -fx-background-color: $list-selection-focused;
-        -fx-text-fill: white;
+        -fx-text-fill: $focus-color-text;
     }
 }
 

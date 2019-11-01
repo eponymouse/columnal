@@ -1,3 +1,4 @@
+/* virtual-grid.scss */
 @import 'colors';
 @import 'fonts';
 
@@ -24,7 +25,7 @@
                 -fx-background-color: $table-header-background-color-check-failing;
             }
             & .text-field:hover, & .text-field:focused {
-                -fx-background-color: grey(85%), $table-header-background-color-check-failing;
+                -fx-background-color: $table-header-name-border-color, $table-header-background-color-check-failing;
             }
         }
         &:table-selected, &:check-failing:table-selected {
@@ -33,14 +34,14 @@
                 -fx-background-color: $table-header-background-color-selected;
             }
             & .text-field:hover, & .text-field:focused {
-                -fx-background-color: grey(85%), $table-header-background-color-selected;
+                -fx-background-color: $table-header-name-border-color, $table-header-background-color-selected;
             }
         }
     }
     &.transformation-table-title .text-field, &.check-table-title .text-field {
         -fx-background-color: $table-header-transformation-background-color, $table-header-transformation-background-color;
         &:focused, &:hover {
-            -fx-background-color: grey(85%), $table-header-transformation-background-color;
+            -fx-background-color: $table-header-name-border-color, $table-header-transformation-background-color;
         }
     }
     
@@ -50,7 +51,7 @@
         .text-field {
             -fx-background-color: $table-header-background-color-selected, $table-header-background-color-selected;
             &:focused, &:hover {
-                -fx-background-color: grey(85%), $table-header-background-color-selected;
+                -fx-background-color: $table-header-name-border-color, $table-header-background-color-selected;
             }
         }
     }
@@ -58,7 +59,7 @@
         -fx-text-fill: $table-header-text-color;
         -fx-background-color: $table-header-background-color, $table-header-background-color;
         &:focused, &:hover {
-            -fx-background-color: grey(85%), $table-header-background-color;
+            -fx-background-color: $table-header-name-border-color, $table-header-background-color;
         }
         -fx-background-insets: 0, 1;
         -fx-padding: -1 1 -1 1;
@@ -85,7 +86,7 @@
     }
     
     &:column-header-floating {
-        -fx-effect: dropshadow(gaussian, grey(70%), 10, 0.4, 0, 3);
+        -fx-effect: dropshadow(gaussian, $table-header-shadow, 10, 0.4, 0, 3);
     }
 }
 
@@ -135,11 +136,6 @@
     }
 }
 
-.table-data-cell .input-error {
-    -rtfx-underline-color: hsb(0, 80%, 40%);
-    -rtfx-underline-width: 2;
-}
-
 .grid-comment-field {
     -fx-background-color: $table-divider, $grid-comment;
     -fx-background-insets: 0, 0 1 1 0;
@@ -163,7 +159,7 @@
     -fx-text-fill: $expand-arrow-color;
     -fx-cursor: hand;
     &:expand-down:hovering-expand-down, &:expand-right:hovering-expand-right {
-        -fx-background-color: white;
+        -fx-background-color: $expand-arrow-color-hover;
     }
 }
 
