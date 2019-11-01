@@ -83,6 +83,9 @@ $string-color: hsb(116, 100%, 40%) /*saddlebrown*/;
 }
 
 .expression-editor {
+    .expression-at {
+        -fx-opacity: 30%;
+    }
     .expression-indent, .expression-if, .expression-then, .expression-else, .expression-endif, .expression-define, .expression-enddefine, .expression-match, .expression-case, .expression-orcase, .expression-given, .expression-endmatch, .expression-function, .expression-endfunction {
         -fx-fill: hsb(120, 44%, 40%);
         -fx-font-family: "Noto Mono";

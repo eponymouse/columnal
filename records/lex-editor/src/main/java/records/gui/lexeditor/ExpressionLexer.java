@@ -120,7 +120,13 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         @OnThread(Tag.Any)
         public StyledString toStyledString()
         {
-            return StyledString.s(getContent()).withStyle(new StyledCSS("expression-" + this.name().toLowerCase()));
+            String content = getContent();
+            if (content.startsWith("@"))
+            {
+                return StyledString.concat(StyledString.s("@").withStyle(new StyledCSS("expression-" + this.name().toLowerCase(), "expression-at")), StyledString.s(content.substring(1)).withStyle(new StyledCSS("expression-" + this.name().toLowerCase())));
+            }
+            else
+                return StyledString.s(content).withStyle(new StyledCSS("expression-" + this.name().toLowerCase()));
         }
 
 
