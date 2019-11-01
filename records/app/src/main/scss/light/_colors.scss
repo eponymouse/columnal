@@ -16,7 +16,8 @@ $faint-focus-color: rgba($focus-color, 0.25);
 $control-background: grey(95%);
 $control-background-dark: grey(92%);
   /* From modena: */
-$pane-background: derive(#ececec,26.4%);
+$base-color: #ececec;
+$pane-background: derive($base-color,26.4%);
 $text-color: #333;
 
 /* Initial/logo */

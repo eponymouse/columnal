@@ -14,6 +14,8 @@
     -fx-control-inner-background: $control-background;
         /* Version of -fx-control-inner-background for alternative rows */
     -fx-control-inner-background-alt: $control-background-dark;
+    
+    -fx-base: $base-color;
 }
 
 /* Need this for case when context menu shows on something with
