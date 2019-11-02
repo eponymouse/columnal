@@ -4,9 +4,10 @@ Version 0.6.0 (2019-10-20)
 ==========================
 First public release, starting the early access phase.
 
-Version 0.6.1 (UNRELEASED)
+Version 0.6.1 (2019-11-02)
 ==========================
 Add Linux version, fix name resolution bugs.
 
-- Linux build is now available for x64 architecture.
+- Linux build is now available for x86_64 architecture.
 - Fixed some name resolution bugs.
+- Improved some visual styling.
