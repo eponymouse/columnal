@@ -143,7 +143,7 @@ public class IfThenElseExpression extends NonOperatorExpression
         return content;
     }
 
-    private static Stream<String> findPatternVars(Expression conditionPart)
+    private static Stream<String> findPatternVars(@Recorded Expression conditionPart)
     {
         return conditionPart.visit(new ExpressionVisitorFlat<Stream<String>>()
         {
