@@ -655,11 +655,15 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                         // Match just one name
                         break increaseScoping;
                     }
-                    else
+                    else if (matchCount == 0)
                     {
                         // Match nothing; preserve fully as-is:
                         usingNamespace = !Objects.equals(namespace, "var");
                         firstIdentUsed = 0;
+                        break increaseScoping;
+                    }
+                    else
+                    {
                         break increaseScoping;
                     }
                 }
