@@ -4,6 +4,7 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -18,6 +19,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 
@@ -245,7 +247,27 @@ public class DefineExpression extends Expression
     @Override
     public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@define " + defines.stream().map(e -> e.typeOrDefinition.either(x -> x.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames), x -> x.save(saveDestination, renames))).collect(Collectors.joining(", ")) + " @then " + body.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @enddefine";
+        StringBuilder b = new StringBuilder();
+        b.append("@define ");
+        for (int i = 0; i < defines.size(); i++)
+        {
+            if (i > 0)
+                b.append(", ");
+            SaveDestination latest = saveDestination;
+            saveDestination = defines.get(i).typeOrDefinition.<SaveDestination>either(x -> {
+                b.append(x.save(latest, BracketedStatus.DONT_NEED_BRACKETS, renames));
+                return latest;
+            }, x -> {
+                b.append(x.save(latest, renames));
+                Set<String> patternVars = x.lhsPattern.allVariableReferences().collect(ImmutableSet.<String>toImmutableSet());
+                Set<String> definedVars = latest.definedNames("var").stream().<String>map(v -> v.get(0)).collect(ImmutableSet.<String>toImmutableSet());
+                return latest.withNames(Utility.filterOutNulls(Sets.<String>difference(patternVars, definedVars).stream().<@Nullable @ExpressionIdentifier String>map(IdentifierUtility::asExpressionIdentifier)).<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>>map(v -> new Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>("var", ImmutableList.of(v))).collect(ImmutableList.<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>>toImmutableList()));
+            });
+        }
+        b.append(" @then ");
+        b.append(body.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames));
+        b.append(" @enddefine");
+        return b.toString();
     }
 
     @Override

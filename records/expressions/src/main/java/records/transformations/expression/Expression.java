@@ -555,6 +555,11 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         SaveDestination withNames(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names);
 
         /**
+         * Get all the defined names in the given namespace
+         */
+        ImmutableList<ImmutableList<String>> definedNames(String namespace);
+
+        /**
          * Do we need keywords like @call, @unfinished, etc?
          * @return
          */
@@ -573,6 +578,12 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             public SaveDestination withNames(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names)
             {
                 return this;
+            }
+
+            @Override
+            public ImmutableList<ImmutableList<String>> definedNames(String namespace)
+            {
+                return ImmutableList.of();
             }
 
             @Override
@@ -597,6 +608,12 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             public SaveDestination withNames(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names)
             {
                 return this;
+            }
+
+            @Override
+            public ImmutableList<ImmutableList<String>> definedNames(String namespace)
+            {
+                return ImmutableList.of();
             }
 
             @Override
@@ -641,7 +658,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                             continue increaseScoping;
                         }
                         
-                        if ((usingNamespace || namespace == null || namespace.equals(name.getFirst())) && couldMatch(inUse, name.getSecond()))
+                        if ((!usingNamespace || namespace == null || namespace.equals(name.getFirst())) && couldMatch(inUse, name.getSecond()))
                         {
                             matchCount += 1;
                         }
@@ -690,6 +707,13 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             public SaveDestination withNames(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names)
             {
                 return new ToEditor(Utility.concatI(this.names, names));
+            }
+
+            @Override
+            @SuppressWarnings("identifier")
+            public ImmutableList<ImmutableList<String>> definedNames(String namespace)
+            {
+                return names.stream().filter(p -> namespace.equals(p.getFirst())).<ImmutableList<String>>map(p -> p.getSecond()).collect(ImmutableList.<ImmutableList<String>>toImmutableList());
             }
 
             @Override

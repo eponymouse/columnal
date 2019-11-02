@@ -1,8 +1,11 @@
 package records.transformations.expression;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.TypeManager;
@@ -10,14 +13,17 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.visitor.ExpressionVisitor;
+import records.transformations.expression.visitor.ExpressionVisitorFlat;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
@@ -127,8 +133,43 @@ public class IfThenElseExpression extends NonOperatorExpression
     @Override
     public String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String content = "@if " + condition.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @then " + thenExpression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @else " + elseExpression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @endif";
+        Set<String> patternVars = findPatternVars(condition).collect(ImmutableSet.<String>toImmutableSet());
+        
+        Set<String> definedVars = saveDestination.definedNames("var").stream().<String>map(v -> v.get(0)).collect(ImmutableSet.<String>toImmutableSet());
+        SaveDestination thenSave = saveDestination.withNames(Utility.filterOutNulls(Sets.<String>difference(patternVars, definedVars).stream().<@Nullable @ExpressionIdentifier String>map(IdentifierUtility::asExpressionIdentifier)).<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>>map(v -> new Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>("var", ImmutableList.of(v))).collect(ImmutableList.<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>>toImmutableList()));
+        
+        
+        String content = "@if " + condition.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @then " + thenExpression.save(thenSave, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @else " + elseExpression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @endif";
         return content;
+    }
+
+    private static Stream<String> findPatternVars(Expression conditionPart)
+    {
+        return conditionPart.visit(new ExpressionVisitorFlat<Stream<String>>()
+        {
+            // Only ands of equal expressions with patterns:
+            @Override
+            public Stream<String> and(AndExpression self, ImmutableList<@Recorded Expression> expressions)
+            {
+                return expressions.stream().flatMap(e -> findPatternVars(e));
+            }
+
+            @Override
+            public Stream<String> equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern)
+            {
+                if (lastIsPattern)
+                {
+                    return expressions.get(1).allVariableReferences();
+                }
+                return Stream.of();
+            }
+
+            @Override
+            protected Stream<String> makeDef(Expression expression)
+            {
+                return Stream.of();
+            }
+        });
     }
 
     @Override
