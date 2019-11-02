@@ -73,12 +73,12 @@
     }
     .pick-html-webview-wrapper {
         -fx-border-style: solid outside;
-        -fx-border-color: grey(50%);
+        -fx-border-color: $control-border;
         -fx-border-width: 1;
     }
 }
 .table-list-dialog .table-list, .sort-list-dialog .sort-list {
-    -fx-background-color: grey, $control-background;
+    -fx-background-color: $control-border, $control-background;
     -fx-background-insets: 0, 1;
     & .fancy-list-end {
         -fx-background: transparent;
@@ -150,20 +150,20 @@
         -fx-background-color: $list-even, $list-even;
         -fx-background-insets: 0, 1;
         &:hover {
-            -fx-background-color: grey, $list-even;
+            -fx-background-color: $control-border, $list-even;
         }
         &:focused {
-            -fx-background-color: grey, white;
+            -fx-background-color: $control-border, white;
         }
     }
     &:odd .pick-table-pane > .text-field, &:odd .sort-pane > .text-field {
         -fx-background-color: $list-odd, $list-odd;
         -fx-background-insets: 0, 1;
         &:hover {
-            -fx-background-color: grey, $list-odd;
+            -fx-background-color: $control-border, $list-odd;
         }
         &:focused {
-            -fx-background-color: grey, white;
+            -fx-background-color: $control-border, white;
         }
     }
     & .pick-table-pane > .label, & .sort-pane > .label {
@@ -216,7 +216,7 @@
     -fx-border-color: grey(70%); 
 }
 .edit-column-expression-root .split-by-pane {
-    -fx-background-color: grey(50%), grey(85%);
+    -fx-background-color: $control-border, grey(85%);
     -fx-background-insets: 0, 1;
     -fx-padding: 6;
     .scroll-pane-fill {

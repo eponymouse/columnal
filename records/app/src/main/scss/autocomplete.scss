@@ -4,19 +4,19 @@
 .autocomplete.list-view > .virtual-flow > .clipped-container > .sheet > .completion-cell { 
     -fx-content-display: right;
     -fx-graphic-text-gap: 10;
-    -fx-text-fill: black;
+    -fx-text-fill: $text-color;
     .completion-cell-description {
-        -fx-text-fill: grey;
+        -fx-text-fill: $text-color-faint;
         -fx-font-size: 75%;
         .list-cell:selected & {
-            -fx-text-fill: white;
+            -fx-text-fill: $focus-color-text;
         }
     }
     &:selected {
-        -fx-text-fill: white;
+        -fx-text-fill: $focus-color-text;
         -fx-background-color: $list-selection-focused;
         .completion-cell-description {
-            -fx-text-fill: grey(75%);
+            -fx-text-fill: $focus-color-text-faint;
         }
     }
 }
@@ -30,26 +30,26 @@
 
 .autocomplete-instruction.instruction > .instruction-label {
     -fx-background-insets: 0, 1;
-    -fx-background-color: grey(70%), white;
+    -fx-background-color: $autocomplete-instruction-border-text, $autocomplete-background-color;
     -fx-font-size: 75%;
-    -fx-text-fill: grey(70%);
+    -fx-text-fill: $autocomplete-instruction-border-text;
 }
 
 .lex-complete-root {
     .lex-completion-list {
-        -fx-background-color: grey(50%), white;
+        -fx-background-color: $autocomplete-border-color, $autocomplete-background-color;
         -fx-background-insets: 0, 1;    
         -fx-padding: 1;
     }
     .lex-completion {
-        -fx-background-color: white;
+        -fx-background-color: $autocomplete-background-color;
         -fx-padding: 0 2 0 2;
         .styled-text {
             -fx-font-smoothing-type: gray;
-            -fx-fill: black;
+            -fx-fill: $text-color;
         }
         &.lex-completion-header {
-            -fx-background-color: white, hsb(217, 8%, 95%);
+            -fx-background-color: $autocomplete-background-color, hsb(217, 8%, 95%);
             -fx-background-radius: 0, 0;
             -fx-background-insets: 0, 0 0 1 0;
             & .lex-completion-text-flow {
@@ -67,23 +67,23 @@
         &:selected {
             -fx-background-color: $focus-color;
             .styled-text {
-                -fx-fill: white;
+                -fx-fill: $focus-color-text;
             }
             .side-text {
-                -fx-text-fill: grey(90%);
+                -fx-text-fill: $focus-color-text-faint;
             }
         }
     }
     .lex-webview-wrapper {
         -fx-padding: 1 1 1 0;
         -fx-background-insets: 0 0 0 -1, 1 1 1 0;
-        -fx-background-color: grey(50%), white;
+        -fx-background-color: $autocomplete-border-color, $autocomplete-background-color;
         .web-view {
             -fx-font-smoothing-type: gray;
             -fx-content-menu-enabled: false;
         }
     }
     .fade-overlay {
-        -fx-fill: linear-gradient(to bottom, fade-out(grey(60%), 1) 0%, fade-out(grey(60%), 1) 60%, fade-out(grey(60%), 0.5) 90%, fade-out(grey(60%), 0.2) 100%);
+        -fx-fill: linear-gradient(to bottom, fade-out($autocomplete-fade, 1) 0%, fade-out($autocomplete-fade, 1) 60%, fade-out($autocomplete-fade, 0.5) 90%, fade-out($autocomplete-fade, 0.2) 100%);
     }
 }
