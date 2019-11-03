@@ -25,6 +25,7 @@
                         <span class="{regex-group(1)}-var"><xsl:apply-templates select="ext:node-set($typevar)"/></span>
                     </xsl:matching-substring>
                     <xsl:non-matching-substring>
+                        <!--
                         <xsl:analyze-string select="." regex="\[">
                             <xsl:matching-substring>
                                 <xsl:variable name="newLink">
@@ -32,10 +33,10 @@
                                 </xsl:variable>
                                 <xsl:apply-templates select="ext:node-set($newLink)"/>
                             </xsl:matching-substring>
-                            <xsl:non-matching-substring>
-                                <xsl:copy-of select="."/>
+                            <xsl:non-matching-substring> -->
+                                <xsl:copy-of select="."/> <!--
                             </xsl:non-matching-substring>
-                        </xsl:analyze-string>
+                        </xsl:analyze-string> -->
                     </xsl:non-matching-substring>
                 </xsl:analyze-string>
             </xsl:non-matching-substring>
@@ -45,7 +46,7 @@
     <xsl:template name="processExpression">
         <xsl:param name="expression" required="yes"/>
         <xsl:param name="insertable" required="no"/>
-        <xsl:variable name="munged" select="replace($expression,'@call\s+|@function\s+|@tagged\s+', '')"/>
+        <xsl:variable name="munged" select="replace($expression,'@call\s+|function\\\\|tag\\\\', '')"/>
         <xsl:variable name="processed">
             <xsl:analyze-string select="$munged" regex="[\(\)\[\]{}]+">
                 <xsl:matching-substring><span class="expression-bracket"><xsl:copy-of select="."/></span></xsl:matching-substring>
