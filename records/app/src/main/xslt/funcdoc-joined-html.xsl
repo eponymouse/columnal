@@ -11,6 +11,7 @@
                 <title>Function Documentation</title>
                 <link rel="stylesheet" href="funcdoc.css"/>
                 <link rel="stylesheet" href="web.css"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1"/>
             </head>
             <body>
                 <h1>Columnal Documentation: Table of Contents</h1>

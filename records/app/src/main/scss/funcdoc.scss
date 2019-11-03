@@ -156,9 +156,11 @@ html.autocomplete span.insertable-expression {
         .example-call {
             padding-left: 20pt;
         }
+        html.autocomplete & .example-description {
+            font-size: 80%;
+        }
         .example-description {
             display: block;
-            font-size: 80%;
             color: grey(60%);
             padding-left: 40pt;
         }
