@@ -36,6 +36,7 @@ import utility.Utility;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -327,12 +328,15 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
                 }
                 else
                 {
-
-                    // A hack!
-                    if (idents.size() >= 2 && idents.get(idents.size() - 1).equals("Single"))
-                        write(idents.get(idents.size() - 2) + "\\", DELAY);
-
-
+                    // Check for duplicate tags, and scope with type name if not recognised as single tag:
+                    if (Objects.equals(namespace, "tag"))
+                    {
+                        if (typeManager.lookupTag(null, idents.get(idents.size() - 1)).isLeft())
+                        {
+                            write(idents.get(idents.size() - 2) + "\\", DELAY);
+                        }
+                    }
+                    
                     write(idents.get(idents.size() - 1), DELAY);
                 }
                 
