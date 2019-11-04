@@ -7,6 +7,7 @@ import org.testfx.api.FxRobotInterface;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformSupplier;
 import utility.Utility;
 
 import java.util.OptionalInt;
@@ -28,25 +29,16 @@ public interface ListUtilTrait extends FxRobotInterface
         final int index = firstIndex.getAsInt();
 
         clickOn(list);
-        push(KeyCode.DOWN);
+        push(KeyCode.SPACE);
         sleep(100);
         // If nothing selected, selection will begin when you hit a key:
-        int existingIndex = TestUtil.fx(() -> list.getSelectionModel().getSelectedIndex());
-        if (existingIndex < 0)
-            existingIndex = 0;
-
-        if(index > existingIndex)
-        {
-            for (int i = existingIndex; i < index; i++)
-                push(KeyCode.DOWN);
-        }
-        else if (index < existingIndex)
-        {
-            for (int i = existingIndex; i > index; i--)
-                push(KeyCode.UP);
-        }
-        sleep(100);
-
-        assertEquals(index, (int)TestUtil.fx(() -> list.getSelectionModel().getSelectedIndex()));
+        FXPlatformSupplier<Integer> cur = () -> TestUtil.fx(() -> list.getSelectionModel().getSelectedIndex());
+        
+        while (cur.get() < index)
+            push(KeyCode.DOWN);
+        while (cur.get() > index)
+            push(KeyCode.UP);
+        
+        assertEquals(index, (int)cur.get());
     }
 }
