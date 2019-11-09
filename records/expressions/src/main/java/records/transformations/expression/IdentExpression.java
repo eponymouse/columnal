@@ -847,7 +847,7 @@ public class IdentExpression extends NonOperatorExpression
         @Override
         public boolean hideFromExplanation(boolean skipIfTrivial)
         {
-            return skipIfTrivial && patternMatch;
+            return skipIfTrivial || patternMatch;
         }
 
         @Override
