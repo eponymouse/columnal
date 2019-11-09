@@ -212,8 +212,9 @@ public class UnitManager
                 @UnitIdentifier String unitName = IdentifierUtility.fromParsed(singleOrScaleContext.singleUnit());
                 @Nullable UnitDeclaration lookedUp = getKnownUnit(unitName);
                 if (lookedUp == null)
-                    throw new UserException("Unknown unit: \"" + unitName + "\"");
-                base = lookedUp.getUnit();
+                    base = new Unit(new SingleUnit(unitName, "Unknown", "", ""));
+                else
+                    base = lookedUp.getUnit();
             }
         }
         else if (singleOrScaleContext.NUMBER() != null && singleOrScaleContext.NUMBER().getText().equals("1"))
