@@ -155,7 +155,7 @@ public class PropListFunctions
         {
             // Check that random element is found:
             @Value Object elem = src.list.get(r.nextInt(src.list.size()));
-            assertTrue("" + src.type, Utility.cast(TestUtil.runExpression("@call function\\\\any(" + DataTypeUtility.valueToString(src.list, src.type, false) + ", (? = " + DataTypeUtility.valueToString(elem, getInnerType(src.type), false) + "))"), Boolean.class));
+            assertTrue("" + src.type, Utility.cast(TestUtil.runExpression("@call function\\\\any(" + DataTypeUtility.valueToString(src.list, src.type, false, null) + ", (? = " + DataTypeUtility.valueToString(elem, getInnerType(src.type), false, null) + "))"), Boolean.class));
         }
     }
 

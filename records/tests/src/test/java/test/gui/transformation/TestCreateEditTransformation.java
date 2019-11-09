@@ -549,7 +549,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         
         final Expression checkExpression;
         final boolean expectedPass = checkType == CheckType.ANY_ROW || (checkType == CheckType.ALL_ROWS && allEqualToContained);
-        Expression containedItemExpression = TestUtil.parseExpression(DataTypeUtility.valueToString(containedItem, srcColumn.getType().getType(), false), tableManager.getTypeManager(), FunctionList.getFunctionLookup(tableManager.getUnitManager()));
+        Expression containedItemExpression = TestUtil.parseExpression(DataTypeUtility.valueToString(containedItem, srcColumn.getType().getType(), false, null), tableManager.getTypeManager(), FunctionList.getFunctionLookup(tableManager.getUnitManager()));
         if (r.nextInt(3) == 0)
         {
             // Fake it using a stand-alone check
