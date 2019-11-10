@@ -92,7 +92,8 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
             HashMap<Explanation, Boolean> alreadyExplained = new HashMap<>();
             Multimap<Expression, HighlightExpression> highlights = ArrayListMultimap.create();
             makeString(explanation, alreadyExplained, highlights, lines, false);
-            return lines.build().stream().collect(StyledString.joining("\n\u21aa "));
+            //return lines.build().stream().collect(StyledString.joining("\n\u21aa "));
+            return lines.build().reverse().stream().collect(StyledString.joining("\n\u2b11 "));
         });
     }
 
@@ -196,7 +197,7 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
                 });
             });
             textFlow.getStyleClass().add("explanation-flow");
-            setMargin(textFlow, new Insets(8));
+            setMargin(textFlow, new Insets(8, 24, 8, 8));
 
             SmallDeleteButton deleteButton = new SmallDeleteButton();
             deleteButton.setOnAction(() -> close());
