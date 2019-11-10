@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Main Blank" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="records.gui.Main" />
+    <module name="app" />
+    <option name="VM_PARAMETERS" value="-Xmx4096M" />
+    <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/records/app/pom.xml" goal="xml:transform" />
+      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/records/app/pom.xml" goal="resources:copy-resources@copy-scss" />
+      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/records/app/pom.xml" goal="sass:update-stylesheets" />
+      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/records/app/pom.xml" goal="resources:resources" />
+    </method>
+  </configuration>
+</component>
