@@ -25,6 +25,7 @@
         <module>book</module>
         <module>threadchecker</module>
         <module>anns-threadchecker</module>
+        <module>r-interop</module>
     </modules>
     
     <dependencies>
