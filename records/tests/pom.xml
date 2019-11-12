@@ -20,6 +20,12 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
+        <dependency>
+            <groupId>groupId</groupId>
+            <artifactId>r-interop</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
         <!-- annotations from the Checker Framework: nullness, interning, locking, ... -->
         <dependency>
             <groupId>org.checkerframework</groupId>

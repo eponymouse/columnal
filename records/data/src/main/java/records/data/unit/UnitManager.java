@@ -53,13 +53,20 @@ public class UnitManager
     // In case of clashes, builtInUnits is preferred.
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private final Map<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> knownUnits = new HashMap<>();
-
-    @SuppressWarnings("initialization")
+    
     public UnitManager() throws InternalException, UserException
     {
+        this("builtin_units.txt");
+    }
+    
+    @SuppressWarnings("initialization")
+    public UnitManager(@Nullable String builtInName) throws InternalException, UserException
+    {
+        if (builtInName == null)
+            return;
         try
         {
-            @Nullable InputStream stream = ResourceUtility.getResourceAsStream("builtin_units.txt");
+            @Nullable InputStream stream = ResourceUtility.getResourceAsStream(builtInName);
             if (stream == null)
                 throw new InternalException("Could not find data file");
             String builtInUnits = IOUtils.toString(stream, StandardCharsets.UTF_8);
@@ -93,6 +100,11 @@ public class UnitManager
         {
             throw new InternalException("Error reading data file", e);
         }
+    }
+    
+    public static UnitManager _test_blank() throws UserException, InternalException
+    {
+        return new UnitManager(null);
     }
     
     private synchronized @Nullable UnitDeclaration getKnownUnit(@UnitIdentifier String name)
