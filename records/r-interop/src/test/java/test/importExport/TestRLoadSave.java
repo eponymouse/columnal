@@ -27,6 +27,7 @@ public class TestRLoadSave
         @SuppressWarnings("nullness")
         @NonNull URL resource = getClass().getClassLoader().getResource("iris.rds");
         RValue loaded = RData.readRData(new File(resource.toURI()));
+        System.out.println(RData.prettyPrint(loaded));
         RecordSet rs = RData.convertRToTable(new TypeManager(UnitManager._test_blank()), loaded);
                 
         assertEquals(ImmutableList.of(new ColumnId("Sepal Length"), new ColumnId("Sepal Width"), new ColumnId("Petal Length"), new ColumnId("Petal Width"), new ColumnId("Species")), rs.getColumnIds());
