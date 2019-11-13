@@ -40,6 +40,15 @@
     <orderEntry type="library" name="Maven: info.debatty:java-string-similarity:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: net.jcip:jcip-annotations:1.0" level="project" />
     <orderEntry type="module" module-name="data" />
+    <orderEntry type="module-library">
+      <library name="Maven: junit:junit:4.13">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/junit-4.13-SNAPSHOT.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntry type="module" module-name="expressions" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.10.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.10.0" level="project" />

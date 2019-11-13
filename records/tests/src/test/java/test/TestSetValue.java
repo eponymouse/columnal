@@ -50,7 +50,7 @@ public class TestSetValue
         // Check initial store worked:
         for (int i = 0; i < length; i++)
         {
-            TestUtil.assertValueEitherEqual("Value " + i, originals.get(i), collapseErr(col.getType(), i));
+            DataTestUtil.assertValueEitherEqual("Value " + i, originals.get(i), collapseErr(col.getType(), i));
             pendingReplacements.add(new Pair<>(i, replacements.get(i)));
         }
 
@@ -64,7 +64,7 @@ public class TestSetValue
         // Check replacement worked:
         for (int i = 0; i < length; i++)
         {
-            TestUtil.assertValueEitherEqual("Value " + i, replacements.get(i), collapseErr(col.getType(), i));
+            DataTestUtil.assertValueEitherEqual("Value " + i, replacements.get(i), collapseErr(col.getType(), i));
         }
     }
 

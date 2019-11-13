@@ -422,6 +422,12 @@ public class RData
                 });
                 
                 if (factorNames != null)
+                {
+                    // R factors index from 1, we index TaggedValue from 0, so adjust:
+                    for (int i = 0; i < values.length; i++)
+                    {
+                        values[i] -= 1;
+                    }
                     return new RValue()
                     {
                         @Override
@@ -430,6 +436,7 @@ public class RData
                             return visitor.visitFactorList(values, factorNames);
                         }
                     };
+                }
                 else
                     return new RValue()
                     {
@@ -751,7 +758,7 @@ public class RData
     private static TaggedTypeDefinition getTaggedTypeForFactors(ImmutableList<String> levelNames, TypeManager typeManager) throws InternalException, UserException
     {
         // TODO Search for existing type
-        @ExpressionIdentifier String typeName = "F";
+        @ExpressionIdentifier String typeName = IdentifierUtility.fixExpressionIdentifier(levelNames.stream().sorted().findFirst().orElse("F") + " " + levelNames.size(), "F");
         TaggedTypeDefinition taggedTypeDefinition =  typeManager.registerTaggedType(typeName, ImmutableList.<Pair<TypeVariableKind, @ExpressionIdentifier String>>of(), levelNames.stream().map(s -> new TagType<JellyType>(IdentifierUtility.fixExpressionIdentifier(s, "Factor"), null)).collect(ImmutableList.<TagType<JellyType>>toImmutableList()));
         if (taggedTypeDefinition == null)
             throw new UserException("Type named " + typeName + " already exists but with different tags");
@@ -1031,7 +1038,7 @@ public class RData
             @Override
             public StringBuilder visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
-                return b.append("factor[" + values.length + "]");
+                return b.append("factor[" + values.length + ", levels=" + levelNames.stream().collect(Collectors.joining(",")) + "]");
             }
         }).toString();
     }

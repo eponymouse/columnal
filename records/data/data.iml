@@ -47,5 +47,14 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.10.0" level="project" />
     <orderEntry type="module" module-name="annsthreadchecker" scope="PROVIDED" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.0" level="project" />
+    <orderEntry type="module-library">
+      <library name="Maven: junit:junit:4.13">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/junit-4.13-SNAPSHOT.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

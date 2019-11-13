@@ -94,6 +94,15 @@
             <version>0.8.2</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>groupId</groupId>
+            <artifactId>data</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <classifier>tests</classifier>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

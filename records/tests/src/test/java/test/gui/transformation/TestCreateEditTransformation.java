@@ -178,7 +178,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             {
                 LoadedColumnInfo copiedColumn = clip.get(i);
                 assertEquals(copiedColumn.columnName, columns.get(i).name);
-                TestUtil.assertValueListEitherEqual("" + i, columns.get(i).data, copiedColumn.dataValues);
+                DataTestUtil.assertValueListEitherEqual("" + i, columns.get(i).data, copiedColumn.dataValues);
             }
 
             // Now add the actual aggregate:
@@ -274,7 +274,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
 
                     assertEquals(calculation.columnName.getRaw(), calculation.dataType, calcCol.dataType);
 
-                    TestUtil.assertValueListEitherEqual(calculation.columnName.getRaw(),
+                    DataTestUtil.assertValueListEitherEqual(calculation.columnName.getRaw(),
                             calculation.expectedResult.stream().<Either<String, @Value Object>>map(x -> x == null ? Either.<String, @Value Object>left("") : Either.<String, @Value Object>right(x)).collect(ImmutableList.toImmutableList()),
                             calcCol.dataValues
                     );

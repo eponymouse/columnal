@@ -254,7 +254,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                     // Try flexibly parsing then compare:
                     try
                     {
-                        TestUtil.assertValueEqual("Flexible", FromString.convertEntireString(DataTypeUtility.value(first), dataType), FromString.convertEntireString(DataTypeUtility.value(value), dataType));
+                        DataTestUtil.assertValueEqual("Flexible", FromString.convertEntireString(DataTypeUtility.value(first), dataType), FromString.convertEntireString(DataTypeUtility.value(value), dataType));
                         return;
                     }
                     catch (Throwable t)

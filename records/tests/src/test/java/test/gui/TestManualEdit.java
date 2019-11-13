@@ -6,7 +6,6 @@ import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.geometry.Bounds;
@@ -20,7 +19,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import records.data.*;
 import records.data.Table.TableDisplayBase;
-import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.ComparableValue;
 import records.data.datatype.DataTypeValue;
@@ -598,7 +596,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             
             assertEquals(expCol.columnName, actCol.columnName);
             assertEquals(expCol.dataType, actCol.dataType);
-            TestUtil.assertValueListEitherEqual("Column " + expCol.columnName + " (" + colIndex + ")", expCol.dataValues, actCol.dataValues);
+            DataTestUtil.assertValueListEitherEqual("Column " + expCol.columnName + " (" + colIndex + ")", expCol.dataValues, actCol.dataValues);
         }
     }
 

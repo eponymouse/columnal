@@ -60,6 +60,30 @@
         </dependency>
 
 
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13</version>
+            <scope>system</scope> <!-- should be test -->
+            <systemPath>${basedir}/../lib/junit-4.13-SNAPSHOT.jar</systemPath>
+        </dependency>
     </dependencies>
 
+    <!-- From http://maven.apache.org/guides/mini/guide-attached-tests.html -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

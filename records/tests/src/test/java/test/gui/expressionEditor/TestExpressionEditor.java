@@ -50,7 +50,6 @@ import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.Pair;
 import utility.Utility;
 
 import java.util.List;
@@ -163,7 +162,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             // Need to fish out first column from clip, then compare item:
             //TestUtil.checkType(expressionValue.type, clip.get().get(0));
             List<Either<String, @Value Object>> actual = clip.get().stream().filter((LoadedColumnInfo p) -> Objects.equals(p.columnName, new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).dataValues;
-            TestUtil.assertValueListEitherEqual("Transformed", Utility.<@Value Object, Either<String, @Value Object>>mapList(expressionValue.value, x -> Either.<String, @Value Object>right(x)), actual);
+            DataTestUtil.assertValueListEitherEqual("Transformed", Utility.<@Value Object, Either<String, @Value Object>>mapList(expressionValue.value, x -> Either.<String, @Value Object>right(x)), actual);
             
             // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
             // Shouldn't really need this code but test is flaky without it due to some JavaFX animation-related exceptions:

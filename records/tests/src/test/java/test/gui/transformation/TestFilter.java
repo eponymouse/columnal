@@ -12,7 +12,6 @@ import records.data.CellPosition;
 import records.data.Column;
 import records.data.datatype.DataTypeUtility;
 import records.gui.MainWindow.MainWindowActions;
-import records.gui.table.TableDisplay;
 import records.gui.grid.RectangleBounds;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
@@ -103,6 +102,6 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         assertTrue(clip.isPresent());
         // Need to fish out first column from clip, then compare item:
         List<Either<String, @Value Object>> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TestUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers((Number)x, cutOff) > 0).map(x -> Either.<String, Object>right(x)).collect(Collectors.toList());
-        TestUtil.assertValueListEitherEqual("Filtered", expected, clip.get().stream().filter(c -> Objects.equals(c.columnName, srcColumn.getName())).findFirst().<ImmutableList<Either<String, @Value Object>>>map(c -> c.dataValues).orElse(null));
+        DataTestUtil.assertValueListEitherEqual("Filtered", expected, clip.get().stream().filter(c -> Objects.equals(c.columnName, srcColumn.getName())).findFirst().<ImmutableList<Either<String, @Value Object>>>map(c -> c.dataValues).orElse(null));
     }
 }

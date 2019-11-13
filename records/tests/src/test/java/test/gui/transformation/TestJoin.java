@@ -5,11 +5,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.data.ColumnId;
@@ -224,7 +222,7 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
                 {
                     joinColName = new ColumnId(tableB.getId().getRaw() + " " + joinColName.getRaw());
                 }
-                TestUtil.assertValueListEitherEqual("Values for " + srcColName.getFirst().getId().getRaw() + " -> " + joinColName.getRaw(),
+                DataTestUtil.assertValueListEitherEqual("Values for " + srcColName.getFirst().getId().getRaw() + " -> " + joinColName.getRaw(),
                     expected,
                     TestUtil.getAllCollapsedData(join.getData().getColumn(joinColName).getType(), expected.size()));
             }

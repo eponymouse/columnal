@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.data.ColumnId;
@@ -21,7 +20,6 @@ import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import test.TestUtil;
 import test.gen.GenFile;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -47,7 +45,7 @@ public class TestTextFileColumn
         {
             for (int line = 0; line < generatedTextFile.getLineCount(); line++)
             {
-                TestUtil.assertValueEqual("Col " + column + " index " + line, generatedTextFile.getExpectedValue(column, line), recordSet.getColumns().get(column).getType().getCollapsed(line));
+                DataTestUtil.assertValueEqual("Col " + column + " index " + line, generatedTextFile.getExpectedValue(column, line), recordSet.getColumns().get(column).getType().getCollapsed(line));
             }
         }
     }

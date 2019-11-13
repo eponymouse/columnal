@@ -49,6 +49,15 @@
     <orderEntry type="module" module-name="parsers" />
     <orderEntry type="module" module-name="anns" scope="PROVIDED" />
     <orderEntry type="module" module-name="data" />
+    <orderEntry type="module-library">
+      <library name="Maven: junit:junit:4.13">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/junit-4.13-SNAPSHOT.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntry type="module" module-name="expressions" />
     <orderEntry type="module" module-name="functions" />
     <orderEntry type="library" name="Maven: ch.obermuhlner:big-math:2.0.0" level="project" />

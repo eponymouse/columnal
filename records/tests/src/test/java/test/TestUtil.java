@@ -145,84 +145,6 @@ public class TestUtil
         return "menu.exit";
     }
 
-    @OnThread(Tag.Any)
-    public static void assertValueEitherEqual(String prefix, @Nullable Either<String, @Value Object> a, @Nullable Either<String, @Value Object> b) throws UserException, InternalException
-    {
-        if (a == null && b == null)
-            return;
-        
-        if (a == null || b == null)
-        {
-            fail(prefix + " Expected " + a + " but found " + b);
-            return;
-        }
-        @NonNull Either<String, @Value Object> aNN = a;
-        @NonNull Either<String, @Value Object> bNN = b;
-        
-        aNN.either_(aErr -> bNN.either_(
-            bErr -> {assertEquals(aErr, bErr);},
-            bVal -> {fail(prefix + " Expected Left:" + aErr + " but found Right:" + bVal);}),
-            aVal -> bNN.either_(
-                bErr -> {fail(prefix + " Expected Right:" + aVal + " but found Left:" + bErr);},
-                bVal -> {assertValueEqual(prefix, aVal, bVal);}
-        ));
-    }
-
-    @OnThread(Tag.Any)
-    public static void assertValueEqual(String prefix, @Nullable @Value Object a, @Nullable @Value Object b)
-    {
-        try
-        {
-            if ((a == null) != (b == null))
-                fail(prefix + " differing nullness: " + (a == null) + " vs " + (b == null));
-            
-            if (a != null && b != null)
-            {
-                @NonNull @Value Object aNN = a;
-                @NonNull @Value Object bNN = b;
-                CompletableFuture<Either<Throwable,  Integer>> f = new CompletableFuture<>();
-                Workers.onWorkerThread("Comparison", Priority.FETCH, () -> f.complete(exceptionToEither(() -> Utility.compareValues(aNN, bNN))));
-                int compare = f.get().either(e -> {throw new RuntimeException(e);}, x -> x);
-                if (compare != 0)
-                {
-                    fail(prefix + " comparing " + DataTypeUtility._test_valueToString(a) + " against " + DataTypeUtility._test_valueToString(b) + " result: " + compare);
-                }
-            }
-        }
-        catch (ExecutionException | InterruptedException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @OnThread(Tag.Any)
-    public static void assertValueListEqual(String prefix, List<@Value Object> a, @Nullable List<@Value Object> b) throws UserException, InternalException
-    {
-        assertNotNull(prefix + " not null", b);
-        if (b != null)
-        {
-            assertEquals(prefix + " list size", a.size(), b.size());
-            for (int i = 0; i < a.size(); i++)
-            {
-                assertValueEqual(prefix, a.get(i), b.get(i));
-            }
-        }
-    }
-
-    @OnThread(Tag.Any)
-    public static void assertValueListEitherEqual(String prefix, List<Either<String, @Value Object>> a, @Nullable List<Either<String, @Value Object>> b) throws UserException, InternalException
-    {
-        assertNotNull(prefix + " not null", b);
-        if (b != null)
-        {
-            assertEquals(prefix + " list size", a.size(), b.size());
-            for (int i = 0; i < a.size(); i++)
-            {
-                assertValueEitherEqual(prefix + " row " + i, a.get(i), b.get(i));
-            }
-        }
-    }
-
     public static void assertEqualList(List<?> a, List<?> b)
     {
         if (a.size() != b.size())
@@ -908,18 +830,6 @@ public class TestUtil
         catch (InternalException | UserException e)
         {
             throw new RuntimeException(e);
-        }
-    }
-
-    public static <T> Either<Throwable, T> exceptionToEither(ExSupplier<T> supplier)
-    {
-        try
-        {
-            return Either.right(supplier.get());
-        }
-        catch (Throwable e)
-        {
-            return Either.left(e);
         }
     }
 

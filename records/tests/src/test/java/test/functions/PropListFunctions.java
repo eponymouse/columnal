@@ -76,8 +76,8 @@ public class PropListFunctions
             assertEquals(getInnerType(src.type), maxChecked.getSecond());
             @Value Object minActual = minChecked.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)});
             @Value Object maxActual = maxChecked.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)});
-            TestUtil.assertValueEqual("", expectedMin, minActual);
-            TestUtil.assertValueEqual("", expectedMax, maxActual);
+            DataTestUtil.assertValueEqual("", expectedMin, minActual);
+            DataTestUtil.assertValueEqual("", expectedMax, maxActual);
         }
     }
 

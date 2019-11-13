@@ -69,7 +69,6 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.IdentifierUtility;
 import utility.Pair;
-import utility.UnitType;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -323,7 +322,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             assertEquals(latest.size(), recordSet.getLength());
             for (int j = 0; j < latest.size(); j++)
             {
-                TestUtil.assertValueEqual("Index " + j, latest.get(j), recordSet.getColumns().get(0).getType().getCollapsed(j));
+                DataTestUtil.assertValueEqual("Index " + j, latest.get(j), recordSet.getColumns().get(0).getType().getCollapsed(j));
             }
             
             dataHistory.add(latest);
@@ -410,7 +409,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 for (int j = 0; j < values.size(); j++)
                 {
                     int jFinal = j;
-                    TestUtil.assertValueEqual("Index " + j, values.get(j), TestUtil.<@Value Object>sim(() -> column.getCollapsed(jFinal)));
+                    DataTestUtil.assertValueEqual("Index " + j, values.get(j), TestUtil.<@Value Object>sim(() -> column.getCollapsed(jFinal)));
                 }
             }
         });
@@ -478,7 +477,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         for (int i = 0; i < values.size(); i++)
         {
             int iFinal = i;
-            TestUtil.assertValueEitherEqual("Index " + i, values.get(i), TestUtil.<Either<String, @Value Object>>sim(() -> {
+            DataTestUtil.assertValueEitherEqual("Index " + i, values.get(i), TestUtil.<Either<String, @Value Object>>sim(() -> {
                 try
                 {
                     return Either.right(column.getCollapsed(iFinal));

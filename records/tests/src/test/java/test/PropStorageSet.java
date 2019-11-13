@@ -123,7 +123,7 @@ public class PropStorageSet
                 DataTypeValue columnType = c.getType();
                 Either<String, @Value Object> valueOrErr = r.nextInt(5) == 1 ? Either.left(("Err " + i)) : Either.right(value);
                 columnType.setCollapsed(rowIndex, valueOrErr);
-                TestUtil.assertValueEitherEqual("Type: " + typeAndValueGen.getType() + " index " + rowIndex, valueOrErr, collapseErr(c.getType(), rowIndex));
+                DataTestUtil.assertValueEitherEqual("Type: " + typeAndValueGen.getType() + " index " + rowIndex, valueOrErr, collapseErr(c.getType(), rowIndex));
                 vals.put(rowIndex, valueOrErr);
                 
                 //Log.debug("Set value at " + rowIndex);
@@ -139,7 +139,7 @@ public class PropStorageSet
     {
         for (Entry<@KeyFor("vals") Integer, Either<String, @Value Object>> entry : vals.entrySet())
         {
-            TestUtil.assertValueEitherEqual("Type: " + dataType + " index " + entry.getKey(), entry.getValue(), collapseErr(c.getType(), entry.getKey()));
+            DataTestUtil.assertValueEitherEqual("Type: " + dataType + " index " + entry.getKey(), entry.getValue(), collapseErr(c.getType(), entry.getKey()));
         }
     }
 

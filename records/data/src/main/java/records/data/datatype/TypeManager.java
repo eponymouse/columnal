@@ -503,5 +503,9 @@ public class TypeManager
             return wholeType.getTags().get(tagIndex);
         }
 
+        public @Value TaggedValue makeTag(@Nullable @Value Object inner)
+        {
+            return new TaggedValue(tagIndex, inner, wholeType);
+        }
     }
 }

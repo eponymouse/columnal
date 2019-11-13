@@ -199,7 +199,7 @@ public class PropRunTransformation
         assertEquals(srcData.size(), destData.size());
         for (int i = 0; i < srcData.size(); i++)
         {
-            TestUtil.assertValueListEqual("Row " + i, srcData.get(i).getKey(), destData.get(i).getKey());
+            DataTestUtil.assertValueListEqual("Row " + i, srcData.get(i).getKey(), destData.get(i).getKey());
             assertEquals("Row " + i, srcData.get(i).getValue(), destData.get(i).getValue());
         }
     }

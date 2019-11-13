@@ -12,7 +12,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.*;
@@ -266,7 +265,7 @@ public class PropStringFunctions
                 @Value Object value = typeAndValueGen.makeValue();
                 @Value Object asString = checkedToString.getFirst().call(new @Value Object[] {value});
                 @Value Object roundTripped = checkedFromString.getFirst().call(new @Value Object[] {asString});
-                TestUtil.assertValueEqual(asString.toString(), value, roundTripped);
+                DataTestUtil.assertValueEqual(asString.toString(), value, roundTripped);
             }
         }
     }
