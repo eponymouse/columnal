@@ -40,7 +40,7 @@ public class TestRLoadSave
         RValue loaded = RData.readRData(new File(resource.toURI()));
         System.out.println(RData.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(UnitManager._test_blank());
-        RecordSet rs = RData.convertRToTable(typeManager, loaded);
+        RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0);
                 
         assertEquals(ImmutableList.of(new ColumnId("Sepal Length"), new ColumnId("Sepal Width"), new ColumnId("Petal Length"), new ColumnId("Petal Width"), new ColumnId("Species")), rs.getColumnIds());
         
@@ -57,7 +57,7 @@ public class TestRLoadSave
         RValue loaded = RData.readRData(new File(resource.toURI()));
         System.out.println(RData.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(UnitManager._test_blank());
-        RecordSet rs = RData.convertRToTable(typeManager, loaded);
+        RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0);
 
         assertEquals(ImmutableList.of(new ColumnId("mpg"), new ColumnId("cyl"), new ColumnId("disp"), new ColumnId("hp"), new ColumnId("drat"), new ColumnId("wt"), new ColumnId("qsec"), new ColumnId("vs"), new ColumnId("am"), new ColumnId("gear"), new ColumnId("carb")), rs.getColumnIds());
 
@@ -66,7 +66,19 @@ public class TestRLoadSave
         //DataTestUtil.assertValueListEqual("Row 149", ImmutableList.of(d("5.9"), d("3.0"), d("5.1"), d("1.8"), typeManager.lookupTag("setosa 3", "virginica").getRight("Tag not found").makeTag(null)), DataTestUtil.getRowVals(rs, 149));
     }
 
-    private static @Value BigDecimal d(String s)
+    @Test
+    public void testImportRData3() throws Exception
+    {
+        @SuppressWarnings("nullness")
+        @NonNull URL resource = getClass().getClassLoader().getResource("aggr_results.Rdata");
+        RValue loaded = RData.readRData(new File(resource.toURI()));
+        System.out.println(RData.prettyPrint(loaded));
+        TypeManager typeManager = new TypeManager(UnitManager._test_blank());
+        ImmutableList<RecordSet> rs = RData.convertRToTable(typeManager, loaded);
+
+    }
+
+        private static @Value BigDecimal d(String s)
     {
         // We go through double to replicate the R value exactly
         return DataTypeUtility.value(new BigDecimal(Double.parseDouble(s)));

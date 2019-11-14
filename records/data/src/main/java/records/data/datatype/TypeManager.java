@@ -126,7 +126,7 @@ public class TypeManager
         }
         else
         {
-            // TODO run sanity check for duplicate tag type names
+            // No need to check for duplicate tag type names as TaggedTypeDefinition constructor does it for us:
             TaggedTypeDefinition newType = new TaggedTypeDefinition(idealTypeId, typeVariables, tagTypes);
             allKnownTypes.put(idealTypeId, newType);
             userTypes.put(idealTypeId, newType);

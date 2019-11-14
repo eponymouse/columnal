@@ -232,7 +232,6 @@ public class RData
         if (header[0] == 'R' && header[1] == 'D' && header[2] == 'X' && header[4] == '\n')
         {
             rData = true;
-            throw new InternalException("RData not yet supported");
         }
         else
         {
@@ -737,13 +736,13 @@ public class RData
             @Override
             public Pair<DataType, @Value Object> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                throw new InternalException("TODO generic list to single value");
+                throw new InternalException("TODO generic list to single value: " + prettyPrint(rValue));
             }
 
             @Override
             public Pair<DataType, @Value Object> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
             {
-                throw new InternalException("TODO pair list to single value");
+                throw new InternalException("TODO pair list to single value: "  + prettyPrint(rValue));
             }
 
             @Override
@@ -758,11 +757,16 @@ public class RData
     private static TaggedTypeDefinition getTaggedTypeForFactors(ImmutableList<String> levelNames, TypeManager typeManager) throws InternalException, UserException
     {
         // TODO Search for existing type
-        @ExpressionIdentifier String typeName = IdentifierUtility.fixExpressionIdentifier(levelNames.stream().sorted().findFirst().orElse("F") + " " + levelNames.size(), "F");
-        TaggedTypeDefinition taggedTypeDefinition =  typeManager.registerTaggedType(typeName, ImmutableList.<Pair<TypeVariableKind, @ExpressionIdentifier String>>of(), levelNames.stream().map(s -> new TagType<JellyType>(IdentifierUtility.fixExpressionIdentifier(s, "Factor"), null)).collect(ImmutableList.<TagType<JellyType>>toImmutableList()));
-        if (taggedTypeDefinition == null)
-            throw new UserException("Type named " + typeName + " already exists but with different tags");
-        return taggedTypeDefinition;
+        for (int i = 0; i < 100; i++)
+        {
+            @SuppressWarnings("identifier")
+            @ExpressionIdentifier String hint = "F " + i;
+            @ExpressionIdentifier String typeName = IdentifierUtility.fixExpressionIdentifier(levelNames.stream().sorted().findFirst().orElse("F") + " " + levelNames.size(), hint);
+            TaggedTypeDefinition taggedTypeDefinition = typeManager.registerTaggedType(typeName, ImmutableList.<Pair<TypeVariableKind, @ExpressionIdentifier String>>of(), levelNames.stream().map(s -> new TagType<JellyType>(IdentifierUtility.fixExpressionIdentifier(s, "Factor"), null)).collect(ImmutableList.<TagType<JellyType>>toImmutableList()));
+            if (taggedTypeDefinition != null)
+                return taggedTypeDefinition;
+        }
+        throw new UserException("Type named F1 through F100 already exists but with different tags");
     }
 
     public static Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> convertRToColumn(TypeManager typeManager, RValue rValue, ColumnId columnName) throws UserException, InternalException
@@ -790,7 +794,16 @@ public class RData
             @Override
             public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                return new Pair<>(rs -> new MemoryNumericColumn(rs, columnName, NumberInfo.DEFAULT, DoubleStream.of(values).mapToObj(n -> Either.<String, Number>right(DataTypeUtility.<Number>value(new BigDecimal(n)))).collect(ImmutableList.<Either<String, Number>>toImmutableList()), 0L), values.length);
+                return new Pair<>(rs -> new MemoryNumericColumn(rs, columnName, NumberInfo.DEFAULT, DoubleStream.of(values).mapToObj(n -> {
+                    try
+                    {
+                        return Either.<String, Number>right(DataTypeUtility.<Number>value(new BigDecimal(n)));
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        return Either.<String, Number>left(Double.toString(n));
+                    }
+                }).collect(ImmutableList.<Either<String, Number>>toImmutableList()), 0L), values.length);
             }
 
             @Override
@@ -826,17 +839,19 @@ public class RData
                 if (items.size() == 2)
                 {
                     RVisitor<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>> outer = this;
-                    return items.get(0).item.visit(new SpecificRVisitor<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>>()
+                    @Nullable Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> asFactors = items.get(0).item.visit(new DefaultRVisitor<@Nullable Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>>(null)
                     {
                         @Override
-                        public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
+                        public @Nullable Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
                         {
                             return outer.visitFactorList(values, levelNames);
                         }
                     });
+                    if (asFactors != null)
+                        return asFactors;
                 }
                 
-                throw new InternalException("TODO pair list to column");
+                throw new InternalException("TODO pair list to column: " + prettyPrint(rValue));
             }
         });
     }
@@ -862,58 +877,64 @@ public class RData
         return new Pair<>(curType, ImmutableMap.copyOf(conversions));
     }
     
-    public static RecordSet convertRToTable(TypeManager typeManager, RValue rValue) throws UserException, InternalException
+    public static ImmutableList<RecordSet> convertRToTable(TypeManager typeManager, RValue rValue) throws UserException, InternalException
     {
         // R tables are usually a list of columns, which suits us:
-        return rValue.visit(new RVisitor<RecordSet>()
+        return rValue.visit(new RVisitor<ImmutableList<RecordSet>>()
         {
-            private RecordSet singleColumn() throws UserException, InternalException
+            private ImmutableList<RecordSet> singleColumn() throws UserException, InternalException
             {
                 Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> p = convertRToColumn(typeManager, rValue, new ColumnId("Result"));
-                return new KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(p.getFirst()), p.getSecond());
+                return ImmutableList.<RecordSet>of(new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(p.getFirst()), p.getSecond()));
             }
 
             @Override
-            public RecordSet visitNil() throws InternalException, UserException
+            public ImmutableList<RecordSet> visitNil() throws InternalException, UserException
             {
-                throw new UserException("Cannot make table from nil value");
+                return ImmutableList.of();
             }
 
             @Override
-            public RecordSet visitString(String s) throws InternalException, UserException
-            {
-                return singleColumn();
-            }
-
-            @Override
-            public RecordSet visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<RecordSet> visitString(String s) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public RecordSet visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<RecordSet> visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public RecordSet visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
+            public ImmutableList<RecordSet> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public RecordSet visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
+            public ImmutableList<RecordSet> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
-                // Is this right?  Can a pair list be a list of columns?
                 return singleColumn();
             }
 
             @Override
-            public RecordSet visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<RecordSet> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
             {
-                ImmutableMap<String, RValue> attrMap;
+                ImmutableList.Builder<RecordSet> r = ImmutableList.builder();
+                for (PairListEntry item : items)
+                {
+                    r.addAll(convertRToTable(typeManager, item.item));
+                }
+                return r.build();
+            }
+
+            @Override
+            public ImmutableList<RecordSet> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                // Tricky; could be a list of tables, a list of columns or a list of values!
+                // First try as table (list of columns):
+                final ImmutableMap<String, RValue> attrMap;
                 if (attributes != null)
                 {
                     attrMap = pairListToMap(attributes);
@@ -922,23 +943,63 @@ public class RData
                 {
                     attrMap = ImmutableMap.of();
                 }
-                
-                // Tricky; could be a list of columns or a list of values!
-                // First try as table (list of columns:
 
-                RValue classRList = attrMap.get("class");
-                RValue classRValue = classRList == null ? null : getListItem(classRList, 0);
-                if (classRValue != null && "data.frame".equals(getString(classRValue)))
+                boolean isDataFrame = isDataFrame(attrMap);
+                if (isDataFrame)
                 {
                     ImmutableList<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>> columns = Utility.mapListExI_Index(values, (i, v) -> convertRToColumn(typeManager, v, getColumnName(attrMap.get("names"), i)));
                     if (!columns.isEmpty() && columns.stream().mapToInt(p -> p.getSecond()).distinct().count() == 1)
                     {
-                        return new <EditableColumn>KnownLengthRecordSet(Utility.<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>, SimulationFunction<RecordSet, EditableColumn>>mapList(columns, p -> p.getFirst()), columns.get(0).getSecond());
+                        return ImmutableList.of(new <EditableColumn>KnownLengthRecordSet(Utility.<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>, SimulationFunction<RecordSet, EditableColumn>>mapList(columns, p -> p.getFirst()), columns.get(0).getSecond()));
                     }
                     throw new UserException("Columns are of differing lengths");
                 }
                 else
-                    return singleColumn();
+                {
+                    boolean hasDataFrames = false;
+                    for (RValue value : values)
+                    {
+                        boolean valueIsDataFrame = value.visit(new DefaultRVisitor<Boolean>(false)
+                        {
+                            @Override
+                            public Boolean visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+                            {
+                                final ImmutableMap<String, RValue> valueAttrMap;
+                                if (attributes != null)
+                                {
+                                    valueAttrMap = pairListToMap(attributes);
+                                }
+                                else
+                                {
+                                    valueAttrMap = ImmutableMap.of();
+                                }
+                                return isDataFrame(valueAttrMap);
+                            }
+                        });
+                        
+                        if (valueIsDataFrame)
+                        {
+                            hasDataFrames = true;
+                            break;
+                        }
+                    }
+                    if (!hasDataFrames)
+                        return singleColumn();
+                    
+                    ImmutableList.Builder<RecordSet> r = ImmutableList.builder();
+                    for (RValue value : values)
+                    {
+                        r.addAll(convertRToTable(typeManager, value));
+                    }
+                    return r.build();
+                }
+            }
+
+            private boolean isDataFrame(ImmutableMap<String, RValue> attrMap) throws UserException, InternalException
+            {
+                RValue classRList = attrMap.get("class");
+                RValue classRValue = classRList == null ? null : getListItem(classRList, 0);
+                return classRValue != null && "data.frame".equals(getString(classRValue));
             }
 
             private ImmutableMap<String, RValue> pairListToMap(RValue attributes) throws UserException, InternalException
@@ -958,26 +1019,33 @@ public class RData
             }
         });
     }
-    
+
     public static String prettyPrint(RValue rValue) throws UserException, InternalException
     {
-        return rValue.visit(new RVisitor<StringBuilder>() {
-            StringBuilder b = new StringBuilder();
-
+        StringBuilder b = new StringBuilder();
+        prettyPrint(rValue, b, "");
+        return b.toString();
+    }
+    
+    private static void prettyPrint(RValue rValue, StringBuilder b, String indent) throws UserException, InternalException
+    {
+        rValue.visit(new RVisitor<@Nullable Void>() {
             @Override
-            public StringBuilder visitNil() throws InternalException, UserException
+            public @Nullable Void visitNil() throws InternalException, UserException
             {
-                return b.append("<nil>");
+                b.append("<nil>");
+                return null;
             }
 
             @Override
-            public StringBuilder visitString(String s) throws InternalException, UserException
+            public @Nullable Void visitString(String s) throws InternalException, UserException
             {
-                return b.append("\"" + s + "\"");
+                b.append("\"" + s + "\"");
+                return null;
             }
 
             @Override
-            public StringBuilder visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public @Nullable Void visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 b.append("int[" + values.length);
                 if (attributes != null)
@@ -985,11 +1053,12 @@ public class RData
                     b.append(", attr=");
                     attributes.visit(this);
                 }
-                return b.append("]");
+                b.append("]");
+                return null;
             }
 
             @Override
-            public StringBuilder visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public @Nullable Void visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 b.append("double[" + values.length);
                 if (attributes != null)
@@ -997,49 +1066,62 @@ public class RData
                     b.append(", attr=");
                     attributes.visit(this);
                 }
-                return b.append("]");
+                b.append("]");
+                return null;
             }
 
             @Override
-            public StringBuilder visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+            public @Nullable Void visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                b.append("generic{");
+                b.append("generic{\n");
                 for (RValue value : values)
                 {
-                    value.visit(this).append(", ");
+                    b.append(indent);
+                    prettyPrint(value, b, indent + "  ");
+                    b.append(",\n");
                 }
                 if (attributes != null)
                 {
+                    b.append(indent);
                     b.append("attr=");
                     attributes.visit(this);
+                    b.append("\n");
                 }
-                return b.append("}");
+                b.append(indent);
+                b.append("}");
+                return null;
             }
 
             @Override
-            public StringBuilder visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
+            public @Nullable Void visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
             {
                 b.append("pair{");
                 for (PairListEntry value : items)
                 {
                     if (value.attributes != null)
-                        value.attributes.visit(this).append(" -> ");
+                    {
+                        value.attributes.visit(this);
+                        b.append(" -> ");
+                    }
                     if (value.tag != null)
                     {
                         b.append("[");
                         value.tag.visit(this);
                         b.append("]@");
                     }
-                    value.item.visit(this).append(", ");
+                    value.item.visit(this);
+                    b.append(", ");
                 }
-                return b.append("}");
+                b.append("}");
+                return null;
             }
 
             @Override
-            public StringBuilder visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
+            public @Nullable Void visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
-                return b.append("factor[" + values.length + ", levels=" + levelNames.stream().collect(Collectors.joining(",")) + "]");
+                b.append("factor[" + values.length + ", levels=" + levelNames.stream().collect(Collectors.joining(",")) + "]");
+                return null;
             }
-        }).toString();
+        });
     }
 }
