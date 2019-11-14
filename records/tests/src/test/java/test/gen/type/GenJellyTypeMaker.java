@@ -40,8 +40,10 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
 {
     public static enum TypeKinds {
         NUM_TEXT_TEMPORAL,
-        BOOLEAN_TUPLE_LIST,
-        BUILTIN_TAGGED,
+        BOOLEAN,
+        RECORD_LIST,
+        MAYBE,
+        OTHER_BUILTIN_TAGGED, // besides maybe
         NEW_TAGGED
     }
 
@@ -120,7 +122,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
                 () -> JellyType.fromConcrete(DataType.date(new DateTimeInfo(r.choose(DateTimeType.values()))))
             ));
         }
-        if (typeKinds.contains(TypeKinds.BOOLEAN_TUPLE_LIST))
+        if (typeKinds.contains(TypeKinds.BOOLEAN))
         {
             options.add(() -> JellyType.fromConcrete(DataType.BOOLEAN));
 
@@ -132,7 +134,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
                 ));
             }
         }
-        if ((typeKinds.contains(TypeKinds.BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED)) && maxDepth > 1)
+        if ((typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED)) && maxDepth > 1)
             options.add(() -> genTagged(typeManager, r, maxDepth, gs));
         
         if (!availableTypeVars.isEmpty())
@@ -166,8 +168,10 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
     {
         TaggedTypeDefinition typeDefinition = null;
         List<TaggedTypeDefinition> pool = new ArrayList<>();
-        if (typeKinds.contains(TypeKinds.BUILTIN_TAGGED))
+        if (typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED))
             pool.addAll(typeManager.getKnownTaggedTypes().values());
+        else if (typeKinds.contains(TypeKinds.MAYBE))
+            pool.add(typeManager.getMaybeType());
         
         pool.addAll(typeManager.getUserTaggedTypes().values());
         
