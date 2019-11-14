@@ -10,6 +10,7 @@ import javafx.scene.input.MouseButton;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.data.Column;
+import records.data.DataTestUtil;
 import records.data.datatype.DataTypeUtility;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;

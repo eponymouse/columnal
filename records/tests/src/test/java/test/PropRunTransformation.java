@@ -11,6 +11,7 @@ import org.hamcrest.MatcherAssert;
 import org.junit.runner.RunWith;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.DataTestUtil;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataTypeUtility;

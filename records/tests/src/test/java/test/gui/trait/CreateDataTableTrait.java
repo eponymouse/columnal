@@ -9,6 +9,7 @@ import org.testfx.api.FxRobotInterface;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.DataTestUtil;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.error.InvalidImmediateValueException;

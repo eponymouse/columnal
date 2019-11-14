@@ -13,6 +13,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.data.DataTestUtil;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;

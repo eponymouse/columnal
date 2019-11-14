@@ -22,6 +22,7 @@ import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.DataTestUtil;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableId;

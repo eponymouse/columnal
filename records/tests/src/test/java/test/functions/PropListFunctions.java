@@ -8,6 +8,7 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
+import records.data.DataTestUtil;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;

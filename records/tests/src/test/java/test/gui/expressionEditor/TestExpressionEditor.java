@@ -21,6 +21,7 @@ import org.testfx.api.FxRobot;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.data.DataTestUtil;
 import records.data.KnownLengthRecordSet;
 import records.data.MemoryBooleanColumn;
 import records.data.TableId;

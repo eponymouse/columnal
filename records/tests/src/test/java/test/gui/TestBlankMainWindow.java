@@ -28,6 +28,7 @@ import org.testfx.robot.Motion;
 import org.testfx.service.query.impl.NodeQueryImpl;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
+import records.data.DataTestUtil;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TableManager;

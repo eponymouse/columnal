@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.DataTestUtil;
 import records.data.EditableRecordSet;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;

@@ -2,6 +2,7 @@ package test.importExport;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.pholser.junit.quickcheck.Property;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.Test;
 import records.data.ColumnId;
@@ -77,8 +78,14 @@ public class TestRLoadSave
         ImmutableList<RecordSet> rs = RData.convertRToTable(typeManager, loaded);
 
     }
+    
+    @Property
+    public void testRoundTrip()
+    {
+        
+    }
 
-        private static @Value BigDecimal d(String s)
+    private static @Value BigDecimal d(String s)
     {
         // We go through double to replicate the R value exactly
         return DataTypeUtility.value(new BigDecimal(Double.parseDouble(s)));
