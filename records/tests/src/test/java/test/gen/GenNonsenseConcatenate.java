@@ -1,15 +1,12 @@
 package test.gen;
 
-import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import records.data.ColumnId;
+import records.data.DataTestUtil;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
-import records.data.datatype.DataType;
 import records.error.InternalException;
-import records.error.UserException;
 import records.transformations.Concatenate;
 import records.transformations.Concatenate.IncompleteColumnHandling;
 import test.DummyManager;
@@ -17,11 +14,6 @@ import test.TestUtil;
 import test.TestUtil.Transformation_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.Assume.assumeNoException;
 
@@ -45,7 +37,7 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
         DummyManager mgr = TestUtil.managerWithTestTypes().getFirst();
 
         TableId ourId = TestUtil.generateTableId(sourceOfRandomness);
-        ImmutableList<TableId> srcIds = TestUtil.makeList(sourceOfRandomness, 1, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
+        ImmutableList<TableId> srcIds = DataTestUtil.makeList(sourceOfRandomness, 1, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
 
         IncompleteColumnHandling incompleteColumnHandling = IncompleteColumnHandling.values()[sourceOfRandomness.nextInt(IncompleteColumnHandling.values().length)];
 

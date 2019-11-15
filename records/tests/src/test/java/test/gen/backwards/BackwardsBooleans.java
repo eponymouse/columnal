@@ -3,8 +3,8 @@ package test.gen.backwards;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import records.data.DataTestUtil;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.AndExpression;
@@ -17,7 +17,6 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.OrExpression;
 import records.transformations.function.FunctionList;
-import test.TestUtil;
 import utility.Pair;
 import utility.Utility;
 
@@ -63,7 +62,7 @@ public class BackwardsBooleans extends BackwardsProvider
             // First form a valid set of values and sort them into order
             boolean ascending = r.nextBoolean();
             DataType dataType = parent.makeType();
-            List<Pair<@Value Object, Expression>> operands = new ArrayList<>(TestUtil.<Pair<@Value Object, Expression>>makeList(r, 2, 5, () -> {
+            List<Pair<@Value Object, Expression>> operands = new ArrayList<>(DataTestUtil.<Pair<@Value Object, Expression>>makeList(r, 2, 5, () -> {
                 @Value Object value = parent.makeValue(dataType);
                 return new Pair<>(value, parent.make(dataType, value, maxLevels - 1));
             }));
@@ -191,7 +190,7 @@ public class BackwardsBooleans extends BackwardsProvider
     {
         // If target is false, all must be false:
         if (b == false)
-            return new OrExpression(TestUtil.makeList(r, 2, 5, () -> parent.make(DataType.BOOLEAN, false, maxLevels - 1)));
+            return new OrExpression(DataTestUtil.makeList(r, 2, 5, () -> parent.make(DataType.BOOLEAN, false, maxLevels - 1)));
             // Otherwise they can take on random values, but one must be false:
         else
         {
@@ -208,7 +207,7 @@ public class BackwardsBooleans extends BackwardsProvider
     {
         // If target is true, all must be true:
         if (b)
-            return new AndExpression(TestUtil.makeList(r, 2, 5, () -> parent.make(DataType.BOOLEAN, true, maxLevels - 1)));
+            return new AndExpression(DataTestUtil.makeList(r, 2, 5, () -> parent.make(DataType.BOOLEAN, true, maxLevels - 1)));
             // Otherwise they can take on random values, but one must be false:
         else
         {

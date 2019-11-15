@@ -5,10 +5,10 @@ import annotation.qual.Value;
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.DataTestUtil;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -194,7 +194,7 @@ public class BackwardsMatch extends BackwardsProvider
         DataType t = parent.makeType();
         @Value Object actual = parent.makeValue(t);
         // Make a bunch of guards which won't fire:
-        List<Pair<PatternInfo, Expression>> clauses = new ArrayList<>(Utility.filterOptional(TestUtil.<Optional<Pair<PatternInfo, Expression>>>makeList(r, 0, 4, () -> {
+        List<Pair<PatternInfo, Expression>> clauses = new ArrayList<>(Utility.filterOptional(DataTestUtil.<Optional<Pair<PatternInfo, Expression>>>makeList(r, 0, 4, () -> {
             @Nullable PatternInfo nonMatch = makeNonMatchingPattern(maxLevels - 1, t, actual);
             return nonMatch == null ? Optional.empty() : Optional.of(new Pair<>(nonMatch,
                     parent.make(targetType, parent.makeValue(targetType), maxLevels - 1)));
@@ -281,7 +281,7 @@ public class BackwardsMatch extends BackwardsProvider
         DataType t = parent.makeType();
         @Value Object actual = parent.makeValue(t);
         // Make a bunch of guards which won't fire:
-        ArrayList<MatchClause> clauses = new ArrayList<>(TestUtil.makeList(r, 0, 4, (ExSupplier<Optional<MatchClause>>)() -> {
+        ArrayList<MatchClause> clauses = new ArrayList<>(DataTestUtil.makeList(r, 0, 4, (ExSupplier<Optional<MatchClause>>)() -> {
             // Generate a bunch which can't match the item:
             List<PatternInfo> patterns = makeNonMatchingPatterns(maxLevels - 1, t, actual);
             Expression outcome = parent.make(targetType, parent.makeValue(targetType), maxLevels - 1);
@@ -483,7 +483,7 @@ public class BackwardsMatch extends BackwardsProvider
     @OnThread(Tag.Simulation)
     private List<PatternInfo> makeNonMatchingPatterns(final int maxLevels, final DataType t, @Value Object actual) throws InternalException, UserException
     {
-        return Utility.filterOptional(TestUtil.<Optional<PatternInfo>>makeList(r, 1, 3, () -> Optional.ofNullable(makeNonMatchingPattern(maxLevels, t, actual))).stream()).collect(ImmutableList.toImmutableList());
+        return Utility.filterOptional(DataTestUtil.<Optional<PatternInfo>>makeList(r, 1, 3, () -> Optional.ofNullable(makeNonMatchingPattern(maxLevels, t, actual))).stream()).collect(ImmutableList.toImmutableList());
     }
 
     @OnThread(Tag.Simulation)

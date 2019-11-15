@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.ColumnId;
+import records.data.DataTestUtil;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.error.InternalException;
@@ -17,8 +18,6 @@ import test.TestUtil.Transformation_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-
-import java.util.List;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assume.assumeNoException;
@@ -39,7 +38,7 @@ public class GenNonsenseSort extends Generator<Transformation_Mgr>
     public Transformation_Mgr generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
-        ImmutableList<Pair<ColumnId, Direction>> cols = TestUtil.makeList(sourceOfRandomness, 1, 10, () -> new Pair<>(TestUtil.generateColumnId(sourceOfRandomness), sourceOfRandomness.nextBoolean() ? Direction.ASCENDING : Direction.DESCENDING));
+        ImmutableList<Pair<ColumnId, Direction>> cols = DataTestUtil.makeList(sourceOfRandomness, 1, 10, () -> new Pair<>(TestUtil.generateColumnId(sourceOfRandomness), sourceOfRandomness.nextBoolean() ? Direction.ASCENDING : Direction.DESCENDING));
 
         try
         {

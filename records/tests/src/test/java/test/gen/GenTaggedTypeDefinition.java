@@ -7,6 +7,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.DataTestUtil;
 import records.data.datatype.DataType;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
@@ -14,7 +15,6 @@ import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
-import test.TestUtil;
 import test.gen.type.GenJellyTypeMaker;
 import utility.Pair;
 import utility.Utility;
@@ -39,7 +39,7 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
             if (r.nextInt(3) == 1)
             {
                 // Must use distinct to make sure no duplicate names:
-                typeVars = TestUtil.makeList(r, 1, 4, () -> "" + r.nextChar('a', 'z')).stream().distinct().map(name -> new Pair<>(r.nextInt(3) == 1 ? TypeVariableKind.UNIT : TypeVariableKind.TYPE, name)).collect(ImmutableList.toImmutableList());
+                typeVars = DataTestUtil.makeList(r, 1, 4, () -> "" + r.nextChar('a', 'z')).stream().distinct().map(name -> new Pair<>(r.nextInt(3) == 1 ? TypeVariableKind.UNIT : TypeVariableKind.TYPE, name)).collect(ImmutableList.toImmutableList());
             }
             else
             {
@@ -51,7 +51,7 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
             
             // Outside type variables are not visible in a new tagged type:
             boolean noInner = r.nextInt() % 3 == 1;
-            ArrayList<@Nullable JellyType> types = noInner ? new ArrayList<@Nullable JellyType>() : new ArrayList<@Nullable JellyType>(TestUtil.makeList(r, 1, 10, () -> genDataType.generate(r, status).makeType()));
+            ArrayList<@Nullable JellyType> types = noInner ? new ArrayList<@Nullable JellyType>() : new ArrayList<@Nullable JellyType>(DataTestUtil.makeList(r, 1, 10, () -> genDataType.generate(r, status).makeType()));
             int extraNulls = r.nextInt(5) + (types.isEmpty() ? 1 : 0);
             for (int i = 0; i < extraNulls; i++)
             {

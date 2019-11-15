@@ -103,5 +103,6 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.testfx:testfx-junit:4.0.15-alpha" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.testfx:openjfx-monocle:8u76-b04" level="project" />
     <orderEntry type="module" module-name="data" scope="TEST" production-on-test="" />
+    <orderEntry type="module" module-name="expressions" scope="TEST" production-on-test="" />
   </component>
 </module>

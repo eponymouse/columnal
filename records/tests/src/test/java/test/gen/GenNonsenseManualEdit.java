@@ -8,6 +8,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
+import records.data.DataTestUtil;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.datatype.DataType;
@@ -69,7 +70,7 @@ public class GenNonsenseManualEdit extends Generator<Transformation_Mgr>
                     continue;
                 }
               
-                ImmutableList<Pair<@Value Object, Either<String, @Value Object>>> ps = TestUtil.<Pair<@Value Object, Either<String, @Value Object>>>makeList(random, 1, 5, () -> new Pair<>(keyColumn == null ? DataTypeUtility.value(random.nextInt()) : keyColumn.makeValue(), random.nextInt(5) == 1 ? Either.<String, @Value Object>left("#" + random.nextInt()) : Either.<String, @Value Object>right(typeAndValueGen.makeValue())));
+                ImmutableList<Pair<@Value Object, Either<String, @Value Object>>> ps = DataTestUtil.<Pair<@Value Object, Either<String, @Value Object>>>makeList(random, 1, 5, () -> new Pair<>(keyColumn == null ? DataTypeUtility.value(random.nextInt()) : keyColumn.makeValue(), random.nextInt(5) == 1 ? Either.<String, @Value Object>left("#" + random.nextInt()) : Either.<String, @Value Object>right(typeAndValueGen.makeValue())));
                 
                 replacements.put(columnId, new ColumnReplacementValues(typeAndValueGen.getType(), ps));
             }

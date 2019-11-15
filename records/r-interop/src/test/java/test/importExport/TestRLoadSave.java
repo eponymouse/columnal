@@ -2,35 +2,31 @@ package test.importExport;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import records.data.Column;
 import records.data.ColumnId;
 import records.data.DataTestUtil;
+import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
-import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
-import records.error.InternalException;
-import records.error.UserException;
 import records.rinterop.RData;
 import records.rinterop.RData.RValue;
-import records.rinterop.RData.SpecificRVisitor;
-import threadchecker.OnThread;
-import threadchecker.Tag;
-import utility.Pair;
-import utility.TaggedValue;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
+@RunWith(JUnitQuickcheck.class)
 public class TestRLoadSave
 {
     @Test
@@ -40,7 +36,12 @@ public class TestRLoadSave
         @NonNull URL resource = getClass().getClassLoader().getResource("iris.rds");
         RValue loaded = RData.readRData(new File(resource.toURI()));
         System.out.println(RData.prettyPrint(loaded));
-        TypeManager typeManager = new TypeManager(UnitManager._test_blank());
+        /*
+            @Nullable InputStream stream = ResourceUtility.getResourceAsStream("builtin_units.txt");
+            if (stream == null)
+                return new UnitManager(null);
+            else */
+        TypeManager typeManager = new TypeManager(new UnitManager());
         RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0);
                 
         assertEquals(ImmutableList.of(new ColumnId("Sepal Length"), new ColumnId("Sepal Width"), new ColumnId("Petal Length"), new ColumnId("Petal Width"), new ColumnId("Species")), rs.getColumnIds());
@@ -57,7 +58,12 @@ public class TestRLoadSave
         @NonNull URL resource = getClass().getClassLoader().getResource("mtcars.rds");
         RValue loaded = RData.readRData(new File(resource.toURI()));
         System.out.println(RData.prettyPrint(loaded));
-        TypeManager typeManager = new TypeManager(UnitManager._test_blank());
+        /*
+            @Nullable InputStream stream = ResourceUtility.getResourceAsStream("builtin_units.txt");
+            if (stream == null)
+                return new UnitManager(null);
+            else */
+        TypeManager typeManager = new TypeManager(new UnitManager());
         RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0);
 
         assertEquals(ImmutableList.of(new ColumnId("mpg"), new ColumnId("cyl"), new ColumnId("disp"), new ColumnId("hp"), new ColumnId("drat"), new ColumnId("wt"), new ColumnId("qsec"), new ColumnId("vs"), new ColumnId("am"), new ColumnId("gear"), new ColumnId("carb")), rs.getColumnIds());
@@ -74,14 +80,36 @@ public class TestRLoadSave
         @NonNull URL resource = getClass().getClassLoader().getResource("aggr_results.Rdata");
         RValue loaded = RData.readRData(new File(resource.toURI()));
         System.out.println(RData.prettyPrint(loaded));
-        TypeManager typeManager = new TypeManager(UnitManager._test_blank());
+        /*
+            @Nullable InputStream stream = ResourceUtility.getResourceAsStream("builtin_units.txt");
+            if (stream == null)
+                return new UnitManager(null);
+            else */
+        TypeManager typeManager = new TypeManager(new UnitManager());
         ImmutableList<RecordSet> rs = RData.convertRToTable(typeManager, loaded);
 
     }
     
-    @Property
-    public void testRoundTrip()
+    @Property(trials = 10)
+    public void testRoundTrip(@From(GenRCompatibleRecordSet.class) KnownLengthRecordSet original) throws Exception
     {
+        // We can only test us->R->us, because to test R->us->R we'd still need to convert at start and end (i.e. us->R->us->R->us which is the same).
+        File f = File.createTempFile("columnaltest", "rds");
+        // TODO write
+        RData.writeRData(f, RData.convertTableToR(original));
+        RecordSet reloaded = RData.convertRToTable(new TypeManager(new UnitManager()), RData.readRData(f)).get(0);
+        f.delete();
+
+        assertEquals(original.getColumnIds(), reloaded.getColumnIds());
+        assertEquals(original.getLength(), reloaded.getLength());
+        for (Column column : original.getColumns())
+        {
+            Column reloadedColumn = reloaded.getColumn(column.getName());
+            for (int i = 0; i < original.getLength(); i++)
+            {
+                DataTestUtil.assertValueEqual("Row " + i + " column " + column.getName(), column.getType().getCollapsed(i), reloadedColumn.getType().getCollapsed(i));
+            }
+        }
         
     }
 

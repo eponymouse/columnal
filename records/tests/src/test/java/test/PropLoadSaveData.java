@@ -5,19 +5,10 @@ import annotation.units.AbsRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
-import records.data.CellPosition;
-import records.data.Column;
-import records.data.EditableColumn;
-import records.data.GridComment;
-import records.data.ImmediateDataSource;
-import records.data.SaveTag;
-import records.data.Table;
-import records.data.TableId;
-import records.data.TableManager;
+import records.data.*;
 import records.data.TableManager.Loaded;
 import records.error.InternalException;
 import records.error.UserException;
@@ -25,7 +16,6 @@ import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
 import test.gen.GenTableManager;
-import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -59,7 +49,7 @@ public class PropLoadSaveData
     {
         SourceOfRandomness sourceOfRandomness = new SourceOfRandomness(r);
         int[] next = new int[] {1};
-        ImmutableList<GridComment> comments = TestUtil.makeList(sourceOfRandomness, 0, 5, () -> {
+        ImmutableList<GridComment> comments = DataTestUtil.makeList(sourceOfRandomness, 0, 5, () -> {
             String content = IntStream.range(0, r.nextInt(3)).mapToObj(_n -> TestUtil.generateColumnIds(sourceOfRandomness, r.nextInt(12)).stream().map(c -> c.getRaw()).collect(Collectors.joining(" "))).collect(Collectors.joining("\n"));
             
             return new GridComment(SaveTag.generateRandom(), content, new CellPosition(r.nextInt(100) * AbsRowIndex.ONE, (next[0]++ * 1000) * AbsColIndex.ONE), 1 + r.nextInt(20), 1 + r.nextInt(20));

@@ -4,11 +4,10 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.ColumnId;
+import records.data.DataTestUtil;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.error.InternalException;
-import records.transformations.Concatenate;
-import records.transformations.Concatenate.IncompleteColumnHandling;
 import records.transformations.Join;
 import test.DummyManager;
 import test.TestUtil;
@@ -41,7 +40,7 @@ public class GenNonsenseJoin extends GenValueBase<Transformation_Mgr>
         TableId ourId = TestUtil.generateTableId(sourceOfRandomness);
         TableId srcIdA = TestUtil.generateTableId(sourceOfRandomness);
         TableId srcIdB = TestUtil.generateTableId(sourceOfRandomness);
-        ImmutableList<Pair<ColumnId, ColumnId>> columns = TestUtil.makeList(r, 0, 5, () -> new Pair<>(TestUtil.generateColumnId(r), TestUtil.generateColumnId(r)));
+        ImmutableList<Pair<ColumnId, ColumnId>> columns = DataTestUtil.makeList(r, 0, 5, () -> new Pair<>(TestUtil.generateColumnId(r), TestUtil.generateColumnId(r)));
 
         try
         {

@@ -101,12 +101,7 @@ public class UnitManager
             throw new InternalException("Error reading data file", e);
         }
     }
-    
-    public static UnitManager _test_blank() throws UserException, InternalException
-    {
-        return new UnitManager(null);
-    }
-    
+
     private synchronized @Nullable UnitDeclaration getKnownUnit(@UnitIdentifier String name)
     {
         Either<@UnitIdentifier String, UnitDeclaration> target = knownUnits.get(name);

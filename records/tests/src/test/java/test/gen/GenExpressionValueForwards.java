@@ -8,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.DataTestUtil;
 import records.data.KnownLengthRecordSet;
 import records.data.MemoryBooleanColumn;
 import records.data.RecordSet;
@@ -158,7 +159,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     columnRef(type),
                     () ->
                     {
-                        @Value Number number = TestUtil.generateNumberV(r, gs);
+                        @Value Number number = DataTestUtil.generateNumberV(r, gs);
                         return literal(number, new NumericLiteral(number, makeUnitExpression(displayInfo.getUnit())));
                     }
                 ), l(fix(maxLevels - 1, type), () -> {
@@ -297,7 +298,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     columnRef(type),
                     () ->
                     {
-                        @Value String value = TestUtil.makeStringV(r, gs);
+                        @Value String value = DataTestUtil.makeStringV(r, gs);
                         return literal(value, TestUtil.makeStringLiteral(value, r));
                     }
                 ), l(fix(maxLevels - 1, type), () -> {
@@ -496,7 +497,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     {
                         DataType t = makeType(r);
 
-                        List<Pair<List<@Value Object>, Expression>> args = TestUtil.<Pair<List<@Value Object>, Expression>>makeList(r, 2, 4, () -> make(t, maxLevels - 1));
+                        List<Pair<List<@Value Object>, Expression>> args = DataTestUtil.<Pair<List<@Value Object>, Expression>>makeList(r, 2, 4, () -> make(t, maxLevels - 1));
                         boolean lt = r.nextBoolean();
                         List<ComparisonOperator> ops = new ArrayList<>();
                         List<Boolean> result = replicate(true);

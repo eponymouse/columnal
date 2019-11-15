@@ -6,6 +6,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.apache.commons.lang3.StringEscapeUtils;
+import records.data.DataTestUtil;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
@@ -14,7 +15,6 @@ import records.data.datatype.DataTypeUtility;
 import records.importers.ColumnInfo;
 import records.importers.GuessFormat.FinalTextFormat;
 import records.importers.GuessFormat.TrimChoice;
-import test.TestUtil;
 import test.gen.GenFormattedData.FormatAndData;
 
 import java.math.BigDecimal;
@@ -121,7 +121,7 @@ public class GenFormattedData extends Generator<FormatAndData>
                     }
                     else
                     {
-                        str = TestUtil.makeString(r, generationStatus).replace("\n", "").replace("\r", "");
+                        str = DataTestUtil.makeString(r, generationStatus).replace("\n", "").replace("\r", "");
                         // Get rid of any characters which can't be saved in that encoding:
                         str = str.chars().filter(ch -> format.initialTextFormat.charset.newEncoder().canEncode((char) ch)).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
                         // TODO quote separators instead of removing them:

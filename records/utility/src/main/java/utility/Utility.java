@@ -1862,6 +1862,7 @@ public class Utility
         }
     }
     
+    // Eugh -- nasty way to represent ValueFunction which must depend on Expression
     public static abstract class ValueFunctionBase
     {
     }

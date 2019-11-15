@@ -67,6 +67,19 @@
             <scope>system</scope> <!-- should be test -->
             <systemPath>${basedir}/../lib/junit-4.13-SNAPSHOT.jar</systemPath>
         </dependency>
+
+        <dependency>
+            <groupId>com.pholser</groupId>
+            <artifactId>junit-quickcheck-core</artifactId>
+            <version>0.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.pholser</groupId>
+            <artifactId>junit-quickcheck-generators</artifactId>
+            <version>0.8.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <!-- From http://maven.apache.org/guides/mini/guide-attached-tests.html -->

@@ -5,29 +5,19 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import records.data.DataTestUtil;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.FlatDataTypeVisitor;
-import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.CallExpression;
-import records.transformations.expression.Expression;
 import records.transformations.expression.FieldAccessExpression;
-import records.transformations.expression.IdentExpression;
-import records.transformations.expression.RecordExpression;
-import records.transformations.function.FunctionList;
 import test.TestUtil;
 import utility.Pair;
-import utility.Utility;
-import utility.Utility.Record;
 import utility.Utility.RecordMap;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Random;
 
 public class BackwardsRecord extends BackwardsProvider
 {
@@ -51,7 +41,7 @@ public class BackwardsRecord extends BackwardsProvider
             @ExpressionIdentifier String ourField = TestUtil.generateExpressionIdentifier(r);
             fields.add(new Pair<>(ourField, targetType));
             // Add a few more:
-            fields.addAll(TestUtil.<Pair<@ExpressionIdentifier String, DataType>>makeList(r, 1, 3, () -> new Pair<>(TestUtil.generateExpressionIdentifier(r), parent.makeType())));
+            fields.addAll(DataTestUtil.<Pair<@ExpressionIdentifier String, DataType>>makeList(r, 1, 3, () -> new Pair<>(TestUtil.generateExpressionIdentifier(r), parent.makeType())));
 
             ImmutableMap<@ExpressionIdentifier String, DataType> fieldMap = fields.stream().collect(ImmutableMap.toImmutableMap(p -> p.getFirst(), p -> p.getSecond(), (a, b) -> a));
             DataType recordType = DataType.record(fieldMap);

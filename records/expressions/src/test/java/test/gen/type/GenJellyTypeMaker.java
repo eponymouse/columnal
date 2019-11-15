@@ -7,8 +7,8 @@ import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import one.util.streamex.StreamEx;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.DataTestUtil;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -21,7 +21,6 @@ import records.error.UserException;
 import records.jellytype.JellyType;
 import records.jellytype.JellyTypeRecord.Field;
 import records.jellytype.JellyUnit;
-import test.TestUtil;
 import test.gen.GenUnit;
 import test.gen.type.GenJellyTypeMaker.JellyTypeMaker;
 import utility.Either;
@@ -102,6 +101,11 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
         // Use depth system to prevent infinite generation:
         try
         {
+            /*
+                @Nullable InputStream stream = ResourceUtility.getResourceAsStream("builtin_units.txt");
+                if (stream == null)
+                    return new UnitManager(null);
+                else */
             TypeManager typeManager = new TypeManager(new UnitManager());
             return new JellyTypeMaker(typeManager, () -> genDepth(typeManager, r, 3, generationStatus));
         }
@@ -129,7 +133,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
             if (maxDepth > 1)
             {
                 options.addAll(Arrays.asList(
-                        () -> JellyType.record(TestUtil.makeList(r, 2, 5, () -> new Pair<>(TestUtil.generateExpressionIdentifier(r), genDepth(typeManager, r, maxDepth - 1, gs))).stream().collect(ImmutableMap.toImmutableMap(p -> p.getFirst(), p -> new Field(p.getSecond(), true), (a, b) -> a))),
+                        () -> JellyType.record(DataTestUtil.<Pair<@ExpressionIdentifier String, JellyType>>makeList(r, 2, 5, () -> new Pair<>(DataTestUtil.generateExpressionIdentifier(r), genDepth(typeManager, r, maxDepth - 1, gs))).stream().collect(ImmutableMap.<Pair<@ExpressionIdentifier String, JellyType>, @ExpressionIdentifier String, Field>toImmutableMap((Pair<@ExpressionIdentifier String, JellyType> p) -> p.getFirst(), p -> new Field(p.getSecond(), true), (Field a, Field b) -> a))),
                         () -> JellyType.list(genDepth(typeManager, r, maxDepth - 1, gs))
                 ));
             }
@@ -190,7 +194,11 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
             if (r.nextBoolean())
             {
                 // Must use distinct to make sure no duplicates:
-                typeVars = TestUtil.makeList(r, 1, 4, () -> "" + r.nextChar('a', 'z')).stream().distinct().map(s -> new Pair<>(r.nextInt(3) == 1 ? TypeVariableKind.UNIT : TypeVariableKind.TYPE, s)).collect(ImmutableList.toImmutableList());
+                typeVars = DataTestUtil.<@ExpressionIdentifier String>makeList(r, 1, 4, () -> {
+                    @SuppressWarnings("identifier")
+                    @ExpressionIdentifier String az = "" + r.nextChar('a', 'z');
+                    return az;
+                }).stream().distinct().<Pair<TypeVariableKind, @ExpressionIdentifier String>>map(s -> new Pair<TypeVariableKind, @ExpressionIdentifier String>(r.nextInt(3) == 1 ? TypeVariableKind.UNIT : TypeVariableKind.TYPE, s)).collect(ImmutableList.<Pair<TypeVariableKind, @ExpressionIdentifier String>>toImmutableList());
             }
             else
             {
@@ -202,7 +210,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
             if (r.nextInt(3) == 1)
                 types = new ArrayList<>();
             else
-                types = new ArrayList<>(TestUtil.makeList(r, 1, 10, () -> genDepth(typeManager, r, maxDepth - 1, gs)));
+                types = new ArrayList<>(DataTestUtil.makeList(r, 1, 10, () -> genDepth(typeManager, r, maxDepth - 1, gs)));
             // Then those with inner types, making sure we have at least one:
             int extraNulls = r.nextInt(5) + (types.isEmpty() ? 1 : 0);
             for (int i = 0; i < extraNulls; i++)

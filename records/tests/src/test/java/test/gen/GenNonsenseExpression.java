@@ -10,6 +10,7 @@ import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.ColumnId;
+import records.data.DataTestUtil;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.TaggedTypeDefinition;
@@ -18,7 +19,6 @@ import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.grammar.GrammarUtility;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
@@ -28,16 +28,13 @@ import test.DummyManager;
 import test.TestUtil;
 import utility.Either;
 import utility.ExSupplier;
-import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -89,9 +86,9 @@ public class GenNonsenseExpression extends Generator<Expression>
             // Non-terminal:
             return r.<Supplier<Expression>>choose(Arrays.<Supplier<Expression>>asList(
                 () -> new NotEqualExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
-                () -> new EqualExpression(TestUtil.<Expression>makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs)), false),
+                () -> new EqualExpression(DataTestUtil.<Expression>makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs)), false),
                 () -> {
-                    List<Expression> expressions = TestUtil.<Expression>makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
+                    List<Expression> expressions = DataTestUtil.<Expression>makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
                     List<ComparisonOperator> operators = r.nextBoolean() ? Arrays.asList(ComparisonOperator.GREATER_THAN, ComparisonOperator.GREATER_THAN_OR_EQUAL_TO) : Arrays.asList(ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO);
                     @SuppressWarnings("unchecked")
                     Generator<ComparisonOperator> comparisonOperatorGenerator = (Generator) new EnumGenerator(ComparisonOperator.class)
@@ -104,9 +101,9 @@ public class GenNonsenseExpression extends Generator<Expression>
                     };
                     return new ComparisonExpression(expressions, ImmutableList.<ComparisonOperator>copyOf(TestUtil.<ComparisonOperator>makeList(expressions.size() - 1, comparisonOperatorGenerator, r, gs)));
                 },
-                () -> new AndExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
-                () -> new OrExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
-                () -> new TimesExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
+                () -> new AndExpression(DataTestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
+                () -> new OrExpression(DataTestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
+                () -> new TimesExpression(DataTestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> {
                     if (!tagAllowed)
                         return genTerminal(r, gs, false);
@@ -125,17 +122,17 @@ public class GenNonsenseExpression extends Generator<Expression>
                 },
                 () ->
                 {
-                    List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
+                    List<Expression> expressions = DataTestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
                     @SuppressWarnings("unchecked")
                     Generator<AddSubtractOp> opGenerator = (Generator<AddSubtractOp>) (Generator<?>) new EnumGenerator(AddSubtractOp.class);
                     return new AddSubtractExpression(expressions, TestUtil.makeList(expressions.size() - 1, opGenerator, r, gs));
                 },
                 () -> new DivideExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new RaiseExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
-                () -> new CallExpression(genTerminal(r, gs, true), TestUtil.makeList(r, 1, 5, () -> genDepth(true, r, depth + 1, gs))),
-                () -> new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1)), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO)),
-                () -> new ArrayExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 0, 6, () -> genDepth(r, depth + 1, gs)))),
-                () -> new RecordExpression(TestUtil.<Pair<@ExpressionIdentifier String, @Recorded Expression>>makeList(r, 2, 6, () -> new Pair<>("x", genDepth(r, depth + 1, gs))))
+                () -> new CallExpression(genTerminal(r, gs, true), DataTestUtil.makeList(r, 1, 5, () -> genDepth(true, r, depth + 1, gs))),
+                () -> new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), genDepth(false, r, depth + 1, gs), DataTestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1)), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO)),
+                () -> new ArrayExpression(ImmutableList.<Expression>copyOf(DataTestUtil.makeList(r, 0, 6, () -> genDepth(r, depth + 1, gs)))),
+                () -> new RecordExpression(DataTestUtil.<Pair<@ExpressionIdentifier String, @Recorded Expression>>makeList(r, 2, 6, () -> new Pair<>("x", genDepth(r, depth + 1, gs))))
                 /*,
                 () ->
                 {
@@ -183,7 +180,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                     () -> InvalidIdentExpression.identOrUnfinished(TestUtil.makeUnfinished(r)),
                     () -> new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), r.nextBoolean() ? null : genUnit(r, gs)),
                     () -> new BooleanLiteral(r.nextBoolean()),
-                    () -> TestUtil.makeStringLiteral(TestUtil.makeStringV(r, gs), r),
+                    () -> TestUtil.makeStringLiteral(DataTestUtil.makeStringV(r, gs), r),
                     () -> {
                         ColumnId columnId = TestUtil.generateColumnId(r);
                         if (columnReferences.getOrDefault(columnId.getRaw(), true))
@@ -235,7 +232,7 @@ public class GenNonsenseExpression extends Generator<Expression>
 
     private MatchExpression.MatchClause genClause(SourceOfRandomness r, GenerationStatus gs, int depth)
     {
-        return MatchClause.unrecorded(TestUtil.makeList(r, 1, 4, () -> genPattern(r, gs, depth)), genDepth(r, depth, gs));
+        return MatchClause.unrecorded(DataTestUtil.makeList(r, 1, 4, () -> genPattern(r, gs, depth)), genDepth(r, depth, gs));
     }
 
     private MatchExpression.Pattern genPattern(SourceOfRandomness r, GenerationStatus gs, int depth)
