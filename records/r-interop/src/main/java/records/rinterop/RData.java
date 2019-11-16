@@ -4,23 +4,25 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Booleans;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.ColumnId;
-import records.data.EditableColumn;
-import records.data.KnownLengthRecordSet;
-import records.data.MemoryNumericColumn;
-import records.data.MemoryStringColumn;
-import records.data.MemoryTaggedColumn;
-import records.data.RecordSet;
+import records.data.*;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
@@ -30,16 +32,21 @@ import utility.Pair;
 import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
+import utility.Utility.ListEx;
+import utility.Utility.Record;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.stream.Collectors;
@@ -49,7 +56,16 @@ import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 public class RData
-{
+{    
+    public static final int STRING_SINGLE = 9;
+    public static final int LOGICAL_VECTOR = 10;
+    public static final int INT_VECTOR = 13;
+    public static final int DOUBLE_VECTOR = 14;
+    public static final int STRING_VECTOR = 16;
+    public static final int GENERIC_VECTOR = 19;
+    public static final int PAIR_LIST = 2;
+    public static final int NIL = 0;
+
     private static class V2Header
     {
         private final byte header[];
@@ -209,14 +225,7 @@ public class RData
         @ExpressionIdentifier String def = "Column " + index;
         if (listColumnNames != null)
         {
-            return listColumnNames.visit(new SpecificRVisitor<ColumnId>()
-            {
-                @Override
-                public ColumnId visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
-                {
-                    return new ColumnId(IdentifierUtility.fixExpressionIdentifier(getString(values.get(index)), def));
-                }
-            });
+            return new ColumnId(IdentifierUtility.fixExpressionIdentifier(getString(getListItem(listColumnNames, index)), def));
         }
         return new ColumnId(def);
     }
@@ -246,8 +255,9 @@ public class RData
         }
 
         RValue result = readItem(d, new HashMap<>());
-        if (d.read() != -1)
-            throw new UserException("Unexpected data at end of file");
+        int after = d.read();
+        if (after != -1)
+            throw new UserException("Unexpected data at end of file: " + after);
         return result;
     }
     
@@ -273,7 +283,7 @@ public class RData
 
         switch (objHeader.getType())
         {
-            case 0: // Nil
+            case NIL: // Nil
             case 254: // Pseudo-nil
                 return new RValue() {
 
@@ -287,14 +297,7 @@ public class RData
             {
                 int ref = objHeader.getReference(d);
                 String atom = getAtom(atoms, ref);
-                return new RValue()
-                {
-                    @Override
-                    public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
-                    {
-                        return visitor.visitString(atom);
-                    }
-                };
+                return string(atom);
             }
             case 1: // Symbol
             {
@@ -310,7 +313,7 @@ public class RData
                 });
                 return symbol;
             }
-            case 2: // Pair list
+            case PAIR_LIST: // Pair list
             {
                 RValue attr = objHeader.readAttributes(d, atoms);
                 RValue tag = objHeader.readTag(d, atoms);
@@ -375,19 +378,12 @@ public class RData
                     };
                 }
             }
-            case 9: // String
+            case STRING_SINGLE: // String
             {
                 String s = readLenString(d);
-                return new RValue()
-                {
-                    @Override
-                    public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
-                    {
-                        return visitor.visitString(s);
-                    }
-                };
+                return string(s);
             }
-            case 13: // Integer vector
+            case INT_VECTOR: // Integer vector
             {
                 int vecLen = d.readInt();
                 int[] values = new int[vecLen];
@@ -410,6 +406,12 @@ public class RData
                         }))
                             return items.get(0).item.visit(new SpecificRVisitor<ImmutableList<String>>()
                             {
+                                @Override
+                                public ImmutableList<String> visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+                                {
+                                    return values;
+                                }
+
                                 @Override
                                 public ImmutableList<String> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
                                 {
@@ -437,16 +439,9 @@ public class RData
                     };
                 }
                 else
-                    return new RValue()
-                    {
-                        @Override
-                        public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
-                        {
-                            return visitor.visitIntList(values, attr);
-                        }
-                    };
+                    return intVector(values, attr);
             }
-            case 14: // Floating point vector
+            case DOUBLE_VECTOR: // Floating point vector
             {
                 int vecLen = d.readInt();
                 double[] values = new double[vecLen];
@@ -455,17 +450,24 @@ public class RData
                     values[i] = d.readDouble();
                 }
                 final @Nullable RValue attr = objHeader.readAttributes(d, atoms);
-                return new RValue()
-                {
-                    @Override
-                    public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
-                    {
-                        return visitor.visitDoubleList(values, attr);
-                    }
-                };
+                if (isClass(pairListToMap(attr), "Date"))
+                    return dateVector(values, attr);
+                else 
+                    return doubleVector(values, attr);
             }
-            case 16: // Character vector
-            case 19: // Generic vector
+            case STRING_VECTOR: // Character vector
+            {
+                int vecLen = d.readInt();
+                ImmutableList.Builder<String> valueBuilder = ImmutableList.builderWithExpectedSize(vecLen);
+                for (int i = 0; i < vecLen; i++)
+                {
+                    valueBuilder.add(getString(readItem(d, atoms)));
+                }
+                ImmutableList<String> values = valueBuilder.build();
+                final @Nullable RValue attr = objHeader.readAttributes(d, atoms);
+                return stringVector(values, attr);
+            }
+            case GENERIC_VECTOR: // Generic vector
             {
                 int vecLen = d.readInt();
                 ImmutableList.Builder<RValue> valueBuilder = ImmutableList.builderWithExpectedSize(vecLen);
@@ -475,14 +477,7 @@ public class RData
                 }
                 ImmutableList<RValue> values = valueBuilder.build();
                 final @Nullable RValue attr = objHeader.readAttributes(d, atoms);
-                return new RValue()
-                {
-                    @Override
-                    public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
-                    {
-                        return visitor.visitGenericList(values, attr);
-                    }
-                };
+                return genericVector(values, attr);
             }
             case 238: // ALTREP_SXP
             {
@@ -494,6 +489,27 @@ public class RData
             default:
                 throw new UserException("Unsupported R object type (identifier: " + objHeader.getType() + ")");
         }
+    }
+
+    private static RValue dateVector(double[] values, @Nullable RValue attr) throws InternalException
+    {
+        if (DoubleStream.of(values).allMatch(d -> d == (int)d))
+        {
+            ImmutableList<@Value TemporalAccessor> dates = DoubleStream.of(values).<@Value TemporalAccessor>mapToObj(d -> {
+                @SuppressWarnings("valuetype")
+                @Value LocalDate date = LocalDate.ofEpochDay((int) d);
+                return date;
+            }).collect(ImmutableList.<@Value TemporalAccessor>toImmutableList());
+            return new RValue()
+            {
+                @Override
+                public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+                {
+                    return visitor.visitTemporalList(DateTimeType.YEARMONTHDAY, dates, attr);
+                }
+            };
+        }
+        throw new InternalException("TODO");
     }
 
     private static Stream<PairListEntry> flattenPairList(RValue head, RValue tail, @Nullable RValue attr, @Nullable RValue tag) throws UserException, InternalException
@@ -530,6 +546,13 @@ public class RData
     private static RValue getListItem(RValue info, int index) throws UserException, InternalException
     {
         return info.visit(new SpecificRVisitor<RValue>() {
+
+            @Override
+            public RValue visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                return string(values.get(index));
+            }
+
             @Override
             public RValue visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
             {
@@ -577,7 +600,8 @@ public class RData
         {
             return new BufferedInputStream(new GZIPInputStream(new FileInputStream(rFilePath))); 
         }
-        throw new UserException("Unrecognised file format");
+        //throw new UserException("Unrecognised file format");
+        return new BufferedInputStream(new FileInputStream(rFilePath));
     }
     
     public static interface RVisitor<T>
@@ -586,6 +610,9 @@ public class RData
         // If attributes reveal this is a factor, it won't be called; visitFactorList will be instead
         public T visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException;
+        public T visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException;
+        public T visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException;
+        public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException;
         public T visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException;
@@ -613,6 +640,12 @@ public class RData
         }
 
         @Override
+        public T visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+        {
+            return makeDefault();
+        }
+
+        @Override
         public T visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
         {
             return makeDefault();
@@ -626,6 +659,18 @@ public class RData
 
         @Override
         public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+        {
+            return makeDefault();
+        }
+
+        @Override
+        public T visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+        {
+            return makeDefault();
+        }
+
+        @Override
+        public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
         {
             return makeDefault();
         }
@@ -667,6 +712,24 @@ public class RData
         public T visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
         {
             throw new UserException("Unexpected type: list of floating point");
+        }
+
+        @Override
+        public T visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+        {
+            throw new UserException("Unexpected type: list of booleans");
+        }
+
+        @Override
+        public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
+        {
+            throw new UserException("Unexpected type: list of date/time type");
+        }
+
+        @Override
+        public T visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+        {
+            throw new UserException("Unexpected type: list of strings");
         }
 
         @Override
@@ -716,6 +779,15 @@ public class RData
             }
 
             @Override
+            public Pair<DataType, @Value Object> visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                if (values.length == 1)
+                    return new Pair<>(DataType.BOOLEAN, DataTypeUtility.value(values[0]));
+                else
+                    return new Pair<>(DataType.array(DataType.BOOLEAN), DataTypeUtility.value(Booleans.asList(values)));
+            }
+
+            @Override
             public Pair<DataType, @Value Object> visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 if (values.length == 1)
@@ -731,6 +803,25 @@ public class RData
                     return new Pair<>(DataType.NUMBER, DataTypeUtility.value(values[0]));
                 else
                     return new Pair<>(DataType.array(DataType.NUMBER), DataTypeUtility.value(Doubles.asList(values)));
+            }
+
+            @Override
+            public Pair<DataType, @Value Object> visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                if (values.size() == 1)
+                    return new Pair<>(DataType.TEXT, DataTypeUtility.value(values.get(0)));
+                else
+                    return new Pair<>(DataType.array(DataType.TEXT), DataTypeUtility.value(values));
+            }
+
+            @Override
+            public Pair<DataType, @Value Object> visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                DateTimeInfo t = new DateTimeInfo(dateTimeType);
+                if (values.size() == 1)
+                    return new Pair<>(DataType.date(t), values.get(0));
+                else
+                    return new Pair<>(DataType.array(DataType.date(t)), DataTypeUtility.value(values));
             }
 
             @Override
@@ -783,6 +874,25 @@ public class RData
             public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitString(String s) throws InternalException, UserException
             {
                 return new Pair<>(rs -> new MemoryStringColumn(rs, columnName, ImmutableList.<Either<String, String>>of(Either.<String, String>right(s)), ""), 1);
+            }
+
+            @Override
+            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                return new Pair<>(rs -> new MemoryStringColumn(rs, columnName, Utility.mapList(values, v -> Either.<String, String>right(v)), ""), values.size());
+            }
+
+            @Override
+            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                DateTimeInfo t = new DateTimeInfo(dateTimeType);
+                return new Pair<>(rs -> new MemoryTemporalColumn(rs, columnName, t, Utility.mapList(values, v -> Either.<String, TemporalAccessor>right(v)), t.getDefaultValue()), values.size());
+            }
+
+            @Override
+            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                return new Pair<>(rs -> new MemoryBooleanColumn(rs, columnName, Booleans.asList(values).stream().map(n -> Either.<String, Boolean>right(n)).collect(ImmutableList.<Either<String, Boolean>>toImmutableList()), false), values.length);
             }
 
             @Override
@@ -901,6 +1011,18 @@ public class RData
             }
 
             @Override
+            public ImmutableList<RecordSet> visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                return singleColumn();
+            }
+
+            @Override
+            public ImmutableList<RecordSet> visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                return singleColumn();
+            }
+
+            @Override
             public ImmutableList<RecordSet> visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
@@ -908,6 +1030,12 @@ public class RData
 
             @Override
             public ImmutableList<RecordSet> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                return singleColumn();
+            }
+
+            @Override
+            public ImmutableList<RecordSet> visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
@@ -934,17 +1062,9 @@ public class RData
             {
                 // Tricky; could be a list of tables, a list of columns or a list of values!
                 // First try as table (list of columns):
-                final ImmutableMap<String, RValue> attrMap;
-                if (attributes != null)
-                {
-                    attrMap = pairListToMap(attributes);
-                }
-                else
-                {
-                    attrMap = ImmutableMap.of();
-                }
+                final ImmutableMap<String, RValue> attrMap = pairListToMap(attributes);
 
-                boolean isDataFrame = isDataFrame(attrMap);
+                boolean isDataFrame = isClass(attrMap, "data.frame");
                 if (isDataFrame)
                 {
                     ImmutableList<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>> columns = Utility.mapListExI_Index(values, (i, v) -> convertRToColumn(typeManager, v, getColumnName(attrMap.get("names"), i)));
@@ -952,7 +1072,7 @@ public class RData
                     {
                         return ImmutableList.of(new <EditableColumn>KnownLengthRecordSet(Utility.<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>, SimulationFunction<RecordSet, EditableColumn>>mapList(columns, p -> p.getFirst()), columns.get(0).getSecond()));
                     }
-                    throw new UserException("Columns are of differing lengths");
+                    throw new UserException("Columns are of differing lengths: " + columns.stream().map(p -> "" + p.getSecond()).collect(Collectors.joining(", ")));
                 }
                 else
                 {
@@ -964,16 +1084,8 @@ public class RData
                             @Override
                             public Boolean visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
                             {
-                                final ImmutableMap<String, RValue> valueAttrMap;
-                                if (attributes != null)
-                                {
-                                    valueAttrMap = pairListToMap(attributes);
-                                }
-                                else
-                                {
-                                    valueAttrMap = ImmutableMap.of();
-                                }
-                                return isDataFrame(valueAttrMap);
+                                final ImmutableMap<String, RValue> valueAttrMap = pairListToMap(attributes);
+                                return isClass(valueAttrMap, "data.frame");
                             }
                         });
                         
@@ -994,30 +1106,32 @@ public class RData
                     return r.build();
                 }
             }
-
-            private boolean isDataFrame(ImmutableMap<String, RValue> attrMap) throws UserException, InternalException
-            {
-                RValue classRList = attrMap.get("class");
-                RValue classRValue = classRList == null ? null : getListItem(classRList, 0);
-                return classRValue != null && "data.frame".equals(getString(classRValue));
-            }
-
-            private ImmutableMap<String, RValue> pairListToMap(RValue attributes) throws UserException, InternalException
-            {
-                return Utility.<String, RValue>pairListToMap(attributes.<ImmutableList<Pair<String, RValue>>>visit(new SpecificRVisitor<ImmutableList<Pair<String, RValue>>>()
-                {
-                    @Override
-                    public ImmutableList<Pair<String, RValue>> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
-                    {
-                        return Utility.mapListExI(items, e -> {
-                            if (e.tag == null)
-                                throw new UserException("Missing tag name ");
-                            return new Pair<>(getString(e.tag), e.item);
-                        });
-                    }
-                }));
-            }
         });
+    }
+
+    private static boolean isClass(ImmutableMap<String, RValue> attrMap, String className) throws UserException, InternalException
+    {
+        RValue classRList = attrMap.get("class");
+        RValue classRValue = classRList == null ? null : getListItem(classRList, 0);
+        return classRValue != null && className.equals(getString(classRValue));
+    }
+
+    private static ImmutableMap<String, RValue> pairListToMap(@Nullable RValue attributes) throws UserException, InternalException
+    {
+        if (attributes == null)
+            return ImmutableMap.of();
+        return Utility.<String, RValue>pairListToMap(attributes.<ImmutableList<Pair<String, RValue>>>visit(new SpecificRVisitor<ImmutableList<Pair<String, RValue>>>()
+        {
+            @Override
+            public ImmutableList<Pair<String, RValue>> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
+            {
+                return Utility.mapListExI(items, e -> {
+                    if (e.tag == null)
+                        throw new UserException("Missing tag name ");
+                    return new Pair<>(getString(e.tag), e.item);
+                });
+            }
+        }));
     }
 
     public static String prettyPrint(RValue rValue) throws UserException, InternalException
@@ -1045,6 +1159,19 @@ public class RData
             }
 
             @Override
+            public @Nullable Void visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                b.append("boolean[" + values.length);
+                if (attributes != null)
+                {
+                    b.append(", attr=");
+                    attributes.visit(this);
+                }
+                b.append("]");
+                return null;
+            }
+
+            @Override
             public @Nullable Void visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 b.append("int[" + values.length);
@@ -1061,6 +1188,32 @@ public class RData
             public @Nullable Void visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 b.append("double[" + values.length);
+                if (attributes != null)
+                {
+                    b.append(", attr=");
+                    attributes.visit(this);
+                }
+                b.append("]");
+                return null;
+            }
+
+            @Override
+            public @Nullable Void visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                b.append("String[" + values.size());
+                if (attributes != null)
+                {
+                    b.append(", attr=");
+                    attributes.visit(this);
+                }
+                b.append("]");
+                return null;
+            }
+
+            @Override
+            public @Nullable Void visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                b.append(dateTimeType.toString() + "[" + values.size());
                 if (attributes != null)
                 {
                     b.append(", attr=");
@@ -1124,4 +1277,453 @@ public class RData
             }
         });
     }
+    
+    public static RValue convertTableToR(RecordSet recordSet) throws UserException, InternalException
+    {
+        // A table is a generic list of columns with class data.frame
+        return genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c)), makeClassAttributes("data.frame"));
+    }
+
+    private static RValue makeClassAttributes(String className)
+    {
+        return pairListFromMap(ImmutableMap.of("class", genericVector(ImmutableList.of(string(className)), null)));
+    }
+
+    private static RValue convertColumnToR(Column column) throws UserException, InternalException
+    {
+        DataTypeValue dataTypeValue = column.getType();
+        int length = column.getLength();
+        return dataTypeValue.applyGet(new DataTypeVisitorGet<RValue>()
+        {
+            @Override
+            public RValue number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
+            {
+                // Need to work out if they are all ints, otherwise must use doubles.
+                // Start with ints and go from there
+                int[] ints = new int[length];
+                int i;
+                for (i = 0; i < length; i++)
+                {
+                    @Value Number n = g.get(i);
+                    @Value Integer nInt = getIfInteger(n);
+                    if (nInt != null)
+                        ints[i] = nInt;
+                    else
+                        break;
+                }
+                if (i == length)
+                    return intVector(ints, null);
+                
+                // Convert all ints to doubles:
+                double[] doubles = new double[length];
+                for (int j = 0; j < i; j++)
+                {
+                    doubles[j] = ints[j];
+                }
+                for (; i < length; i++)
+                {
+                    doubles[i] = Utility.toBigDecimal(g.get(i)).doubleValue();
+                }
+                return doubleVector(doubles, null);
+            }
+
+            @Override
+            public RValue text(GetValue<@Value String> g) throws InternalException, UserException
+            {
+                ImmutableList.Builder<RValue> list = ImmutableList.builderWithExpectedSize(length);
+                for (int i = 0; i < length; i++)
+                {
+                    list.add(string(g.get(i)));
+                }
+                return genericVector(list.build(), null);
+            }
+
+            @Override
+            public RValue bool(GetValue<@Value Boolean> g) throws InternalException, UserException
+            {
+                boolean[] bools = new boolean[length];
+                for (int i = 0; i < length; i++)
+                {
+                    bools[i] = g.get(i);
+                }
+                return booleanVector(bools, null);
+            }
+
+            @Override
+            public RValue date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
+            {
+                ImmutableList.Builder<@Value TemporalAccessor> valueBuilder = ImmutableList.builderWithExpectedSize(length);
+                for (int i = 0; i < length; i++)
+                {
+                    valueBuilder.add(g.get(i));
+                }
+                ImmutableList<@Value TemporalAccessor> values = valueBuilder.build();
+                return temporalVector(dateTimeInfo, values);
+            }
+
+            @Override
+            public RValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
+            {
+                throw new InternalException("TODO");
+            }
+
+            @Override
+            public RValue record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
+            {
+                throw new InternalException("TODO");
+            }
+
+            @Override
+            public RValue array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
+            {
+                throw new InternalException("TODO");
+            }
+        });
+    }
+
+    private static RValue temporalVector(DateTimeInfo dateTimeInfo, ImmutableList<@Value TemporalAccessor> values)
+    {
+        return new RValue()
+        {
+            @Override
+            public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+            {
+                return visitor.visitTemporalList(dateTimeInfo.getType(), values, makeClassAttributes("Date"));
+            }
+        };
+    }
+
+    private static @Nullable @Value Integer getIfInteger(@Value Number n) throws InternalException
+    {
+        return Utility.<@Nullable @Value Integer>withNumberInt(n, l -> {
+            if (l.longValue() != l.intValue())
+                return null;
+            return DataTypeUtility.value(l.intValue());
+        }, bd -> {
+            try
+            {
+                return DataTypeUtility.value(bd.intValueExact());
+            }
+            catch (ArithmeticException e)
+            {
+                return null;
+            }
+        });
+    }
+
+    private static RValue booleanVector(boolean[] values, @Nullable RValue attributes)
+    {
+        return new RValue()
+        {
+            @Override
+            public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+            {
+                return visitor.visitLogicalList(values, attributes);
+            }
+        };
+    }
+
+    private static RValue intVector(int[] values, @Nullable RValue attributes)
+    {
+        return new RValue()
+        {
+            @Override
+            public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+            {
+                return visitor.visitIntList(values, attributes);
+            }
+        };
+    }
+
+    private static RValue doubleVector(double[] values, @Nullable RValue attributes)
+    {
+        return new RValue()
+        {
+            @Override
+            public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+            {
+                return visitor.visitDoubleList(values, attributes);
+            }
+        };
+    }
+
+    private static RValue logicalVector(boolean[] values, @Nullable RValue attributes)
+    {
+        return new RValue()
+        {
+            @Override
+            public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+            {
+                return visitor.visitLogicalList(values, attributes);
+            }
+        };
+    }
+
+    private static RValue genericVector(ImmutableList<RValue> values, @Nullable RValue attributes)
+    {
+        return new RValue()
+        {
+            @Override
+            public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+            {
+                return visitor.visitGenericList(values, attributes);
+            }
+        };
+    }
+
+    private static RValue stringVector(ImmutableList<String> values, @Nullable RValue attributes)
+    {
+        return new RValue()
+        {
+            @Override
+            public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+            {
+                return visitor.visitStringList(values, attributes);
+            }
+        };
+    }
+    
+    private static RValue string(String value)
+    {
+        return new RValue()
+        {
+            @Override
+            public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+            {
+                return visitor.visitString(value);
+            }
+        };
+    }
+
+    private static RValue pairListFromMap(ImmutableMap<String, RValue> values)
+    {
+        return makePairList(values.entrySet().stream().map(e -> new PairListEntry(null, string(e.getKey()), e.getValue())).collect(ImmutableList.<PairListEntry>toImmutableList()));
+    }
+    
+    private static RValue makePairList(ImmutableList<PairListEntry> values)
+    {
+        return new RValue()
+        {
+            @Override
+            public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+            {
+                return visitor.visitPairList(values);
+            }
+        };
+    }
+
+    public static void writeRData(File destFile, RValue topLevel) throws IOException, UserException, InternalException
+    {
+        final DataOutputStream d = new DataOutputStream(new FileOutputStream(destFile, false));
+        // TODO compress
+        d.writeByte('X');
+        d.writeByte('\n');
+        d.writeInt(0);
+        d.writeInt(0);
+        d.writeInt(0);
+        topLevel.visit(new RVisitor<@Nullable Void>()
+        {
+            private void writeInt(int value) throws UserException
+            {
+                try
+                {
+                    d.writeInt(value);
+                }
+                catch (IOException e)
+                {
+                    throw new UserException("IO error", e);
+                }
+            }
+
+            private void writeHeader(int value, @Nullable RValue attributes, @Nullable RValue tag) throws UserException, InternalException
+            {
+                try
+                {
+                    d.writeInt(value | (attributes != null ? 0x200 : 0) | (tag != null ? 0x400 : 0));
+                    if (value == PAIR_LIST)
+                    {
+                        writeAttributes(attributes);
+                        writeAttributes(tag);
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new UserException("IO error", e);
+                }
+            }
+
+
+
+            private void writeDouble(double value) throws UserException
+            {
+                try
+                {
+                    d.writeDouble(value);
+                }
+                catch (IOException e)
+                {
+                    throw new UserException("IO error", e);
+                }
+            }
+
+            private void writeBytes(byte[] value) throws UserException
+            {
+                try
+                {
+                    d.write(value);
+                }
+                catch (IOException e)
+                {
+                    throw new UserException("IO error", e);
+                }
+            }
+            
+            private void writeAttributes(@Nullable RValue attributes) throws UserException, InternalException
+            {
+                if (attributes == null)
+                    return;
+                attributes.visit(this);
+            }
+            
+            @Override
+            public @Nullable Void visitString(String s) throws InternalException, UserException
+            {
+                writeInt(STRING_SINGLE);
+                writeLenString(s);
+                return null;
+            }
+
+            private void writeLenString(String s) throws UserException
+            {
+                byte[] bytes = s.getBytes(StandardCharsets.US_ASCII);
+                writeInt(bytes.length);
+                writeBytes(bytes);
+            }
+
+            @Override
+            public @Nullable Void visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                writeHeader(STRING_VECTOR, attributes, null);
+                for (String value : values)
+                {
+                    writeLenString(value);
+                }
+                writeAttributes(attributes);
+                return null;
+            }
+
+            @Override
+            public @Nullable Void visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                switch (dateTimeType)
+                {
+                    case YEARMONTHDAY:
+                        writeHeader(DOUBLE_VECTOR, attributes, null);
+                        writeInt(values.size());
+                        for (TemporalAccessor value : values)
+                        {
+                            writeDouble(((LocalDate)value).toEpochDay());
+                        }
+                        writeAttributes(attributes);
+                        break;
+                    default:
+                        throw new InternalException("TODO: " + dateTimeType);
+                }
+                return null;
+            }
+
+            @Override
+            public @Nullable Void visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                writeHeader(INT_VECTOR, attributes, null);
+                writeInt(values.length);
+                for (int value : values)
+                {
+                    writeInt(value);
+                }
+                writeAttributes(attributes);
+                return null;
+            }
+
+            @Override
+            public @Nullable Void visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                writeHeader(DOUBLE_VECTOR, attributes, null);
+                writeInt(values.length);
+                for (double value : values)
+                {
+                    writeDouble(value);
+                }
+                writeAttributes(attributes);
+                return null;
+            }
+
+            @Override
+            public @Nullable Void visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                writeHeader(LOGICAL_VECTOR, attributes, null);
+                writeInt(values.length);
+                for (boolean value : values)
+                {
+                    writeInt(value ? 1 : 0);
+                }
+                writeAttributes(attributes);
+                return null;
+            }
+
+            @Override
+            public @Nullable Void visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                writeHeader(GENERIC_VECTOR, attributes, null);
+                writeInt(values.size());
+                for (RValue value : values)
+                {
+                    value.visit(this);
+                }
+                writeAttributes(attributes);
+                return null;
+            }
+
+            @Override
+            public @Nullable Void visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
+            {
+                switch (items.size())
+                {
+                    case 0:
+                        break;
+                    case 1:
+                        writeHeader(PAIR_LIST, items.get(0).attributes, items.get(0).tag);
+                        items.get(0).item.visit(this);
+                        visitNil();
+                        break;
+                    case 2:
+                        writeHeader(PAIR_LIST, items.get(0).attributes, items.get(0).tag);
+                        items.get(0).item.visit(this);
+                        items.get(1).item.visit(this);
+                        break;
+                    default:
+                        writeHeader(PAIR_LIST, items.get(0).attributes, items.get(0).tag);
+                        items.get(0).item.visit(this);
+                        visitPairList(items.subList(1, items.size()));
+                        break;
+                }
+                return null;
+            }
+
+            @Override
+            public @Nullable Void visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
+            {
+                throw new InternalException("TODO");
+                //return null;
+            }
+
+            @Override
+            public @Nullable Void visitNil() throws InternalException, UserException
+            {
+                writeInt(NIL);
+                return null;
+            }
+        });
+    }
+
 }

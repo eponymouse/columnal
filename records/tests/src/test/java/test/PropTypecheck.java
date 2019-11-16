@@ -210,10 +210,10 @@ public class PropTypecheck
     {
         List<DataType> types = DataTestUtil.makeList(new SourceOfRandomness(r), 1, 10, () -> typeMaker.makeType().getDataType());
         
-        List<@ExpressionIdentifier String> namesA = Utility.<@ExpressionIdentifier String>replicateM(types.size(), () -> TestUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
+        List<@ExpressionIdentifier String> namesA = Utility.<@ExpressionIdentifier String>replicateM(types.size(), () -> DataTestUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
         if (namesA.stream().distinct().count() != namesA.size())
             return;
-        List<@ExpressionIdentifier String> namesB = r.nextInt(4) == 1 ? namesA : Utility.<@ExpressionIdentifier String>replicateM(types.size(), () -> TestUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
+        List<@ExpressionIdentifier String> namesB = r.nextInt(4) == 1 ? namesA : Utility.<@ExpressionIdentifier String>replicateM(types.size(), () -> DataTestUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
         if (namesB.stream().distinct().count() != namesB.size())
             return;
         

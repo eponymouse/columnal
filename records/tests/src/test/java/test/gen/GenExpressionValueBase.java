@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 
-public abstract class GenExpressionValueBase extends GenValueBase<ExpressionValue>
+public abstract class GenExpressionValueBase extends GenValueBaseE<ExpressionValue>
 {
     private final IdentityHashMap<Expression, Pair<DataType, @Value Object>> expressionValues = new IdentityHashMap<>();
     protected DummyManager dummyManager;

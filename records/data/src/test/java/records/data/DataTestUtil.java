@@ -250,7 +250,7 @@ public class DataTestUtil
         return keywords;
     }
 
-    private static String generateIdent(SourceOfRandomness sourceOfRandomness)
+    public static String generateIdent(SourceOfRandomness sourceOfRandomness)
     {
         if (sourceOfRandomness.nextBoolean())
         {

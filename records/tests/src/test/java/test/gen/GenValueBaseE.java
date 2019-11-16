@@ -29,6 +29,11 @@ import java.util.stream.Collectors;
 
 public abstract class GenValueBaseE<T> extends GenValueBase<T>
 {
+    protected GenValueBaseE(Class<T> type)
+    {
+        super(type);
+    }
+
     @SuppressWarnings("recorded")
     public UnitExpression makeUnitExpression(Unit unit)
     {

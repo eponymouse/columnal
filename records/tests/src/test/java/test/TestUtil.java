@@ -154,7 +154,7 @@ public class TestUtil
 
     public static TableId generateTableId(SourceOfRandomness sourceOfRandomness)
     {
-        return new TableId(IdentifierUtility.fixExpressionIdentifier(generateIdent(sourceOfRandomness), "Table"));
+        return new TableId(IdentifierUtility.fixExpressionIdentifier(DataTestUtil.generateIdent(sourceOfRandomness), "Table"));
     }
 
     // Generates a pair of different ids
@@ -172,7 +172,7 @@ public class TestUtil
 
     public static ColumnId generateColumnId(SourceOfRandomness sourceOfRandomness)
     {
-        return new ColumnId(IdentifierUtility.fixExpressionIdentifier(generateIdent(sourceOfRandomness), "Column"));
+        return new ColumnId(IdentifierUtility.fixExpressionIdentifier(DataTestUtil.generateIdent(sourceOfRandomness), "Column"));
     }
 
 
@@ -436,7 +436,7 @@ public class TestUtil
         @ExpressionIdentifier String s;
         do
         {
-            s = IdentifierUtility.asExpressionIdentifier(generateIdent(r));
+            s = IdentifierUtility.asExpressionIdentifier(DataTestUtil.generateIdent(r));
         }
         while (s == null);
         return s;

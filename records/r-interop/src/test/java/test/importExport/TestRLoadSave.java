@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.Assert;
@@ -14,15 +15,20 @@ import records.data.ColumnId;
 import records.data.DataTestUtil;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
+import records.data.datatype.DataType;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.rinterop.RData;
 import records.rinterop.RData.RValue;
+import utility.Pair;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.time.LocalDate;
 
 import static org.junit.Assert.assertEquals;
 
@@ -89,13 +95,24 @@ public class TestRLoadSave
         ImmutableList<RecordSet> rs = RData.convertRToTable(typeManager, loaded);
 
     }
+
+    @Test
+    public void testImportRData4() throws Exception
+    {
+        @SuppressWarnings("nullness")
+        @NonNull URL resource = getClass().getClassLoader().getResource("date.rds");
+        RValue loaded = RData.readRData(new File(resource.toURI()));
+        System.out.println(RData.prettyPrint(loaded));
+        Pair<DataType, @Value Object> r = RData.convertRToTypedValue(new TypeManager(new UnitManager()), loaded);
+        assertEquals(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), r.getFirst());
+        DataTestUtil.assertValueEqual("Date", LocalDate.of(1950, 2, 1), r.getSecond());
+    }
     
     @Property(trials = 10)
-    public void testRoundTrip(@From(GenRCompatibleRecordSet.class) KnownLengthRecordSet original) throws Exception
+    public void testRoundTrip(@When(seed=1L) @From(GenRCompatibleRecordSet.class) KnownLengthRecordSet original) throws Exception
     {
         // We can only test us->R->us, because to test R->us->R we'd still need to convert at start and end (i.e. us->R->us->R->us which is the same).
         File f = File.createTempFile("columnaltest", "rds");
-        // TODO write
         RData.writeRData(f, RData.convertTableToR(original));
         RecordSet reloaded = RData.convertRToTable(new TypeManager(new UnitManager()), RData.readRData(f)).get(0);
         f.delete();
@@ -111,6 +128,7 @@ public class TestRLoadSave
             }
         }
         
+        Assert.fail("TODO also load R in the interim to load and re-save ( separate test?");
     }
 
     private static @Value BigDecimal d(String s)
