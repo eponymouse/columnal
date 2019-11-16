@@ -45,7 +45,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -450,8 +455,11 @@ public class RData
                     values[i] = d.readDouble();
                 }
                 final @Nullable RValue attr = objHeader.readAttributes(d, atoms);
-                if (isClass(pairListToMap(attr), "Date"))
+                ImmutableMap<String, RValue> attrMap = pairListToMap(attr);
+                if (isClass(attrMap, "Date"))
                     return dateVector(values, attr);
+                else if (isClass(attrMap, "POSIXct"))
+                    return dateTimeZonedVector(values, attr);
                 else 
                     return doubleVector(values, attr);
             }
@@ -491,6 +499,34 @@ public class RData
         }
     }
 
+    private static RValue dateTimeZonedVector(double[] values, @Nullable RValue attr) throws InternalException, UserException
+    {
+        ImmutableMap<String, RValue> attrMap = pairListToMap(attr);
+        RValue tzone = attrMap.get("tzone");
+        if (tzone != null)
+        {
+            ImmutableList.Builder<@Value TemporalAccessor> b = ImmutableList.builderWithExpectedSize(values.length);
+            for (double value : values)
+            {
+                @SuppressWarnings("valuetype")
+                @Value ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond((long) value), ZoneId.of(getString(getListItem(tzone, 0))));
+                b.add(zdt);
+            }
+            return temporalVector(new DateTimeInfo(DateTimeType.DATETIMEZONED), b.build());
+        }
+        else
+        {
+            ImmutableList.Builder<@Value TemporalAccessor> b = ImmutableList.builderWithExpectedSize(values.length);
+            for (double value : values)
+            {
+                @SuppressWarnings("valuetype")
+                @Value LocalDateTime ldt = LocalDateTime.ofInstant(Instant.ofEpochSecond((long) value), ZoneId.of("UTC"));
+                b.add(ldt);
+            }
+            return temporalVector(new DateTimeInfo(DateTimeType.DATETIME), b.build());
+        }
+    }
+
     private static RValue dateVector(double[] values, @Nullable RValue attr) throws InternalException
     {
         if (DoubleStream.of(values).allMatch(d -> d == (int)d))
@@ -509,7 +545,24 @@ public class RData
                 }
             };
         }
-        throw new InternalException("TODO");
+        else
+        {
+            ImmutableList<@Value TemporalAccessor> dates = DoubleStream.of(values).<@Value TemporalAccessor>mapToObj(d -> {
+                double seconds = d * (60.0 * 60.0 * 24.0);
+                double wholeSeconds = Math.floor(seconds);
+                @SuppressWarnings("valuetype")
+                @Value LocalDateTime date = LocalDateTime.ofEpochSecond((long)wholeSeconds, (int)(1_000_000_000 * (seconds - wholeSeconds)), ZoneOffset.UTC);
+                return date;
+            }).collect(ImmutableList.<@Value TemporalAccessor>toImmutableList());
+            return new RValue()
+            {
+                @Override
+                public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+                {
+                    return visitor.visitTemporalList(DateTimeType.DATETIME, dates, attr);
+                }
+            };
+        }
     }
 
     private static Stream<PairListEntry> flattenPairList(RValue head, RValue tail, @Nullable RValue attr, @Nullable RValue tag) throws UserException, InternalException
@@ -928,10 +981,7 @@ public class RData
             {
                 ImmutableList<Pair<DataType, @Value Object>> typedPairs = Utility.<RValue, Pair<DataType, @Value Object>>mapListExI(values, v -> convertRToTypedValue(typeManager, v));
                 Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> m = generaliseType(Utility.mapListExI(typedPairs, p -> p.getFirst()));
-                @ExpressionIdentifier String columnId = IdentifierUtility.asExpressionIdentifier("C" + Math.abs(values.hashCode()));
-                if (columnId == null)
-                    throw new UserException("Invalid column name");
-                return new Pair<>(m.getFirst().makeImmediateColumn(new ColumnId(columnId), Utility.<Pair<DataType, @Value Object>, Either<String, @Value Object>>mapListExI(typedPairs, p -> Either.<String, @Value Object>right(getOrInternal(m.getSecond(), p.getFirst()).apply(p.getSecond()))), DataTypeUtility.makeDefaultValue(m.getFirst())), typedPairs.size());
+                return new Pair<>(m.getFirst().makeImmediateColumn(columnName, Utility.<Pair<DataType, @Value Object>, Either<String, @Value Object>>mapListExI(typedPairs, p -> Either.<String, @Value Object>right(getOrInternal(m.getSecond(), p.getFirst()).apply(p.getSecond()))), DataTypeUtility.makeDefaultValue(m.getFirst())), typedPairs.size());
             }
 
             private SimulationFunction<@Value Object, @Value Object> getOrInternal(ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>> map, DataType key) throws InternalException
@@ -1281,12 +1331,12 @@ public class RData
     public static RValue convertTableToR(RecordSet recordSet) throws UserException, InternalException
     {
         // A table is a generic list of columns with class data.frame
-        return genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c)), makeClassAttributes("data.frame"));
+        return genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c)), makeClassAttributes("data.frame", ImmutableMap.<String, RValue>of("names", stringVector(Utility.mapListExI(recordSet.getColumns(), c -> c.getName().getRaw()), null))));
     }
 
-    private static RValue makeClassAttributes(String className)
+    private static RValue makeClassAttributes(String className, ImmutableMap<String, RValue> otherItems)
     {
-        return pairListFromMap(ImmutableMap.of("class", genericVector(ImmutableList.of(string(className)), null)));
+        return pairListFromMap(Utility.appendToMap(otherItems, "class", genericVector(ImmutableList.of(string(className)), null), null));
     }
 
     private static RValue convertColumnToR(Column column) throws UserException, InternalException
@@ -1330,12 +1380,12 @@ public class RData
             @Override
             public RValue text(GetValue<@Value String> g) throws InternalException, UserException
             {
-                ImmutableList.Builder<RValue> list = ImmutableList.builderWithExpectedSize(length);
+                ImmutableList.Builder<String> list = ImmutableList.builderWithExpectedSize(length);
                 for (int i = 0; i < length; i++)
                 {
-                    list.add(string(g.get(i)));
+                    list.add(g.get(i));
                 }
-                return genericVector(list.build(), null);
+                return stringVector(list.build(), null);
             }
 
             @Override
@@ -1388,7 +1438,7 @@ public class RData
             @Override
             public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
             {
-                return visitor.visitTemporalList(dateTimeInfo.getType(), values, makeClassAttributes("Date"));
+                return visitor.visitTemporalList(dateTimeInfo.getType(), values, makeClassAttributes("Date", ImmutableMap.of()));
             }
         };
     }
@@ -1604,8 +1654,10 @@ public class RData
             public @Nullable Void visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 writeHeader(STRING_VECTOR, attributes, null);
+                writeInt(values.size());
                 for (String value : values)
                 {
+                    writeInt(STRING_SINGLE);
                     writeLenString(value);
                 }
                 writeAttributes(attributes);
@@ -1623,6 +1675,24 @@ public class RData
                         for (TemporalAccessor value : values)
                         {
                             writeDouble(((LocalDate)value).toEpochDay());
+                        }
+                        writeAttributes(attributes);
+                        break;
+                    case DATETIME:
+                        writeHeader(DOUBLE_VECTOR, attributes, null);
+                        writeInt(values.size());
+                        for (TemporalAccessor value : values)
+                        {
+                            writeDouble(((LocalDateTime)value).toEpochSecond(ZoneOffset.UTC));
+                        }
+                        writeAttributes(attributes);
+                        break;
+                    case DATETIMEZONED:
+                        writeHeader(DOUBLE_VECTOR, attributes, null);
+                        writeInt(values.size());
+                        for (TemporalAccessor value : values)
+                        {
+                            writeDouble(((ZonedDateTime)value).toEpochSecond());
                         }
                         writeAttributes(attributes);
                         break;
@@ -1696,11 +1766,12 @@ public class RData
                         items.get(0).item.visit(this);
                         visitNil();
                         break;
+                    /*
                     case 2:
                         writeHeader(PAIR_LIST, items.get(0).attributes, items.get(0).tag);
                         items.get(0).item.visit(this);
                         items.get(1).item.visit(this);
-                        break;
+                        break;*/
                     default:
                         writeHeader(PAIR_LIST, items.get(0).attributes, items.get(0).tag);
                         items.get(0).item.visit(this);

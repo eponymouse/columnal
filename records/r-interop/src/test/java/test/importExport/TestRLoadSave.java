@@ -29,6 +29,8 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 import static org.junit.Assert.assertEquals;
 
@@ -107,6 +109,20 @@ public class TestRLoadSave
         assertEquals(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), r.getFirst());
         DataTestUtil.assertValueEqual("Date", LocalDate.of(1950, 2, 1), r.getSecond());
     }
+
+    @Test
+    public void testImportRData5() throws Exception
+    {
+        @SuppressWarnings("nullness")
+        @NonNull URL resource = getClass().getClassLoader().getResource("datetimezoned.rds");
+        RValue loaded = RData.readRData(new File(resource.toURI()));
+        System.out.println(RData.prettyPrint(loaded));
+        Pair<DataType, @Value Object> r = RData.convertRToTypedValue(new TypeManager(new UnitManager()), loaded);
+        assertEquals(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), r.getFirst());
+        @SuppressWarnings("valuetype")
+        @Value ZonedDateTime zdt = ZonedDateTime.of(2005, 10, 21, 18, 47, 22, 0, ZoneId.of("Europe/London"));
+        DataTestUtil.assertValueEqual("DateTimeZoned", zdt, r.getSecond());
+    }
     
     @Property(trials = 10)
     public void testRoundTrip(@When(seed=1L) @From(GenRCompatibleRecordSet.class) KnownLengthRecordSet original) throws Exception
@@ -114,9 +130,11 @@ public class TestRLoadSave
         // We can only test us->R->us, because to test R->us->R we'd still need to convert at start and end (i.e. us->R->us->R->us which is the same).
         File f = File.createTempFile("columnaltest", "rds");
         RData.writeRData(f, RData.convertTableToR(original));
-        RecordSet reloaded = RData.convertRToTable(new TypeManager(new UnitManager()), RData.readRData(f)).get(0);
+        RValue reread = RData.readRData(f);
+        RecordSet reloaded = RData.convertRToTable(new TypeManager(new UnitManager()), reread).get(0);
         f.delete();
 
+        System.out.println(RData.prettyPrint(reread));
         assertEquals(original.getColumnIds(), reloaded.getColumnIds());
         assertEquals(original.getLength(), reloaded.getLength());
         for (Column column : original.getColumns())
