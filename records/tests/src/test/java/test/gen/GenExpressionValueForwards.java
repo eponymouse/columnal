@@ -405,7 +405,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
                             Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
-                            ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
+                            ZoneOffset zone = DataTestUtil.generateZoneOffset(r, gs);
                             return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> call("datetimezoned from dtz", dateE, timeE, TestUtil.makeStringLiteral(zone.toString(), r)));
                         });
                         break;
@@ -638,22 +638,22 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
         switch (dateTimeInfo.getType())
         {
             case YEARMONTHDAY:
-                value = TestUtil.generateDate(r, gs);
+                value = DataTestUtil.generateDate(r, gs);
                 break;
             case YEARMONTH:
-                value = YearMonth.from(TestUtil.generateDate(r, gs));
+                value = YearMonth.from(DataTestUtil.generateDate(r, gs));
                 break;
             case TIMEOFDAY:
-                value = TestUtil.generateTime(r, gs);
+                value = DataTestUtil.generateTime(r, gs);
                 break;
             //case TIMEOFDAYZONED:
                 //@Value OffsetTime timez = OffsetTime.from(TestUtil.generateDateTimeZoned(r, gs));
                 //return literal(timez, call("timezoned.from.string", new StringLiteral(timez.toString())));
             case DATETIME:
-                value = TestUtil.generateDateTime(r, gs);
+                value = DataTestUtil.generateDateTime(r, gs);
                 break;
             case DATETIMEZONED:
-                value = TestUtil.generateDateTimeZoned(r, gs);
+                value = DataTestUtil.generateDateTimeZoned(r, gs);
                 break;
             default:
                 throw new RuntimeException("No date generator for " + dateTimeInfo.getType());

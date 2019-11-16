@@ -3,6 +3,7 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import records.data.DataTestUtil;
 import test.TestUtil;
 
 import java.time.LocalDateTime;
@@ -21,6 +22,6 @@ public class GenDateTimeZoned extends Generator<ZonedDateTime>
     @Override
     public ZonedDateTime generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        return TestUtil.generateDateTimeZoned(sourceOfRandomness, generationStatus);
+        return DataTestUtil.generateDateTimeZoned(sourceOfRandomness, generationStatus);
     }
 }

@@ -38,10 +38,10 @@ public class BackwardsRecord extends BackwardsProvider
         return ImmutableList.of(() -> {
             // Make a record then access its field:
             ArrayList<Pair<@ExpressionIdentifier String, DataType>> fields = new ArrayList<>();
-            @ExpressionIdentifier String ourField = TestUtil.generateExpressionIdentifier(r);
+            @ExpressionIdentifier String ourField = DataTestUtil.generateExpressionIdentifier(r);
             fields.add(new Pair<>(ourField, targetType));
             // Add a few more:
-            fields.addAll(DataTestUtil.<Pair<@ExpressionIdentifier String, DataType>>makeList(r, 1, 3, () -> new Pair<>(TestUtil.generateExpressionIdentifier(r), parent.makeType())));
+            fields.addAll(DataTestUtil.<Pair<@ExpressionIdentifier String, DataType>>makeList(r, 1, 3, () -> new Pair<>(DataTestUtil.generateExpressionIdentifier(r), parent.makeType())));
 
             ImmutableMap<@ExpressionIdentifier String, DataType> fieldMap = fields.stream().collect(ImmutableMap.toImmutableMap(p -> p.getFirst(), p -> p.getSecond(), (a, b) -> a));
             DataType recordType = DataType.record(fieldMap);

@@ -3,6 +3,7 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import records.data.DataTestUtil;
 import test.TestUtil;
 
 import java.time.LocalDate;
@@ -20,6 +21,6 @@ public class GenDate extends Generator<LocalDate>
     @Override
     public LocalDate generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        return TestUtil.generateDate(sourceOfRandomness, generationStatus);
+        return DataTestUtil.generateDate(sourceOfRandomness, generationStatus);
     }
 }
