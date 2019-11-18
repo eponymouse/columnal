@@ -3,6 +3,7 @@ package records.rinterop;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Booleans;
 import com.google.common.primitives.Doubles;
@@ -21,6 +22,7 @@ import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
@@ -29,6 +31,7 @@ import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
+import records.jellytype.JellyType.UnknownTypeException;
 import utility.Either;
 import utility.IdentifierUtility;
 import utility.Pair;
@@ -59,6 +62,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -75,6 +79,7 @@ public class RData
     public static final int GENERIC_VECTOR = 19;
     public static final int PAIR_LIST = 2;
     public static final int NIL = 0;
+    public static final int NA_AS_INTEGER = 0x80000000;
 
     private static class V2Header
     {
@@ -437,7 +442,8 @@ public class RData
                     // R factors index from 1, we index TaggedValue from 0, so adjust:
                     for (int i = 0; i < values.length; i++)
                     {
-                        values[i] -= 1;
+                        if (values[i] != NA_AS_INTEGER)
+                            values[i] -= 1;
                     }
                     return new RValue()
                     {
@@ -460,7 +466,7 @@ public class RData
                 {
                     int n = d.readInt();
                     values[i] = n != 0;
-                    if (n == 0x80000000)
+                    if (n == NA_AS_INTEGER)
                     {
                         if (isNA == null)
                             isNA = new boolean[vecLen];
@@ -529,23 +535,33 @@ public class RData
         RValue tzone = attrMap.get("tzone");
         if (tzone != null)
         {
-            ImmutableList.Builder<@Value TemporalAccessor> b = ImmutableList.builderWithExpectedSize(values.length);
+            ImmutableList.Builder<Optional<@Value TemporalAccessor>> b = ImmutableList.builderWithExpectedSize(values.length);
             for (double value : values)
             {
-                @SuppressWarnings("valuetype")
-                @Value ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond((long) roundTowardsZero(value), (long) (1_000_000_000.0 * (value - roundTowardsZero(value)))), ZoneId.of(getString(getListItem(tzone, 0))));
-                b.add(zdt);
+                if (Double.isNaN(value))
+                    b.add(Optional.empty());
+                else
+                {
+                    @SuppressWarnings("valuetype")
+                    @Value ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond((long) roundTowardsZero(value), (long) (1_000_000_000.0 * (value - roundTowardsZero(value)))), ZoneId.of(getString(getListItem(tzone, 0))));
+                    b.add(Optional.of(zdt));
+                }
             }
             return temporalVector(new DateTimeInfo(DateTimeType.DATETIMEZONED), b.build());
         }
         else
         {
-            ImmutableList.Builder<@Value TemporalAccessor> b = ImmutableList.builderWithExpectedSize(values.length);
+            ImmutableList.Builder<Optional<@Value TemporalAccessor>> b = ImmutableList.builderWithExpectedSize(values.length);
             for (double value : values)
             {
-                @SuppressWarnings("valuetype")
-                @Value LocalDateTime ldt = LocalDateTime.ofInstant(Instant.ofEpochSecond((long) roundTowardsZero(value)), ZoneId.of("UTC"));
-                b.add(ldt);
+                if (Double.isNaN(value))
+                    b.add(Optional.empty());
+                else
+                {
+                    @SuppressWarnings("valuetype")
+                    @Value LocalDateTime ldt = LocalDateTime.ofInstant(Instant.ofEpochSecond((long) roundTowardsZero(value)), ZoneId.of("UTC"));
+                    b.add(Optional.of(ldt));
+                }
             }
             return temporalVector(new DateTimeInfo(DateTimeType.DATETIME), b.build());
         }
@@ -558,13 +574,15 @@ public class RData
 
     private static RValue dateVector(double[] values, @Nullable RValue attr) throws InternalException
     {
-        if (DoubleStream.of(values).allMatch(d -> d == (int)d))
+        if (DoubleStream.of(values).allMatch(d -> Double.isNaN(d) || d == (int)d))
         {
-            ImmutableList<@Value TemporalAccessor> dates = DoubleStream.of(values).<@Value TemporalAccessor>mapToObj(d -> {
+            ImmutableList<Optional<@Value TemporalAccessor>> dates = DoubleStream.of(values).<Optional<@Value TemporalAccessor>>mapToObj(d -> {
+                if (Double.isNaN(d))
+                    return Optional.empty();
                 @SuppressWarnings("valuetype")
                 @Value LocalDate date = LocalDate.ofEpochDay((int) d);
-                return date;
-            }).collect(ImmutableList.<@Value TemporalAccessor>toImmutableList());
+                return Optional.of(date);
+            }).collect(ImmutableList.<Optional<@Value TemporalAccessor>>toImmutableList());
             return new RValue()
             {
                 @Override
@@ -576,13 +594,15 @@ public class RData
         }
         else
         {
-            ImmutableList<@Value TemporalAccessor> dates = DoubleStream.of(values).<@Value TemporalAccessor>mapToObj(d -> {
+            ImmutableList<Optional<@Value TemporalAccessor>> dates = DoubleStream.of(values).<Optional<@Value TemporalAccessor>>mapToObj(d -> {
+                if (Double.isNaN(d))
+                    return Optional.empty();
                 double seconds = d * (60.0 * 60.0 * 24.0);
                 double wholeSeconds = Math.floor(seconds);
                 @SuppressWarnings("valuetype")
                 @Value LocalDateTime date = LocalDateTime.ofEpochSecond((long)wholeSeconds, (int)(1_000_000_000 * (seconds - wholeSeconds)), ZoneOffset.UTC);
-                return date;
-            }).collect(ImmutableList.<@Value TemporalAccessor>toImmutableList());
+                return Optional.of(date);
+            }).collect(ImmutableList.<Optional<@Value TemporalAccessor>>toImmutableList());
             return new RValue()
             {
                 @Override
@@ -694,7 +714,7 @@ public class RData
         public T visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException;
-        public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException;
+        public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException;
         public T visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException;
@@ -752,7 +772,7 @@ public class RData
         }
 
         @Override
-        public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
+        public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
         {
             return makeDefault();
         }
@@ -803,7 +823,7 @@ public class RData
         }
 
         @Override
-        public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
+        public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
         {
             throw new UserException("Unexpected type: list of date/time type");
         }
@@ -897,13 +917,23 @@ public class RData
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType, @Value Object> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 DateTimeInfo t = new DateTimeInfo(dateTimeType);
-                if (values.size() == 1)
-                    return new Pair<>(DataType.date(t), values.get(0));
+                if (values.stream().allMatch(v -> v.isPresent()))
+                {
+                    if (values.size() == 1)
+                        return new Pair<>(DataType.date(t), values.get(0).get());
+                    else
+                        return new Pair<>(DataType.array(DataType.date(t)), DataTypeUtility.value(Utility.<Optional<@Value TemporalAccessor>, @Value TemporalAccessor>mapListI(values, v -> v.get())));
+                }
                 else
-                    return new Pair<>(DataType.array(DataType.date(t)), DataTypeUtility.value(values));
+                {
+                    if (values.size() == 1) // Must actually be empty if not all present:
+                        return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.date(t))), typeManager), typeManager.maybeMissing());
+                    else
+                        return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.date(t))), typeManager), DataTypeUtility.value(Utility.mapListI(values, v -> v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing))));
+                }
             }
 
             @Override
@@ -965,10 +995,13 @@ public class RData
             }
 
             @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 DateTimeInfo t = new DateTimeInfo(dateTimeType);
-                return new Pair<>(rs -> new MemoryTemporalColumn(rs, columnName, t, Utility.mapList(values, v -> Either.<String, TemporalAccessor>right(v)), t.getDefaultValue()), values.size());
+                if (values.stream().allMatch(v -> v.isPresent()))
+                    return new Pair<>(rs -> new MemoryTemporalColumn(rs, columnName, t, Utility.mapListI(values, v -> Either.<String, TemporalAccessor>right(v.get())), t.getDefaultValue()), values.size());
+                else
+                    return makeMaybeColumn(DataType.date(t), Utility.mapListI(values, v -> Either.<String, TaggedValue>right(v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing))));
             }
 
             @Override
@@ -986,17 +1019,22 @@ public class RData
                         else
                             maybeValues.add(Either.right(typeManager.maybePresent(DataTypeUtility.value(values[i]))));
                     }
-                    
-                    ImmutableList<Either<Unit, DataType>> typeVar = ImmutableList.of(Either.<Unit, DataType>right(DataType.BOOLEAN));
-                    DataType maybeBoolean = typeManager.getMaybeType().instantiate(typeVar, typeManager);
-                    return new Pair<>(rs -> new MemoryTaggedColumn(rs, columnName, typeManager.getMaybeType().getTaggedTypeName(), typeVar, maybeBoolean.apply(new SpecificDataTypeVisitor<ImmutableList<TagType<DataType>>>() {
-                        @Override
-                        public ImmutableList<TagType<DataType>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
-                        {
-                            return tags;
-                        }
-                    }), maybeValues.build(), typeManager.maybeMissing()), values.length);
+
+                    return makeMaybeColumn(DataType.BOOLEAN, maybeValues.build());
                 }
+            }
+
+            private Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> makeMaybeColumn(DataType inner, ImmutableList<Either<String, @Value TaggedValue>> maybeValues) throws TaggedInstantiationException, InternalException, UnknownTypeException
+            {
+                ImmutableList<Either<Unit, DataType>> typeVar = ImmutableList.of(Either.<Unit, DataType>right(inner));
+                DataType maybeDataType = typeManager.getMaybeType().instantiate(typeVar, typeManager);
+                return new Pair<>(rs -> new MemoryTaggedColumn(rs, columnName, typeManager.getMaybeType().getTaggedTypeName(), typeVar, maybeDataType.apply(new SpecificDataTypeVisitor<ImmutableList<TagType<DataType>>>() {
+                    @Override
+                    public ImmutableList<TagType<DataType>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
+                    {
+                        return tags;
+                    }
+                }), maybeValues, typeManager.maybeMissing()), maybeValues.size());
             }
 
             @Override
@@ -1028,15 +1066,7 @@ public class RData
                             maybeValues.add(Either.right(typeManager.maybePresent(DataTypeUtility.value(new BigDecimal(values[i])))));
                     }
 
-                    ImmutableList<Either<Unit, DataType>> typeVar = ImmutableList.of(Either.<Unit, DataType>right(DataType.NUMBER));
-                    DataType maybeBoolean = typeManager.getMaybeType().instantiate(typeVar, typeManager);
-                    return new Pair<>(rs -> new MemoryTaggedColumn(rs, columnName, typeManager.getMaybeType().getTaggedTypeName(), typeVar, maybeBoolean.apply(new SpecificDataTypeVisitor<ImmutableList<TagType<DataType>>>() {
-                        @Override
-                        public ImmutableList<TagType<DataType>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
-                        {
-                            return tags;
-                        }
-                    }), maybeValues.build(), typeManager.maybeMissing()), values.length);
+                    return makeMaybeColumn(DataType.NUMBER, maybeValues.build());
                 }
                 else
                 {
@@ -1056,8 +1086,29 @@ public class RData
             @Override
             public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
+                boolean hasNAs = false;
+                for (int value : values)
+                {
+                    if (value == NA_AS_INTEGER)
+                    {
+                        hasNAs = true;
+                        break;
+                    }
+                }
+
                 TaggedTypeDefinition taggedTypeDefinition = getTaggedTypeForFactors(levelNames, typeManager);
-                return new Pair<>(rs -> new MemoryTaggedColumn(rs, columnName, taggedTypeDefinition.getTaggedTypeName(), ImmutableList.of(), Utility.mapList(taggedTypeDefinition.getTags(), t -> new TagType<>(t.getName(), null)), IntStream.of(values).mapToObj(n -> Either.<String, TaggedValue>right(new TaggedValue(n, null, taggedTypeDefinition))).collect(ImmutableList.<Either<String, TaggedValue>>toImmutableList()), new TaggedValue(0, null, taggedTypeDefinition)), values.length);
+                if (hasNAs)
+                {
+                    ImmutableList<Either<String, TaggedValue>> factorValues = IntStream.of(values).mapToObj(n -> Either.<String, TaggedValue>right(n == NA_AS_INTEGER ? typeManager.maybeMissing() : typeManager.maybePresent(new TaggedValue(n, null, taggedTypeDefinition)))).collect(ImmutableList.<Either<String, TaggedValue>>toImmutableList());
+                    return makeMaybeColumn(taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager), factorValues);
+                }
+                else
+                {
+                    ImmutableList<Either<String, TaggedValue>> factorValues = IntStream.of(values).mapToObj(n -> Either.<String, TaggedValue>right(new TaggedValue(n, null, taggedTypeDefinition))).collect(ImmutableList.<Either<String, TaggedValue>>toImmutableList());
+                    return new Pair<>(rs -> {
+                        return new MemoryTaggedColumn(rs, columnName, taggedTypeDefinition.getTaggedTypeName(), ImmutableList.of(), Utility.mapList(taggedTypeDefinition.getTags(), t -> new TagType<>(t.getName(), null)), factorValues, new TaggedValue(0, null, taggedTypeDefinition));
+                    }, values.length);
+                }
             }
 
             @Override
@@ -1169,7 +1220,7 @@ public class RData
             }
 
             @Override
-            public ImmutableList<RecordSet> visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<RecordSet> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
@@ -1345,7 +1396,7 @@ public class RData
             }
 
             @Override
-            public @Nullable Void visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
+            public @Nullable Void visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 b.append(dateTimeType.toString() + "[" + values.size());
                 if (attributes != null)
@@ -1486,12 +1537,12 @@ public class RData
             @Override
             public RValue date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
-                ImmutableList.Builder<@Value TemporalAccessor> valueBuilder = ImmutableList.builderWithExpectedSize(length);
+                ImmutableList.Builder<Optional<@Value TemporalAccessor>> valueBuilder = ImmutableList.builderWithExpectedSize(length);
                 for (int i = 0; i < length; i++)
                 {
-                    valueBuilder.add(g.get(i));
+                    valueBuilder.add(Optional.of(g.get(i)));
                 }
-                ImmutableList<@Value TemporalAccessor> values = valueBuilder.build();
+                ImmutableList<Optional<@Value TemporalAccessor>> values = valueBuilder.build();
                 return temporalVector(dateTimeInfo, values);
             }
 
@@ -1568,7 +1619,7 @@ public class RData
         });
     }
 
-    private static RValue temporalVector(DateTimeInfo dateTimeInfo, ImmutableList<@Value TemporalAccessor> values)
+    private static RValue temporalVector(DateTimeInfo dateTimeInfo, ImmutableList<Optional<@Value TemporalAccessor>> values)
     {
         return new RValue()
         {
@@ -1577,9 +1628,10 @@ public class RData
             {
                 if (dateTimeInfo.getType() == DateTimeType.DATETIMEZONED && !values.isEmpty())
                 {
-                    ZoneId zone = ((ZonedDateTime) values.get(0)).getZone();
+                    // If no non-NA, won't matter:
+                    ZoneId zone = values.stream().flatMap(v -> Utility.streamNullable(v.orElse(null))).findFirst().map(t -> ((ZonedDateTime) t).getZone()).orElse(ZoneId.systemDefault());
 
-                    return visitor.visitTemporalList(dateTimeInfo.getType(), Utility.<@Value TemporalAccessor, @Value TemporalAccessor>mapListI(values, v -> DataTypeUtility.valueZonedDateTime(((ZonedDateTime)v).withZoneSameInstant(zone))), makeClassAttributes("POSIXct", ImmutableMap.of("tzone", stringVector(zone.toString()))));
+                    return visitor.visitTemporalList(dateTimeInfo.getType(), Utility.<Optional<@Value TemporalAccessor>, Optional<@Value TemporalAccessor>>mapListI(values, mv -> mv.<@Value TemporalAccessor>map(v -> DataTypeUtility.valueZonedDateTime(((ZonedDateTime) v).withZoneSameInstant(zone)))), makeClassAttributes("POSIXct", ImmutableMap.of("tzone", stringVector(zone.toString()))));
                 }
                 else if (dateTimeInfo.getType() == DateTimeType.TIMEOFDAY)
                     return visitor.visitTemporalList(dateTimeInfo.getType(), values, null);
@@ -1804,57 +1856,80 @@ public class RData
             }
 
             @Override
-            public @Nullable Void visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException
+            public @Nullable Void visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 switch (dateTimeType)
                 {
                     case YEARMONTHDAY:
                         writeHeader(DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
-                        for (TemporalAccessor value : values)
+                        for (Optional<@Value TemporalAccessor> value : values)
                         {
-                            writeDouble(((LocalDate)value).toEpochDay());
+                            if (value.isPresent())
+                                writeDouble(((LocalDate)value.get()).toEpochDay());
+                            else
+                                writeDouble(Double.NaN);
                         }
                         writeAttributes(attributes);
                         break;
                     case DATETIME:
                         writeHeader(DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
-                        for (TemporalAccessor value : values)
+                        for (Optional<@Value TemporalAccessor> value : values)
                         {
-                            LocalDateTime ldt = (LocalDateTime) value;
-                            double seconds = (double)ldt.toEpochSecond(ZoneOffset.UTC) + (double)ldt.getNano() / 1_000_000_000.0;
-                            writeDouble(seconds / (60.0 * 60.0 * 24.0));
+                            if (value.isPresent())
+                            {
+                                LocalDateTime ldt = (LocalDateTime) value.get();
+                                double seconds = (double) ldt.toEpochSecond(ZoneOffset.UTC) + (double) ldt.getNano() / 1_000_000_000.0;
+                                writeDouble(seconds / (60.0 * 60.0 * 24.0));
+                            }
+                            else
+                                writeDouble(Double.NaN);
                         }
                         writeAttributes(attributes);
                         break;
                     case DATETIMEZONED:
                         writeHeader(DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
-                        for (TemporalAccessor value : values)
+                        for (Optional<@Value TemporalAccessor> value : values)
                         {
-                            ZonedDateTime zdt = (ZonedDateTime) value;
-                            writeDouble((double)zdt.toEpochSecond() + ((double)zdt.getNano() / 1_000_000_000.0));
+                            if (value.isPresent())
+                            {
+                                ZonedDateTime zdt = (ZonedDateTime) value.get();
+                                writeDouble((double) zdt.toEpochSecond() + ((double) zdt.getNano() / 1_000_000_000.0));
+                            }
+                            else
+                                writeDouble(Double.NaN);
                         }
                         writeAttributes(attributes);
                         break;
                     case TIMEOFDAY:
                         writeHeader(DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
-                        for (TemporalAccessor value : values)
+                        for (Optional<@Value TemporalAccessor> value : values)
                         {
-                            LocalTime lt = (LocalTime) value;
-                            writeDouble((double)lt.toNanoOfDay() / 1_000_000_000.0);
+                            if (value.isPresent())
+                            {
+                                LocalTime lt = (LocalTime) value.get();
+                                writeDouble((double) lt.toNanoOfDay() / 1_000_000_000.0);
+                            }
+                            else
+                                writeDouble(Double.NaN);
                         }
                         writeAttributes(attributes);
                         break;
                     case YEARMONTH:
                         writeHeader(DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
-                        for (TemporalAccessor value : values)
+                        for (Optional<@Value TemporalAccessor> value : values)
                         {
-                            YearMonth yearMonth = (YearMonth)value;
-                            writeDouble(yearMonth.atDay(1).toEpochDay());
+                            if (value.isPresent())
+                            {
+                                YearMonth yearMonth = (YearMonth) value.get();
+                                writeDouble(yearMonth.atDay(1).toEpochDay());
+                            }
+                            else
+                                writeDouble(Double.NaN);
                         }
                         writeAttributes(attributes);
                         break;
@@ -1897,7 +1972,7 @@ public class RData
                 writeInt(values.length);
                 for (int i = 0; i < values.length; i++)
                 {
-                    writeInt(isNA != null && isNA[i] ? 0x80000000 : (values[i] ? 1 : 0));
+                    writeInt(isNA != null && isNA[i] ? NA_AS_INTEGER : (values[i] ? 1 : 0));
                 }
                 writeAttributes(attributes);
                 return null;

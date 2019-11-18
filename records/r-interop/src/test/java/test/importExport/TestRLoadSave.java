@@ -27,6 +27,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.NumberInfo;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
@@ -160,11 +161,24 @@ public class TestRLoadSave
         System.out.println(RData.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(new UnitManager());
         RecordSet r = RData.convertRToTable(typeManager, loaded).get(0);
+        // df <- data.frame(c(TRUE, NA, FALSE), c(36, NA, -35.2), c(1, NA, 2), factor(c("A", NA, "B")), as.character(c("Hello", NA, "Bye")), c(ISOdate(2005,10,21,18,47,22,tz="America/New_York"), NA, NA))
+        
         assertEquals(maybeType(typeManager, DataType.BOOLEAN), r.getColumns().get(0).getType().getType());
         DataTestUtil.assertValueListEqual("Bool column", ImmutableList.of(new TaggedValue(1, true, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, false, typeManager.getMaybeType())), asList(r.getColumns().get(0)));
 
         assertEquals(maybeType(typeManager, DataType.NUMBER), r.getColumns().get(1).getType().getType());
         DataTestUtil.assertValueListEqual("Double column", ImmutableList.of(new TaggedValue(1, 36, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, new BigDecimal(-35.2), typeManager.getMaybeType())), asList(r.getColumns().get(1)));
+
+        assertEquals(maybeType(typeManager, DataType.NUMBER), r.getColumns().get(2).getType().getType());
+        DataTestUtil.assertValueListEqual("Int column", ImmutableList.of(new TaggedValue(1, 1, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, new BigDecimal(2), typeManager.getMaybeType())), asList(r.getColumns().get(2)));
+
+        @SuppressWarnings("nullness")
+        @NonNull TaggedTypeDefinition taggedTypeDefinition = typeManager.lookupDefinition(new TypeId("A 2"));
+        assertEquals(maybeType(typeManager, taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager)), r.getColumns().get(3).getType().getType());
+        DataTestUtil.assertValueListEqual("Factor column", ImmutableList.of(typeManager.maybePresent(new TaggedValue(0, null, taggedTypeDefinition)), typeManager.maybeMissing(), typeManager.maybePresent(new TaggedValue(1, null, taggedTypeDefinition))), asList(r.getColumns().get(3)));
+
+        assertEquals(maybeType(typeManager, DataType.date(new DateTimeInfo(DateTimeType.DATETIME))), r.getColumns().get(5).getType().getType());
+        DataTestUtil.assertValueListEqual("Date column", ImmutableList.of(typeManager.maybePresent(LocalDateTime.of(2005, 10, 21, 22, 47, 22, 0)), typeManager.maybeMissing(), typeManager.maybeMissing()), asList(r.getColumns().get(5)));
     }
 
     private ImmutableList<@Value Object> asList(Column column) throws InternalException, UserException
