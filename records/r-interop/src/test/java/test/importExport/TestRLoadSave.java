@@ -47,6 +47,7 @@ import utility.Utility.Record;
 import java.io.File;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -164,7 +165,7 @@ public class TestRLoadSave
     }
     
     @Property(trials = 100)
-    public void testRoundTrip(@When(seed=1L) @From(GenRCompatibleRecordSet.class) KnownLengthRecordSet original) throws Exception
+    public void testRoundTrip(@From(GenRCompatibleRecordSet.class) KnownLengthRecordSet original) throws Exception
     {
         // Need to get rid of any numbers which won't survive round trip:
         for (Column column : original.getColumns())
@@ -191,6 +192,11 @@ public class TestRLoadSave
                 @Override
                 public @Nullable Void text(GetValue<@Value String> g) throws InternalException, UserException
                 {
+                    // Make sure it can round trip:
+                    for (int i = 0; i < length; i++)
+                    {
+                        g.set(i, Either.<String, @Value String>right(DataTypeUtility.value(new String(g.get(i).getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8))));
+                    }
                     return null;
                 }
 
