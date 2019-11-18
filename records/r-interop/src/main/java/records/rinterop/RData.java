@@ -658,7 +658,7 @@ public class RData
         int len = d.readInt();
         byte chars[] = new byte[len];
         d.readFully(chars);
-        return new String(chars, StandardCharsets.US_ASCII);
+        return new String(chars, StandardCharsets.UTF_8);
     }
 
     private static BufferedInputStream openInputStream(File rFilePath) throws IOException, UserException
@@ -1673,7 +1673,7 @@ public class RData
 
             private void writeLenString(String s) throws UserException
             {
-                byte[] bytes = s.getBytes(StandardCharsets.US_ASCII);
+                byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
                 writeInt(bytes.length);
                 writeBytes(bytes);
             }
