@@ -446,6 +446,17 @@ public class RData
                 else
                     return intVector(values, attr);
             }
+            case LOGICAL_VECTOR:
+            {
+                int vecLen = d.readInt();
+                boolean[] values = new boolean[vecLen];
+                for (int i = 0; i < vecLen; i++)
+                {
+                    values[i] = d.readInt() != 0;
+                }
+                final @Nullable RValue attr = objHeader.readAttributes(d, atoms);
+                return logicalVector(values, attr);
+            }
             case DOUBLE_VECTOR: // Floating point vector
             {
                 int vecLen = d.readInt();

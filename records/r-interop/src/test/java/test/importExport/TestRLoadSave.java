@@ -269,35 +269,54 @@ public class TestRLoadSave
         }
         
         // We can only test us->R->us, because to test R->us->R we'd still need to convert at start and end (i.e. us->R->us->R->us which is the same).
-        File f = File.createTempFile("columnaltest", "rds");
-        RData.writeRData(f, RData.convertTableToR(original));
-        RValue reread = RData.readRData(f);
-        RecordSet reloaded = RData.convertRToTable(new TypeManager(new UnitManager()), reread).get(0);
-        f.delete();
-
-        System.out.println(RData.prettyPrint(reread));
-        assertEquals(original.getColumnIds(), reloaded.getColumnIds());
-        assertEquals(original.getLength(), reloaded.getLength());
-        for (Column column : original.getColumns())
+        for (int kind = 0; kind < 3; kind++)
         {
-            Column reloadedColumn = reloaded.getColumn(column.getName());
-            for (int i = 0; i < original.getLength(); i++)
+            RValue tableAsR = RData.convertTableToR(original);
+            final RValue roundTripped;
+            switch (kind)
             {
-                final @Value Object reloadedVal = reloadedColumn.getType().getCollapsed(i);
-                // Not all date types survive, so need to coerce:
-                @Value Object reloadedValCoerced = column.getType().getType().apply(new FlatDataTypeVisitor<@Value Object>(reloadedVal) {
-                    @Override
-                    @SuppressWarnings("nullness")
-                    public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+                case 0:
+                    roundTripped = tableAsR;
+                    break;
+                case 1:
+                case 2:
+                    File f = File.createTempFile("columnaltest", "rds");
+                    RData.writeRData(f, tableAsR);
+                    if (kind == 2)
                     {
-                        return DataTypeUtility.value(dateTimeInfo, (TemporalAccessor)reloadedVal);
+                        // TODO load R to load and save
                     }
-                });
-                DataTestUtil.assertValueEqual("Row " + i + " column " + column.getName(), column.getType().getCollapsed(i), reloadedValCoerced);
+                    roundTripped = RData.readRData(f);
+                    f.delete();
+                    break;
+                default:
+                    Assert.fail("Missing case");
+                    return;
+            }
+            RecordSet reloaded = RData.convertRToTable(new TypeManager(new UnitManager()), roundTripped).get(0);
+            System.out.println(RData.prettyPrint(roundTripped));
+            assertEquals(original.getColumnIds(), reloaded.getColumnIds());
+            assertEquals(original.getLength(), reloaded.getLength());
+            for (Column column : original.getColumns())
+            {
+                Column reloadedColumn = reloaded.getColumn(column.getName());
+                for (int i = 0; i < original.getLength(); i++)
+                {
+                    final @Value Object reloadedVal = reloadedColumn.getType().getCollapsed(i);
+                    // Not all date types survive, so need to coerce:
+                    @Value Object reloadedValCoerced = column.getType().getType().apply(new FlatDataTypeVisitor<@Value Object>(reloadedVal)
+                    {
+                        @Override
+                        @SuppressWarnings("nullness")
+                        public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+                        {
+                            return DataTypeUtility.value(dateTimeInfo, (TemporalAccessor) reloadedVal);
+                        }
+                    });
+                    DataTestUtil.assertValueEqual("Row " + i + " column " + column.getName(), column.getType().getCollapsed(i), reloadedValCoerced);
+                }
             }
         }
-        
-        Assert.fail("TODO also load R in the interim to load and re-save ( separate test?");
     }
 
     private static @Value BigDecimal d(String s)
