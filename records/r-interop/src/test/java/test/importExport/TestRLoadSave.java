@@ -162,7 +162,9 @@ public class TestRLoadSave
         RecordSet r = RData.convertRToTable(typeManager, loaded).get(0);
         assertEquals(maybeType(typeManager, DataType.BOOLEAN), r.getColumns().get(0).getType().getType());
         DataTestUtil.assertValueListEqual("Bool column", ImmutableList.of(new TaggedValue(1, true, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, false, typeManager.getMaybeType())), asList(r.getColumns().get(0)));
-        //DataTestUtil.assertValueEqual("Big number", DataTypeUtility.value(new BigDecimal("-92233720368547758085295")), r.getSecond());
+
+        assertEquals(maybeType(typeManager, DataType.NUMBER), r.getColumns().get(1).getType().getType());
+        DataTestUtil.assertValueListEqual("Double column", ImmutableList.of(new TaggedValue(1, 36, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, new BigDecimal(-35.2), typeManager.getMaybeType())), asList(r.getColumns().get(1)));
     }
 
     private ImmutableList<@Value Object> asList(Column column) throws InternalException, UserException

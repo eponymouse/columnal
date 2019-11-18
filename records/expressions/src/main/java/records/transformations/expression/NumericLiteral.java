@@ -33,9 +33,9 @@ public class NumericLiteral extends Literal
     private final @Value Number value;
     private final @Nullable @Recorded UnitExpression unit;
 
-    public NumericLiteral(Number value, @Nullable @Recorded UnitExpression unit)
+    public NumericLiteral(@Value Number value, @Nullable @Recorded UnitExpression unit)
     {
-        this.value = DataTypeUtility.value(value);
+        this.value = value;
         this.unit = unit;
     }
 

@@ -1,9 +1,11 @@
 package test.gen;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataTypeUtility;
 import records.error.UserException;
 import utility.Utility;
 
@@ -14,10 +16,11 @@ import java.util.List;
 /**
  * Created by neil on 13/12/2016.
  */
-public class GenNumber extends Generator<Number>
+public class GenNumber extends Generator<@Value Number>
 {
     private final boolean fixBits;
 
+    @SuppressWarnings("valuetype")
     public GenNumber(boolean fixBits)
     {
         super(Number.class);
@@ -30,9 +33,9 @@ public class GenNumber extends Generator<Number>
     }
 
     @Override
-    public Number generate(SourceOfRandomness sourceOfRandomness, @Nullable GenerationStatus generationStatus)
+    public @Value Number generate(SourceOfRandomness sourceOfRandomness, @Nullable GenerationStatus generationStatus)
     {
-        Number n;
+        @Value Number n;
         try
         {
             n = Utility.parseNumber(new GenNumberAsString(fixBits).generate(sourceOfRandomness, generationStatus));
@@ -41,18 +44,18 @@ public class GenNumber extends Generator<Number>
         {
             throw new RuntimeException(e);
         }
-        List<Number> rets = new ArrayList<>();
+        List<@Value Number> rets = new ArrayList<>();
         rets.add(n);
         if (n.doubleValue() == (double)n.intValue())
         {
             // If it fits in smaller, we may randomly choose to use smaller:
-            rets.add(BigDecimal.valueOf(n.intValue()));
+            rets.add(DataTypeUtility.value(BigDecimal.valueOf(DataTypeUtility.value(n.intValue()))));
             if ((long) n.intValue() == n.longValue())
-                rets.add(n.intValue());
+                rets.add(DataTypeUtility.value(n.intValue()));
             if ((long) n.shortValue() == n.longValue())
-                rets.add(n.shortValue());
+                rets.add(DataTypeUtility.value(n.shortValue()));
             if ((long) n.byteValue() == n.longValue())
-                rets.add(n.byteValue());
+                rets.add(DataTypeUtility.value(n.byteValue()));
         }
         return sourceOfRandomness.choose(rets);
     }

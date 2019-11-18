@@ -435,11 +435,13 @@ public class Utility
             return 0;
     }
 
-    public static Number getIntegerPart(Number number)
+    public static @Value Number getIntegerPart(@Value Number number)
     {
         if (number instanceof BigDecimal)
         {
-            return ((BigDecimal)number).toBigInteger();
+            @SuppressWarnings("valuetype")
+            @Value BigDecimal bigDecimal = new BigDecimal(((BigDecimal) number).toBigInteger());
+            return bigDecimal;
         }
         else
             return number;
@@ -722,7 +724,8 @@ public class Utility
         }
     }
 
-    public static <T> T withNumber(@Value Object num, ExFunction<Long, T> withLong, ExFunction<BigDecimal, T> withBigDecimal) throws InternalException, UserException
+    @SuppressWarnings("valuetype")
+    public static <T> T withNumber(@Value Object num, ExFunction<@Value Long, T> withLong, ExFunction<@Value BigDecimal, T> withBigDecimal) throws InternalException, UserException
     {
         if (num instanceof BigDecimal)
             return withBigDecimal.apply(Utility.cast(num, BigDecimal.class));

@@ -47,3 +47,16 @@ class DateTimeFormatter
 {
     public <T> @ImmediateValue T parse(CharSequence text, TemporalQuery<T> query);
 }
+package com.google.common.primitives;
+class Booleans
+{
+    public List<@ImmediateValue Boolean> asList(boolean[] values);
+}
+class Ints
+{
+    public List<@ImmediateValue Integer> asList(int[] values);
+}
+class Doubles
+{
+    public List<@ImmediateValue Double> asList(double[] values);
+}

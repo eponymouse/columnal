@@ -1146,7 +1146,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                                     {
                                         // Offer boolean
                                         @SuppressWarnings("recorded")
-                                        EqualExpression equalExpression = new EqualExpression(ImmutableList.of(columnReference, new NumericLiteral(1, null)), false);
+                                        EqualExpression equalExpression = new EqualExpression(ImmutableList.of(columnReference, new NumericLiteral(DataTypeUtility.value(1), null)), false);
                                         r.add(new TypeTransform(equalExpression, DataType.BOOLEAN));
                                     }
                                 }
@@ -1228,7 +1228,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                         public ImmutableList<TypeTransform> bool(GetValue<@Value Boolean> g) throws InternalException, UserException
                         {
                             @SuppressWarnings("recorded")
-                            @Recorded IfThenElseExpression ifThenElseExpression = IfThenElseExpression.unrecorded(columnReference, new NumericLiteral(1, null), new NumericLiteral(0, null));
+                            @Recorded IfThenElseExpression ifThenElseExpression = IfThenElseExpression.unrecorded(columnReference, new NumericLiteral(DataTypeUtility.value(1), null), new NumericLiteral(DataTypeUtility.value(0), null));
                             return ImmutableList.of(toText(), new TypeTransform(ifThenElseExpression, DataType.NUMBER));
                         }
 

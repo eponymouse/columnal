@@ -170,14 +170,14 @@ public class EditableRecordSet extends RecordSet
                 {
                     try
                     {
-                        List<Object> array = new ArrayList<>();
                         @NonNull @Value ListEx details = g.get(index);
+                        ImmutableList.Builder<@Value Object> array = ImmutableList.builderWithExpectedSize(details.size());
                         for (int indexInArray = 0; indexInArray < details.size(); indexInArray++)
                         {
                             // Need to look for indexInArray, not index, to get full list:
                             array.add(details.get(indexInArray));
                         }
-                        r.add(Either.right(DataTypeUtility.value(array)));
+                        r.add(Either.right(DataTypeUtility.value(array.build())));
                     }
                     catch (InvalidImmediateValueException e)
                     {

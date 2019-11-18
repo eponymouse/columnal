@@ -130,7 +130,7 @@ public class FromString
                         s.append(".").append(src.consumeNumbers());
                     }
                     
-                    return DataTypeUtility.value(Utility.parseNumber(s.toString()));
+                    return Utility.parseNumber(s.toString());
                 }
 
                 @Override

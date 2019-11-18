@@ -32,12 +32,12 @@ public class Absolute extends SingleNumericInOutFunction
             @Override
             public @Value Object _call() throws UserException, InternalException
             {
-                return DataTypeUtility.value(Utility.<Number>withNumber(arg(0), l -> {
+                return Utility.<@Value Number>withNumber(arg(0), l -> {
                     if (l == Long.MIN_VALUE)
-                        return BigDecimal.valueOf(l).negate();
+                        return DataTypeUtility.value(BigDecimal.valueOf(l).negate());
                     else
-                        return Math.abs(l);
-                }, BigDecimal::abs));
+                        return DataTypeUtility.value(Math.abs(l));
+                }, d -> DataTypeUtility.value(d));
             }
         };
     }

@@ -1041,7 +1041,7 @@ public abstract class DataType implements StyledShowable
         Either<String, NumberContext> numberContext = tryParse(p, DataParser::numberOrInvalid, NumberOrInvalidContext::invalidItem, NumberOrInvalidContext::number);
         if (numberContext == null)
             throw new UserException("Expected number value but found: \"" + p.getCurrentToken() + "\"");
-        return numberContext.<@Value Number>mapEx(number -> DataTypeUtility.value(Utility.parseNumber(number.getText().trim())));
+        return numberContext.<@Value Number>mapEx(number -> Utility.parseNumber(number.getText().trim()));
     }
 
     private static Either<String, @Value Number> loadNumber(DataParser2 p) throws UserException, InternalException
@@ -1049,7 +1049,7 @@ public abstract class DataType implements StyledShowable
         Either<String, DataParser2.NumberContext> numberContext = tryParse(p, DataParser2::numberOrInvalid, DataParser2.NumberOrInvalidContext::invalidItem, DataParser2.NumberOrInvalidContext::number);
         if (numberContext == null)
             throw new UserException("Expected number value but found: \"" + p.getCurrentToken() + "\"");
-        return numberContext.<@Value Number>mapEx(number -> DataTypeUtility.value(Utility.parseNumber(number.getText().trim())));
+        return numberContext.<@Value Number>mapEx(number -> Utility.parseNumber(number.getText().trim()));
     }
 
     private static Either<String, TaggedValue> loadTaggedValue(ImmutableList<TagType<DataType>> tags, DataParser p) throws UserException, InternalException

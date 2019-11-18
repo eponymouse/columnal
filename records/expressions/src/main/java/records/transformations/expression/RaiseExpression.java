@@ -121,7 +121,7 @@ public class RaiseExpression extends BinaryOpExpression
     @Override
     public @Value Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws UserException, InternalException
     {
-        return DataTypeUtility.value(Utility.raiseNumber(Utility.cast(lhsValue.value, Number.class), Utility.cast(rhsValue.value, Number.class)));
+        return Utility.raiseNumber(Utility.cast(lhsValue.value, Number.class), Utility.cast(rhsValue.value, Number.class));
     }
 
     @Override

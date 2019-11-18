@@ -33,7 +33,7 @@ public class RoundDP extends FunctionDefinition
             @Override
             public @Value Object _call() throws UserException, InternalException
             {
-                return DataTypeUtility.value(Utility.<Number>withNumber(arg(0, Number.class), x -> x, d -> d.setScale(intArg(1), RoundingMode.HALF_UP)));
+                return Utility.<@Value Number>withNumber(arg(0, Number.class), (@Value Long x) -> x, d -> DataTypeUtility.value(d.setScale(intArg(1), RoundingMode.HALF_UP)));
             }
         };
         

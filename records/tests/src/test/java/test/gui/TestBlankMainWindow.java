@@ -270,7 +270,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     public void propUndoAddAndEditData(@From(GenRandom.class) Random r) throws InternalException, UserException
     {
         GenNumber gen = new GenNumber();
-        Supplier<@Value Number> makeNumber = () -> DataTypeUtility.value(gen.generate(new SourceOfRandomness(r), null));
+        Supplier<@Value Number> makeNumber = () -> gen.generate(new SourceOfRandomness(r), null);
         @Value Number def = makeNumber.get();
         makeNewDataEntryTable(null, NEW_TABLE_POS, new Pair<>(DataType.NUMBER, def));
         TestUtil.sleep(200);

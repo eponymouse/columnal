@@ -1,5 +1,6 @@
 package records.importers;
 
+import annotation.qual.ImmediateValue;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
@@ -197,8 +198,8 @@ public class TextImporter implements Importer
                             }
                             else
                             {
-                                return Utility.parseNumberOpt(str).map(n -> {
-                                    return Either.<String, TaggedValue>right(new TaggedValue(1, DataTypeUtility.value(n), typeManager.getMaybeType()));
+                                return Utility.parseNumberOpt(str).map((@ImmediateValue Number n) -> {
+                                    return Either.<String, TaggedValue>right(new TaggedValue(1, n, typeManager.getMaybeType()));
                                 }).orElse(Either.<String, TaggedValue>left(str));
                             }
                         });

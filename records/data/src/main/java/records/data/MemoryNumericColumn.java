@@ -24,14 +24,14 @@ public class MemoryNumericColumn extends EditableColumn
     @OnThread(Tag.Any)
     private final @Value Number defaultValue;
 
-    private MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, Number defaultValue) throws InternalException
+    private MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, @Value Number defaultValue) throws InternalException
     {
         super(rs, title);
-        this.defaultValue = DataTypeUtility.value(defaultValue);
+        this.defaultValue = defaultValue;
         storage = new NumericColumnStorage(numberInfo, true);
     }
 
-    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, List<Either<String, Number>> values, Number defaultValue) throws InternalException
+    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, List<Either<String, Number>> values, @Value Number defaultValue) throws InternalException
     {
         this(rs, title, numberInfo, defaultValue);
         storage.addAll(values.stream());
@@ -39,7 +39,7 @@ public class MemoryNumericColumn extends EditableColumn
 
     public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, Stream<String> values) throws InternalException, UserException
     {
-        this(rs, title, numberInfo, 0);
+        this(rs, title, numberInfo, DataTypeUtility.value(0));
         for (String value : Utility.iterableStream(values))
         {
             storage.addRead(value);
@@ -61,7 +61,7 @@ public class MemoryNumericColumn extends EditableColumn
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        return new MemoryNumericColumn(rs, getName(), storage.getDisplayInfo(), storage.getAllCollapsed(0, shrunkLength), 0);
+        return new MemoryNumericColumn(rs, getName(), storage.getDisplayInfo(), storage.getAllCollapsed(0, shrunkLength), DataTypeUtility.value(0));
     }
 
     @Override

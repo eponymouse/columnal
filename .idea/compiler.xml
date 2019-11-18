@@ -166,7 +166,6 @@
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
-        <processor name="annotation.ValueTypeChecker" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processorPath>
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />

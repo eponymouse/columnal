@@ -1,6 +1,8 @@
 package test.expressions;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.identifier.qual.IdentifierBottom;
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -80,12 +82,12 @@ public class TestExpressionExplanation
 
     private static SimulationFunction<RecordSet, EditableColumn> bools(@ExpressionIdentifier String name, boolean... values)
     {
-        return rs -> new MemoryBooleanColumn(rs, new ColumnId(name), Utility.<Boolean, Either<String, Boolean>>mapList(Booleans.asList(values), Either::right), false);
+        return rs -> new MemoryBooleanColumn(rs, new ColumnId(name), Utility.<@ImmediateValue Boolean, Either<String, Boolean>>mapList(Booleans.asList(values), Either::right), false);
     }
 
     private static SimulationFunction<RecordSet, EditableColumn> nums(@ExpressionIdentifier String name, Number... values)
     {
-        return rs -> new MemoryNumericColumn(rs, new ColumnId(name), new NumberInfo(Unit.SCALAR), Utility.<Number, Either<String, Number>>mapList(Arrays.asList(values), Either::right), 0);
+        return rs -> new MemoryNumericColumn(rs, new ColumnId(name), new NumberInfo(Unit.SCALAR), Utility.<Number, Either<String, Number>>mapList(Arrays.asList(values), Either::right), DataTypeUtility.value(0));
     }
 
     private static SimulationFunction<RecordSet, EditableColumn> text(@ExpressionIdentifier String name, String... values)

@@ -117,7 +117,7 @@ public class ArrayExpression extends Expression
             fetchSubExpression(item, state, valuesBuilder);
         }
         ImmutableList<ValueResult> values = valuesBuilder.build();
-        return result(DataTypeUtility.value(Utility.mapList(values, v -> v.value)), state, values);
+        return result(DataTypeUtility.value(Utility.<ValueResult, @Value Object>mapList(values, v -> v.value)), state, values);
     }
 
     @Override

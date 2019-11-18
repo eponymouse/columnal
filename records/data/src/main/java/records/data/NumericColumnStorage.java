@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
@@ -384,18 +385,18 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
     }
     */
 
-    private Number getNonBlank(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+    private @ImmediateValue Number getNonBlank(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
         checkRange(index);
 
 
         // Guessing here to order most likely cases:
         if (bytes != null)
-            return bytes[index];
+            return DataTypeUtility.value(bytes[index]);
         else if (ints != null)
-            return ints[index];
+            return DataTypeUtility.value(ints[index]);
         else if (shorts != null)
-            return shorts[index];
+            return DataTypeUtility.value(shorts[index]);
         else if (longs != null)
         {
             if (longs[index] == SEE_BIGDEC)
@@ -407,10 +408,10 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
                 @Nullable BigDecimal bigDecimal = bigDecimals[index];
                 if (bigDecimal == null)
                     throw new InternalException("SEE_BIGDEC but null BigDecimal");
-                return bigDecimal;
+                return DataTypeUtility.value(bigDecimal);
             }
             else
-                return longs[index];
+                return DataTypeUtility.value(longs[index]);
         }
         throw new InternalException("All arrays null in NumericColumnStorage");
     }
@@ -462,7 +463,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
                 @Override
                 public @Value Number _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                 {
-                    return DataTypeUtility.value(NumericColumnStorage.this.getNonBlank(i, prog));
+                    return NumericColumnStorage.this.getNonBlank(i, prog);
                 }
 
                 @Override

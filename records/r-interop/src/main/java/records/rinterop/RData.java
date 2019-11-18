@@ -417,9 +417,9 @@ public class RData
                             return items.get(0).item.visit(new SpecificRVisitor<ImmutableList<String>>()
                             {
                                 @Override
-                                public ImmutableList<String> visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+                                public ImmutableList<String> visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
                                 {
-                                    return values;
+                                    return Utility.<@Value String, String>mapListI(values, v -> v);
                                 }
 
                                 @Override
@@ -630,7 +630,7 @@ public class RData
         return info.visit(new SpecificRVisitor<RValue>() {
 
             @Override
-            public RValue visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+            public RValue visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return string(values.get(index));
             }
@@ -693,7 +693,7 @@ public class RData
         public T visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException;
-        public T visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException;
+        public T visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException;
@@ -746,7 +746,7 @@ public class RData
         }
 
         @Override
-        public T visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+        public T visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
         {
             return makeDefault();
         }
@@ -809,7 +809,7 @@ public class RData
         }
 
         @Override
-        public T visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+        public T visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
         {
             throw new UserException("Unexpected type: list of strings");
         }
@@ -866,7 +866,7 @@ public class RData
                 if (values.length == 1)
                     return new Pair<>(DataType.BOOLEAN, DataTypeUtility.value(values[0]));
                 else
-                    return new Pair<>(DataType.array(DataType.BOOLEAN), DataTypeUtility.value(Booleans.asList(values)));
+                    return new Pair<>(DataType.array(DataType.BOOLEAN), DataTypeUtility.valueImmediate(Booleans.asList(values)));
             }
 
             @Override
@@ -875,20 +875,20 @@ public class RData
                 if (values.length == 1)
                     return new Pair<>(DataType.NUMBER, DataTypeUtility.value(values[0]));
                 else
-                    return new Pair<>(DataType.array(DataType.NUMBER), DataTypeUtility.value(Ints.asList(values)));
+                    return new Pair<>(DataType.array(DataType.NUMBER), DataTypeUtility.valueImmediate(Ints.asList(values)));
             }
 
             @Override
             public Pair<DataType, @Value Object> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 if (values.length == 1)
-                    return new Pair<>(DataType.NUMBER, DataTypeUtility.value(values[0]));
+                    return new Pair<>(DataType.NUMBER, DataTypeUtility.value(new BigDecimal(values[0])));
                 else
-                    return new Pair<>(DataType.array(DataType.NUMBER), DataTypeUtility.value(Doubles.asList(values)));
+                    return new Pair<>(DataType.array(DataType.NUMBER), DataTypeUtility.valueImmediate(Doubles.asList(values)));
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType, @Value Object> visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 if (values.size() == 1)
                     return new Pair<>(DataType.TEXT, DataTypeUtility.value(values.get(0)));
@@ -959,7 +959,7 @@ public class RData
             }
 
             @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return new Pair<>(rs -> new MemoryStringColumn(rs, columnName, Utility.mapList(values, v -> Either.<String, String>right(v)), ""), values.size());
             }
@@ -1002,22 +1002,55 @@ public class RData
             @Override
             public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                return new Pair<>(rs -> new MemoryNumericColumn(rs, columnName, NumberInfo.DEFAULT, IntStream.of(values).mapToObj(n -> Either.<String, Number>right(n)).collect(ImmutableList.<Either<String, Number>>toImmutableList()), 0L), values.length);
+                return new Pair<>(rs -> new MemoryNumericColumn(rs, columnName, NumberInfo.DEFAULT, IntStream.of(values).mapToObj(n -> Either.<String, Number>right(n)).collect(ImmutableList.<Either<String, Number>>toImmutableList()), DataTypeUtility.value(0)), values.length);
             }
 
             @Override
             public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                return new Pair<>(rs -> new MemoryNumericColumn(rs, columnName, NumberInfo.DEFAULT, DoubleStream.of(values).mapToObj(n -> {
-                    try
+                boolean hasNaNs = false;
+                for (int i = 0; i < values.length; i++)
+                {
+                    if (Double.isNaN(values[i]))
                     {
-                        return Either.<String, Number>right(DataTypeUtility.<Number>value(new BigDecimal(n)));
+                        hasNaNs = true;
+                        break;
                     }
-                    catch (NumberFormatException e)
+                }
+                if (hasNaNs)
+                {
+                    ImmutableList.Builder<Either<String, @Value TaggedValue>> maybeValues = ImmutableList.builderWithExpectedSize(values.length);
+                    for (int i = 0; i < values.length; i++)
                     {
-                        return Either.<String, Number>left(Double.toString(n));
+                        if (Double.isNaN(values[i]))
+                            maybeValues.add(Either.right(typeManager.maybeMissing()));
+                        else
+                            maybeValues.add(Either.right(typeManager.maybePresent(DataTypeUtility.value(new BigDecimal(values[i])))));
                     }
-                }).collect(ImmutableList.<Either<String, Number>>toImmutableList()), 0L), values.length);
+
+                    ImmutableList<Either<Unit, DataType>> typeVar = ImmutableList.of(Either.<Unit, DataType>right(DataType.NUMBER));
+                    DataType maybeBoolean = typeManager.getMaybeType().instantiate(typeVar, typeManager);
+                    return new Pair<>(rs -> new MemoryTaggedColumn(rs, columnName, typeManager.getMaybeType().getTaggedTypeName(), typeVar, maybeBoolean.apply(new SpecificDataTypeVisitor<ImmutableList<TagType<DataType>>>() {
+                        @Override
+                        public ImmutableList<TagType<DataType>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
+                        {
+                            return tags;
+                        }
+                    }), maybeValues.build(), typeManager.maybeMissing()), values.length);
+                }
+                else
+                {
+                    return new Pair<>(rs -> new MemoryNumericColumn(rs, columnName, NumberInfo.DEFAULT, DoubleStream.of(values).mapToObj(n -> {
+                        try
+                        {
+                            return Either.<String, Number>right(DataTypeUtility.<Number>value(new BigDecimal(n)));
+                        }
+                        catch (NumberFormatException e)
+                        {
+                            return Either.<String, Number>left(Double.toString(n));
+                        }
+                    }).collect(ImmutableList.<Either<String, Number>>toImmutableList()), DataTypeUtility.value(0)), values.length);
+                }
             }
 
             @Override
@@ -1112,7 +1145,7 @@ public class RData
             }
 
             @Override
-            public ImmutableList<RecordSet> visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<RecordSet> visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
@@ -1299,7 +1332,7 @@ public class RData
             }
 
             @Override
-            public @Nullable Void visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+            public @Nullable Void visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 b.append("String[" + values.size());
                 if (attributes != null)
@@ -1634,7 +1667,7 @@ public class RData
             @Override
             public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
             {
-                return visitor.visitStringList(values, attributes);
+                return visitor.visitStringList(Utility.<String, @Value String>mapListI(values, v -> DataTypeUtility.value(v)), attributes);
             }
         };
     }
@@ -1757,7 +1790,7 @@ public class RData
             }
 
             @Override
-            public @Nullable Void visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException
+            public @Nullable Void visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 writeHeader(STRING_VECTOR, attributes, null);
                 writeInt(values.size());

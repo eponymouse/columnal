@@ -226,7 +226,31 @@ public class DataTypeUtility
     }
 
     @SuppressWarnings("valuetype")
-    public static <T extends Number> @ImmediateValue T value(@UnknownIfValue T number)
+    public static @ImmediateValue Byte value(@UnknownIfValue Byte number)
+    {
+        return number;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @ImmediateValue Short value(@UnknownIfValue Short number)
+    {
+        return number;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @ImmediateValue Integer value(@UnknownIfValue Integer number)
+    {
+        return number;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @ImmediateValue BigDecimal value(@UnknownIfValue BigDecimal number)
+    {
+        return number;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @ImmediateValue Long value(@UnknownIfValue Long number)
     {
         return number;
     }
@@ -324,13 +348,13 @@ public class DataTypeUtility
     }
 
     @SuppressWarnings("valuetype")
-    public static Utility.@Value ListEx value(@UnknownIfValue List<@Value ? extends Object> list)
+    public static Utility.@Value ListEx value(@UnknownIfValue List<@Value ? extends @Value Object> list)
     {
         return new ListExList(list);
     }
 
     @SuppressWarnings("valuetype")
-    public static Utility.@ImmediateValue ListEx valueImmediate(@UnknownIfValue List<@ImmediateValue ? extends Object> list)
+    public static Utility.@ImmediateValue ListEx valueImmediate(@UnknownIfValue List<@ImmediateValue ? extends @ImmediateValue Object> list)
     {
         return new ListExList(list);
     }

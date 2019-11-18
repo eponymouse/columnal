@@ -185,7 +185,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     Pair<List<@Value Object>, Expression> numerator = make(DataType.number(new NumberInfo(numUnit)), maxLevels - 1);
                     Pair<List<@Value Object>, Expression> denominator = make(DataType.number(new NumberInfo(denomUnit)), maxLevels - 1);
                     // We avoid divide by zeros and return -7 in that case (arbitrary pick unlikely to come up by accident/bug):
-                    return map2(numerator, denominator, (top, bottom) -> Utility.compareValues(bottom, DataTypeUtility.value(0)) == 0 ? DataTypeUtility.value(-7) : DataTypeUtility.value(Utility.divideNumbers((Number) top, (Number) bottom)), (topE, bottomE) -> IfThenElseExpression.unrecorded(new EqualExpression(ImmutableList.of(bottomE, new NumericLiteral(0, makeUnitExpression(denomUnit))), false), new NumericLiteral(-7, makeUnitExpression(displayInfo.getUnit())), new DivideExpression(topE, bottomE)));
+                    return map2(numerator, denominator, (top, bottom) -> Utility.compareValues(bottom, DataTypeUtility.value(0)) == 0 ? DataTypeUtility.value(-7) : Utility.divideNumbers((Number) top, (Number) bottom), (topE, bottomE) -> IfThenElseExpression.unrecorded(new EqualExpression(ImmutableList.of(bottomE, new NumericLiteral(0, makeUnitExpression(denomUnit))), false), new NumericLiteral(-7, makeUnitExpression(displayInfo.getUnit())), new DivideExpression(topE, bottomE)));
                 }, /* TODO put RaiseExpression back again
                 () ->
                 {

@@ -158,7 +158,7 @@ public class DataTestUtil
 
     public static @Value Number generateNumberV(SourceOfRandomness r, GenerationStatus gs)
     {
-        return DataTypeUtility.value(new GenNumber().generate(r, gs));
+        return new GenNumber().generate(r, gs);
     }
 
     private static LocalDate MIN_DATE = LocalDate.of(1, 1, 1);

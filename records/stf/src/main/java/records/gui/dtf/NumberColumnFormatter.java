@@ -40,13 +40,14 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         for (DocumentTextField visibleCell : vis.visibleCells)
         {
             visibleCell.setUnfocusedAlignment(TextAlignment.RIGHT);
-            RecogniserDocument<Number> editorKit = visibleCell.getRecogniserDocument(Number.class);
+            @SuppressWarnings("valuetype")
+            RecogniserDocument<@Value Number> editorKit = visibleCell.getRecogniserDocument(Number.class);
             if (editorKit != null)
             {
-                @Nullable Number value = editorKit.getLatestValue().<@Nullable Number>either(err -> null, x -> x);
+                @Nullable @Value Number value = editorKit.getLatestValue().<@Nullable @Value Number>either(err -> null, x -> x);
                 if (value != null)
                 {
-                    visibleItems.add(new NumberDetails(visibleCell, DataTypeUtility.value(value)));
+                    visibleItems.add(new NumberDetails(visibleCell, value));
                 }
             }
         }

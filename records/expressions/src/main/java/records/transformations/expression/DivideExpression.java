@@ -72,7 +72,7 @@ public class DivideExpression extends BinaryOpExpression
     @OnThread(Tag.Simulation)
     public @Value Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws UserException, InternalException
     {
-        return DataTypeUtility.value(Utility.divideNumbers(Utility.cast(lhsValue.value, Number.class), Utility.cast(rhsValue.value, Number.class)));
+        return Utility.divideNumbers(Utility.cast(lhsValue.value, Number.class), Utility.cast(rhsValue.value, Number.class));
     }
 
     @Override

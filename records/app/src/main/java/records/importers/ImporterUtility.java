@@ -1,5 +1,6 @@
 package records.importers;
 
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
@@ -126,7 +127,7 @@ public class ImporterUtility
                     if (item.isEmpty() || item.trim().equals(or.getBlankString()))
                         return Either.<String, TaggedValue>right(new TaggedValue(0, null, mgr.getMaybeType()));
                     else
-                        return Utility.parseNumberOpt(inner.removePrefixAndSuffix(item)).map(n -> Either.<String, TaggedValue>right(new TaggedValue(1, DataTypeUtility.value(n), mgr.getMaybeType()))).orElse(Either.left(item));
+                        return Utility.parseNumberOpt(inner.removePrefixAndSuffix(item)).map((@ImmediateValue Number n) -> Either.<String, TaggedValue>right(new TaggedValue(1, n, mgr.getMaybeType()))).orElse(Either.left(item));
                 }), new TaggedValue(0, null, mgr.getMaybeType())));
             }
             else
