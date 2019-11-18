@@ -7,11 +7,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Booleans;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.*;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
@@ -23,6 +25,7 @@ import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
+import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
@@ -452,12 +455,20 @@ public class RData
             {
                 int vecLen = d.readInt();
                 boolean[] values = new boolean[vecLen];
+                boolean @MonotonicNonNull [] isNA = null;
                 for (int i = 0; i < vecLen; i++)
                 {
-                    values[i] = d.readInt() != 0;
+                    int n = d.readInt();
+                    values[i] = n != 0;
+                    if (n == 0x80000000)
+                    {
+                        if (isNA == null)
+                            isNA = new boolean[vecLen];
+                        isNA[i] = true;
+                    }
                 }
                 final @Nullable RValue attr = objHeader.readAttributes(d, atoms);
-                return logicalVector(values, attr);
+                return logicalVector(values, isNA, attr);
             }
             case DOUBLE_VECTOR: // Floating point vector
             {
@@ -681,7 +692,7 @@ public class RData
         // If attributes reveal this is a factor, it won't be called; visitFactorList will be instead
         public T visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException;
-        public T visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException;
+        public T visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitStringList(ImmutableList<String> values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<@Value TemporalAccessor> values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException;
@@ -711,7 +722,7 @@ public class RData
         }
 
         @Override
-        public T visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+        public T visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
         {
             return makeDefault();
         }
@@ -786,7 +797,7 @@ public class RData
         }
 
         @Override
-        public T visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+        public T visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
         {
             throw new UserException("Unexpected type: list of booleans");
         }
@@ -850,7 +861,7 @@ public class RData
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType, @Value Object> visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
             {
                 if (values.length == 1)
                     return new Pair<>(DataType.BOOLEAN, DataTypeUtility.value(values[0]));
@@ -961,9 +972,31 @@ public class RData
             }
 
             @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
             {
-                return new Pair<>(rs -> new MemoryBooleanColumn(rs, columnName, Booleans.asList(values).stream().map(n -> Either.<String, Boolean>right(n)).collect(ImmutableList.<Either<String, Boolean>>toImmutableList()), false), values.length);
+                if (isNA == null)
+                    return new Pair<>(rs -> new MemoryBooleanColumn(rs, columnName, Booleans.asList(values).stream().map(n -> Either.<String, Boolean>right(n)).collect(ImmutableList.<Either<String, Boolean>>toImmutableList()), false), values.length);
+                else
+                {
+                    ImmutableList.Builder<Either<String, @Value TaggedValue>> maybeValues = ImmutableList.builderWithExpectedSize(values.length);
+                    for (int i = 0; i < values.length; i++)
+                    {
+                        if (isNA[i])
+                            maybeValues.add(Either.right(typeManager.maybeMissing()));
+                        else
+                            maybeValues.add(Either.right(typeManager.maybePresent(DataTypeUtility.value(values[i]))));
+                    }
+                    
+                    ImmutableList<Either<Unit, DataType>> typeVar = ImmutableList.of(Either.<Unit, DataType>right(DataType.BOOLEAN));
+                    DataType maybeBoolean = typeManager.getMaybeType().instantiate(typeVar, typeManager);
+                    return new Pair<>(rs -> new MemoryTaggedColumn(rs, columnName, typeManager.getMaybeType().getTaggedTypeName(), typeVar, maybeBoolean.apply(new SpecificDataTypeVisitor<ImmutableList<TagType<DataType>>>() {
+                        @Override
+                        public ImmutableList<TagType<DataType>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
+                        {
+                            return tags;
+                        }
+                    }), maybeValues.build(), typeManager.maybeMissing()), values.length);
+                }
             }
 
             @Override
@@ -1085,7 +1118,7 @@ public class RData
             }
 
             @Override
-            public ImmutableList<RecordSet> visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<RecordSet> visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
@@ -1227,9 +1260,9 @@ public class RData
             }
 
             @Override
-            public @Nullable Void visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public @Nullable Void visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
             {
-                b.append("boolean[" + values.length);
+                b.append("boolean[" + values.length + (isNA != null ? "?" : ""));
                 if (attributes != null)
                 {
                     b.append(", attr=");
@@ -1414,7 +1447,7 @@ public class RData
                 {
                     bools[i] = g.get(i);
                 }
-                return booleanVector(bools, null);
+                return logicalVector(bools, null, null);
             }
 
             @Override
@@ -1432,7 +1465,60 @@ public class RData
             @Override
             public RValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
             {
-                throw new InternalException("TODO");
+                if (tagTypes.size() == 1)
+                {
+                    TagType<DataType> onlyTag = tagTypes.get(0);
+                    if (onlyTag.getInner() != null)
+                    {
+                        return onlyTag.getInner().fromCollapsed((i, prog) -> {
+                            @Value Object inner = g.getWithProgress(i, prog).getInner();
+                            if (inner == null)
+                                throw new InternalException("Null inner value on tag with inner type");
+                            return inner;
+                        }).applyGet(this);
+                    }
+                    else
+                    {
+                        return DataType.TEXT.fromCollapsed((i, prog) -> DataTypeUtility.value(onlyTag.getName())).applyGet(this);
+                    }
+                }
+                if (tagTypes.size() == 2)
+                {
+                    @Nullable DataType onlyInner = null;
+                    if (tagTypes.get(0).getInner() != null && tagTypes.get(1).getInner() == null)
+                        onlyInner = tagTypes.get(0).getInner();
+                    else if (tagTypes.get(0).getInner() == null && tagTypes.get(1).getInner() != null)
+                        onlyInner = tagTypes.get(1).getInner();
+                    if (onlyInner != null)
+                    {
+                        return onlyInner.fromCollapsed((i, prog) -> {
+                            @Value TaggedValue taggedValue = g.get(i);
+                            if (taggedValue.getInner() == null)
+                                throw new InternalException("TODO");
+                            return taggedValue.getInner();
+                        }).applyGet(this);
+                    }
+                }
+                if (tagTypes.stream().allMatch(tt -> tt.getInner() == null))
+                {
+                    int[] vals = new int[length];
+                    for (int i = 0; i < length; i++)
+                    {
+                        vals[i] = g.get(i).getTagIndex() + 1;
+                    }    
+                    
+                    // Convert to factors:
+                    return new RValue()
+                    {
+                        @Override
+                        public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+                        {
+                            return visitor.visitFactorList(vals, Utility.mapListI(tagTypes, tt -> tt.getName()));
+                        }
+                    };
+                }
+                
+                throw new UserException("Cannot convert complex tagged type " + typeName.getRaw() + " to R");
             }
 
             @Override
@@ -1488,18 +1574,6 @@ public class RData
         });
     }
 
-    private static RValue booleanVector(boolean[] values, @Nullable RValue attributes)
-    {
-        return new RValue()
-        {
-            @Override
-            public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
-            {
-                return visitor.visitLogicalList(values, attributes);
-            }
-        };
-    }
-
     private static RValue intVector(int[] values, @Nullable RValue attributes)
     {
         return new RValue()
@@ -1524,14 +1598,14 @@ public class RData
         };
     }
 
-    private static RValue logicalVector(boolean[] values, @Nullable RValue attributes)
+    private static RValue logicalVector(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes)
     {
         return new RValue()
         {
             @Override
             public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
             {
-                return visitor.visitLogicalList(values, attributes);
+                return visitor.visitLogicalList(values, isNA, attributes);
             }
         };
     }
@@ -1784,13 +1858,13 @@ public class RData
             }
 
             @Override
-            public @Nullable Void visitLogicalList(boolean[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public @Nullable Void visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
             {
                 writeHeader(LOGICAL_VECTOR, attributes, null);
                 writeInt(values.length);
-                for (boolean value : values)
+                for (int i = 0; i < values.length; i++)
                 {
-                    writeInt(value ? 1 : 0);
+                    writeInt(isNA != null && isNA[i] ? 0x80000000 : (values[i] ? 1 : 0));
                 }
                 writeAttributes(attributes);
                 return null;

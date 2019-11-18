@@ -137,7 +137,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
                     () -> JellyType.list(genDepth(typeManager, r, maxDepth - 1, gs))
             ));
         }
-        if ((typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED)) && maxDepth > 1)
+        if ((typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED) || typeKinds.contains(TypeKinds.MAYBE)) && maxDepth > 1)
             options.add(() -> genTagged(typeManager, r, maxDepth, gs));
         
         if (!availableTypeVars.isEmpty())

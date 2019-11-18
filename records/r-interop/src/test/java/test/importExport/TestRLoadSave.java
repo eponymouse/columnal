@@ -7,12 +7,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.Column;
@@ -29,12 +27,14 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.NumberInfo;
+import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.jellytype.JellyType.UnknownTypeException;
 import records.rinterop.RData;
 import records.rinterop.RData.RValue;
 import utility.Either;
@@ -55,7 +55,6 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 
 import static org.junit.Assert.assertEquals;
@@ -152,18 +151,35 @@ public class TestRLoadSave
     }
 
     @Test
-    @Ignore
+    @SuppressWarnings("valuetype")
     public void testImportRData6() throws Exception
     {
         @SuppressWarnings("nullness")
-        @NonNull URL resource = getClass().getClassLoader().getResource("mpfr.rds");
+        @NonNull URL resource = getClass().getClassLoader().getResource("na.rds");
         RValue loaded = RData.readRData(new File(resource.toURI()));
         System.out.println(RData.prettyPrint(loaded));
-        Pair<DataType, @Value Object> r = RData.convertRToTypedValue(new TypeManager(new UnitManager()), loaded);
-        assertEquals(DataType.NUMBER, r.getFirst());
-        DataTestUtil.assertValueEqual("Big number", DataTypeUtility.value(new BigDecimal("-92233720368547758085295")), r.getSecond());
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        RecordSet r = RData.convertRToTable(typeManager, loaded).get(0);
+        assertEquals(maybeType(typeManager, DataType.BOOLEAN), r.getColumns().get(0).getType().getType());
+        DataTestUtil.assertValueListEqual("Bool column", ImmutableList.of(new TaggedValue(1, true, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, false, typeManager.getMaybeType())), asList(r.getColumns().get(0)));
+        //DataTestUtil.assertValueEqual("Big number", DataTypeUtility.value(new BigDecimal("-92233720368547758085295")), r.getSecond());
     }
-    
+
+    private ImmutableList<@Value Object> asList(Column column) throws InternalException, UserException
+    {
+        ImmutableList.Builder<@Value Object> r = ImmutableList.builderWithExpectedSize(column.getLength());
+        for (int i = 0; i < column.getLength(); i++)
+        {
+            r.add(column.getType().getCollapsed(i));
+        }
+        return r.build();
+    }
+
+    private DataType maybeType(TypeManager typeManager, DataType dataType) throws TaggedInstantiationException, InternalException, UnknownTypeException
+    {
+        return typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(dataType)), typeManager);
+    }
+
     @Property(trials = 100)
     public void testRoundTrip(@From(GenRCompatibleRecordSet.class) KnownLengthRecordSet original) throws Exception
     {
