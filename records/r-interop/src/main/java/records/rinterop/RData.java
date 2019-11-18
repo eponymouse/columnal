@@ -48,6 +48,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -1460,6 +1462,8 @@ public class RData
 
                     return visitor.visitTemporalList(dateTimeInfo.getType(), Utility.<@Value TemporalAccessor, @Value TemporalAccessor>mapListI(values, v -> DataTypeUtility.valueZonedDateTime(((ZonedDateTime)v).withZoneSameInstant(zone))), makeClassAttributes("POSIXct", ImmutableMap.of("tzone", stringVector(zone.toString()))));
                 }
+                else if (dateTimeInfo.getType() == DateTimeType.TIMEOFDAY)
+                    return visitor.visitTemporalList(dateTimeInfo.getType(), values, null);
                 else
                     return visitor.visitTemporalList(dateTimeInfo.getType(), values, makeClassAttributes("Date", ImmutableMap.of()));
             }
@@ -1724,6 +1728,26 @@ public class RData
                         {
                             ZonedDateTime zdt = (ZonedDateTime) value;
                             writeDouble((double)zdt.toEpochSecond() + ((double)zdt.getNano() / 1_000_000_000.0));
+                        }
+                        writeAttributes(attributes);
+                        break;
+                    case TIMEOFDAY:
+                        writeHeader(DOUBLE_VECTOR, attributes, null);
+                        writeInt(values.size());
+                        for (TemporalAccessor value : values)
+                        {
+                            LocalTime lt = (LocalTime) value;
+                            writeDouble((double)lt.toNanoOfDay() / 1_000_000_000.0);
+                        }
+                        writeAttributes(attributes);
+                        break;
+                    case YEARMONTH:
+                        writeHeader(DOUBLE_VECTOR, attributes, null);
+                        writeInt(values.size());
+                        for (TemporalAccessor value : values)
+                        {
+                            YearMonth yearMonth = (YearMonth)value;
+                            writeDouble(yearMonth.atDay(1).toEpochDay());
                         }
                         writeAttributes(attributes);
                         break;

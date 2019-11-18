@@ -163,7 +163,7 @@ public class TestRLoadSave
         DataTestUtil.assertValueEqual("Big number", DataTypeUtility.value(new BigDecimal("-92233720368547758085295")), r.getSecond());
     }
     
-    @Property(trials = 10)
+    @Property(trials = 100)
     public void testRoundTrip(@When(seed=1L) @From(GenRCompatibleRecordSet.class) KnownLengthRecordSet original) throws Exception
     {
         // Need to get rid of any numbers which won't survive round trip:
@@ -206,6 +206,16 @@ public class TestRLoadSave
                     // R's double doesn't have enough precision for nanos, so we must only keep what can round trip through a double-valued instant:
                     switch (dateTimeInfo.getType())
                     {
+                        case TIMEOFDAY:
+                            for (int i = 0; i < length; i++)
+                            {
+                                @Value TemporalAccessor orig = g.get(i);
+                                double secs = (double)((LocalTime)orig).toNanoOfDay() / 1_000_000_000.0;
+                                @SuppressWarnings("nullness")
+                                @NonNull @ImmediateValue TemporalAccessor value = DataTypeUtility.value(dateTimeInfo, LocalTime.ofNanoOfDay((long) (Math.round(secs) * 1_000_000_000.0)));
+                                g.set(i, Either.right(value));
+                            }
+                            break;
                         case DATETIMEZONED:
                         case DATETIME:
                             for (int i = 0; i < length; i++)
@@ -223,6 +233,7 @@ public class TestRLoadSave
                                     throw new InternalException("Date cannot convert: " + orig);
                                 g.set(i, Either.<String, @Value TemporalAccessor>right(value));
                             }
+                            break;
                     }
                     
                     if (dateTimeInfo.getType() == DateTimeType.DATETIMEZONED && length > 1)
@@ -310,6 +321,11 @@ public class TestRLoadSave
                         @SuppressWarnings("nullness")
                         public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
                         {
+                            if (dateTimeInfo.getType() == DateTimeType.TIMEOFDAY && !(reloadedVal instanceof LocalTime))
+                            {
+                                @Value BigDecimal bd = Utility.toBigDecimal((Number)reloadedVal);
+                                return DataTypeUtility.value(dateTimeInfo, LocalTime.ofNanoOfDay(bd.multiply(new BigDecimal("1000000000")).longValue()));
+                            }
                             return DataTypeUtility.value(dateTimeInfo, (TemporalAccessor) reloadedVal);
                         }
                     });
