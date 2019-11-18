@@ -509,7 +509,7 @@ public class RData
             for (double value : values)
             {
                 @SuppressWarnings("valuetype")
-                @Value ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond((long) value), ZoneId.of(getString(getListItem(tzone, 0))));
+                @Value ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond((long) roundTowardsZero(value), (long) (1_000_000_000.0 * (value - roundTowardsZero(value)))), ZoneId.of(getString(getListItem(tzone, 0))));
                 b.add(zdt);
             }
             return temporalVector(new DateTimeInfo(DateTimeType.DATETIMEZONED), b.build());
@@ -520,11 +520,16 @@ public class RData
             for (double value : values)
             {
                 @SuppressWarnings("valuetype")
-                @Value LocalDateTime ldt = LocalDateTime.ofInstant(Instant.ofEpochSecond((long) value), ZoneId.of("UTC"));
+                @Value LocalDateTime ldt = LocalDateTime.ofInstant(Instant.ofEpochSecond((long) roundTowardsZero(value)), ZoneId.of("UTC"));
                 b.add(ldt);
             }
             return temporalVector(new DateTimeInfo(DateTimeType.DATETIME), b.build());
         }
+    }
+
+    private static double roundTowardsZero(double seconds)
+    {
+        return Math.signum(seconds) * Math.floor(Math.abs(seconds));
     }
 
     private static RValue dateVector(double[] values, @Nullable RValue attr) throws InternalException
@@ -1438,7 +1443,14 @@ public class RData
             @Override
             public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
             {
-                return visitor.visitTemporalList(dateTimeInfo.getType(), values, makeClassAttributes("Date", ImmutableMap.of()));
+                if (dateTimeInfo.getType() == DateTimeType.DATETIMEZONED && !values.isEmpty())
+                {
+                    ZoneId zone = ((ZonedDateTime) values.get(0)).getZone();
+
+                    return visitor.visitTemporalList(dateTimeInfo.getType(), Utility.<@Value TemporalAccessor, @Value TemporalAccessor>mapListI(values, v -> DataTypeUtility.valueZonedDateTime(((ZonedDateTime)v).withZoneSameInstant(zone))), makeClassAttributes("POSIXct", ImmutableMap.of("tzone", stringVector(zone.toString()))));
+                }
+                else
+                    return visitor.visitTemporalList(dateTimeInfo.getType(), values, makeClassAttributes("Date", ImmutableMap.of()));
             }
         };
     }
@@ -1521,6 +1533,11 @@ public class RData
         };
     }
 
+    private static RValue stringVector(String singleValue)
+    {
+        return stringVector(ImmutableList.of(singleValue), null);
+    }
+    
     private static RValue stringVector(ImmutableList<String> values, @Nullable RValue attributes)
     {
         return new RValue()
@@ -1683,7 +1700,9 @@ public class RData
                         writeInt(values.size());
                         for (TemporalAccessor value : values)
                         {
-                            writeDouble(((LocalDateTime)value).toEpochSecond(ZoneOffset.UTC));
+                            LocalDateTime ldt = (LocalDateTime) value;
+                            double seconds = (double)ldt.toEpochSecond(ZoneOffset.UTC) + (double)ldt.getNano() / 1_000_000_000.0;
+                            writeDouble(seconds / (60.0 * 60.0 * 24.0));
                         }
                         writeAttributes(attributes);
                         break;
@@ -1692,7 +1711,8 @@ public class RData
                         writeInt(values.size());
                         for (TemporalAccessor value : values)
                         {
-                            writeDouble(((ZonedDateTime)value).toEpochSecond());
+                            ZonedDateTime zdt = (ZonedDateTime) value;
+                            writeDouble((double)zdt.toEpochSecond() + ((double)zdt.getNano() / 1_000_000_000.0));
                         }
                         writeAttributes(attributes);
                         break;

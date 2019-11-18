@@ -294,6 +294,8 @@ public class DataTypeUtility
                 case DATETIME:
                     if (t instanceof LocalDateTime)
                         return t;
+                    else if (t instanceof LocalDate) // This is mainly for R import help
+                        return LocalDateTime.of((LocalDate)t, LocalTime.MIN);
                     else
                         return LocalDateTime.from(t);
                 case DATETIMEZONED:

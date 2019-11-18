@@ -1,13 +1,18 @@
 package test.importExport;
 
+import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.Column;
@@ -18,19 +23,39 @@ import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataType.FlatDataTypeVisitor;
+import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
+import records.data.datatype.DataTypeValue.GetValue;
+import records.data.datatype.NumberInfo;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.data.unit.UnitManager;
+import records.error.InternalException;
+import records.error.UserException;
 import records.rinterop.RData;
 import records.rinterop.RData.RValue;
+import utility.Either;
 import utility.Pair;
+import utility.TaggedValue;
+import utility.Utility;
+import utility.Utility.ListEx;
+import utility.Utility.Record;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 
 import static org.junit.Assert.assertEquals;
 
@@ -120,13 +145,129 @@ public class TestRLoadSave
         Pair<DataType, @Value Object> r = RData.convertRToTypedValue(new TypeManager(new UnitManager()), loaded);
         assertEquals(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), r.getFirst());
         @SuppressWarnings("valuetype")
-        @Value ZonedDateTime zdt = ZonedDateTime.of(2005, 10, 21, 18, 47, 22, 0, ZoneId.of("Europe/London"));
+        @Value ZonedDateTime zdt = ZonedDateTime.of(2005, 10, 21, 18, 47, 22, 0, ZoneId.of("America/New_York"));
         DataTestUtil.assertValueEqual("DateTimeZoned", zdt, r.getSecond());
+        assertEquals(zdt, r.getSecond());
+    }
+
+    @Test
+    @Ignore
+    public void testImportRData6() throws Exception
+    {
+        @SuppressWarnings("nullness")
+        @NonNull URL resource = getClass().getClassLoader().getResource("mpfr.rds");
+        RValue loaded = RData.readRData(new File(resource.toURI()));
+        System.out.println(RData.prettyPrint(loaded));
+        Pair<DataType, @Value Object> r = RData.convertRToTypedValue(new TypeManager(new UnitManager()), loaded);
+        assertEquals(DataType.NUMBER, r.getFirst());
+        DataTestUtil.assertValueEqual("Big number", DataTypeUtility.value(new BigDecimal("-92233720368547758085295")), r.getSecond());
     }
     
     @Property(trials = 10)
     public void testRoundTrip(@When(seed=1L) @From(GenRCompatibleRecordSet.class) KnownLengthRecordSet original) throws Exception
     {
+        // Need to get rid of any numbers which won't survive round trip:
+        for (Column column : original.getColumns())
+        {
+            column.getType().applyGet(new DataTypeVisitorGet<@Nullable Void>()
+            {
+                int length = column.getLength();
+                @Override
+                public @Nullable Void number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
+                {
+                    for (int i = 0; i < length; i++)
+                    {
+                        @Value Number orig = g.get(i);
+                        double d = orig.doubleValue();
+                        BigDecimal bd = new BigDecimal(d);
+                        if (Utility.compareNumbers(orig, bd) != 0)
+                        {
+                            g.set(i, Either.<String, @Value Number>right(DataTypeUtility.<BigDecimal>value(bd)));
+                        }
+                    }
+                    return null;
+                }
+
+                @Override
+                public @Nullable Void text(GetValue<@Value String> g) throws InternalException, UserException
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable Void bool(GetValue<@Value Boolean> g) throws InternalException, UserException
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable Void date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
+                {
+                    // R's double doesn't have enough precision for nanos, so we must only keep what can round trip through a double-valued instant:
+                    switch (dateTimeInfo.getType())
+                    {
+                        case DATETIMEZONED:
+                        case DATETIME:
+                            for (int i = 0; i < length; i++)
+                            {
+                                @Value TemporalAccessor orig = g.get(i);
+                                Instant origInstant = makeInstant(orig);
+                                double seconds = origInstant.getEpochSecond() + ((double)origInstant.getNano()) / 1_000_000_000.0;
+                                if (dateTimeInfo.getType() == DateTimeType.DATETIME)
+                                    seconds = Math.round(seconds / (60.0 * 60.0 * 24.0)) * (60.0 * 60.0 * 24.0);
+                                // From https://stackoverflow.com/a/38544355/412908
+                                double secondsRoundTowardsZero = Math.signum(seconds) * Math.floor(Math.abs(seconds));
+                                Instant instantFromDouble = Instant.ofEpochSecond((long) secondsRoundTowardsZero, (long) (1_000_000_000.0 * (seconds - secondsRoundTowardsZero)));
+                                @ImmediateValue TemporalAccessor value = DataTypeUtility.value(dateTimeInfo, dateTimeInfo.getType() == DateTimeType.DATETIMEZONED ? ZonedDateTime.ofInstant(instantFromDouble, ((ZonedDateTime) orig).getZone()) : LocalDateTime.ofInstant(instantFromDouble, ZoneId.of("UTC")));
+                                if (value == null)
+                                    throw new InternalException("Date cannot convert: " + orig);
+                                g.set(i, Either.<String, @Value TemporalAccessor>right(value));
+                            }
+                    }
+                    
+                    if (dateTimeInfo.getType() == DateTimeType.DATETIMEZONED && length > 1)
+                    {
+                        // R can only have one zone for the whole column,
+                        // so to round trip we must do same:
+                        ZoneId zoneId = ((ZonedDateTime)g.get(0)).getZone();
+                        for (int i = 1; i < length; i++)
+                        {
+                            g.set(i, Either.<String, @Value TemporalAccessor>right(DataTypeUtility.valueZonedDateTime(((ZonedDateTime) g.get(i)).withZoneSameInstant(zoneId))));
+                        }
+                    }
+                    return null;
+                }
+
+                private Instant makeInstant(@Value TemporalAccessor orig) throws InternalException
+                {
+                    if (orig instanceof ZonedDateTime)
+                        return Instant.from(orig);
+                    else if (orig instanceof LocalDateTime)
+                        return Instant.from(((LocalDateTime)orig).atOffset(ZoneOffset.UTC));
+                    else
+                        throw new InternalException("Cannot make instant from " + orig.getClass());
+                }
+
+                @Override
+                public @Nullable Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable Void record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable Void array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
+                {
+                    return null;
+                }
+            });
+        }
+        
         // We can only test us->R->us, because to test R->us->R we'd still need to convert at start and end (i.e. us->R->us->R->us which is the same).
         File f = File.createTempFile("columnaltest", "rds");
         RData.writeRData(f, RData.convertTableToR(original));
@@ -142,7 +283,17 @@ public class TestRLoadSave
             Column reloadedColumn = reloaded.getColumn(column.getName());
             for (int i = 0; i < original.getLength(); i++)
             {
-                DataTestUtil.assertValueEqual("Row " + i + " column " + column.getName(), column.getType().getCollapsed(i), reloadedColumn.getType().getCollapsed(i));
+                final @Value Object reloadedVal = reloadedColumn.getType().getCollapsed(i);
+                // Not all date types survive, so need to coerce:
+                @Value Object reloadedValCoerced = column.getType().getType().apply(new FlatDataTypeVisitor<@Value Object>(reloadedVal) {
+                    @Override
+                    @SuppressWarnings("nullness")
+                    public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+                    {
+                        return DataTypeUtility.value(dateTimeInfo, (TemporalAccessor)reloadedVal);
+                    }
+                });
+                DataTestUtil.assertValueEqual("Row " + i + " column " + column.getName(), column.getType().getCollapsed(i), reloadedValCoerced);
             }
         }
         
