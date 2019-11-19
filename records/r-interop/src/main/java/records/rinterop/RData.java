@@ -368,6 +368,7 @@ public class RData
                         }))
                             return items.get(0).item.visit(new SpecificRVisitor<ImmutableList<String>>()
                             {
+                                @SuppressWarnings("optional")
                                 @Override
                                 public ImmutableList<String> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
                                 {
@@ -869,6 +870,7 @@ public class RData
             }
 
             @Override
+            @SuppressWarnings("optional")
             public Pair<DataType, @Value Object> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 if (values.stream().allMatch(v -> v.isPresent()))
@@ -887,6 +889,7 @@ public class RData
                 }
             }
 
+            @SuppressWarnings("optional")
             @Override
             public Pair<DataType, @Value Object> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
@@ -967,6 +970,7 @@ public class RData
                 return visitStringList(ImmutableList.<Optional<@Value String>>of(Optional.<@Value String>ofNullable(s)), null);
             }
 
+            @SuppressWarnings("optional")
             @Override
             public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
@@ -976,6 +980,7 @@ public class RData
                     return makeMaybeColumn(DataType.TEXT, Utility.mapListI(values, v -> Either.<String, TaggedValue>right(v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing))));
             }
 
+            @SuppressWarnings("optional")
             @Override
             public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
