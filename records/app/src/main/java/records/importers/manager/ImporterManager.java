@@ -60,9 +60,8 @@ public class ImporterManager
     public void chooseAndImportFile(Window parent, TableManager tableManager, CellPosition destination, SimulationConsumerNoError<DataSource> onLoad)
     {
         ArrayList<ExtensionFilter> filters = new ArrayList<>();
-        filters.add(new ExtensionFilter(TranslationUtility.getString("importer.all.known"), registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream().flatMap(ImporterManager::streamSecond)).collect(Collectors.<String>toList())));
-        filters.addAll(registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream())
-                .map(p -> new ExtensionFilter(p.getFirst(), p.getSecond())).collect(Collectors.<ExtensionFilter>toList()));
+        filters.add(new ExtensionFilter(TranslationUtility.getString("importer.all.known"), registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream()).collect(Collectors.<String>toList())));
+        filters.addAll(registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream().map(ext -> new ExtensionFilter(imp.getName(), ext))).collect(Collectors.<ExtensionFilter>toList()));
         filters.add(new ExtensionFilter(TranslationUtility.getString("importer.all.files"), "*.*"));
 
         @Nullable File chosen = FXUtility.chooseFileOpen("data.import.dialogTitle", "dataImport", parent,
@@ -79,12 +78,6 @@ public class ImporterManager
                 FXUtility.logAndShowError("error.filePath", e);
             }
         }
-    }
-
-    // To avoid checker framework bug:
-    private static Stream<? extends String> streamSecond(Pair<String, ImmutableList<String>> p)
-    {
-        return p.getSecond().stream();
     }
 
     @OnThread(Tag.FXPlatform)
@@ -120,7 +113,7 @@ public class ImporterManager
         // Work out which importer will handle it:
         for (Importer importer : registeredImporters)
         {
-            if (importer.getSupportedFileTypes().stream().anyMatch((Pair<@Localized String, ImmutableList<String>> p) -> p.getSecond().stream().anyMatch(ext -> matches(file, ext))))
+            if (importer.getSupportedFileTypes().stream().anyMatch(ext -> matches(file, ext)))
             {
                 importer.importFile(parent, tableManager, destination, file, source, onLoad);
                 return;
@@ -277,7 +270,7 @@ public class ImporterManager
                         super.updateItem(item, empty);
                         if (item != null && !empty)
                         {
-                            setText(item.getName() + "\n" + item.getSupportedFileTypes().stream().map((Pair<@Localized String, ImmutableList<String>> p) -> p.getFirst() + "(" + p.getSecond().stream().collect(Collectors.joining(", ")) + ")").collect(Collectors.joining("; ")));
+                            setText(item.getName() + " (" + item.getSupportedFileTypes().stream().collect(Collectors.joining(", ")) + ")");
                         }
                     }
                 };
@@ -292,7 +285,7 @@ public class ImporterManager
         @RequiresNonNull("importerList")
         protected void guessImporterFromFileExtension(@UnknownInitialization(BorderPane.class) PickImporterPane this, String fileExtensionWithoutDot)
         {
-            Importer importer = registeredImporters.stream().filter(imp -> imp.getSupportedFileTypes().stream().anyMatch(p -> p.getSecond().contains(("*." + fileExtensionWithoutDot).toLowerCase()))).findFirst().orElse(null);
+            Importer importer = registeredImporters.stream().filter(imp -> imp.getSupportedFileTypes().stream().anyMatch(ext -> ext.equalsIgnoreCase("*." + fileExtensionWithoutDot))).findFirst().orElse(null);
             if (importer != null)
                 importerList.getSelectionModel().select(importer);
         }

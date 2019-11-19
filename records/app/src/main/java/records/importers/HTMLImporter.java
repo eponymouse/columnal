@@ -409,9 +409,9 @@ public class HTMLImporter implements Importer
     }
 
     @Override
-    public @OnThread(Tag.Any) ImmutableList<Pair<@Localized String, ImmutableList<String>>> getSupportedFileTypes()
+    public @OnThread(Tag.Any) ImmutableList<String> getSupportedFileTypes()
     {
-        return ImmutableList.of(new Pair<@Localized String, ImmutableList<String>>(TranslationUtility.getString("importer.html.files"), ImmutableList.of("*.html", "*.htm")));
+        return ImmutableList.of("*.html", "*.htm");
     }
 
     @Override

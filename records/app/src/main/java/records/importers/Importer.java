@@ -23,7 +23,7 @@ public interface Importer
      * and a list of file extensions (like "*.txt").
      */
     @OnThread(Tag.Any)
-    public ImmutableList<Pair<@Localized String, ImmutableList<String>>> getSupportedFileTypes();
+    public ImmutableList<String> getSupportedFileTypes();
 
     /**
      * Attempt to load the given file
