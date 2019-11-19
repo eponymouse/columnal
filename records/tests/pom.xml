@@ -292,7 +292,7 @@
                                 <annotationProcessors>
                                     <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
                                     <annotationProcessor>org.checkerframework.checker.units.UnitsChecker</annotationProcessor>
-                                    <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor>
+                                    <!-- <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor> -->
 
                                     <annotationProcessor>annotation.identifier.IdentifierChecker</annotationProcessor>
                                 </annotationProcessors>
