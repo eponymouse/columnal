@@ -9,6 +9,7 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.apache.commons.io.IOUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
@@ -47,6 +48,7 @@ import utility.Utility.ListEx;
 import utility.Utility.Record;
 
 import java.io.File;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -223,7 +225,16 @@ public class TestRLoadSave
                     RData.writeRData(f, tableAsR);
                     if (kind == 2)
                     {
-                        // TODO load R to load and save
+                        long lenBefore = f.length();
+                        String[] command = new String[] {"R",  "-e", "saveRDS(readRDS(\"" + f.getAbsolutePath() + "\"),\"" + f.getAbsolutePath() + "\");"};
+                        Process process = Runtime.getRuntime().exec(command);
+                        StringWriter stdout = new StringWriter();
+                        IOUtils.copy(process.getInputStream(), stdout, StandardCharsets.UTF_8);
+                        StringWriter stderr = new StringWriter();
+                        IOUtils.copy(process.getErrorStream(), stderr, StandardCharsets.UTF_8);
+                        assertEquals("stdout: " + stdout.toString() + "stderr: " + stderr.toString(), 0, process.waitFor());
+                        long lenAfter = f.length();
+                        System.out.println("Length before R: " + lenBefore + " after: " + lenAfter);
                     }
                     roundTripped = RData.readRData(f);
                     f.delete();

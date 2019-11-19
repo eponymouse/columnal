@@ -79,7 +79,7 @@ public class RData
     public static final int STRING_VECTOR = 16;
     public static final int GENERIC_VECTOR = 19;
     public static final int PAIR_LIST = 2;
-    public static final int NIL = 0;
+    public static final int NIL = 254;
     public static final int NA_AS_INTEGER = 0x80000000;
 
     private static class V2Header
@@ -102,67 +102,10 @@ public class RData
     private static final class TypeHeader
     {
         private final int headerBits;
-        private final int pairListAttributes;
-        private final int pairListTag;
-        private final int pairListRef;
-        private final boolean factor;
-        
         
         public TypeHeader(DataInputStream d, HashMap<Integer, String> atoms) throws IOException, InternalException, UserException
         {
             headerBits = d.readInt();
-            /*
-            if ((headerBits & 0xFF) == 2)
-            {
-                if ((headerBits & 0x200) != 0)
-                {
-                    // Attributes
-                    pairListAttributes = d.readInt();
-                }
-                else
-                    pairListAttributes = 0;
-
-                if ((headerBits & 0x400) != 0)
-                {
-                    // Attributes
-                    pairListTag = d.readInt();
-                }
-                else
-                    pairListTag = 0;
-                
-                boolean factor[] = new boolean[1];
-                
-                if (pairListTag == 1)
-                {
-                    pairListRef = readItem(d, atoms).visit(new SpecificRVisitor<Integer>()
-                    {
-                        @Override
-                        public Integer visitString(String s) throws InternalException, UserException
-                        {
-                            // TODO this isn't the right check, look at class=factor
-                            if (s.equals("levels"))
-                                factor[0] = true;
-                            return addAtom(atoms, s);
-                        }
-                    });
-                }
-                else if ((pairListTag & 0xFF) == 0xFF)
-                {
-                    pairListRef = pairListTag >>> 8;
-                }
-                else
-                {
-                    pairListRef = 0;
-                }
-                this.factor = factor[0];
-            }
-            else*/
-            {
-                pairListAttributes = 0;
-                pairListTag = 0;
-                pairListRef = 0;
-                factor = false;
-            }
         }
 
         private @Nullable RValue readAttributes(DataInputStream d, HashMap<Integer, String> atoms) throws IOException, UserException, InternalException
@@ -227,12 +170,12 @@ public class RData
         return newKey;
     }
     
-    private static String getAtom(HashMap<Integer, String> atoms, int key) throws InternalException
+    private static String getAtom(HashMap<Integer, String> atoms, int key) throws UserException
     {
         String atom = atoms.get(key);
         if (atom != null)
             return atom;
-        throw new InternalException("Could not find atom: " + key + " in atoms sized: " + atoms.size());
+        throw new UserException("Could not find atom: " + key + " in atoms sized: " + atoms.size());
     }
     
     private static ColumnId getColumnName(@Nullable RValue listColumnNames, int index) throws UserException, InternalException
@@ -301,7 +244,6 @@ public class RData
         switch (objHeader.getType())
         {
             case NIL: // Nil
-            case 254: // Pseudo-nil
                 return new RValue() {
 
                     @Override
@@ -972,13 +914,13 @@ public class RData
             @Override
             public Pair<DataType, @Value Object> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                throw new InternalException("TODO generic list to single value: " + prettyPrint(rValue));
+                throw new UserException("List found when single value expected: " + prettyPrint(rValue));
             }
 
             @Override
             public Pair<DataType, @Value Object> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
             {
-                throw new InternalException("TODO pair list to single value: "  + prettyPrint(rValue));
+                throw new UserException("List found when single value expected: " + prettyPrint(rValue));
             }
 
             @Override
@@ -1182,7 +1124,7 @@ public class RData
                         return asFactors;
                 }
                 
-                throw new InternalException("TODO pair list to column: " + prettyPrint(rValue));
+                throw new UserException("Pair list found when column expected: " + prettyPrint(rValue));
             }
         });
     }
@@ -1659,7 +1601,7 @@ public class RData
                                             return seconds;
                                         }).orElse(Double.NaN)).toArray(), makeClassAttributes("POSIXct", ImmutableMap.of()));
                                 }
-                                throw new InternalException("TODO: " + dateTimeInfo.getType());
+                                throw new InternalException("Unsupported date-time type: " + dateTimeInfo.getType());
                             }
 
                             @Override
@@ -1713,13 +1655,13 @@ public class RData
             @Override
             public RValue record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
             {
-                throw new InternalException("TODO");
+                throw new UserException("Cannot convert records to R");
             }
 
             @Override
             public RValue array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
             {
-                throw new InternalException("TODO");
+                throw new UserException("Cannot convert lists to R");
             }
         });
     }
@@ -1864,9 +1806,11 @@ public class RData
         // TODO compress
         d.writeByte('X');
         d.writeByte('\n');
-        d.writeInt(0);
-        d.writeInt(0);
-        d.writeInt(0);
+        d.writeInt(3);
+        d.writeInt(0x03_06_01); // We should match R 3.6.1
+        d.writeInt(0x03_05_00);
+        d.writeInt("UTF-8".length());
+        d.writeBytes("UTF-8");
         topLevel.visit(new RVisitor<@Nullable Void>()
         {
             private void writeInt(int value) throws UserException
@@ -2043,8 +1987,6 @@ public class RData
                         }
                         writeAttributes(attributes);
                         break;
-                    default:
-                        throw new InternalException("TODO: " + dateTimeType);
                 }
                 return null;
             }
@@ -2142,6 +2084,8 @@ public class RData
                 return null;
             }
         });
+        d.flush();
+        d.close();
     }
 
 }
