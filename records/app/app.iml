@@ -51,6 +51,7 @@
     <orderEntry type="library" name="Maven: ch.obermuhlner:big-math:2.0.0" level="project" />
     <orderEntry type="module" module-name="lex-editor" />
     <orderEntry type="module" module-name="transformations" />
+    <orderEntry type="module" module-name="r-interop" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:28.1-jre" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:failureaccess:1.0.1" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava" level="project" />

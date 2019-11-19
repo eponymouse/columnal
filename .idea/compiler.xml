@@ -164,9 +164,6 @@
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/tests/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
-        <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
-        <processor name="org.checkerframework.checker.units.UnitsChecker" />
-        <processor name="annotation.identifier.IdentifierChecker" />
         <processorPath>
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />

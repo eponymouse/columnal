@@ -22,6 +22,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.exporters.CSVExporter;
 import records.exporters.ExcelExporter;
 import records.exporters.HTMLExporter;
+import records.exporters.RExporter;
 import records.exporters.manager.ExporterManager;
 import records.gui.MainWindow.MainWindowActions;
 import records.plugins.PluginManager;
@@ -210,6 +211,7 @@ public class Main extends Application
         ExporterManager.getInstance().registerExporter(new CSVExporter());
         ExporterManager.getInstance().registerExporter(new HTMLExporter());
         ExporterManager.getInstance().registerExporter(new ExcelExporter());
+        ExporterManager.getInstance().registerExporter(new RExporter());
         Log.normal("Registered exporters");
     }
 
