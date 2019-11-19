@@ -19,6 +19,7 @@ import records.transformations.function.core.TypeOf;
 import records.transformations.function.datetime.AddDays;
 import records.transformations.function.datetime.DaysBetween;
 import records.transformations.function.datetime.SecondsBetween;
+import records.transformations.function.datetime.YearsBetween;
 import records.transformations.function.list.*;
 import records.transformations.function.lookup.LookupFunctions;
 import records.transformations.function.math.Logarithm;
@@ -101,7 +102,8 @@ public class FunctionList
             new Sum(),
             new ToString(),
             new TypeOf(),
-            new Xor()
+            new Xor(),
+            new YearsBetween()
         ).stream(),
             FromString.getFunctions().stream(),
             LookupFunctions.getLookupFunctions().stream(),

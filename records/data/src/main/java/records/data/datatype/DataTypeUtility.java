@@ -381,7 +381,7 @@ public class DataTypeUtility
     @OnThread(Tag.Simulation)
     public static String valueToString(@Value Object item) throws UserException, InternalException
     {
-        return valueToString(item, null, false);
+        return valueToString(item, null, false, null);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -389,15 +389,23 @@ public class DataTypeUtility
     {
         return Utility.launderSimulationEx(() -> valueToString(item));
     }
+    
+    public static interface Truncater
+    {
+        public String truncateNumber(@Value Number number) throws InternalException, UserException;
+        // TODO also allow list truncation
+    }
 
     // If asExpressionOfType != null, convert to Expression, else convert just to value
     @OnThread(Tag.Simulation)
-    public static String valueToString(@Value Object item, @Nullable DataType asExpressionOfType, boolean surroundedByBrackets) throws UserException, InternalException
+    public static String valueToString(@Value Object item, @Nullable DataType asExpressionOfType, boolean surroundedByBrackets, @Nullable Truncater truncater) throws UserException, InternalException
     {
         if (item instanceof Number)
         {
             String number;
-            if (item instanceof BigDecimal)
+            if (truncater != null)
+                number = truncater.truncateNumber(Utility.cast(item, Number.class));
+            else if (item instanceof BigDecimal)
             {
                 if (Utility.isIntegral(item))
                 {
@@ -476,9 +484,9 @@ public class DataTypeUtility
             {
                 @Nullable DataType typeInner = asExpressionOfTaggedType == null ? null : Utility.getI(asExpressionOfTaggedType.getSecond(), tv.getTagIndex()).getInner();
                 if (asExpressionOfTaggedType != null)
-                    return "@call " + tagName + "(" + valueToString(tvInner, typeInner, true) + ")";
+                    return "@call " + tagName + "(" + valueToString(tvInner, typeInner, true, truncater) + ")";
                 else
-                    return tagName + "(" + valueToString(tvInner, null, true) + ")";
+                    return tagName + "(" + valueToString(tvInner, null, true, truncater) + ")";
             }
             else
             {
@@ -507,7 +515,7 @@ public class DataTypeUtility
                     s.append(", ");
                 first = false;
                 s.append(entry.getKey()).append(": ");
-                s.append(valueToString(entry.getValue(), fieldTypes == null ? null : Utility.get(fieldTypes, entry.getKey()), false));
+                s.append(valueToString(entry.getValue(), fieldTypes == null ? null : Utility.get(fieldTypes, entry.getKey()), false, truncater));
             }
             if (!surroundedByBrackets)
                 s.append(")");
@@ -528,7 +536,7 @@ public class DataTypeUtility
                         return inner;
                     }
                 });
-                s.append(valueToString(listEx.get(i), innerType, false));
+                s.append(valueToString(listEx.get(i), innerType, false, truncater));
             }
             return s.append("]").toString();
         }

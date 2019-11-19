@@ -29,6 +29,8 @@
 @UNIT g "Grams"
 @UNIT kg "Kilograms" = 1000 * g
 @UNIT mg "Milligrams" = 10^-3 * g
+@UNIT lb "Pounds Avoirdupois" = 454 * g
+@UNIT oz "Ounces Avoirdupois" = 28.35 * g 
 
 @CATEGORY "Frequency"
 @UNIT Hz "Hertz"

@@ -224,7 +224,9 @@ public class Main extends Application
         if (SystemUtils.IS_OS_WINDOWS)
             os = "windows";
         else if (SystemUtils.IS_OS_MAC)
-            os = "macx86";
+            os = "mac-x86";
+        else if (SystemUtils.IS_OS_LINUX)
+            os = "linux-x86";
         else
             return Optional.empty();
         

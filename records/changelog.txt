@@ -11,3 +11,9 @@ Add Linux version, fix name resolution bugs.
 - Linux build is now available for x86_64 architecture.
 - Fixed some name resolution bugs.
 - Improved some visual styling.
+
+Version 0.6.2 (YYYY-MM-DD)
+==========================
+
+- Added a couple more weight units (lb, oz)
+- Added a "years between" function.

@@ -23,6 +23,7 @@ import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeUtility.Truncater;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager;
@@ -54,6 +55,8 @@ import utility.Pair;
 import utility.SimulationConsumer;
 import utility.Utility;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -402,7 +405,26 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
         else
         {
-            return StyledString.concat(Expression.this.toDisplay(DisplayType.SIMPLE, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(value)), using);
+            // TODO hyperlink truncated items to allow displaying their full value
+            return StyledString.concat(Expression.this.toDisplay(DisplayType.SIMPLE, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(value, null, false, new Truncater()
+            {
+                @Override
+                public String truncateNumber(@Value Number number) throws InternalException, UserException
+                {
+                    if (!Utility.isIntegral(number))
+                    {
+                        // From https://stackoverflow.com/questions/7572309/any-neat-way-to-limit-significant-figures-with-bigdecimal
+                        BigDecimal bd = Utility.toBigDecimal(number);
+                        int targetSF = 6;
+                        int newScale = targetSF - bd.precision() + bd.scale();
+
+                        bd = bd.setScale(newScale, RoundingMode.HALF_UP);
+                        return DataTypeUtility.value(bd).toPlainString() + "\u2026";
+                    }
+                    // Use default behaviour:
+                    return DataTypeUtility.valueToString(number);
+                }
+            })), using);
         }
     }
 

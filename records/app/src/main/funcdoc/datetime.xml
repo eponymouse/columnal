@@ -164,6 +164,37 @@
             <output>@call function\\from text("2001-02-03 04:56 America/Vancouver")</output>
         </example>
     </function>
+
+    <function name="years between">
+        <argType name="start">Date</argType>
+        <argType name="end">Date</argType>
+        <returnType name="days">Number{year}</returnType>
+        <description>
+            <p>Calculates the number of years between two dates.</p>
+            <p>If the first date is before the second date, the returned number is positive.  If the first date is after the second date, the returned number will be negative.</p>
+            <!-- <p>If you just want the whole number of years, you may want to pass the return to floor</p> -->
+        </description>
+        <!-- Function is not symmetric
+        <equivalence>
+            <forany name="a">Date</forany>
+            <forany name="b">Date</forany>
+            <lhs>@call function\\years between(a, b)</lhs>
+            <rhs>-1 * @call function\\years between(b, a)</rhs>
+        </equivalence>
+        -->
+        <example>
+            <inputArg>(date{4 April 1999}, date{4 April 2000})</inputArg>
+            <output>1{year}</output>
+        </example>
+        <example>
+            <inputArg>(date{4 April 1999}, date{5 April 2000})</inputArg>
+            <output>1{year} + (1{year}/365)</output>
+        </example>
+        <example>
+            <inputArg>(date{4 February 1999}, date{5 February 2000})</inputArg>
+            <output>1{year} + (1{year}/366)</output>
+        </example>
+    </function>
     
     <function name="days between">
         <argType name="start">Date</argType>

@@ -99,7 +99,7 @@ public abstract class GenExpressionValueBase extends GenValueBaseE<ExpressionVal
     {
         try
         {
-            return TestUtil.parseExpression(DataTypeUtility.valueToString(object, dataType, false), dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+            return TestUtil.parseExpression(DataTypeUtility.valueToString(object, dataType, false, null), dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         }
         catch (InternalException | UserException e)
         {
