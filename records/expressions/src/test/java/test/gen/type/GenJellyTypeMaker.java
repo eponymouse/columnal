@@ -8,6 +8,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.com.google.common.collect.Sets;
 import records.data.DataTestUtil;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -35,18 +36,19 @@ import java.util.List;
 /**
  * Generates a generator for jelly types
  */
+@SuppressWarnings("recorded")
 public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
 {
     public static enum TypeKinds {
         NUM_TEXT_TEMPORAL,
         BOOLEAN,
         RECORD_LIST,
-        MAYBE,
+        MAYBE_UNNESTED,
         OTHER_BUILTIN_TAGGED, // besides maybe
         NEW_TAGGED
     }
 
-    private final ImmutableSet<TypeKinds> typeKinds;
+    private final ImmutableSet<TypeKinds> startingTypeKinds;
     private final ImmutableSet<@ExpressionIdentifier String> availableTypeVars;
     private final boolean mustHaveValues;
 
@@ -90,7 +92,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
     public GenJellyTypeMaker(ImmutableSet<TypeKinds> typeKinds, ImmutableSet<@ExpressionIdentifier String> availableTypeVars, boolean mustHaveValues)
     {
         super(JellyTypeMaker.class);
-        this.typeKinds = typeKinds;
+        this.startingTypeKinds = typeKinds;
         this.availableTypeVars = availableTypeVars;
         this.mustHaveValues = mustHaveValues;
     }
@@ -107,7 +109,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
                     return new UnitManager(null);
                 else */
             TypeManager typeManager = new TypeManager(new UnitManager());
-            return new JellyTypeMaker(typeManager, () -> genDepth(typeManager, r, 3, generationStatus));
+            return new JellyTypeMaker(typeManager, () -> genDepth(typeManager, r, 3, generationStatus, startingTypeKinds));
         }
         catch (InternalException | UserException e)
         {
@@ -115,7 +117,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
         }
     }
 
-    private JellyType genDepth(TypeManager typeManager, SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws UserException, InternalException
+    private JellyType genDepth(TypeManager typeManager, SourceOfRandomness r, int maxDepth, GenerationStatus gs, ImmutableSet<TypeKinds> typeKinds) throws UserException, InternalException
     {
         List<ExSupplier<JellyType>> options = new ArrayList<>();
         if (typeKinds.contains(TypeKinds.NUM_TEXT_TEMPORAL))
@@ -133,12 +135,12 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
         if (maxDepth > 1 && typeKinds.contains(TypeKinds.RECORD_LIST))
         {
             options.addAll(Arrays.asList(
-                    () -> JellyType.record(DataTestUtil.<Pair<@ExpressionIdentifier String, JellyType>>makeList(r, 2, 5, () -> new Pair<>(DataTestUtil.generateExpressionIdentifier(r), genDepth(typeManager, r, maxDepth - 1, gs))).stream().collect(ImmutableMap.<Pair<@ExpressionIdentifier String, JellyType>, @ExpressionIdentifier String, Field>toImmutableMap((Pair<@ExpressionIdentifier String, JellyType> p) -> p.getFirst(), p -> new Field(p.getSecond(), true), (Field a, Field b) -> a))),
-                    () -> JellyType.list(genDepth(typeManager, r, maxDepth - 1, gs))
+                    () -> JellyType.record(DataTestUtil.<Pair<@ExpressionIdentifier String, JellyType>>makeList(r, 2, 5, () -> new Pair<>(DataTestUtil.generateExpressionIdentifier(r), genDepth(typeManager, r, maxDepth - 1, gs, typeKinds))).stream().collect(ImmutableMap.<Pair<@ExpressionIdentifier String, JellyType>, @ExpressionIdentifier String, Field>toImmutableMap((Pair<@ExpressionIdentifier String, JellyType> p) -> p.getFirst(), p -> new Field(p.getSecond(), true), (Field a, Field b) -> a))),
+                    () -> JellyType.list(genDepth(typeManager, r, maxDepth - 1, gs, typeKinds))
             ));
         }
-        if ((typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED) || typeKinds.contains(TypeKinds.MAYBE)) && maxDepth > 1)
-            options.add(() -> genTagged(typeManager, r, maxDepth, gs));
+        if ((typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED) || typeKinds.contains(TypeKinds.MAYBE_UNNESTED)) && maxDepth > 1)
+            options.add(() -> genTagged(typeManager, r, maxDepth, gs, typeKinds));
         
         if (!availableTypeVars.isEmpty())
             options.add(() -> JellyType.typeVariable(r.choose(availableTypeVars)));
@@ -158,7 +160,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
             try
             {
                 TypeManager typeManager = new TypeManager(new UnitManager());
-                return new JellyTypeMaker(typeManager, () -> genTagged(typeManager, sourceOfRandomness, 3, generationStatus));
+                return new JellyTypeMaker(typeManager, () -> genTagged(typeManager, sourceOfRandomness, 3, generationStatus, ImmutableSet.copyOf(TypeKinds.values())));
             }
             catch (InternalException | UserException e)
             {
@@ -167,13 +169,13 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
         }
     }
 
-    protected JellyType genTagged(TypeManager typeManager, SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws InternalException, UserException
+    protected JellyType genTagged(TypeManager typeManager, SourceOfRandomness r, int maxDepth, GenerationStatus gs, ImmutableSet<TypeKinds> typeKinds) throws InternalException, UserException
     {
         TaggedTypeDefinition typeDefinition = null;
         List<TaggedTypeDefinition> pool = new ArrayList<>();
         if (typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED))
             pool.addAll(typeManager.getKnownTaggedTypes().values());
-        else if (typeKinds.contains(TypeKinds.MAYBE))
+        else if (typeKinds.contains(TypeKinds.MAYBE_UNNESTED) || typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED))
             pool.add(typeManager.getMaybeType());
         
         pool.addAll(typeManager.getUserTaggedTypes().values());
@@ -209,7 +211,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
             if (r.nextInt(3) == 1)
                 types = new ArrayList<>();
             else
-                types = new ArrayList<>(DataTestUtil.makeList(r, 1, 10, () -> genDepth(typeManager, r, maxDepth - 1, gs)));
+                types = new ArrayList<>(DataTestUtil.makeList(r, 1, 10, () -> genDepth(typeManager, r, maxDepth - 1, gs, typeKinds)));
             // Then those with inner types, making sure we have at least one:
             int extraNulls = r.nextInt(5) + (types.isEmpty() ? 1 : 0);
             for (int i = 0; i < extraNulls; i++)
@@ -231,7 +233,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
         }
         return JellyType.tagged(typeDefinition.getTaggedTypeName(), Utility.mapListExI(typeDefinition.getTypeArguments(), (Pair<TypeVariableKind, String> arg) -> {
             if (arg.getFirst() == TypeVariableKind.TYPE)
-                return Either.right(genDepth(typeManager, r, maxDepth - 1, gs));
+                return Either.right(genDepth(typeManager, r, maxDepth - 1, gs, ImmutableSet.<TypeKinds>copyOf(Sets.<TypeKinds>difference(typeKinds, ImmutableSet.<TypeKinds>of(TypeKinds.MAYBE_UNNESTED)))));
             else
                 return Either.left(JellyUnit.fromConcrete(new GenUnit().generate(r, gs)));
         }));

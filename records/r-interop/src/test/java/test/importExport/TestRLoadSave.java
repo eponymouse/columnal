@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -57,6 +58,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 
@@ -161,7 +163,7 @@ public class TestRLoadSave
         System.out.println(RData.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(new UnitManager());
         RecordSet r = RData.convertRToTable(typeManager, loaded).get(0);
-        // df <- data.frame(c(TRUE, NA, FALSE), c(36, NA, -35.2), c(1, NA, 2), factor(c("A", NA, "B")), as.character(c("Hello", NA, "Bye")), c(ISOdate(2005,10,21,18,47,22,tz="America/New_York"), NA, NA))
+        // df <- data.frame(c(TRUE, NA, FALSE), c(36, NA, -35.2), c(1, NA, 2), factor(c("A", NA, "B")), as.character(c("Hello", NA, "Bye")), c(ISOdate(2005,10,21,18,47,22,tz="America/New_York"), NA, NA), stringsAsFactors=FALSE)
         
         assertEquals(maybeType(typeManager, DataType.BOOLEAN), r.getColumns().get(0).getType().getType());
         DataTestUtil.assertValueListEqual("Bool column", ImmutableList.of(new TaggedValue(1, true, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, false, typeManager.getMaybeType())), asList(r.getColumns().get(0)));
@@ -202,119 +204,7 @@ public class TestRLoadSave
         // Need to get rid of any numbers which won't survive round trip:
         for (Column column : original.getColumns())
         {
-            column.getType().applyGet(new DataTypeVisitorGet<@Nullable Void>()
-            {
-                int length = column.getLength();
-                @Override
-                public @Nullable Void number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
-                {
-                    for (int i = 0; i < length; i++)
-                    {
-                        @Value Number orig = g.get(i);
-                        double d = orig.doubleValue();
-                        BigDecimal bd = new BigDecimal(d);
-                        if (Utility.compareNumbers(orig, bd) != 0)
-                        {
-                            g.set(i, Either.<String, @Value Number>right(DataTypeUtility.<BigDecimal>value(bd)));
-                        }
-                    }
-                    return null;
-                }
-
-                @Override
-                public @Nullable Void text(GetValue<@Value String> g) throws InternalException, UserException
-                {
-                    // Make sure it can round trip:
-                    for (int i = 0; i < length; i++)
-                    {
-                        g.set(i, Either.<String, @Value String>right(DataTypeUtility.value(new String(g.get(i).getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8))));
-                    }
-                    return null;
-                }
-
-                @Override
-                public @Nullable Void bool(GetValue<@Value Boolean> g) throws InternalException, UserException
-                {
-                    return null;
-                }
-
-                @Override
-                public @Nullable Void date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
-                {
-                    // R's double doesn't have enough precision for nanos, so we must only keep what can round trip through a double-valued instant:
-                    switch (dateTimeInfo.getType())
-                    {
-                        case TIMEOFDAY:
-                            for (int i = 0; i < length; i++)
-                            {
-                                @Value TemporalAccessor orig = g.get(i);
-                                double secs = (double)((LocalTime)orig).toNanoOfDay() / 1_000_000_000.0;
-                                @SuppressWarnings("nullness")
-                                @NonNull @ImmediateValue TemporalAccessor value = DataTypeUtility.value(dateTimeInfo, LocalTime.ofNanoOfDay((long) (Math.round(secs) * 1_000_000_000.0)));
-                                g.set(i, Either.right(value));
-                            }
-                            break;
-                        case DATETIMEZONED:
-                        case DATETIME:
-                            for (int i = 0; i < length; i++)
-                            {
-                                @Value TemporalAccessor orig = g.get(i);
-                                Instant origInstant = makeInstant(orig);
-                                double seconds = origInstant.getEpochSecond() + ((double)origInstant.getNano()) / 1_000_000_000.0;
-                                if (dateTimeInfo.getType() == DateTimeType.DATETIME)
-                                    seconds = Math.round(seconds / (60.0 * 60.0 * 24.0)) * (60.0 * 60.0 * 24.0);
-                                // From https://stackoverflow.com/a/38544355/412908
-                                double secondsRoundTowardsZero = Math.signum(seconds) * Math.floor(Math.abs(seconds));
-                                Instant instantFromDouble = Instant.ofEpochSecond((long) secondsRoundTowardsZero, (long) (1_000_000_000.0 * (seconds - secondsRoundTowardsZero)));
-                                @ImmediateValue TemporalAccessor value = DataTypeUtility.value(dateTimeInfo, dateTimeInfo.getType() == DateTimeType.DATETIMEZONED ? ZonedDateTime.ofInstant(instantFromDouble, ((ZonedDateTime) orig).getZone()) : LocalDateTime.ofInstant(instantFromDouble, ZoneId.of("UTC")));
-                                if (value == null)
-                                    throw new InternalException("Date cannot convert: " + orig);
-                                g.set(i, Either.<String, @Value TemporalAccessor>right(value));
-                            }
-                            break;
-                    }
-                    
-                    if (dateTimeInfo.getType() == DateTimeType.DATETIMEZONED && length > 1)
-                    {
-                        // R can only have one zone for the whole column,
-                        // so to round trip we must do same:
-                        ZoneId zoneId = ((ZonedDateTime)g.get(0)).getZone();
-                        for (int i = 1; i < length; i++)
-                        {
-                            g.set(i, Either.<String, @Value TemporalAccessor>right(DataTypeUtility.valueZonedDateTime(((ZonedDateTime) g.get(i)).withZoneSameInstant(zoneId))));
-                        }
-                    }
-                    return null;
-                }
-
-                private Instant makeInstant(@Value TemporalAccessor orig) throws InternalException
-                {
-                    if (orig instanceof ZonedDateTime)
-                        return Instant.from(orig);
-                    else if (orig instanceof LocalDateTime)
-                        return Instant.from(((LocalDateTime)orig).atOffset(ZoneOffset.UTC));
-                    else
-                        throw new InternalException("Cannot make instant from " + orig.getClass());
-                }
-
-                @Override
-                public @Nullable Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
-                {
-                    return null;
-                }
-
-                @Override
-                public @Nullable Void record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
-                {
-                    return null;
-                }
-
-                @Override
-                public @Nullable Void array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
-                {
-                    return null;
-                }
-            });
+            column.getType().applyGet(new EnsureRoundTrip(column.getLength()));
         }
         
         // We can only test us->R->us, because to test R->us->R we'd still need to convert at start and end (i.e. us->R->us->R->us which is the same).
@@ -342,7 +232,8 @@ public class TestRLoadSave
                     Assert.fail("Missing case");
                     return;
             }
-            RecordSet reloaded = RData.convertRToTable(new TypeManager(new UnitManager()), roundTripped).get(0);
+            TypeManager typeManager = new TypeManager(new UnitManager());
+            RecordSet reloaded = RData.convertRToTable(typeManager, roundTripped).get(0);
             System.out.println(RData.prettyPrint(roundTripped));
             assertEquals(original.getColumnIds(), reloaded.getColumnIds());
             assertEquals(original.getLength(), reloaded.getLength());
@@ -353,20 +244,7 @@ public class TestRLoadSave
                 {
                     final @Value Object reloadedVal = reloadedColumn.getType().getCollapsed(i);
                     // Not all date types survive, so need to coerce:
-                    @Value Object reloadedValCoerced = column.getType().getType().apply(new FlatDataTypeVisitor<@Value Object>(reloadedVal)
-                    {
-                        @Override
-                        @SuppressWarnings("nullness")
-                        public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
-                        {
-                            if (dateTimeInfo.getType() == DateTimeType.TIMEOFDAY && !(reloadedVal instanceof LocalTime))
-                            {
-                                @Value BigDecimal bd = Utility.toBigDecimal((Number)reloadedVal);
-                                return DataTypeUtility.value(dateTimeInfo, LocalTime.ofNanoOfDay(bd.multiply(new BigDecimal("1000000000")).longValue()));
-                            }
-                            return DataTypeUtility.value(dateTimeInfo, (TemporalAccessor) reloadedVal);
-                        }
-                    });
+                    @Value Object reloadedValCoerced = column.getType().getType().apply(new CoerceValueToThisType(reloadedVal, typeManager));
                     DataTestUtil.assertValueEqual("Row " + i + " column " + column.getName(), column.getType().getCollapsed(i), reloadedValCoerced);
                 }
             }
@@ -380,4 +258,190 @@ public class TestRLoadSave
     }
 
 
+    private static class EnsureRoundTrip implements DataTypeVisitorGet<@Nullable Void>
+    {
+        private final int length;
+
+        public EnsureRoundTrip(int length)
+        {
+            this.length = length;
+        }
+
+        @Override
+        public @Nullable Void number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
+        {
+            for (int i = 0; i < length; i++)
+            {
+                @Value Number orig = g.get(i);
+                double d = orig.doubleValue();
+                BigDecimal bd = new BigDecimal(d);
+                if (Utility.compareNumbers(orig, bd) != 0)
+                {
+                    g.set(i, Either.<String, @Value Number>right(DataTypeUtility.<BigDecimal>value(bd)));
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public @Nullable Void text(GetValue<@Value String> g) throws InternalException, UserException
+        {
+            // Make sure it can round trip:
+            for (int i = 0; i < length; i++)
+            {
+                g.set(i, Either.<String, @Value String>right(DataTypeUtility.value(new String(g.get(i).getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8))));
+            }
+            return null;
+        }
+
+        @Override
+        public @Nullable Void bool(GetValue<@Value Boolean> g) throws InternalException, UserException
+        {
+            return null;
+        }
+
+        @Override
+        public @Nullable Void date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
+        {
+            // R's double doesn't have enough precision for nanos, so we must only keep what can round trip through a double-valued instant:
+            switch (dateTimeInfo.getType())
+            {
+                case TIMEOFDAY:
+                    for (int i = 0; i < length; i++)
+                    {
+                        @Value TemporalAccessor orig = g.get(i);
+                        double secs = (double)((LocalTime)orig).toNanoOfDay() / 1_000_000_000.0;
+                        @SuppressWarnings("nullness")
+                        @NonNull @ImmediateValue TemporalAccessor value = DataTypeUtility.value(dateTimeInfo, LocalTime.ofNanoOfDay((long) (Math.round(secs) * 1_000_000_000.0)));
+                        g.set(i, Either.right(value));
+                    }
+                    break;
+                case DATETIMEZONED:
+                case DATETIME:
+                    for (int i = 0; i < length; i++)
+                    {
+                        @Value TemporalAccessor orig = g.get(i);
+                        Instant origInstant = makeInstant(orig);
+                        double seconds = origInstant.getEpochSecond() + ((double)origInstant.getNano()) / 1_000_000_000.0;
+                        if (dateTimeInfo.getType() == DateTimeType.DATETIME)
+                            seconds = Math.round(seconds / (60.0 * 60.0 * 24.0)) * (60.0 * 60.0 * 24.0);
+                        // From https://stackoverflow.com/a/38544355/412908
+                        double secondsRoundTowardsZero = Math.signum(seconds) * Math.floor(Math.abs(seconds));
+                        Instant instantFromDouble = Instant.ofEpochSecond((long) secondsRoundTowardsZero, (long) (1_000_000_000.0 * (seconds - secondsRoundTowardsZero)));
+                        @ImmediateValue TemporalAccessor value = DataTypeUtility.value(dateTimeInfo, dateTimeInfo.getType() == DateTimeType.DATETIMEZONED ? ZonedDateTime.ofInstant(instantFromDouble, ((ZonedDateTime) orig).getZone()) : LocalDateTime.ofInstant(instantFromDouble, ZoneId.of("UTC")));
+                        if (value == null)
+                            throw new InternalException("Date cannot convert: " + orig);
+                        g.set(i, Either.<String, @Value TemporalAccessor>right(value));
+                    }
+                    break;
+            }
+            
+            if (dateTimeInfo.getType() == DateTimeType.DATETIMEZONED && length > 1)
+            {
+                // R can only have one zone for the whole column,
+                // so to round trip we must do same:
+                ZoneId zoneId = ((ZonedDateTime)g.get(0)).getZone();
+                for (int i = 1; i < length; i++)
+                {
+                    g.set(i, Either.<String, @Value TemporalAccessor>right(DataTypeUtility.valueZonedDateTime(((ZonedDateTime) g.get(i)).withZoneSameInstant(zoneId))));
+                }
+            }
+            return null;
+        }
+
+        private Instant makeInstant(@Value TemporalAccessor orig) throws InternalException
+        {
+            if (orig instanceof ZonedDateTime)
+                return Instant.from(orig);
+            else if (orig instanceof LocalDateTime)
+                return Instant.from(((LocalDateTime)orig).atOffset(ZoneOffset.UTC));
+            else
+                throw new InternalException("Cannot make instant from " + orig.getClass());
+        }
+
+        @Override
+        public @Nullable Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
+        {
+            if (typeName.getRaw().equals("Optional"))
+            {
+                ArrayList<Pair<Integer, @Value Object>> inners = new ArrayList<>();
+                for (int i = 0; i < length; i++)
+                {
+                    @Value TaggedValue taggedValue = g.get(i);
+                    if (taggedValue.getInner() != null)
+                        inners.add(new Pair<>(i, taggedValue.getInner()));
+                }
+                
+                TypeManager typeManager = new TypeManager(new UnitManager());
+                return typeVars.get(0).getRight("Err").fromCollapsed(new GetValue<@Value Object>()
+                {
+                    @Override
+                    public @Value Object getWithProgress(int i, Column.@Nullable ProgressListener prog) throws UserException, InternalException
+                    {
+                        return inners.get(i).getSecond();
+                    }
+
+                    @Override
+                    public void set(int index, Either<String, @Value Object> value) throws InternalException, UserException
+                    {
+                        g.set(inners.get(index).getFirst(), Either.right(typeManager.maybePresent(value.getRight("Err"))));
+                    }
+                }).applyGet(new EnsureRoundTrip(inners.size()));
+            }
+            return null;
+        }
+
+        @Override
+        public @Nullable Void record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
+        {
+            return null;
+        }
+
+        @Override
+        public @Nullable Void array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
+        {
+            return null;
+        }
+    }
+
+    private static class CoerceValueToThisType extends FlatDataTypeVisitor<@Value Object>
+    {
+        private final @Value Object reloadedVal;
+        private final TypeManager typeManager;
+
+        public CoerceValueToThisType(@Value Object reloadedVal, TypeManager typeManager)
+        {
+            super(reloadedVal);
+            this.reloadedVal = reloadedVal;
+            this.typeManager = typeManager;
+        }
+
+        @Override
+        @SuppressWarnings("nullness")
+        public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+        {
+            if (dateTimeInfo.getType() == DateTimeType.TIMEOFDAY && !(reloadedVal instanceof LocalTime))
+            {
+                @Value BigDecimal bd = Utility.toBigDecimal((Number) reloadedVal);
+                return DataTypeUtility.value(dateTimeInfo, LocalTime.ofNanoOfDay(bd.multiply(new BigDecimal("1000000000")).longValue()));
+            }
+            return DataTypeUtility.value(dateTimeInfo, (TemporalAccessor) reloadedVal);
+        }
+
+        @Override
+        @SuppressWarnings("nullness")
+        public @Value Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+        {
+            if (typeName.getRaw().equals("Optional") && !(reloadedVal instanceof TaggedValue))
+                return typeManager.maybePresent(tags.get(1).getInner().apply(this));
+            else
+            {
+                @Value TaggedValue taggedValue = (TaggedValue) this.reloadedVal;
+                if (taggedValue.getTagIndex() == 1)
+                    return typeManager.maybePresent(tags.get(1).getInner().apply(new CoerceValueToThisType(taggedValue.getInner(), typeManager)));
+                else
+                    return taggedValue;
+            }
+        }
+    }
 }

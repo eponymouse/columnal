@@ -36,6 +36,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Created by neil on 13/01/2017.
  */
+@SuppressWarnings("recorded")
 public class GenDataTypeMaker extends GenValueBase<DataTypeMaker>
 {
     private final GenJellyTypeMaker genJellyTypeMaker;

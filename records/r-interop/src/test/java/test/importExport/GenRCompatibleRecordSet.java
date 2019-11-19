@@ -35,7 +35,7 @@ public class GenRCompatibleRecordSet extends Generator<KnownLengthRecordSet>
     @Override
     public KnownLengthRecordSet generate(SourceOfRandomness random, GenerationStatus status)
     {
-        GenDataTypeMaker gen = new GenDataTypeMaker(ImmutableSet.of(TypeKinds.NUM_TEXT_TEMPORAL, TypeKinds.MAYBE, TypeKinds.BOOLEAN), true);
+        GenDataTypeMaker gen = new GenDataTypeMaker(ImmutableSet.of(TypeKinds.NUM_TEXT_TEMPORAL, TypeKinds.MAYBE_UNNESTED, TypeKinds.BOOLEAN), true);
 
         int numColumns = 1 + random.nextInt(10);
         int numRows = random.nextInt(20);

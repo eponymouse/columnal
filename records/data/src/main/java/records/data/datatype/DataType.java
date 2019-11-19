@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.ArrayColumnStorage;
@@ -200,11 +201,23 @@ public abstract class DataType implements StyledShowable
             @SuppressWarnings("valuetype")
             private <T> GetValue<@Value T> castTo(Class<T> cls)
             {
-                return (i, prog) -> {
-                    Object value = get.getWithProgress(i, prog);
-                    if (!cls.isAssignableFrom(value.getClass()))
-                        throw new InternalException("Type inconsistency: should be " + cls + " but is " + value.getClass());
-                    return cls.cast(value);
+                return new GetValue<T>()
+                {
+                    @Override
+                    public @NonNull @Value T getWithProgress(int i,  Column.@Nullable ProgressListener prog) throws UserException, InternalException
+                    {
+                        Object value = get.getWithProgress(i, prog);
+                        if (!cls.isAssignableFrom(value.getClass()))
+                            throw new InternalException("Type inconsistency: should be " + cls + " but is " + value.getClass());
+                        return cls.cast(value);
+                    }
+
+                    @SuppressWarnings("nullness") // Not sure why this is needed
+                    @Override
+                    public void set(int index, Either<String, @Value T> value) throws InternalException, UserException
+                    {
+                        get.set(index, value.<@NonNull @Value Object>map(v -> v));
+                    }
                 };
             }
 

@@ -12,6 +12,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.*;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
@@ -240,7 +241,8 @@ public class RData
         @ExpressionIdentifier String def = "Column " + index;
         if (listColumnNames != null)
         {
-            return new ColumnId(IdentifierUtility.fixExpressionIdentifier(getString(getListItem(listColumnNames, index)), def));
+            @Value String s = getString(getListItem(listColumnNames, index));
+            return new ColumnId(IdentifierUtility.fixExpressionIdentifier(s == null ? "" : s, def));
         }
         return new ColumnId(def);
     }
@@ -317,12 +319,13 @@ public class RData
             case 1: // Symbol
             {
                 RValue symbol = readItem(d, atoms);
-                symbol.visit(new SpecificRVisitor<String>()
+                symbol.visit(new SpecificRVisitor<@Nullable @Value String>()
                 {
                     @Override
-                    public String visitString(String s) throws InternalException, UserException
+                    public @Nullable @Value String visitString(@Nullable @Value String s) throws InternalException, UserException
                     {
-                        addAtom(atoms, s);
+                        if (s != null)
+                            addAtom(atoms, s);
                         return s;
                     }
                 });
@@ -395,7 +398,7 @@ public class RData
             }
             case STRING_SINGLE: // String
             {
-                String s = readLenString(d);
+                @Nullable String s = readLenString(d);
                 return string(s);
             }
             case INT_VECTOR: // Integer vector
@@ -414,23 +417,23 @@ public class RData
                         if (items.size() >= 1 && items.get(0).tag != null && items.get(0).tag.visit(new DefaultRVisitor<Boolean>(false)
                         {
                             @Override
-                            public Boolean visitString(String s) throws InternalException, UserException
+                            public Boolean visitString(@Nullable String s) throws InternalException, UserException
                             {
-                                return s.equals("levels");
+                                return "levels".equals(s);
                             }
                         }))
                             return items.get(0).item.visit(new SpecificRVisitor<ImmutableList<String>>()
                             {
                                 @Override
-                                public ImmutableList<String> visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
+                                public ImmutableList<String> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
                                 {
-                                    return Utility.<@Value String, String>mapListI(values, v -> v);
+                                    return Utility.<Optional<@Value String>, String>mapListExI(values, v -> v.orElseThrow(() -> new UserException("Unexpected NA in factors")));
                                 }
 
                                 @Override
                                 public ImmutableList<String> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
                                 {
-                                    return Utility.mapListExI(values, RData::getString);
+                                    return Utility.mapListExI(values, RData::getStringNN);
                                 }
                             });
                         return null;
@@ -496,12 +499,12 @@ public class RData
             case STRING_VECTOR: // Character vector
             {
                 int vecLen = d.readInt();
-                ImmutableList.Builder<String> valueBuilder = ImmutableList.builderWithExpectedSize(vecLen);
+                ImmutableList.Builder<Optional<@Value String>> valueBuilder = ImmutableList.builderWithExpectedSize(vecLen);
                 for (int i = 0; i < vecLen; i++)
                 {
-                    valueBuilder.add(getString(readItem(d, atoms)));
+                    valueBuilder.add(Optional.ofNullable(getString(readItem(d, atoms))));
                 }
-                ImmutableList<String> values = valueBuilder.build();
+                ImmutableList<Optional<@Value String>> values = valueBuilder.build();
                 final @Nullable RValue attr = objHeader.readAttributes(d, atoms);
                 return stringVector(values, attr);
             }
@@ -522,7 +525,7 @@ public class RData
                 RValue info = readItem(d, atoms);
                 RValue state = readItem(d, atoms);
                 RValue attr = readItem(d, atoms);
-                return lookupClass(getString(getListItem(info, 0)), getString(getListItem(info, 1))).load(state, attr);
+                return lookupClass(getStringNN(getListItem(info, 0)), getStringNN(getListItem(info, 1))).load(state, attr);
             }
             default:
                 throw new UserException("Unsupported R object type (identifier: " + objHeader.getType() + ")");
@@ -543,7 +546,7 @@ public class RData
                 else
                 {
                     @SuppressWarnings("valuetype")
-                    @Value ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond((long) roundTowardsZero(value), (long) (1_000_000_000.0 * (value - roundTowardsZero(value)))), ZoneId.of(getString(getListItem(tzone, 0))));
+                    @Value ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond((long) roundTowardsZero(value), (long) (1_000_000_000.0 * (value - roundTowardsZero(value)))), ZoneId.of(getStringNN(getListItem(tzone, 0))));
                     b.add(Optional.of(zdt));
                 }
             }
@@ -633,12 +636,27 @@ public class RData
         }));
     }
 
-    private static String getString(RValue rValue) throws UserException, InternalException
+    private static @Value String getStringNN(RValue rValue) throws UserException, InternalException
     {
-        return rValue.visit(new SpecificRVisitor<String>()
+        return rValue.visit(new SpecificRVisitor<@Value String>()
         {
             @Override
-            public String visitString(String s) throws InternalException, UserException
+            public @Value String visitString(@Nullable @Value String s) throws InternalException, UserException
+            {
+                if (s != null)
+                    return s;
+                else
+                    throw new UserException("Unexpected NA in internal String");
+            }
+        });
+    }
+
+    private static @Nullable @Value String getString(RValue rValue) throws UserException, InternalException
+    {
+        return rValue.visit(new SpecificRVisitor<@Nullable @Value String>()
+        {
+            @Override
+            public @Nullable @Value String visitString(@Nullable @Value String s) throws InternalException, UserException
             {
                 return s;
             }
@@ -650,9 +668,9 @@ public class RData
         return info.visit(new SpecificRVisitor<RValue>() {
 
             @Override
-            public RValue visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
+            public RValue visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                return string(values.get(index));
+                return string(values.get(index).orElse(null));
             }
 
             @Override
@@ -686,9 +704,11 @@ public class RData
         throw new UserException("Unsupported R class: " + p + " " + c);
     }
 
-    private static String readLenString(DataInputStream d) throws IOException
+    private static @Nullable String readLenString(DataInputStream d) throws IOException
     {
         int len = d.readInt();
+        if (len < 0)
+            return null;
         byte chars[] = new byte[len];
         d.readFully(chars);
         return new String(chars, StandardCharsets.UTF_8);
@@ -708,12 +728,12 @@ public class RData
     
     public static interface RVisitor<T>
     {
-        public T visitString(String s) throws InternalException, UserException;
+        public T visitString(@Nullable @Value String s) throws InternalException, UserException;
         // If attributes reveal this is a factor, it won't be called; visitFactorList will be instead
         public T visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException;
-        public T visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException;
+        public T visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException;
@@ -736,7 +756,7 @@ public class RData
         }
 
         @Override
-        public T visitString(String s) throws InternalException, UserException
+        public T visitString(@Nullable @Value String s) throws InternalException, UserException
         {
             return makeDefault();
         }
@@ -766,7 +786,7 @@ public class RData
         }
 
         @Override
-        public T visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
+        public T visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
         {
             return makeDefault();
         }
@@ -799,7 +819,7 @@ public class RData
     public static abstract class SpecificRVisitor<T> implements RVisitor<T>
     {
         @Override
-        public T visitString(String s) throws InternalException, UserException
+        public T visitString(@Nullable @Value String s) throws InternalException, UserException
         {
             throw new UserException("Unexpected type: string");
         }
@@ -829,7 +849,7 @@ public class RData
         }
 
         @Override
-        public T visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
+        public T visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
         {
             throw new UserException("Unexpected type: list of strings");
         }
@@ -875,9 +895,12 @@ public class RData
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitString(String s) throws InternalException, UserException
+            public Pair<DataType, @Value Object> visitString(@Nullable @Value String s) throws InternalException, UserException
             {
-                return new Pair<>(DataType.TEXT, DataTypeUtility.value(s));
+                if (s != null)
+                    return new Pair<>(DataType.TEXT, DataTypeUtility.value(s));
+                else
+                    return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.TEXT)), typeManager), typeManager.maybeMissing());
             }
 
             @Override
@@ -908,12 +931,22 @@ public class RData
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType, @Value Object> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                if (values.size() == 1)
-                    return new Pair<>(DataType.TEXT, DataTypeUtility.value(values.get(0)));
-                else
-                    return new Pair<>(DataType.array(DataType.TEXT), DataTypeUtility.value(values));
+                if (values.stream().allMatch(v -> v.isPresent()))
+                {
+                    if (values.size() == 1)
+                        return new Pair<>(DataType.TEXT, values.get(0).get());
+                    else
+                        return new Pair<>(DataType.array(DataType.TEXT), DataTypeUtility.value(Utility.<Optional<@Value String>, @Value String>mapListI(values, v -> v.get())));
+                }
+                else 
+                {
+                    if (values.size() == 1) // Must actually be empty if not all present:
+                        return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.TEXT)), typeManager), typeManager.maybeMissing());
+                    else
+                        return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.TEXT)), typeManager), DataTypeUtility.value(Utility.mapListI(values, v -> v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing))));
+                }
             }
 
             @Override
@@ -983,15 +1016,18 @@ public class RData
             }
 
             @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitString(String s) throws InternalException, UserException
+            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitString(@Nullable @Value String s) throws InternalException, UserException
             {
-                return new Pair<>(rs -> new MemoryStringColumn(rs, columnName, ImmutableList.<Either<String, String>>of(Either.<String, String>right(s)), ""), 1);
+                return visitStringList(ImmutableList.<Optional<@Value String>>of(Optional.<@Value String>ofNullable(s)), null);
             }
 
             @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                return new Pair<>(rs -> new MemoryStringColumn(rs, columnName, Utility.mapList(values, v -> Either.<String, String>right(v)), ""), values.size());
+                if (values.stream().allMatch(v -> v.isPresent()))
+                    return new Pair<>(rs -> new MemoryStringColumn(rs, columnName, Utility.mapList(values, v -> Either.<String, String>right(v.get())), ""), values.size());
+                else
+                    return makeMaybeColumn(DataType.TEXT, Utility.mapListI(values, v -> Either.<String, TaggedValue>right(v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing))));
             }
 
             @Override
@@ -1190,13 +1226,13 @@ public class RData
             }
 
             @Override
-            public ImmutableList<RecordSet> visitString(String s) throws InternalException, UserException
+            public ImmutableList<RecordSet> visitString(@Nullable @Value String s) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public ImmutableList<RecordSet> visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<RecordSet> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
@@ -1313,7 +1349,7 @@ public class RData
                 return Utility.mapListExI(items, e -> {
                     if (e.tag == null)
                         throw new UserException("Missing tag name ");
-                    return new Pair<>(getString(e.tag), e.item);
+                    return new Pair<>(getStringNN(e.tag), e.item);
                 });
             }
         }));
@@ -1337,7 +1373,7 @@ public class RData
             }
 
             @Override
-            public @Nullable Void visitString(String s) throws InternalException, UserException
+            public @Nullable Void visitString(@Nullable @Value String s) throws InternalException, UserException
             {
                 b.append("\"" + s + "\"");
                 return null;
@@ -1383,7 +1419,7 @@ public class RData
             }
 
             @Override
-            public @Nullable Void visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
+            public @Nullable Void visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 b.append("String[" + values.size());
                 if (attributes != null)
@@ -1466,7 +1502,7 @@ public class RData
     public static RValue convertTableToR(RecordSet recordSet) throws UserException, InternalException
     {
         // A table is a generic list of columns with class data.frame
-        return genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c)), makeClassAttributes("data.frame", ImmutableMap.<String, RValue>of("names", stringVector(Utility.mapListExI(recordSet.getColumns(), c -> c.getName().getRaw()), null))));
+        return genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c)), makeClassAttributes("data.frame", ImmutableMap.<String, RValue>of("names", stringVector(Utility.<Column, Optional<@Value String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(c.getName().getRaw()))), null))));
     }
 
     private static RValue makeClassAttributes(String className, ImmutableMap<String, RValue> otherItems)
@@ -1515,10 +1551,10 @@ public class RData
             @Override
             public RValue text(GetValue<@Value String> g) throws InternalException, UserException
             {
-                ImmutableList.Builder<String> list = ImmutableList.builderWithExpectedSize(length);
+                ImmutableList.Builder<Optional<@Value String>> list = ImmutableList.builderWithExpectedSize(length);
                 for (int i = 0; i < length; i++)
                 {
-                    list.add(g.get(i));
+                    list.add(Optional.of(g.get(i)));
                 }
                 return stringVector(list.build(), null);
             }
@@ -1575,12 +1611,81 @@ public class RData
                         onlyInner = tagTypes.get(1).getInner();
                     if (onlyInner != null)
                     {
-                        return onlyInner.fromCollapsed((i, prog) -> {
+                        // Can convert to equivalent of maybe; inner plus missing values as NA:
+                        ImmutableList.Builder<Optional<@Value Object>> b = ImmutableList.builderWithExpectedSize(length);
+                        for (int i = 0; i < length; i++)
+                        {
                             @Value TaggedValue taggedValue = g.get(i);
-                            if (taggedValue.getInner() == null)
-                                throw new InternalException("TODO");
-                            return taggedValue.getInner();
-                        }).applyGet(this);
+                            if (taggedValue.getInner() != null)
+                                b.add(Optional.<@Value Object>of(taggedValue.getInner()));
+                            else
+                                b.add(Optional.empty());
+                        }
+                        ImmutableList<Optional<@Value Object>> inners = b.build();
+                        return onlyInner.apply(new DataTypeVisitor<RValue>()
+                        {
+                            @Override
+                            public RValue number(NumberInfo numberInfo) throws InternalException, UserException
+                            {
+                                return doubleVector(inners.stream().mapToDouble(mn -> mn.<Double>map(n -> Utility.toBigDecimal((Number)n).doubleValue()).orElse(Double.NaN)).toArray(), null);
+                            }
+
+                            @Override
+                            public RValue text() throws InternalException, UserException
+                            {
+                                return stringVector(Utility.<Optional<@Value Object>, Optional<@Value String>>mapListI(inners, v -> v.<@Value String>map(o -> (String) o)), null);
+                            }
+
+                            @Override
+                            public RValue date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+                            {
+                                switch (dateTimeInfo.getType())
+                                {
+                                    case YEARMONTHDAY:
+                                        return dateVector(inners.stream().mapToDouble(md -> md.map(d -> (double)((LocalDate)d).toEpochDay()).orElse(Double.NaN)).toArray(), makeClassAttributes("Date", ImmutableMap.of()));
+                                    case YEARMONTH:
+                                        return dateVector(inners.stream().mapToDouble(md -> md.map(d -> (double)((YearMonth)d).atDay(1).toEpochDay()).orElse(Double.NaN)).toArray(), makeClassAttributes("Date", ImmutableMap.of()));
+                                    case TIMEOFDAY:
+                                        return doubleVector(inners.stream().mapToDouble(mn -> mn.<Double>map(n -> (double)((LocalTime)n).toNanoOfDay() / 1_000_000_000.0).orElse(Double.NaN)).toArray(), null);
+                                    case DATETIMEZONED:
+                                        return dateTimeZonedVector(inners.stream().mapToDouble(md -> md.map(d -> {
+                                            ZonedDateTime zdt = (ZonedDateTime) d;
+                                            return (double) zdt.toEpochSecond() + ((double) zdt.getNano() / 1_000_000_000.0);
+                                        }).orElse(Double.NaN)).toArray(), makeClassAttributes("Date", ImmutableMap.of()));
+                                    case DATETIME:
+                                        return dateTimeZonedVector(inners.stream().mapToDouble(md -> md.map(d -> {
+                                            LocalDateTime ldt = (LocalDateTime) d;
+                                            double seconds = (double) ldt.toEpochSecond(ZoneOffset.UTC) + (double) ldt.getNano() / 1_000_000_000.0;
+                                            return seconds;
+                                        }).orElse(Double.NaN)).toArray(), makeClassAttributes("POSIXct", ImmutableMap.of()));
+                                }
+                                throw new InternalException("TODO: " + dateTimeInfo.getType());
+                            }
+
+                            @Override
+                            public RValue bool() throws InternalException, UserException
+                            {
+                                return logicalVector(Booleans.toArray(inners.stream().<Boolean>map(mb -> DataTypeUtility.unvalue(((Boolean)mb.orElse(DataTypeUtility.value(false))))).collect(ImmutableList.<Boolean>toImmutableList())), Booleans.toArray(inners.stream().map(b -> !b.isPresent()).collect(ImmutableList.<Boolean>toImmutableList())), null);
+                            }
+
+                            @Override
+                            public RValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+                            {
+                                throw new UserException("Nested tagged types are not supported");
+                            }
+
+                            @Override
+                            public RValue record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+                            {
+                                throw new UserException("Records are not supported in R");
+                            }
+
+                            @Override
+                            public RValue array(DataType inner) throws InternalException, UserException
+                            {
+                                throw new UserException("Lists are not supported in R");
+                            }
+                        });
                     }
                 }
                 if (tagTypes.stream().allMatch(tt -> tt.getInner() == null))
@@ -1631,7 +1736,7 @@ public class RData
                     // If no non-NA, won't matter:
                     ZoneId zone = values.stream().flatMap(v -> Utility.streamNullable(v.orElse(null))).findFirst().map(t -> ((ZonedDateTime) t).getZone()).orElse(ZoneId.systemDefault());
 
-                    return visitor.visitTemporalList(dateTimeInfo.getType(), Utility.<Optional<@Value TemporalAccessor>, Optional<@Value TemporalAccessor>>mapListI(values, mv -> mv.<@Value TemporalAccessor>map(v -> DataTypeUtility.valueZonedDateTime(((ZonedDateTime) v).withZoneSameInstant(zone)))), makeClassAttributes("POSIXct", ImmutableMap.of("tzone", stringVector(zone.toString()))));
+                    return visitor.visitTemporalList(dateTimeInfo.getType(), Utility.<Optional<@Value TemporalAccessor>, Optional<@Value TemporalAccessor>>mapListI(values, mv -> mv.<@Value TemporalAccessor>map(v -> DataTypeUtility.valueZonedDateTime(((ZonedDateTime) v).withZoneSameInstant(zone)))), makeClassAttributes("POSIXct", ImmutableMap.of("tzone", stringVector(DataTypeUtility.value(zone.toString())))));
                 }
                 else if (dateTimeInfo.getType() == DateTimeType.TIMEOFDAY)
                     return visitor.visitTemporalList(dateTimeInfo.getType(), values, null);
@@ -1707,31 +1812,31 @@ public class RData
         };
     }
 
-    private static RValue stringVector(String singleValue)
+    private static RValue stringVector(@Value @Nullable String singleValue)
     {
-        return stringVector(ImmutableList.of(singleValue), null);
+        return stringVector(ImmutableList.<Optional<@Value String>>of(Optional.<@Value String>ofNullable(singleValue)), null);
     }
     
-    private static RValue stringVector(ImmutableList<String> values, @Nullable RValue attributes)
+    private static RValue stringVector(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes)
     {
         return new RValue()
         {
             @Override
             public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
             {
-                return visitor.visitStringList(Utility.<String, @Value String>mapListI(values, v -> DataTypeUtility.value(v)), attributes);
+                return visitor.visitStringList(values, attributes);
             }
         };
     }
     
-    private static RValue string(String value)
+    private static RValue string(@Nullable String value)
     {
         return new RValue()
         {
             @Override
             public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
             {
-                return visitor.visitString(value);
+                return visitor.visitString(value == null ? null : DataTypeUtility.value(value));
             }
         };
     }
@@ -1827,29 +1932,34 @@ public class RData
             }
             
             @Override
-            public @Nullable Void visitString(String s) throws InternalException, UserException
+            public @Nullable Void visitString(@Nullable @Value String s) throws InternalException, UserException
             {
                 writeInt(STRING_SINGLE);
                 writeLenString(s);
                 return null;
             }
 
-            private void writeLenString(String s) throws UserException
+            private void writeLenString(@Nullable String s) throws UserException
             {
-                byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
-                writeInt(bytes.length);
-                writeBytes(bytes);
+                if (s == null)
+                    writeInt(-1);
+                else
+                {
+                    byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
+                    writeInt(bytes.length);
+                    writeBytes(bytes);
+                }
             }
 
             @Override
-            public @Nullable Void visitStringList(ImmutableList<@Value String> values, @Nullable RValue attributes) throws InternalException, UserException
+            public @Nullable Void visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 writeHeader(STRING_VECTOR, attributes, null);
                 writeInt(values.size());
-                for (String value : values)
+                for (Optional<@Value String> value : values)
                 {
                     writeInt(STRING_SINGLE);
-                    writeLenString(value);
+                    writeLenString(value.orElse(null));
                 }
                 writeAttributes(attributes);
                 return null;

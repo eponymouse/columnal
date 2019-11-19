@@ -47,7 +47,7 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
             }
             GenJellyTypeMaker genDataType = new GenJellyTypeMaker(ImmutableSet.of(NUM_TEXT_TEMPORAL,
                     BOOLEAN, RECORD_LIST,
-                    MAYBE, OTHER_BUILTIN_TAGGED), typeVars.stream().map(p -> p.getSecond()).collect(ImmutableSet.toImmutableSet()), false);
+                    MAYBE_UNNESTED, OTHER_BUILTIN_TAGGED), typeVars.stream().map(p -> p.getSecond()).collect(ImmutableSet.toImmutableSet()), false);
             
             // Outside type variables are not visible in a new tagged type:
             boolean noInner = r.nextInt() % 3 == 1;
