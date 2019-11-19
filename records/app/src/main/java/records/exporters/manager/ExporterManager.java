@@ -87,7 +87,7 @@ public class ExporterManager
                         super.updateItem(item, empty);
                         if (item != null && !empty)
                         {
-                            setText(item.getName() + "\n" + item.getSupportedFileTypes().stream().map((Pair<@Localized String, ImmutableList<String>> p) -> p.getFirst() + "(" + p.getSecond().stream().collect(Collectors.joining(", ")) + ")").collect(Collectors.joining("; ")));
+                            setText(item.getName() + " (" + item.getSupportedFileTypes().stream().collect(Collectors.joining(", ")) + ")");
                         }
                     }
                 };

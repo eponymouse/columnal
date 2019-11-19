@@ -226,8 +226,8 @@ public class ExcelExporter implements Exporter
     }
 
     @Override
-    public @OnThread(Tag.Any) ImmutableList<Pair<@Localized String, ImmutableList<String>>> getSupportedFileTypes()
+    public @OnThread(Tag.Any) ImmutableList<String> getSupportedFileTypes()
     {
-        return ImmutableList.of(new Pair<@Localized String, ImmutableList<String>>(TranslationUtility.getString("importer.excel.files"), ImmutableList.of("*.xlsx")));
+        return ImmutableList.of("*.xlsx");
     }
 }

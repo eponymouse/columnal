@@ -1,7 +1,6 @@
 package records.exporters;
 
 import annotation.qual.Value;
-import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -10,7 +9,6 @@ import records.data.Column;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.datatype.DataTypeUtility;
-import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -74,9 +72,10 @@ public class HTMLExporter implements Exporter
         return TranslationUtility.getString("importer.html.files");
     }
 
+    @OnThread(Tag.Any)
     @Override
-    public @OnThread(Tag.Any) ImmutableList<Pair<@Localized String, ImmutableList<String>>> getSupportedFileTypes()
+    public ImmutableList<String> getSupportedFileTypes()
     {
-        return ImmutableList.of(new Pair<@Localized String, ImmutableList<String>>(TranslationUtility.getString("importer.html.files"), ImmutableList.of("*.html", "*.htm")));
+        return ImmutableList.of("*.html", "*.htm");
     }
 }

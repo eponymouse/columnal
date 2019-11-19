@@ -26,9 +26,8 @@ public interface Exporter
     @Localized String getName();
 
     /**
-     * Get the list of supported file types.  Each pair is the localized label for the file type,
-     * and a list of file extensions (like "*.txt").
+     * Get the list of supported file types.  Each item is a file extension (like "*.txt").
      */
     @OnThread(Tag.Any)
-    public ImmutableList<Pair<@Localized String, ImmutableList<String>>> getSupportedFileTypes();
+    public ImmutableList<String> getSupportedFileTypes();
 }
