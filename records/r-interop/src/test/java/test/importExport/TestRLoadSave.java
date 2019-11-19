@@ -201,10 +201,10 @@ public class TestRLoadSave
     }
 
     @Property(trials = 100)
-    public void testRoundTrip(@From(GenRCompatibleRecordSet.class) KnownLengthRecordSet original) throws Exception
+    public void testRoundTrip(@From(GenRCompatibleRecordSet.class) GenRCompatibleRecordSet.RCompatibleRecordSet original) throws Exception
     {
         // Need to get rid of any numbers which won't survive round trip:
-        for (Column column : original.getColumns())
+        for (Column column : original.recordSet.getColumns())
         {
             column.getType().applyGet(new EnsureRoundTrip(column.getLength()));
         }
@@ -212,7 +212,7 @@ public class TestRLoadSave
         // We can only test us->R->us, because to test R->us->R we'd still need to convert at start and end (i.e. us->R->us->R->us which is the same).
         for (int kind = 0; kind < 3; kind++)
         {
-            RValue tableAsR = RData.convertTableToR(original);
+            RValue tableAsR = RData.convertTableToR(original.recordSet);
             final RValue roundTripped;
             switch (kind)
             {
@@ -243,15 +243,19 @@ public class TestRLoadSave
                     Assert.fail("Missing case");
                     return;
             }
-            TypeManager typeManager = new TypeManager(new UnitManager());
+            TypeManager typeManager = original.typeManager;
             RecordSet reloaded = RData.convertRToTable(typeManager, roundTripped).get(0);
             System.out.println(RData.prettyPrint(roundTripped));
-            assertEquals(original.getColumnIds(), reloaded.getColumnIds());
-            assertEquals(original.getLength(), reloaded.getLength());
-            for (Column column : original.getColumns())
+            assertEquals(original.recordSet.getColumnIds(), reloaded.getColumnIds());
+            assertEquals(original.recordSet.getLength(), reloaded.getLength());
+            for (Column column : original.recordSet.getColumns())
             {
                 Column reloadedColumn = reloaded.getColumn(column.getName());
-                for (int i = 0; i < original.getLength(); i++)
+                
+                // Can't do this because it may need coercing:
+                //assertEquals(getTypeName(column.getType().getType()), getTypeName(reloadedColumn.getType().getType()));
+                
+                for (int i = 0; i < original.recordSet.getLength(); i++)
                 {
                     final @Value Object reloadedVal = reloadedColumn.getType().getCollapsed(i);
                     // Not all date types survive, so need to coerce:
@@ -260,6 +264,17 @@ public class TestRLoadSave
                 }
             }
         }
+    }
+
+    private @Nullable String getTypeName(DataType type) throws InternalException
+    {
+        return type.apply(new FlatDataTypeVisitor<@Nullable String>(null) {
+            @Override
+            public @Nullable String tagged(TypeId typeName, ImmutableList typeVars, ImmutableList tags) throws InternalException, InternalException
+            {
+                return typeName.getRaw();
+            }
+        });
     }
 
     private static @Value BigDecimal d(String s)
@@ -448,7 +463,7 @@ public class TestRLoadSave
             else
             {
                 @Value TaggedValue taggedValue = (TaggedValue) this.reloadedVal;
-                if (taggedValue.getTagIndex() == 1)
+                if (typeName.getRaw().equals("Optional") && taggedValue.getTagIndex() == 1)
                     return typeManager.maybePresent(tags.get(1).getInner().apply(new CoerceValueToThisType(taggedValue.getInner(), typeManager)));
                 else
                     return taggedValue;

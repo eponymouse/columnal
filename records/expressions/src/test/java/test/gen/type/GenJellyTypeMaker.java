@@ -45,7 +45,8 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
         RECORD_LIST,
         MAYBE_UNNESTED,
         OTHER_BUILTIN_TAGGED, // besides maybe
-        NEW_TAGGED
+        NEW_TAGGED_NO_INNER,
+        NEW_TAGGED_INNER,
     }
 
     private final ImmutableSet<TypeKinds> startingTypeKinds;
@@ -139,7 +140,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
                     () -> JellyType.list(genDepth(typeManager, r, maxDepth - 1, gs, typeKinds))
             ));
         }
-        if ((typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED) || typeKinds.contains(TypeKinds.MAYBE_UNNESTED)) && maxDepth > 1)
+        if ((typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED_INNER) || typeKinds.contains(TypeKinds.NEW_TAGGED_NO_INNER) || typeKinds.contains(TypeKinds.MAYBE_UNNESTED)) && maxDepth > 1)
             options.add(() -> genTagged(typeManager, r, maxDepth, gs, typeKinds));
         
         if (!availableTypeVars.isEmpty())
@@ -187,12 +188,12 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
 
         // Limit it to 100 types:
         int typeIndex = r.nextInt(100);
-        if (typeIndex >= pool.size() && typeKinds.contains(TypeKinds.NEW_TAGGED))
+        if (typeIndex >= pool.size() && (typeKinds.contains(TypeKinds.NEW_TAGGED_INNER) || typeKinds.contains(TypeKinds.NEW_TAGGED_NO_INNER)))
         {
             // Don't need to add N more, just add one for now:
 
             final ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeVars;
-            if (r.nextBoolean())
+            if (r.nextBoolean() && typeKinds.contains(TypeKinds.NEW_TAGGED_INNER))
             {
                 // Must use distinct to make sure no duplicates:
                 typeVars = DataTestUtil.<@ExpressionIdentifier String>makeList(r, 1, 4, () -> {
@@ -208,7 +209,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
             // Outside type variables are not visible in a new tagged type:
             ArrayList<@Nullable JellyType> types;
             // First add the items with inner type:
-            if (r.nextInt(3) == 1)
+            if (r.nextInt(3) == 1 || !typeKinds.contains(TypeKinds.NEW_TAGGED_INNER))
                 types = new ArrayList<>();
             else
                 types = new ArrayList<>(DataTestUtil.makeList(r, 1, 10, () -> genDepth(typeManager, r, maxDepth - 1, gs, typeKinds)));
@@ -222,7 +223,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
             @ExpressionIdentifier String typeName = "" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z');
             typeDefinition = typeManager.registerTaggedType(typeName, typeVars, Utility.mapListExI_Index(types, (i, t) -> {
                 @SuppressWarnings("identifier")
-                @ExpressionIdentifier String tagName = "T" + i;
+                @ExpressionIdentifier String tagName = "T" + r.nextChar('A', 'Z') + " " + i;
                 return new DataType.TagType<JellyType>(tagName, t);
             }));
         }

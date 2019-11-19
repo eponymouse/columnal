@@ -5,6 +5,8 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Streams;
 import com.google.common.primitives.Booleans;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
@@ -384,12 +386,6 @@ public class RData
                 
                 if (factorNames != null)
                 {
-                    // R factors index from 1, we index TaggedValue from 0, so adjust:
-                    for (int i = 0; i < values.length; i++)
-                    {
-                        if (values[i] != NA_AS_INTEGER)
-                            values[i] -= 1;
-                    }
                     return new RValue()
                     {
                         @Override
@@ -934,7 +930,15 @@ public class RData
 
     private static TaggedTypeDefinition getTaggedTypeForFactors(ImmutableList<String> levelNames, TypeManager typeManager) throws InternalException, UserException
     {
-        // TODO Search for existing type
+        ImmutableList<@ExpressionIdentifier String> processedNames = Streams.<String, @ExpressionIdentifier String>mapWithIndex(levelNames.stream(), (s, i) -> IdentifierUtility.fixExpressionIdentifier(s, IdentifierUtility.identNum("Factor", (int) i))).collect(ImmutableList.<@ExpressionIdentifier String>toImmutableList());
+
+        ImmutableSet<@ExpressionIdentifier String> namesAsSet = ImmutableSet.copyOf(processedNames);
+        TaggedTypeDefinition existing = typeManager.getKnownTaggedTypes().values().stream().filter(ttd ->
+                ttd.getTags().stream().<@ExpressionIdentifier String>map(tt -> tt.getName()).collect(ImmutableSet.<@ExpressionIdentifier String>toImmutableSet()).equals(namesAsSet)
+        ).findFirst().orElse(null);
+        if (existing != null)
+            return existing;
+        
         for (int i = 0; i < 100; i++)
         {
             @SuppressWarnings("identifier")
@@ -1075,18 +1079,41 @@ public class RData
                 }
 
                 TaggedTypeDefinition taggedTypeDefinition = getTaggedTypeForFactors(levelNames, typeManager);
+                ImmutableList.Builder<Either<String, TaggedValue>> factorValueBuilder = ImmutableList.builderWithExpectedSize(values.length);
+                for (int n : values)
+                {
+                    if (hasNAs)
+                    {
+                        factorValueBuilder.add(Either.<String, TaggedValue>right(n == NA_AS_INTEGER ? typeManager.maybeMissing() : typeManager.maybePresent(new TaggedValue(lookupTag(n, levelNames, taggedTypeDefinition), null, taggedTypeDefinition))));
+                    }
+                    else
+                    {
+                        factorValueBuilder.add(Either.<String, TaggedValue>right(new TaggedValue(lookupTag(n, levelNames, taggedTypeDefinition), null, taggedTypeDefinition)));
+                    }
+                }
+                ImmutableList<Either<String, TaggedValue>> factorValues = factorValueBuilder.build();
+                
                 if (hasNAs)
                 {
-                    ImmutableList<Either<String, TaggedValue>> factorValues = IntStream.of(values).mapToObj(n -> Either.<String, TaggedValue>right(n == NA_AS_INTEGER ? typeManager.maybeMissing() : typeManager.maybePresent(new TaggedValue(n, null, taggedTypeDefinition)))).collect(ImmutableList.<Either<String, TaggedValue>>toImmutableList());
+                    
                     return makeMaybeColumn(taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager), factorValues);
                 }
                 else
                 {
-                    ImmutableList<Either<String, TaggedValue>> factorValues = IntStream.of(values).mapToObj(n -> Either.<String, TaggedValue>right(new TaggedValue(n, null, taggedTypeDefinition))).collect(ImmutableList.<Either<String, TaggedValue>>toImmutableList());
                     return new Pair<>(rs -> {
                         return new MemoryTaggedColumn(rs, columnName, taggedTypeDefinition.getTaggedTypeName(), ImmutableList.of(), Utility.mapList(taggedTypeDefinition.getTags(), t -> new TagType<>(t.getName(), null)), factorValues, new TaggedValue(0, null, taggedTypeDefinition));
                     }, values.length);
                 }
+            }
+
+            private int lookupTag(int tagIndex, ImmutableList<String> levelNames, TaggedTypeDefinition taggedTypeDefinition) throws UserException
+            {
+                if (tagIndex > levelNames.size())
+                    throw new UserException("Factor index does not have name");
+                // Map one-based back to zero-based:
+                @SuppressWarnings("identifier")
+                String name = IdentifierUtility.fixExpressionIdentifier(levelNames.get(tagIndex - 1), levelNames.get(tagIndex - 1));
+                return Utility.findFirstIndex(taggedTypeDefinition.getTags(), tt -> tt.getName().equals(name)).orElseThrow(() -> new UserException("Could not find tag named " + name + " in definition"));
             }
 
             @Override
@@ -1532,16 +1559,13 @@ public class RData
                     TagType<DataType> onlyTag = tagTypes.get(0);
                     if (onlyTag.getInner() != null)
                     {
+                        // Flatten by ignoring taggedness:
                         return onlyTag.getInner().fromCollapsed((i, prog) -> {
                             @Value Object inner = g.getWithProgress(i, prog).getInner();
                             if (inner == null)
                                 throw new InternalException("Null inner value on tag with inner type");
                             return inner;
                         }).applyGet(this);
-                    }
-                    else
-                    {
-                        return DataType.TEXT.fromCollapsed((i, prog) -> DataTypeUtility.value(onlyTag.getName())).applyGet(this);
                     }
                 }
                 if (tagTypes.size() == 2)
@@ -2073,8 +2097,8 @@ public class RData
             @Override
             public @Nullable Void visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
-                throw new InternalException("TODO");
-                //return null;
+                RValue attributes = makePairList(ImmutableList.of(new PairListEntry(null, string("levels"), stringVector(Utility.<String, Optional<@Value String>>mapListI(levelNames, s -> Optional.of(DataTypeUtility.value(s))), null))));
+                return visitIntList(values, attributes);
             }
 
             @Override

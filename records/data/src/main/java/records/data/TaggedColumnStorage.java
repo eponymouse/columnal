@@ -73,6 +73,8 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedV
             public TaggedValue _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
             {
                 int tagIndex = tagStore.getInt(i);
+                if (tagIndex >= tagTypes.size())
+                    throw new InternalException("Found tag index " + tagIndex + " but only know of " + tagTypes.size() + " tags");
                 ColumnStorage<?> innerStorage = tagTypes.get(tagIndex).getInner();
                 if (innerStorage == null)
                     return new TaggedValue(tagIndex, null, DataTypeUtility.fromTags(tagTypes));
