@@ -37,7 +37,7 @@ public class Absolute extends SingleNumericInOutFunction
                         return DataTypeUtility.value(BigDecimal.valueOf(l).negate());
                     else
                         return DataTypeUtility.value(Math.abs(l));
-                }, d -> DataTypeUtility.value(d));
+                }, d -> DataTypeUtility.value(d.abs()));
             }
         };
     }
