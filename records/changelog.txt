@@ -15,5 +15,6 @@ Add Linux version, fix name resolution bugs.
 Version 0.6.2 (YYYY-MM-DD)
 ==========================
 
+- Added import and export to/from R's RDS format (.rds and .Rdata files)
 - Added a couple more weight units (lb, oz)
 - Added a "years between" function.
