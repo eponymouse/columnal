@@ -100,7 +100,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     public void testExplanationSimple2() throws UserException, InternalException
     {
         addCheck("T2", CheckType.ALL_ROWS, "column\\\\asc < 4");
-        testFailureExplanation("asc was 4, using asc (row 4)", "asc < 4 was false");
+        testFailureExplanation("asc < 4 was false", "asc was 4, using asc (row 4)");
     }
 
     @Test
@@ -108,10 +108,10 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     {
         addCheck("T2", CheckType.STANDALONE, "@call function\\\\all(table\\\\T2#asc, ? < 4)");
         testFailureExplanation(
-     //"asc was 4, using asc (row 4)",
-            "? was 4",
+     //"asc was 4, using asc (row 4)"
+      "all(T2#asc, ? < 4) was false, using asc (row 4)",
             "? < 4 was false",
-            "all(T2#asc, ? < 4) was false, using asc (row 4)");
+            "? was 4");
     }
 
     @Test
@@ -119,10 +119,11 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     {
         addCheck("T2", CheckType.ALL_ROWS, "column\\\\asc < @call function\\\\text length(column\\\\alphabet animals)");
         testFailureExplanation(
-     "asc was 3, using asc (row 3)",
-            "alphabet animals was \"Cat\", using alphabet animals (row 3)",
+      "asc < text length(alphabet animals) was false",
             "text length(alphabet animals) was 3",
-            "asc < text length(alphabet animals) was false");
+            "alphabet animals was \"Cat\", using alphabet animals (row 3)",
+            "asc was 3, using asc (row 3)"
+            );
     }
 
     @Test
@@ -130,10 +131,10 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     {
         addCheck("T2", CheckType.ALL_ROWS, "(1 / (column\\\\asc - 3)) < 1.1");
         testFailureExplanation(
-                "asc was 3, using asc (row 3)",
-                "asc - 3 was 0",
-                "Division by zero in: 1 / (column\\\\asc - 3)",
-                "In: (1 / (column\\\\asc - 3)) < 1.1");
+     "In: (1 / (column\\\\asc - 3)) < 1.1",
+           "Division by zero in: 1 / (column\\\\asc - 3)",
+           "asc - 3 was 0",
+           "asc was 3, using asc (row 3)");
     }
 
     @Test
@@ -141,13 +142,13 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     {
         addCheck("T2", CheckType.ALL_ROWS, "@if (column\\\\asc > 2) @then (1 / (column\\\\asc - 3)) @else 0 @endif < 1.1");
         testFailureExplanation(
-                
-                "asc was 3, using asc (row 3)",
-                "asc > 2 was true",
-                "asc - 3 was 0",
-                "Division by zero in: 1 / (column\\\\asc - 3)",
-                "In: @if column\\\\asc > 2 @then 1 / (column\\\\asc - 3) @else 0 @endif",
-                "In: @if column\\\\asc > 2 @then 1 / (column\\\\asc - 3) @else 0 @endif < 1.1");
+      "In: @if column\\\\asc > 2 @then 1 / (column\\\\asc - 3) @else 0 @endif < 1.1",
+            "In: @if column\\\\asc > 2 @then 1 / (column\\\\asc - 3) @else 0 @endif",
+            "Division by zero in: 1 / (column\\\\asc - 3)",
+            "asc - 3 was 0",
+            "asc > 2 was true",
+            "asc was 3, using asc (row 3)"
+            );
     }
 
     @Test
@@ -155,19 +156,18 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     {
         addCheck("T2", CheckType.NO_ROWS, "@match (num: column\\\\asc, animal: column\\\\alphabet animals) @case (num: n) @given n > 5 @then false @case (num: _, animal: animal) @then (@call function\\\\text length(animal) =~ n) & (n > 5) @endmatch");
         testFailureExplanation(
-                "(num: asc, animal: alphabet animals) was (animal: \"Aardvark\", num: 1), using asc (row 1), alphabet animals (row 1)",
-                "(num: n) matched",
-                "n was 1",
-                "n > 5 was false",
-                "(num: _, animal: animal) matched",
-                "animal was \"Aardvark\"",
-                "text length(animal) was 8",
-                "n matched",
-                "text length(animal) =~ n was true",
-                "n was 8",
-                "n > 5 was true",
+                "@match (num: asc, animal: alphabet animals) @case (num: n) @given n > 5 @then false @case (num: _, animal: animal) @then (text length(animal) =~ n) & (n > 5) @endmatch was true",
                 "(text length(animal) =~ n) & (n > 5) was true",
-                "@match (num: asc, animal: alphabet animals) @case (num: n) @given n > 5 @then false @case (num: _, animal: animal) @then (text length(animal) =~ n) & (n > 5) @endmatch was true");
+                "n > 5 was true",
+                "n was 8",
+                "text length(animal) =~ n was true",
+                "text length(animal) was 8",
+                "animal was \"Aardvark\"",
+                "(num: _, animal: animal) matched",
+                "n > 5 was false",
+                "n was 1",
+                "(num: n) matched",
+                "(num: asc, animal: alphabet animals) was (animal: \"Aardvark\", num: 1), using asc (row 1), alphabet animals (row 1)");
     }
 
     @Test
@@ -175,11 +175,11 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
     {
         addCheck("T2", CheckType.NO_ROWS, "@if (column\\\\asc + 1) > 3 @then (column\\\\asc + 1) > 4 @else (column\\\\asc + 1) > 3 @endif");
         testFailureExplanation(
-                "asc was 4, using asc (row 4)",
-                "asc + 1 was 5",
-                "(asc + 1) > 3 was true",
-                "(asc + 1) > 4 was true",
-                "@if (asc + 1) > 3 @then (asc + 1) > 4 @else (asc + 1) > 3 @endif was true"
+      "@if (asc + 1) > 3 @then (asc + 1) > 4 @else (asc + 1) > 3 @endif was true",
+            "(asc + 1) > 4 was true",
+            "(asc + 1) > 3 was true",
+            "asc + 1 was 5",
+            "asc was 4, using asc (row 4)"
         );
     }  
 
@@ -193,7 +193,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
         TextFlow textFlow = lookup(".explanation-flow").query();
         assertNotNull(textFlow);
         String allText = TestUtil.fx(() -> textFlow.getChildren().stream().filter(t -> t instanceof Text).map(t -> ((Text)t).getText()).collect(Collectors.joining()));
-        String[] splitText = allText.split("\n(\u21aa )?", -1);
+        String[] splitText = allText.split("\n(\u2b11 )?", -1);
         assertArrayEquals(lines, splitText);
     }
 
