@@ -345,7 +345,14 @@ public class HTMLImporter implements Importer
             if (outcome != null)
             {
                 @NonNull ImportInfo<PlainImportInfo> outcomeNonNull = outcome;
-                SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), imp.processTrimmed(outcomeNonNull.getFormat().trim.trim(vals)), outcomeNonNull.getFormat().columnInfo));
+                SimulationSupplier<DataSource> makeDataSource = new SimulationSupplier<DataSource>()
+                {
+                    @Override
+                    public DataSource get() throws InternalException, UserException
+                    {
+                        return new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), imp.processTrimmed(outcomeNonNull.getFormat().trim.trim(vals)), outcomeNonNull.getFormat().columnInfo));
+                    }
+                };
                 return makeDataSource;
             } else
                 return null;
