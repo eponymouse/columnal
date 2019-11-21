@@ -71,14 +71,13 @@ public class TableManager
     private final List<GridComment> comments = new ArrayList<>();
     private final UnitManager unitManager;
     private final TypeManager typeManager;
-    private final TableManagerListener listener;
+    private final ArrayList<TableManagerListener> listeners = new ArrayList<>();
     private final TransformationLoader transformationLoader;
     private final PluggedContentHandler pluginManager;
 
-    public TableManager(TransformationLoader transformationLoader, PluggedContentHandler pluggedContentHandler, TableManagerListener listener) throws UserException, InternalException
+    public TableManager(TransformationLoader transformationLoader, PluggedContentHandler pluggedContentHandler) throws UserException, InternalException
     {
         this.transformationLoader = transformationLoader;
-        this.listener = listener;
         this.unitManager = new UnitManager();
         this.typeManager = new TypeManager(unitManager);
         this.pluginManager = pluggedContentHandler;
@@ -131,11 +130,12 @@ public class TableManager
         if (table instanceof DataSource)
         {
             if (sources.add((DataSource) table))
-                listener.addSource((DataSource) table);
-        } else if (table instanceof Transformation)
+                listeners.forEach(l -> l.addSource((DataSource) table));
+        }
+        else if (table instanceof Transformation)
         {
             if (transformations.add((Transformation) table))
-                listener.addTransformation((Transformation) table);
+                listeners.forEach(l -> l.addTransformation((Transformation) table));
         }
 
         try
@@ -246,7 +246,7 @@ public class TableManager
                 if (topLevelItemContext.comment() != null)
                     loadComment(SaveTag.generateRandom(), topLevelItemContext.comment()).either_(exceptions::add, c -> {
                         comments.add(c);
-                        listener.addComment(c);
+                        listeners.forEach(l -> l.addComment(c));
                     });
             }
 
@@ -288,7 +288,7 @@ public class TableManager
             contentHandlers.put("COMMENT", tagAndContent -> {
                 loadComment(tagAndContent.getFirst(), Utility.<TableParser2.CommentContext, TableParser2>parseAsOne(tagAndContent.getSecond(), TableLexer2::new, TableParser2::new, p -> p.comment())).either_(exceptions::add, c -> {
                     comments.add(c);
-                    listener.addComment(c);
+                    listeners.forEach(l -> l.addComment(c));
                 });
             });
             contentHandlers.put("DISPLAY", tagAndContent -> {
@@ -559,14 +559,14 @@ public class TableManager
     public void addComment(GridComment comment)
     {
         comments.add(comment);
-        listener.addComment(comment);
+        listeners.forEach(l -> l.addComment(comment));
     }
 
     @OnThread(Tag.Simulation)
     public void removeComment(GridComment comment)
     {
         comments.remove(comment);
-        listener.removeComment(comment);
+        listeners.forEach(l -> l.removeComment(comment));
     }
 
     public static interface TableMaker<T extends Table>
@@ -732,7 +732,10 @@ public class TableManager
                         usedIds.remove(tableId);
                 }
             }
-            listener.removeTable(removed, remainingCount);
+            for (TableManagerListener l : listeners)
+            {
+                l.removeTable(removed, remainingCount);
+            }
             if (then != null)
                 removed.save(null, then, renames);
         }
@@ -808,6 +811,11 @@ public class TableManager
                 this.<Table>edit(table.getId(), null, new TableAndColumnRenames(ImmutableMap.of(table.getId(), new Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>>(newName, ImmutableMap.of()))));
             });
         };
+    }
+    
+    public void addListener(TableManagerListener listener)
+    {
+        listeners.add(listener);
     }
 
     public static interface TableManagerListener

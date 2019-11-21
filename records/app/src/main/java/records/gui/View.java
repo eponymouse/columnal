@@ -708,7 +708,8 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         diskFile = new SimpleObjectProperty<>(location);
         hintMessage = new HintMessage();
         FXUtility.setPseudoclass(View.this, "empty", true);
-        tableManager = new TableManager(TransformationManager.getInstance(), new PluginManager(), new TableManagerListener()
+        tableManager = new TableManager(TransformationManager.getInstance(), new PluginManager());
+        tableManager.addListener(new TableManagerListener()
         {
             // No-one will add tables after the constructor, so this is okay:
             @SuppressWarnings("initialization")

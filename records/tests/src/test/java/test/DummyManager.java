@@ -13,11 +13,12 @@ import records.transformations.TransformationManager;
 /**
  * A TableManager implementation useful for testing
  */
-public class DummyManager extends TableManager
+public final class DummyManager extends TableManager
 {
     public DummyManager() throws InternalException, UserException
     {
-        super(TransformationManager.getInstance(), onError -> ImmutableMap.of(), new TableManagerListener()
+        super(TransformationManager.getInstance(), onError -> ImmutableMap.of());
+        addListener(new TableManagerListener()
         {
             @Override
             public void removeTable(Table t, int remainingCount)
