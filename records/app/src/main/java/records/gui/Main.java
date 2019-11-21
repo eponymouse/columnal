@@ -25,6 +25,7 @@ import records.exporters.HTMLExporter;
 import records.exporters.RExporter;
 import records.exporters.manager.ExporterManager;
 import records.gui.MainWindow.MainWindowActions;
+import records.importers.RImporter;
 import records.plugins.PluginManager;
 import utility.gui.Clickable;
 import records.importers.ExcelImporter;
@@ -207,6 +208,7 @@ public class Main extends Application
         ImporterManager.getInstance().registerImporter(new TextImporter());
         ImporterManager.getInstance().registerImporter(new HTMLImporter());
         ImporterManager.getInstance().registerImporter(new ExcelImporter());
+        ImporterManager.getInstance().registerImporter(new RImporter());
         Log.normal("Registered importers");
         ExporterManager.getInstance().registerExporter(new CSVExporter());
         ExporterManager.getInstance().registerExporter(new HTMLExporter());

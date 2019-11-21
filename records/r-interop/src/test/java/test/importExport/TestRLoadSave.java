@@ -19,6 +19,7 @@ import org.junit.runner.RunWith;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.DataTestUtil;
+import records.data.EditableRecordSet;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
@@ -193,7 +194,7 @@ public class TestRLoadSave
         RValue loaded = RData.readRData(new File(resource.toURI()));
         System.out.println(RData.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(new UnitManager());
-        ImmutableList<Pair<String, RecordSet>> rs = RData.convertRToTable(typeManager, loaded);
+        ImmutableList<Pair<String, EditableRecordSet>> rs = RData.convertRToTable(typeManager, loaded);
         assertEquals(ImmutableSet.of("df", "df2", "datetimeZoned2"), rs.stream().map(p -> p.getFirst()).collect(ImmutableSet.<String>toImmutableSet()));
     }
 
