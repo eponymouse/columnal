@@ -113,7 +113,7 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
     }
 
     @OnThread(Tag.Simulation)
-    private @Value Object getResult() throws InternalException, UserException
+    public @Value Boolean getResult() throws InternalException, UserException
     {
         if (type == null)
         {
@@ -147,7 +147,7 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
             {
                 ValueResult r = checkExpression.calculateValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty(), true));
                 explanation = r.makeExplanation(null);
-                return r.value;
+                return Utility.cast(r.value, Boolean.class);
             }
             else
             {

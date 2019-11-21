@@ -205,7 +205,7 @@ public class GUI
     /**
      * Makes a BorderPane with given left and right, other items left null.
      */
-    public static BorderPane borderLeftRight(Node left, Node right, String... styleClasses)
+    public static BorderPane borderLeftRight(@Nullable Node left, @Nullable Node right, String... styleClasses)
     {
         BorderPane borderPane = new BorderPane(null, null, right, null, left);
         borderPane.getStyleClass().addAll(styleClasses);

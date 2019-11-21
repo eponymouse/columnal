@@ -177,8 +177,14 @@ public class MainWindow
                 }
             });
         }
+
+        CheckSummaryLabel checksLabel = new CheckSummaryLabel(v.getManager());
+        BorderPane statusBar = GUI.borderLeftRight(checksLabel, null);
+        FXUtility.addChangeListenerPlatformNNAndCallNow(checksLabel.noChecksProperty(), noChecks -> {
+            statusBar.setVisible(!noChecks);
+        });
             
-        BorderPane root = new BorderPane(stackPane, menuBar, null, null, null);
+        BorderPane root = new BorderPane(stackPane, menuBar, null, statusBar, null);
         Scene scene = new Scene(root);
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("mainview.css"));
         stage.setScene(scene);
