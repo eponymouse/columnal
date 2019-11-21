@@ -3,6 +3,8 @@ package records.gui;
 import annotation.qual.Value;
 import com.google.common.collect.MapMaker;
 import javafx.beans.binding.BooleanExpression;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -22,6 +24,7 @@ import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 
 import java.util.Map;
 import java.util.Optional;
@@ -33,17 +36,13 @@ public final class CheckSummaryLabel extends BorderPane
     // Note that weakKeys makes an identity hash map, deliberately: 
     @OnThread(Tag.Simulation)
     private final Map<Check, Optional<Boolean>> currentResults = new MapMaker().weakKeys().makeMap();
-    private final CheckBox counts = new CheckBox() {
-        @Override
-        public void requestFocus()
-        {
-            // Don't focus
-        }
-    };
-    
+    private final Label counts = GUI.labelRaw("No checks", "check-summary-counts");
+    private BooleanProperty hasChecksProperty = new SimpleBooleanProperty(false);
+
     // Should be called before any tables are added
     public CheckSummaryLabel(TableManager tableManager)
     {
+        getStyleClass().add("check-summary");
         setCenter(counts);
         counts.setFocusTraversable(false);
         tableManager.addListener(new TableManagerListener()
@@ -108,7 +107,8 @@ public final class CheckSummaryLabel extends BorderPane
         {
             FXUtility.runFX(() -> {
                 this.counts.setText("No checks");
-                this.counts.setDisable(true);
+                hasChecksProperty.setValue(false);
+                FXUtility.setPseudoclass(this.counts, "failing", false);
             });
         }
         else
@@ -116,14 +116,15 @@ public final class CheckSummaryLabel extends BorderPane
             // If any items are currently missing a result, we display a question mark: 
             OptionalInt passing = currentResults.values().stream().reduce(OptionalInt.of(0), (OptionalInt count, Optional<Boolean> result) -> count.isPresent() && result.isPresent() ? OptionalInt.of(count.getAsInt() + (result.get() ? 1 : 0)) : OptionalInt.empty(), (a, b) -> a.isPresent() && b.isPresent() ? OptionalInt.of(a.getAsInt() + b.getAsInt()) : OptionalInt.empty());
             FXUtility.runFX(() -> {
-                this.counts.setText("Checks: " + (passing.isPresent() ? passing.getAsInt() + "/" + total : "?/" + total));
-                this.counts.setDisable(false);
+                this.counts.setText("Checks: " + (passing.isPresent() ? passing.getAsInt() + "/" + total : "?/" + total) + " OK");
+                FXUtility.setPseudoclass(this.counts, "failing", !passing.isPresent() || passing.getAsInt() != total);
+                hasChecksProperty.set(true);
             });
         }    
     }
     
-    public BooleanExpression noChecksProperty()
+    public BooleanExpression hasChecksProperty()
     {
-        return this.counts.disableProperty();
+        return this.hasChecksProperty;
     }
 }
