@@ -415,7 +415,7 @@ public class HTMLImporter implements Importer
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> onLoad)
+    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> recordLoadedTable)
     {
         Workers.onWorkerThread("Importing HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_("Error importing HTML", () -> {
             try
@@ -423,7 +423,7 @@ public class HTMLImporter implements Importer
                 importHTMLFileThen(parent, tableManager, src, destination, origin, dataSources -> {
                     for (DataSource dataSource : dataSources)
                     {
-                        onLoad.consume(dataSource);
+                        recordLoadedTable.consume(dataSource);
                     }
                 });
             }

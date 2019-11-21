@@ -74,13 +74,13 @@ public class TextImporter implements Importer
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> onLoad)
+    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> recordLoadedTable)
     {
         Workers.onWorkerThread("GuessFormat data", Priority.LOAD_FROM_DISK, () ->
         {
             try
             {
-                importTextFile(parent, tableManager, src, destination, rs -> onLoad.consume(rs));
+                importTextFile(parent, tableManager, src, destination, rs -> recordLoadedTable.consume(rs));
             }
             catch (IOException ex)
             {

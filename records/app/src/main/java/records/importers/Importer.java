@@ -32,12 +32,12 @@ public interface Importer
      * @param tableManager The destination table manager
      * @param src The file to read from
      * @param origin The path that the file comes from (in case of resolving relative links from file)
-     * @param onLoad The callback to call if the load is successful.  If you
+     * @param recordLoadedTable The callback to call if the load is successful.  If you
      *               have multiple tables to import, calling this multiple times
      *               is safe.
      */
     @OnThread(Tag.FXPlatform)
-    public void importFile(Window parent, TableManager tableManager, CellPosition destPosition, File src, URL origin, SimulationConsumerNoError<DataSource> onLoad);
+    public void importFile(Window parent, TableManager tableManager, CellPosition destPosition, File src, URL origin, SimulationConsumerNoError<DataSource> recordLoadedTable);
 
     /**
      * The name of the importer to display to the user when picking an importer
