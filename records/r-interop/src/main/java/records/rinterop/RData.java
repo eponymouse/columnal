@@ -1182,78 +1182,91 @@ public class RData
         return new Pair<>(curType, ImmutableMap.copyOf(conversions));
     }
     
-    public static ImmutableList<RecordSet> convertRToTable(TypeManager typeManager, RValue rValue) throws UserException, InternalException
+    public static ImmutableList<Pair<String, RecordSet>> convertRToTable(TypeManager typeManager, RValue rValue) throws UserException, InternalException
     {
         // R tables are usually a list of columns, which suits us:
-        return rValue.visit(new RVisitor<ImmutableList<RecordSet>>()
+        return rValue.visit(new RVisitor<ImmutableList<Pair<String, RecordSet>>>()
         {
-            private ImmutableList<RecordSet> singleColumn() throws UserException, InternalException
+            private ImmutableList<Pair<String, RecordSet>> singleColumn() throws UserException, InternalException
             {
                 Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> p = convertRToColumn(typeManager, rValue, new ColumnId("Result"));
-                return ImmutableList.<RecordSet>of(new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(p.getFirst()), p.getSecond()));
+                return ImmutableList.<Pair<String, RecordSet>>of(new Pair<>("Value", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(p.getFirst()), p.getSecond())));
             }
 
             @Override
-            public ImmutableList<RecordSet> visitNil() throws InternalException, UserException
+            public ImmutableList<Pair<String, RecordSet>> visitNil() throws InternalException, UserException
             {
                 return ImmutableList.of();
             }
 
             @Override
-            public ImmutableList<RecordSet> visitString(@Nullable @Value String s) throws InternalException, UserException
+            public ImmutableList<Pair<String, RecordSet>> visitString(@Nullable @Value String s) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public ImmutableList<RecordSet> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<Pair<String, RecordSet>> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public ImmutableList<RecordSet> visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<Pair<String, RecordSet>> visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public ImmutableList<RecordSet> visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<Pair<String, RecordSet>> visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public ImmutableList<RecordSet> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<Pair<String, RecordSet>> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public ImmutableList<RecordSet> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<Pair<String, RecordSet>> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public ImmutableList<RecordSet> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
+            public ImmutableList<Pair<String, RecordSet>> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public ImmutableList<RecordSet> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
+            public ImmutableList<Pair<String, RecordSet>> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
             {
-                ImmutableList.Builder<RecordSet> r = ImmutableList.builder();
+                ImmutableList.Builder<Pair<String, RecordSet>> r = ImmutableList.builder();
                 for (PairListEntry item : items)
                 {
-                    r.addAll(convertRToTable(typeManager, item.item));
+                    ImmutableList<Pair<String, RecordSet>> found = convertRToTable(typeManager, item.item);
+                    if (item.tag != null && found.size() == 1)
+                    {
+                        String name = getString(item.tag);
+                        if (name != null)
+                        {
+                            // Skip the random seed; very unlikely they want that as a table:
+                            if (name.equals(".Random.seed"))
+                                continue;
+                            
+                            found = ImmutableList.<Pair<String, RecordSet>>of(found.get(0).<String>replaceFirst(name));
+                        }
+                    }
+                    r.addAll(found);
                 }
                 return r.build();
             }
 
             @Override
-            public ImmutableList<RecordSet> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<Pair<String, RecordSet>> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 // Tricky; could be a list of tables, a list of columns or a list of values!
                 // First try as table (list of columns):
@@ -1263,9 +1276,10 @@ public class RData
                 if (isDataFrame)
                 {
                     ImmutableList<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>> columns = Utility.mapListExI_Index(values, (i, v) -> convertRToColumn(typeManager, v, getColumnName(attrMap.get("names"), i)));
+                    // Check columns are all the same length:
                     if (!columns.isEmpty() && columns.stream().mapToInt(p -> p.getSecond()).distinct().count() == 1)
                     {
-                        return ImmutableList.of(new <EditableColumn>KnownLengthRecordSet(Utility.<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>, SimulationFunction<RecordSet, EditableColumn>>mapList(columns, p -> p.getFirst()), columns.get(0).getSecond()));
+                        return ImmutableList.of(new Pair<>("Table", new <EditableColumn>KnownLengthRecordSet(Utility.<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>, SimulationFunction<RecordSet, EditableColumn>>mapList(columns, p -> p.getFirst()), columns.get(0).getSecond())));
                     }
                     throw new UserException("Columns are of differing lengths: " + columns.stream().map(p -> "" + p.getSecond()).collect(Collectors.joining(", ")));
                 }
@@ -1293,7 +1307,7 @@ public class RData
                     if (!hasDataFrames)
                         return singleColumn();
                     
-                    ImmutableList.Builder<RecordSet> r = ImmutableList.builder();
+                    ImmutableList.Builder<Pair<String, RecordSet>> r = ImmutableList.builder();
                     for (RValue value : values)
                     {
                         r.addAll(convertRToTable(typeManager, value));

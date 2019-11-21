@@ -5,6 +5,7 @@ import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -80,7 +81,7 @@ public class TestRLoadSave
                 return new UnitManager(null);
             else */
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0);
+        RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0).getSecond();
                 
         assertEquals(ImmutableList.of(new ColumnId("Sepal Length"), new ColumnId("Sepal Width"), new ColumnId("Petal Length"), new ColumnId("Petal Width"), new ColumnId("Species")), rs.getColumnIds());
         
@@ -102,7 +103,7 @@ public class TestRLoadSave
                 return new UnitManager(null);
             else */
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0);
+        RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0).getSecond();
 
         assertEquals(ImmutableList.of(new ColumnId("mpg"), new ColumnId("cyl"), new ColumnId("disp"), new ColumnId("hp"), new ColumnId("drat"), new ColumnId("wt"), new ColumnId("qsec"), new ColumnId("vs"), new ColumnId("am"), new ColumnId("gear"), new ColumnId("carb")), rs.getColumnIds());
 
@@ -124,8 +125,7 @@ public class TestRLoadSave
                 return new UnitManager(null);
             else */
         TypeManager typeManager = new TypeManager(new UnitManager());
-        ImmutableList<RecordSet> rs = RData.convertRToTable(typeManager, loaded);
-
+        RData.convertRToTable(typeManager, loaded);
     }
 
     @Test
@@ -164,7 +164,7 @@ public class TestRLoadSave
         RValue loaded = RData.readRData(new File(resource.toURI()));
         System.out.println(RData.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet r = RData.convertRToTable(typeManager, loaded).get(0);
+        RecordSet r = RData.convertRToTable(typeManager, loaded).get(0).getSecond();
         // df <- data.frame(c(TRUE, NA, FALSE), c(36, NA, -35.2), c(1, NA, 2), factor(c("A", NA, "B")), as.character(c("Hello", NA, "Bye")), c(ISOdate(2005,10,21,18,47,22,tz="America/New_York"), NA, NA), stringsAsFactors=FALSE)
         
         assertEquals(maybeType(typeManager, DataType.BOOLEAN), r.getColumns().get(0).getType().getType());
@@ -183,6 +183,18 @@ public class TestRLoadSave
 
         assertEquals(maybeType(typeManager, DataType.date(new DateTimeInfo(DateTimeType.DATETIME))), r.getColumns().get(5).getType().getType());
         DataTestUtil.assertValueListEqual("Date column", ImmutableList.of(typeManager.maybePresent(LocalDateTime.of(2005, 10, 21, 22, 47, 22, 0)), typeManager.maybeMissing(), typeManager.maybeMissing()), asList(r.getColumns().get(5)));
+    }
+
+    @Test
+    public void testImportRData7() throws Exception
+    {
+        @SuppressWarnings("nullness")
+        @NonNull URL resource = getClass().getClassLoader().getResource("df-df2.Rdata");
+        RValue loaded = RData.readRData(new File(resource.toURI()));
+        System.out.println(RData.prettyPrint(loaded));
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        ImmutableList<Pair<String, RecordSet>> rs = RData.convertRToTable(typeManager, loaded);
+        assertEquals(ImmutableSet.of("df", "df2", "datetimeZoned2"), rs.stream().map(p -> p.getFirst()).collect(ImmutableSet.<String>toImmutableSet()));
     }
 
     private ImmutableList<@Value Object> asList(Column column) throws InternalException, UserException
@@ -244,7 +256,7 @@ public class TestRLoadSave
                     return;
             }
             TypeManager typeManager = original.typeManager;
-            RecordSet reloaded = RData.convertRToTable(typeManager, roundTripped).get(0);
+            RecordSet reloaded = RData.convertRToTable(typeManager, roundTripped).get(0).getSecond();
             System.out.println(RData.prettyPrint(roundTripped));
             assertEquals(original.recordSet.getColumnIds(), reloaded.getColumnIds());
             assertEquals(original.recordSet.getLength(), reloaded.getLength());
