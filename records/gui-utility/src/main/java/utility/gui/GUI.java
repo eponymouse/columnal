@@ -144,6 +144,13 @@ public class GUI
         return addIdClass(menu, menuNameKey);
     }
 
+    public static CheckMenuItem checkMenuItem(@LocalizableKey String menuItemKey, MenuItem... menuItems)
+    {
+        CheckMenuItem menu = new CheckMenuItem(TranslationUtility.getString(menuItemKey));
+        menu.setId(makeId(menuItemKey));
+        return addIdClass(menu, menuItemKey);
+    }
+
     public static MenuItem menuItem(@LocalizableKey String menuItemKey, FXPlatformRunnable onAction, String... styleClasses)
     {
         return menuItemPos(menuItemKey, pos -> onAction.run(), styleClasses);
@@ -355,6 +362,13 @@ public class GUI
         item.setToggleGroup(toggleGroup);
         item.getStyleClass().add(makeId(labelKey));
         item.getStyleClass().addAll(styleClasses);
+        return item;
+    }
+
+    public static RadioMenuItem radioMenuItem(@LocalizableKey String labelKey, ToggleGroup toggleGroup)
+    {
+        RadioMenuItem item = new RadioMenuItem(TranslationUtility.getString(labelKey));
+        item.setToggleGroup(toggleGroup);
         return item;
     }
     

@@ -10,8 +10,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TitledPane;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -66,6 +68,11 @@ public class MainWindow
     private final Stage stage;
     private final View v;
     private final CheckSummaryLabel checksLabel;
+    
+    private final ToggleGroup viewLeftToggleGroup = new ToggleGroup();
+    private final RadioMenuItem viewLeftNone;
+    private final RadioMenuItem viewLeftChecks;
+    private LeftPaneType curLeftPaneType;
 
     public static interface MainWindowActions
     {
@@ -153,13 +160,25 @@ public class MainWindow
                             new UnitsDialog(v, v.getManager().getTypeManager()).showAndWaitNested();
                             v.modified();
                         }),
-                        GUI.menuItem("menu.view.tasks", () -> TaskManagerWindow.getInstance().show())
+                        GUI.menuItem("menu.view.tasks", () -> TaskManagerWindow.getInstance().show()),
+                        new SeparatorMenuItem(),
+                        this.viewLeftNone = GUI.radioMenuItem("menu.view.noPane", viewLeftToggleGroup),
+                        this.viewLeftChecks = GUI.radioMenuItem("menu.view.checks", viewLeftToggleGroup)
                 ),
                 GUI.menu("menu.help",
                         GUI.menuItem("menu.help.about", () -> new AboutDialog(v).showAndWait())
                 )
         );
         menuBar.setUseSystemMenuBar(true);
+
+        curLeftPaneType = LeftPaneType.NONE;
+        viewLeftToggleGroup.selectToggle(viewLeftNone);
+        FXUtility.addChangeListenerPlatformNN(viewLeftToggleGroup.selectedToggleProperty(), l -> {
+            if (l == viewLeftNone)
+                FXUtility.mouse(this).showLeftPane(LeftPaneType.NONE);
+            else if (l == viewLeftChecks)
+                FXUtility.mouse(this).showLeftPane(LeftPaneType.LIST_CHECKS);
+        });
 
         /*
         MenuItem saveItem = new MenuItem("Save to Clipboard");
@@ -254,15 +273,21 @@ public class MainWindow
 
     private void showLeftPane(LeftPaneType leftPaneType)
     {
+        if (leftPaneType == curLeftPaneType)
+            return;
+        curLeftPaneType = leftPaneType;
+        
         if (root.getLeft() instanceof LeftPane)
             ((LeftPane)root.getLeft()).cleanup();
         switch (leftPaneType)
         {
             case NONE:
                 root.setLeft(null);
+                viewLeftToggleGroup.selectToggle(viewLeftNone);
                 break;
             case LIST_CHECKS:
                 root.setLeft(new ChecksLeftPane(checksLabel));
+                viewLeftToggleGroup.selectToggle(viewLeftChecks);
                 break;
         }
     }
