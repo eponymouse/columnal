@@ -11,7 +11,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.InvalidImmediateValueException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.GrammarUtility;
@@ -323,5 +325,34 @@ public class DataTestUtil
         }
         else
             return generateIdent(r);
+    }
+
+    @OnThread(Tag.Simulation)
+    public static List<Either<String, @Value Object>> getAllCollapsedData(DataTypeValue type, int size) throws UserException, InternalException
+    {
+        List<Either<String, @Value Object>> r = new ArrayList<>();
+        for (int i = 0; i < size; i++)
+        {
+            try
+            {
+                r.add(Either.right(type.getCollapsed(i)));
+            }
+            catch (InvalidImmediateValueException e)
+            {
+                r.add(Either.left(e.getInvalid()));
+            }
+        }
+        return r;
+    }
+
+    @OnThread(Tag.Simulation)
+    public static List<@Value Object> getAllCollapsedDataValid(DataTypeValue type, int size) throws UserException, InternalException
+    {
+        List<@Value Object> r = new ArrayList<>();
+        for (int i = 0; i < size; i++)
+        {
+            r.add(type.getCollapsed(i));
+        }
+        return r;
     }
 }

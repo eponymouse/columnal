@@ -122,7 +122,7 @@ public interface CreateDataTableTrait extends FxRobotInterface, ScrollToTrait, C
 
         for (int i = 0; i < columns.size(); i++)
         {
-            DataTestUtil.assertValueListEitherEqual("Column " + columns.get(i).name, columns.get(i).data, TestUtil.getAllCollapsedData(actualColumns.get(i).getType(), columns.get(i).data.size()));
+            DataTestUtil.assertValueListEitherEqual("Column " + columns.get(i).name, columns.get(i).data, DataTestUtil.getAllCollapsedData(actualColumns.get(i).getType(), columns.get(i).data.size()));
         }
     }
 }

@@ -558,7 +558,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         if (sortBy != null)
         {
             DataTypeValue sortByColumn = original.getColumn(sortBy).getType();
-            List<ComparableEither<String, ComparableValue>> sortByData = Utility.mapList(TestUtil.getAllCollapsedData(sortByColumn, original.getLength()), x -> ComparableEither.fromEither(x.map(ComparableValue::new)));
+            List<ComparableEither<String, ComparableValue>> sortByData = Utility.mapList(DataTestUtil.getAllCollapsedData(sortByColumn, original.getLength()), x -> ComparableEither.fromEither(x.map(ComparableValue::new)));
             Collections.sort(sortMap, Comparator.<Integer, ComparableEither<String, ComparableValue>>comparing(i -> sortByData.get(i)));
         }
         

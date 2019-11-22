@@ -216,7 +216,7 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
                 }
                 DataTestUtil.assertValueListEitherEqual("Values for " + srcColName.getFirst().getId().getRaw() + " -> " + joinColName.getRaw(),
                     expected,
-                    TestUtil.getAllCollapsedData(join.getData().getColumn(joinColName).getType(), expected.size()));
+                    DataTestUtil.getAllCollapsedData(join.getData().getColumn(joinColName).getType(), expected.size()));
             }
         }
 

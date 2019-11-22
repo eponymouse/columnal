@@ -1144,24 +1144,6 @@ public class TestUtil
     }
 
     @OnThread(Tag.Simulation)
-    public static List<Either<String, @Value Object>> getAllCollapsedData(DataTypeValue type, int size) throws UserException, InternalException
-    {
-        List<Either<String, @Value Object>> r = new ArrayList<>();
-        for (int i = 0; i < size; i++)
-        {
-            try
-            {
-                r.add(Either.right(type.getCollapsed(i)));
-            }
-            catch (InvalidImmediateValueException e)
-            {
-                r.add(Either.left(e.getInvalid()));
-            }
-        }
-        return r;
-    }
-
-    @OnThread(Tag.Simulation)
     public static Either<String, @Value Object> getSingleCollapsedData(DataTypeValue type, int index) throws UserException, InternalException
     {
         try
