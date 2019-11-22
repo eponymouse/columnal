@@ -1,35 +1,50 @@
 package records.gui;
 
+import annotation.units.AbsColIndex;
+import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.TitledPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.DataSource;
+import records.data.Table.TableDisplayBase;
 import records.data.TableManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.CheckSummaryLabel.ChecksStateListener;
 import records.gui.Main.UpgradeInfo;
 import records.gui.grid.VirtualGrid;
+import records.gui.table.HeadedDisplay;
 import records.importers.manager.ImporterManager;
+import records.transformations.Check;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.TranslationUtility;
+import utility.gui.ScrollPaneFill;
+import utility.gui.SmallDeleteButton;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -47,6 +62,10 @@ import java.util.function.Consumer;
 public class MainWindow
 {
     private final static IdentityHashMap<View, Stage> views = new IdentityHashMap<>();
+    private final BorderPane root;
+    private final Stage stage;
+    private final View v;
+    private final CheckSummaryLabel checksLabel;
 
     public static interface MainWindowActions
     {
@@ -72,60 +91,73 @@ public class MainWindow
     // If src is null, make new
     public static MainWindowActions show(final Stage stage, File destinationFile, @Nullable Pair<File, String> src, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo) throws UserException, InternalException
     {
-        View v = new View(destinationFile);
+        MainWindow mainWindow = new MainWindow(stage, destinationFile, src, upgradeInfo);
+        return mainWindow.getActions();
+    }
+
+    private MainWindow(final Stage stage, File destinationFile, @Nullable Pair<File, String> src, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo) throws UserException, InternalException
+    {
+        this.stage = stage;
+        v = new View(destinationFile);
         // We don't use bind because FXUtility.setIcon needs to temporarily change title:
         v.addTitleListenerAndCallNow(stage::setTitle);
-        views.put(v, stage);
+        views.put(v, this.stage);
         stage.setOnHidden(e -> {
             views.remove(v);
         });
 
         MenuBar menuBar = new MenuBar(
-            GUI.menu("menu.project",
-                GUI.menuItem("menu.project.new", () -> InitialWindow.newProject(stage, null)),
-                GUI.menuItem("menu.project.open", () -> InitialWindow.chooseAndOpenProject(stage, null)),
-                GUI.menu("menu.project.open.recent", InitialWindow.makeRecentProjectMenu(stage, upgradeInfo).toArray(new MenuItem[0])),
-                new SaveMenuItem(v),
-                GUI.menuItem("menu.project.saveAs", () -> {
-                    FileChooser fc = new FileChooser();
-                    fc.getExtensionFilters().addAll(FXUtility.getProjectExtensionFilter(Main.EXTENSION_INCL_DOT));
-                    File dest = fc.showSaveDialog(stage);
-                    if (dest == null)
-                        return;
-                    v.setDiskFileAndSave(dest);
-                }),
-                GUI.menuItem("menu.project.saveCopy", () -> {
-                    FileChooser fc = new FileChooser();
-                    File dest = fc.showSaveDialog(stage);
-                    fc.getExtensionFilters().addAll(FXUtility.getProjectExtensionFilter(Main.EXTENSION_INCL_DOT));
-                    if (dest == null)
-                        return;
-                    v.doSaveTo(false, dest);
-                }),
-                GUI.menuItem("menu.project.close", () -> {stage.hide();}),
-                GUI.menuItem("menu.exit", () -> {closeAll();})
-            ),
-            GUI.menu("menu.edit",
-                GUI.menuItem("menu.edit.undo", () -> {v.undo();})
-            ),
-            GUI.menu("menu.view",
-                // TODO finish the find dialog
-                //GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait()),
-                GUI.menuItem("menu.view.goto.row", () -> v.gotoRowDialog()),
-                new SeparatorMenuItem(),
-                GUI.menuItem("menu.view.types", () -> {
-                    new TypesDialog(v, v.getManager().getTypeManager()).showAndWait();
-                    v.modified();
-                }),
-                GUI.menuItem("menu.view.units", () -> {
-                    new UnitsDialog(v, v.getManager().getTypeManager()).showAndWaitNested();
-                    v.modified();
-                }),
-                GUI.menuItem("menu.view.tasks", () -> TaskManagerWindow.getInstance().show())
-            ),
-            GUI.menu("menu.help",
-                GUI.menuItem("menu.help.about", () -> new AboutDialog(v).showAndWait())
-            )
+                GUI.menu("menu.project",
+                        GUI.menuItem("menu.project.new", () -> InitialWindow.newProject(stage, null)),
+                        GUI.menuItem("menu.project.open", () -> InitialWindow.chooseAndOpenProject(stage, null)),
+                        GUI.menu("menu.project.open.recent", InitialWindow.makeRecentProjectMenu(stage, upgradeInfo).toArray(new MenuItem[0])),
+                        new SaveMenuItem(v),
+                        GUI.menuItem("menu.project.saveAs", () -> {
+                            FileChooser fc = new FileChooser();
+                            fc.getExtensionFilters().addAll(FXUtility.getProjectExtensionFilter(Main.EXTENSION_INCL_DOT));
+                            File dest = fc.showSaveDialog(stage);
+                            if (dest == null)
+                                return;
+                            v.setDiskFileAndSave(dest);
+                        }),
+                        GUI.menuItem("menu.project.saveCopy", () -> {
+                            FileChooser fc = new FileChooser();
+                            File dest = fc.showSaveDialog(stage);
+                            fc.getExtensionFilters().addAll(FXUtility.getProjectExtensionFilter(Main.EXTENSION_INCL_DOT));
+                            if (dest == null)
+                                return;
+                            v.doSaveTo(false, dest);
+                        }),
+                        GUI.menuItem("menu.project.close", () -> {
+                            stage.hide();
+                        }),
+                        GUI.menuItem("menu.exit", () -> {
+                            closeAll();
+                        })
+                ),
+                GUI.menu("menu.edit",
+                        GUI.menuItem("menu.edit.undo", () -> {
+                            v.undo();
+                        })
+                ),
+                GUI.menu("menu.view",
+                        // TODO finish the find dialog
+                        //GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait()),
+                        GUI.menuItem("menu.view.goto.row", () -> v.gotoRowDialog()),
+                        new SeparatorMenuItem(),
+                        GUI.menuItem("menu.view.types", () -> {
+                            new TypesDialog(v, v.getManager().getTypeManager()).showAndWait();
+                            v.modified();
+                        }),
+                        GUI.menuItem("menu.view.units", () -> {
+                            new UnitsDialog(v, v.getManager().getTypeManager()).showAndWaitNested();
+                            v.modified();
+                        }),
+                        GUI.menuItem("menu.view.tasks", () -> TaskManagerWindow.getInstance().show())
+                ),
+                GUI.menu("menu.help",
+                        GUI.menuItem("menu.help.about", () -> new AboutDialog(v).showAndWait())
+                )
         );
         menuBar.setUseSystemMenuBar(true);
 
@@ -151,8 +183,9 @@ public class MainWindow
             }
         });
         */
-        
-        TextFlow banner = new TextFlow() {
+
+        TextFlow banner = new TextFlow()
+        {
             @Override
             protected double computeMaxHeight(double width)
             {
@@ -178,12 +211,12 @@ public class MainWindow
             });
         }
 
-        CheckSummaryLabel checksLabel = new CheckSummaryLabel(v.getManager());
-        BorderPane statusBar = GUI.borderLeftRight(checksLabel, null);
+        checksLabel = new CheckSummaryLabel(v.getManager(), () -> FXUtility.mouse(this).showLeftPane(LeftPaneType.LIST_CHECKS));
+        BorderPane statusBar = GUI.borderLeftRight(checksLabel, null, "status-bar");
         statusBar.visibleProperty().bind(checksLabel.hasChecksProperty());
         statusBar.managedProperty().bind(statusBar.visibleProperty());
-            
-        BorderPane root = new BorderPane(stackPane, menuBar, null, statusBar, null);
+
+        root = new BorderPane(stackPane, menuBar, null, statusBar, null);
         Scene scene = new Scene(root);
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("mainview.css"));
         stage.setScene(scene);
@@ -214,6 +247,28 @@ public class MainWindow
 
         stage.show();
         //org.scenicview.ScenicView.show(stage.getScene());
+    }
+    
+    private static enum LeftPaneType
+    { NONE, LIST_CHECKS }
+
+    private void showLeftPane(LeftPaneType leftPaneType)
+    {
+        if (root.getLeft() instanceof LeftPane)
+            ((LeftPane)root.getLeft()).cleanup();
+        switch (leftPaneType)
+        {
+            case NONE:
+                root.setLeft(null);
+                break;
+            case LIST_CHECKS:
+                root.setLeft(new ChecksLeftPane(checksLabel));
+                break;
+        }
+    }
+
+    private MainWindowActions getActions()
+    {
         return new MainWindowActions()
         {
             @Override
@@ -325,5 +380,111 @@ public class MainWindow
     public static Map<View, Stage> _test_getViews()
     {
         return views;
+    }
+    
+    private class LeftPane extends StackPane
+    {
+        private SmallDeleteButton closeButton = new SmallDeleteButton();
+
+        public LeftPane()
+        {
+            StackPane.setAlignment(closeButton, Pos.TOP_RIGHT);
+            StackPane.setMargin(closeButton, new Insets(8, 8, 0, 0));
+            closeButton.setOnAction(() -> showLeftPane(LeftPaneType.NONE));
+        }
+        
+        protected void setContent(@UnknownInitialization(LeftPane.class) LeftPane this, Node content)
+        {
+            getChildren().setAll(content, closeButton);
+        }
+
+        protected void cleanup()
+        {
+        }
+    }
+
+    private final class ChecksLeftPane extends LeftPane implements ChecksStateListener
+    {
+        private final CheckSummaryLabel checkSummaryLabel;
+        private final VBox checkList;
+
+        public ChecksLeftPane(CheckSummaryLabel checkSummaryLabel)
+        {
+            this.checkSummaryLabel = checkSummaryLabel;
+            setMinWidth(150);
+            setMaxWidth(250);
+            checkList = GUI.vbox("checks-list");
+            checkSummaryLabel.addListener(this);
+
+            updateGUI();
+
+            setContent(new ScrollPaneFill(checkList) {
+                @Override
+                public void requestFocus()
+                {
+                    // Don't allow focusing
+                }
+            });
+        }
+
+        @Override
+        public void checksChanged()
+        {
+            updateGUI();
+        }
+
+        private void updateGUI()
+        {
+            checkList.getChildren().clear();
+            Label top = new Label("Checks");
+            top.getStyleClass().add("checks-top-header");
+            checkList.getChildren().add(top);
+            
+            ImmutableList<Check> failingChecks = checkSummaryLabel.getFailingChecks();
+            if (!failingChecks.isEmpty())
+            {
+                checkList.getChildren().add(makeHeader("Failing"));
+                for (Check check : failingChecks)
+                {
+                    checkList.getChildren().add(makeItem(check, false));
+                }
+            }
+            ImmutableList<Check> passingChecks = checkSummaryLabel.getPassingChecks();
+            if (!passingChecks.isEmpty())
+            {
+                checkList.getChildren().add(makeHeader("Succeeding"));
+                for (Check check : passingChecks)
+                {
+                    checkList.getChildren().add(makeItem(check, true));
+                }
+            }
+        }
+
+        @Override
+        protected void cleanup()
+        {
+            checkSummaryLabel.removeListener(this);
+        }
+
+        private Label makeItem(Check check, boolean passing)
+        {
+            Label label = new Label(check.getId().getRaw());
+            FXUtility.setPseudoclass(label, "failing", !passing);
+            label.setOnMouseClicked(e -> {
+                TableDisplayBase display = check.getDisplay();
+                if (display instanceof HeadedDisplay)
+                    v.getGrid().findAndSelect(Either.right(new EntireTableSelection((HeadedDisplay)display, display.getMostRecentPosition().columnIndex)));
+            });
+            VBox.setMargin(label, new Insets(0, 0, 0, 20));
+            label.getStyleClass().add("checks-list-entry");
+            return label;
+        }
+
+        private Label makeHeader(String header)
+        {
+            Label label = new Label(header);
+            label.getStyleClass().add("checks-list-header");
+            return label;
+        }
     }
 }

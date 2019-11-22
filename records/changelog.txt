@@ -16,5 +16,6 @@ Version 0.6.2 (YYYY-MM-DD)
 ==========================
 
 - Added import and export to/from R's RDS format (.rds and .Rdata files)
+- Added pane to display all Check results together
 - Added a couple more weight units (lb, oz)
 - Added a "years between" function.

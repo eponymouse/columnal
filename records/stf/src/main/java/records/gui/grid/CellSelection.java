@@ -72,5 +72,5 @@ public interface CellSelection
     public void gotoRow(Window parent);
     
     // Called when selected or deselected
-    public void notifySelected(boolean selected);
+    public void notifySelected(boolean selected, boolean animateFlash);
 }

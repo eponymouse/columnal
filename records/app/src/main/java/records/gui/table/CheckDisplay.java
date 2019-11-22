@@ -25,7 +25,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
-import records.gui.DataDisplay;
 import records.gui.EntireTableSelection;
 import records.transformations.expression.explanation.Explanation;
 import records.data.Table;
@@ -38,9 +37,7 @@ import records.gui.View;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
-import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGrid.SelectionListener;
-import records.gui.grid.VirtualGridSupplier;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
@@ -347,7 +344,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             }
 
             @Override
-            public void notifySelected(boolean selected)
+            public void notifySelected(boolean selected, boolean animateFlash)
             {
             }
 

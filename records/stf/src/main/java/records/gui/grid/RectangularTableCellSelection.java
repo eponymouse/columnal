@@ -4,7 +4,6 @@ import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import threadchecker.OnThread;
@@ -169,7 +168,7 @@ public class RectangularTableCellSelection implements CellSelection
     }
 
     @Override
-    public void notifySelected(boolean selected)
+    public void notifySelected(boolean selected, boolean animateFlash)
     {
     }
 

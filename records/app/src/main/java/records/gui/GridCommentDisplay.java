@@ -308,7 +308,7 @@ public final class GridCommentDisplay extends GridArea implements GridCommentDis
         }
 
         @Override
-        public void notifySelected(boolean selected)
+        public void notifySelected(boolean selected, boolean animateFlash)
         {
             // Nothing to do
         }

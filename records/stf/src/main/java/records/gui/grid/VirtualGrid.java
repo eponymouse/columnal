@@ -52,13 +52,10 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
-import javafx.scene.shape.QuadCurveTo;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Window;
 import javafx.util.Duration;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -91,11 +88,9 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
-import utility.gui.ResizableRectangle;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
@@ -899,11 +894,16 @@ public final class VirtualGrid implements ScrollBindable
 
     public void select(CellSelection cellSelection)
     {
-        selectInternal(cellSelection);
+        select(cellSelection, false);
+    }
+
+    public void select(CellSelection cellSelection, boolean animateFlash)
+    {
+        selectInternal(cellSelection, animateFlash);
     }
 
     // Only private method allows null selection:
-    private void selectInternal(@Nullable CellSelection cellSelection)
+    private void selectInternal(@Nullable CellSelection cellSelection, boolean animateFlash)
     {
         /*
         visibleCells.forEach((visPos, visCell) -> {
@@ -915,12 +915,12 @@ public final class VirtualGrid implements ScrollBindable
 
         @Nullable CellSelection old = selection.get();
         if (old != null)
-            old.notifySelected(false);
+            old.notifySelected(false, false);
         selection.set(cellSelection);
         if (cellSelection != null)
         {
             container.requestFocus();
-            cellSelection.notifySelected(true);
+            cellSelection.notifySelected(true, animateFlash);
         }
     }
 
@@ -949,7 +949,7 @@ public final class VirtualGrid implements ScrollBindable
                 return Optional.empty();
             },
             s -> Optional.of(s)
-        ).ifPresent(this::select);
+        ).ifPresent(s -> select(s, true));
     }
 
     public Region getNode()
@@ -1287,7 +1287,7 @@ public final class VirtualGrid implements ScrollBindable
             FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
                 if (!focused)
                 {
-                    selectInternal(null);
+                    selectInternal(null, false);
                     FXUtility.mouse(this).redoLayout();
                 }
             });
@@ -2146,7 +2146,7 @@ public final class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        public void notifySelected(boolean selected)
+        public void notifySelected(boolean selected, boolean animateFlash)
         {
             
         }

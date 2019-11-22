@@ -1,6 +1,7 @@
 package records.gui;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.MapMaker;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
@@ -20,12 +21,15 @@ import records.error.UserException;
 import records.transformations.Check;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -37,14 +41,16 @@ public final class CheckSummaryLabel extends BorderPane
     @OnThread(Tag.Simulation)
     private final Map<Check, Optional<Boolean>> currentResults = new MapMaker().weakKeys().makeMap();
     private final Label counts = GUI.labelRaw("No checks", "check-summary-counts");
-    private BooleanProperty hasChecksProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty hasChecksProperty = new SimpleBooleanProperty(false);
+    private final ArrayList<ChecksStateListener> checkListeners = new ArrayList<>();
 
     // Should be called before any tables are added
-    public CheckSummaryLabel(TableManager tableManager)
+    public CheckSummaryLabel(TableManager tableManager, FXPlatformRunnable onClick)
     {
         getStyleClass().add("check-summary");
         setCenter(counts);
         counts.setFocusTraversable(false);
+        counts.setOnMouseClicked(e -> onClick.run());
         tableManager.addListener(new TableManagerListener()
         {
             @Override
@@ -109,6 +115,10 @@ public final class CheckSummaryLabel extends BorderPane
                 this.counts.setText("No checks");
                 hasChecksProperty.setValue(false);
                 FXUtility.setPseudoclass(this.counts, "failing", false);
+                for (ChecksStateListener checkListener : checkListeners)
+                {
+                    checkListener.checksChanged();
+                }
             });
         }
         else
@@ -119,6 +129,10 @@ public final class CheckSummaryLabel extends BorderPane
                 this.counts.setText("Checks: " + (passing.isPresent() ? passing.getAsInt() + "/" + total : "?/" + total) + " OK");
                 FXUtility.setPseudoclass(this.counts, "failing", !passing.isPresent() || passing.getAsInt() != total);
                 hasChecksProperty.set(true);
+                for (ChecksStateListener checkListener : checkListeners)
+                {
+                    checkListener.checksChanged();
+                }
             });
         }    
     }
@@ -126,5 +140,31 @@ public final class CheckSummaryLabel extends BorderPane
     public BooleanExpression hasChecksProperty()
     {
         return this.hasChecksProperty;
+    }
+
+    public ImmutableList<Check> getFailingChecks()
+    {
+        return currentResults.entrySet().stream().filter(e -> e.getValue().isPresent() && !e.getValue().get()).map(e -> e.getKey()).sorted(Comparator.comparing(c -> c.getId().getRaw())).collect(ImmutableList.<Check>toImmutableList());
+    }
+
+    public ImmutableList<Check> getPassingChecks()
+    {
+        return currentResults.entrySet().stream().filter(e -> e.getValue().isPresent() && e.getValue().get()).map(e -> e.getKey()).sorted(Comparator.comparing(c -> c.getId().getRaw())).collect(ImmutableList.<Check>toImmutableList());
+    }
+    
+    public static interface ChecksStateListener
+    {
+        @OnThread(Tag.FXPlatform)
+        public void checksChanged();
+    }
+
+    public void addListener(ChecksStateListener listener)
+    {
+        checkListeners.add(listener);
+    }
+    
+    public void removeListener(ChecksStateListener listener)
+    {
+        checkListeners.remove(listener);
     }
 }

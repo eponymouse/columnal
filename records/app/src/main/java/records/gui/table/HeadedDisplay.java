@@ -4,6 +4,9 @@ import annotation.units.AbsColIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -18,6 +21,8 @@ import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.geometry.VPos;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.effect.ColorAdjust;
+import javafx.scene.effect.Effect;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -25,6 +30,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.stage.Window;
+import javafx.util.Duration;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -86,7 +92,23 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
         if (tableHeaderItem != null)
             floatingItems.removeItem(tableHeaderItem);
     }
-    
+
+    public void flashHeader()
+    {
+        if (tableHeaderItem != null)
+        {
+            if (tableHeaderItem.borderPane != null)
+            {
+                ColorAdjust effect = new ColorAdjust();
+                tableHeaderItem.borderPane.setEffect(effect);
+                Timeline t = new Timeline(new KeyFrame(Duration.millis(300), new KeyValue(effect.brightnessProperty(), 1.0)));
+                t.setCycleCount(4);
+                t.setAutoReverse(true);
+                t.playFromStart();
+            }
+        }
+    }
+
     protected static class TableHeaderItemParams
     {
         @Nullable TableManager tableManager;

@@ -23,7 +23,6 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -31,7 +30,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Window;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -56,8 +54,6 @@ import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangularTableCellSelection;
 import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
-import records.gui.grid.VirtualGrid;
-import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
@@ -77,8 +73,6 @@ import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.DialogPaneWithSideButtons;
-import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.TranslationUtility;
@@ -548,7 +542,7 @@ public abstract class DataDisplay extends HeadedDisplay
         }
 
         @Override
-        public void notifySelected(boolean selected)
+        public void notifySelected(boolean selected, boolean animateFlash)
         {
             boolean isDown = canExpandDown() && pos.rowIndex == getPosition().rowIndex + getHeaderRowCount() + currentKnownRows;
             boolean isRight = canExpandRight() && pos.columnIndex == getPosition().columnIndex + getDisplayColumns().size();

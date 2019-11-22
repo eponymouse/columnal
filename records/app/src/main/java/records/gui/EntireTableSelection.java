@@ -114,8 +114,10 @@ public class EntireTableSelection implements CellSelection
     }
 
     @Override
-    public void notifySelected(boolean selected)
+    public void notifySelected(boolean selected, boolean animateFlash)
     {
+        if (selected && animateFlash)
+            this.selected.flashHeader();
     }
 
     @Override
