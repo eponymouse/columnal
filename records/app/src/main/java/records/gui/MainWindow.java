@@ -162,7 +162,7 @@ public class MainWindow
                         }),
                         GUI.menuItem("menu.view.tasks", () -> TaskManagerWindow.getInstance().show()),
                         new SeparatorMenuItem(),
-                        this.viewLeftNone = GUI.radioMenuItem("menu.view.noPane", viewLeftToggleGroup),
+                        this.viewLeftNone = GUI.radioMenuItem("menu.view.nopane", viewLeftToggleGroup),
                         this.viewLeftChecks = GUI.radioMenuItem("menu.view.checks", viewLeftToggleGroup)
                 ),
                 GUI.menu("menu.help",

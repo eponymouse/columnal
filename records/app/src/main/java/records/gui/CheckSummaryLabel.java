@@ -22,6 +22,7 @@ import records.transformations.Check;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
+import utility.TranslationUtility;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -40,7 +41,7 @@ public final class CheckSummaryLabel extends BorderPane
     // Note that weakKeys makes an identity hash map, deliberately: 
     @OnThread(Tag.Simulation)
     private final Map<Check, Optional<Boolean>> currentResults = new MapMaker().weakKeys().makeMap();
-    private final Label counts = GUI.labelRaw("No checks", "check-summary-counts");
+    private final Label counts = GUI.label("checks.no.checks", "check-summary-counts");
     private final BooleanProperty hasChecksProperty = new SimpleBooleanProperty(false);
     private final ArrayList<ChecksStateListener> checkListeners = new ArrayList<>();
 
@@ -112,7 +113,7 @@ public final class CheckSummaryLabel extends BorderPane
         if (total == 0)
         {
             FXUtility.runFX(() -> {
-                this.counts.setText("No checks");
+                this.counts.setText(TranslationUtility.getString("checks.no.checks"));
                 hasChecksProperty.setValue(false);
                 FXUtility.setPseudoclass(this.counts, "failing", false);
                 for (ChecksStateListener checkListener : checkListeners)
