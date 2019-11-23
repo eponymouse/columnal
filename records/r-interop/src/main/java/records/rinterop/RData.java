@@ -64,6 +64,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -1841,7 +1842,7 @@ public class RData
 
     private static RValue pairListFromMap(ImmutableMap<String, RValue> values)
     {
-        return makePairList(values.entrySet().stream().map(e -> new PairListEntry(null, string(e.getKey(), true), e.getValue())).collect(ImmutableList.<PairListEntry>toImmutableList()));
+        return makePairList(values.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).map(e -> new PairListEntry(null, string(e.getKey(), true), e.getValue())).collect(ImmutableList.<PairListEntry>toImmutableList()));
     }
     
     private static RValue makePairList(ImmutableList<PairListEntry> values)
