@@ -158,6 +158,11 @@ public class RData
             return (headerBits & 0x400) != 0;
         }
 
+        public boolean isObject()
+        {
+            return (headerBits & 0x100) != 0;
+        }
+        
         public int getReference(DataInputStream d) throws IOException
         {
             int ref = headerBits >>> 8;
@@ -381,7 +386,7 @@ public class RData
                                 }
 
                                 @Override
-                                public ImmutableList<String> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+                                public ImmutableList<String> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
                                 {
                                     return Utility.mapListExI(values, RData::getStringNN);
                                 }
@@ -462,7 +467,7 @@ public class RData
                 }
                 ImmutableList<RValue> values = valueBuilder.build();
                 final @Nullable RValue attr = objHeader.readAttributes(d, atoms);
-                return genericVector(values, attr);
+                return genericVector(values, attr, objHeader.isObject());
             }
             case 238: // ALTREP_SXP
             {
@@ -618,7 +623,7 @@ public class RData
             }
 
             @Override
-            public RValue visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+            public RValue visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
             {
                 return values.get(index);
             }
@@ -679,7 +684,7 @@ public class RData
         public T visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException;
-        public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException;
+        public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException;
         public T visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException;
         public T visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException;
         public T visitNil() throws  InternalException, UserException;
@@ -724,7 +729,7 @@ public class RData
         }
 
         @Override
-        public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+        public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
         {
             return makeDefault();
         }
@@ -799,7 +804,7 @@ public class RData
         }
 
         @Override
-        public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+        public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
         {
             throw new UserException("Unexpected type: generic list");
         }
@@ -916,7 +921,7 @@ public class RData
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType, @Value Object> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
             {
                 throw new UserException("List found when single value expected: " + prettyPrint(rValue));
             }
@@ -1127,7 +1132,7 @@ public class RData
             }
 
             @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
             {
                 ImmutableList<Pair<DataType, @Value Object>> typedPairs = Utility.<RValue, Pair<DataType, @Value Object>>mapListExI(values, v -> convertRToTypedValue(typeManager, v));
                 Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> m = generaliseType(Utility.mapListExI(typedPairs, p -> p.getFirst()));
@@ -1271,13 +1276,13 @@ public class RData
             }
 
             @Override
-            public ImmutableList<Pair<String, EditableRecordSet>> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<Pair<String, EditableRecordSet>> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
             {
                 // Tricky; could be a list of tables, a list of columns or a list of values!
                 // First try as table (list of columns):
                 final ImmutableMap<String, RValue> attrMap = pairListToMap(attributes);
 
-                boolean isDataFrame = isClass(attrMap, "data.frame");
+                boolean isDataFrame = isObject && isClass(attrMap, "data.frame");
                 if (isDataFrame)
                 {
                     ImmutableList<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>> columns = Utility.mapListExI_Index(values, (i, v) -> convertRToColumn(typeManager, v, getColumnName(attrMap.get("names"), i)));
@@ -1296,10 +1301,10 @@ public class RData
                         boolean valueIsDataFrame = value.visit(new DefaultRVisitor<Boolean>(false)
                         {
                             @Override
-                            public Boolean visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+                            public Boolean visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
                             {
                                 final ImmutableMap<String, RValue> valueAttrMap = pairListToMap(attributes);
-                                return isClass(valueAttrMap, "data.frame");
+                                return isObject && isClass(valueAttrMap, "data.frame");
                             }
                         });
                         
@@ -1443,9 +1448,9 @@ public class RData
             }
 
             @Override
-            public @Nullable Void visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+            public @Nullable Void visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
             {
-                b.append("generic{\n");
+                b.append(isObject ? "object{\n" : "generic{\n");
                 for (RValue value : values)
                 {
                     b.append(indent);
@@ -1504,7 +1509,7 @@ public class RData
             makeClassAttributes("data.frame", ImmutableMap.<String, RValue>of(
                 "names", stringVector(Utility.<Column, Optional<@Value String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(c.getName().getRaw().replace(" ", ".")))), null),
                 "row.names", intVector(new int[] {NA_AS_INTEGER, -recordSet.getLength()}, null)
-            )));
+            )), true);
     }
 
     private static RValue makeClassAttributes(String className, ImmutableMap<String, RValue> otherItems)
@@ -1799,14 +1804,14 @@ public class RData
         };
     }
 
-    private static RValue genericVector(ImmutableList<RValue> values, @Nullable RValue attributes)
+    private static RValue genericVector(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject)
     {
         return new RValue()
         {
             @Override
             public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
             {
-                return visitor.visitGenericList(values, attributes);
+                return visitor.visitGenericList(values, attributes, isObject);
             }
         };
     }
@@ -1884,9 +1889,14 @@ public class RData
 
             private void writeHeader(int value, @Nullable RValue attributes, @Nullable RValue tag) throws UserException, InternalException
             {
+                writeHeader(value, attributes, tag, false);
+            }
+
+            private void writeHeader(int value, @Nullable RValue attributes, @Nullable RValue tag, boolean isObject) throws UserException, InternalException
+            {
                 try
                 {
-                    d.writeInt(value | (attributes != null ? 0x200 : 0) | (tag != null ? 0x400 : 0));
+                    d.writeInt(value | (isObject ? 0x100 : 0) | (attributes != null ? 0x200 : 0) | (tag != null ? 0x400 : 0));
                     if (value == PAIR_LIST)
                     {
                         writeAttributes(attributes);
@@ -2090,9 +2100,9 @@ public class RData
             }
 
             @Override
-            public @Nullable Void visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes) throws InternalException, UserException
+            public @Nullable Void visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
             {
-                writeHeader(GENERIC_VECTOR, attributes, null);
+                writeHeader(GENERIC_VECTOR, attributes, null, isObject);
                 writeInt(values.size());
                 for (RValue value : values)
                 {
