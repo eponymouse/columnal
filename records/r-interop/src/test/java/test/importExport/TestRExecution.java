@@ -1,21 +1,30 @@
 package test.importExport;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.DataTestUtil;
+import records.data.EditableColumn;
+import records.data.KnownLengthRecordSet;
+import records.data.MemoryNumericColumn;
 import records.data.RecordSet;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.rinterop.RData;
 import records.rinterop.RExecution;
+import utility.SimulationFunction;
+import utility.TaggedValue;
+import utility.Utility;
 
 import java.math.BigDecimal;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 
@@ -53,8 +62,16 @@ public class TestRExecution
                 "\n" +
                 "lm2 <- update(lm1, . ~ . -Examination)\n" +
                 "AIC(lm1, lm2)"
-        , ImmutableList.of("stats"))).get(0).getSecond();
+        , ImmutableList.of("stats"), ImmutableMap.of())).get(0).getSecond();
         assertEquals(ImmutableList.of(new ColumnId("df"), new ColumnId("AIC")), recordSet.getColumnIds());
         assertEquals(ImmutableList.of(new BigDecimal("326.07156844054867406157427467405796051025390625"), new BigDecimal("325.2408440639818536510574631392955780029296875")), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumn(new ColumnId("AIC")).getType(), recordSet.getLength()));
+    }
+
+    @Test
+    public void testTable() throws InternalException, UserException
+    {
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        RecordSet recordSet = RData.convertRToTable(typeManager, RExecution.runRExpression("foo$bar[2:3]", ImmutableList.of(), ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5"))), 3)))).get(0).getSecond();
+        DataTestUtil.assertValueListEqual("Column", ImmutableList.of(4, 5), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
     }
 }

@@ -1,7 +1,10 @@
 package records.rinterop;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import log.Log;
 import org.apache.commons.io.IOUtils;
+import records.data.RecordSet;
 import records.error.InternalException;
 import records.error.UserException;
 import records.rinterop.RData.RValue;
@@ -12,24 +15,42 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class RExecution
 {
     public static RValue runRExpression(String rExpression) throws UserException, InternalException
     {
-        return runRExpression(rExpression, ImmutableList.of());
+        return runRExpression(rExpression, ImmutableList.of(), ImmutableMap.of());
     }
     
-    public static RValue runRExpression(String rExpression, ImmutableList<String> packages) throws UserException, InternalException
+    public static RValue runRExpression(String rExpression, ImmutableList<String> packages, ImmutableMap<String, RecordSet> tablesToPass) throws UserException, InternalException
     {
-        try (TemporaryFileHandler rdsFile = new TemporaryFileHandler("output", "rds"))
+        try (TemporaryFileHandler rdsFile = new TemporaryFileHandler())
         {
             Process p = Runtime.getRuntime().exec(new String[]{"R", "--vanilla", "--slave"});
-            String[] lines = rExpression.split("\\r?\\n");
-            lines[lines.length - 1] = "saveRDS(" + lines[lines.length - 1] + ", file=\"" + rdsFile.getFile().getAbsolutePath() + "\")";
             PrintStream cmdStream = new PrintStream(p.getOutputStream());
+
+            for (Entry<String, RecordSet> entry : tablesToPass.entrySet())
+            {
+                File tableFile = rdsFile.addRDSFile("table");
+                RValue rTable = RData.convertTableToR(entry.getValue());
+                System.out.println(RData.prettyPrint(rTable));
+                RData.writeRData(tableFile, rTable);
+                String read = entry.getKey() + " <- readRDS(\"" + tableFile.getAbsolutePath() + "\")";
+                System.out.println(read);
+                cmdStream.println(read);
+            }
+            
+            String[] lines = rExpression.split("\\r?\\n");
+            File outputFile = rdsFile.addRDSFile("output");
+            lines[lines.length - 1] = "saveRDS(" + lines[lines.length - 1] + ", file=\"" + outputFile.getAbsolutePath() + "\")";
+            
             for (String line : lines)
             {
+                System.out.println(line);
                 cmdStream.println(line);
             }
             cmdStream.println("quit();");
@@ -41,7 +62,7 @@ public class RExecution
             int exitCode = p.waitFor();
             if (exitCode != 0)
                 throw new UserException("Exit code from running R (" + exitCode + ") indicates error.  Output was:\n" + stdout.toString() + "\nError was:\n" + stderr.toString());
-            return RData.readRData(rdsFile.getFile());
+            return RData.readRData(outputFile);
         }
         catch (IOException | InterruptedException e)
         {
@@ -51,22 +72,26 @@ public class RExecution
 
     private static class TemporaryFileHandler implements AutoCloseable
     {
-        private File file;
+        private final ArrayList<File> files = new ArrayList<>();
 
-        public TemporaryFileHandler(String prefix, String suffix) throws IOException
+        public TemporaryFileHandler()
         {
-            this.file = File.createTempFile(prefix, suffix);
         }
-
-        public File getFile()
+        
+        public File addRDSFile(String name) throws IOException
         {
-            return file;
+            File f = File.createTempFile(name, "rds");
+            files.add(f);
+            return f;
         }
 
         @Override
-        public void close() throws IOException
+        public void close()
         {
-            file.delete();
+            for (File f : files)
+            {
+                f.delete();
+            }
         }
     }
 }

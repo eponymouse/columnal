@@ -198,6 +198,20 @@ public class TestRLoadSave
         assertEquals(ImmutableSet.of("df", "df2", "datetimeZoned2"), rs.stream().map(p -> p.getFirst()).collect(ImmutableSet.<String>toImmutableSet()));
     }
 
+    @Test
+    public void testImportRData8() throws Exception
+    {
+        @SuppressWarnings("nullness")
+        @NonNull URL resource = getClass().getClassLoader().getResource("simple345.rds");
+        RValue loaded = RData.readRData(new File(resource.toURI()));
+        System.out.println(RData.prettyPrint(loaded));
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0).getSecond();
+
+        assertEquals(ImmutableList.of(new ColumnId("bar")), rs.getColumnIds());
+
+    }
+
     private ImmutableList<@Value Object> asList(Column column) throws InternalException, UserException
     {
         ImmutableList.Builder<@Value Object> r = ImmutableList.builderWithExpectedSize(column.getLength());

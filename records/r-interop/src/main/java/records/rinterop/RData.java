@@ -65,6 +65,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
@@ -83,6 +84,7 @@ public class RData
     public static final int PAIR_LIST = 2;
     public static final int NIL = 254;
     public static final int NA_AS_INTEGER = 0x80000000;
+    public static final int SYMBOL = 1;
 
     private static class V2Header
     {
@@ -258,22 +260,22 @@ public class RData
             {
                 int ref = objHeader.getReference(d);
                 String atom = getAtom(atoms, ref);
-                return string(atom);
+                return string(atom, false);
             }
-            case 1: // Symbol
+            case SYMBOL: // Symbol
             {
                 RValue symbol = readItem(d, atoms);
                 symbol.visit(new SpecificRVisitor<@Nullable @Value String>()
                 {
                     @Override
-                    public @Nullable @Value String visitString(@Nullable @Value String s) throws InternalException, UserException
+                    public @Nullable @Value String visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
                     {
                         if (s != null)
                             addAtom(atoms, s);
                         return s;
                     }
                 });
-                return symbol;
+                return string(getString(symbol), true);
             }
             case PAIR_LIST: // Pair list
             {
@@ -343,7 +345,7 @@ public class RData
             case STRING_SINGLE: // String
             {
                 @Nullable String s = readLenString(d);
-                return string(s);
+                return string(s, false);
             }
             case INT_VECTOR: // Integer vector
             {
@@ -361,7 +363,7 @@ public class RData
                         if (items.size() >= 1 && items.get(0).tag != null && items.get(0).tag.visit(new DefaultRVisitor<Boolean>(false)
                         {
                             @Override
-                            public Boolean visitString(@Nullable String s) throws InternalException, UserException
+                            public Boolean visitString(@Nullable String s, boolean isSymbol) throws InternalException, UserException
                             {
                                 return "levels".equals(s);
                             }
@@ -580,7 +582,7 @@ public class RData
         return rValue.visit(new SpecificRVisitor<@Value String>()
         {
             @Override
-            public @Value String visitString(@Nullable @Value String s) throws InternalException, UserException
+            public @Value String visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
             {
                 if (s != null)
                     return s;
@@ -595,7 +597,7 @@ public class RData
         return rValue.visit(new SpecificRVisitor<@Nullable @Value String>()
         {
             @Override
-            public @Nullable @Value String visitString(@Nullable @Value String s) throws InternalException, UserException
+            public @Nullable @Value String visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
             {
                 return s;
             }
@@ -609,7 +611,7 @@ public class RData
             @Override
             public RValue visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                return string(values.get(index).orElse(null));
+                return string(values.get(index).orElse(null), false);
             }
 
             @Override
@@ -667,7 +669,7 @@ public class RData
     
     public static interface RVisitor<T>
     {
-        public T visitString(@Nullable @Value String s) throws InternalException, UserException;
+        public T visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException;
         // If attributes reveal this is a factor, it won't be called; visitFactorList will be instead
         public T visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException;
         public T visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException;
@@ -695,7 +697,7 @@ public class RData
         }
 
         @Override
-        public T visitString(@Nullable @Value String s) throws InternalException, UserException
+        public T visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
         {
             return makeDefault();
         }
@@ -758,7 +760,7 @@ public class RData
     public static abstract class SpecificRVisitor<T> implements RVisitor<T>
     {
         @Override
-        public T visitString(@Nullable @Value String s) throws InternalException, UserException
+        public T visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
         {
             throw new UserException("Unexpected type: string");
         }
@@ -834,7 +836,7 @@ public class RData
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitString(@Nullable @Value String s) throws InternalException, UserException
+            public Pair<DataType, @Value Object> visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
             {
                 if (s != null)
                     return new Pair<>(DataType.TEXT, DataTypeUtility.value(s));
@@ -965,7 +967,7 @@ public class RData
             }
 
             @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitString(@Nullable @Value String s) throws InternalException, UserException
+            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
             {
                 return visitStringList(ImmutableList.<Optional<@Value String>>of(Optional.<@Value String>ofNullable(s)), null);
             }
@@ -1200,7 +1202,7 @@ public class RData
             }
 
             @Override
-            public ImmutableList<Pair<String, EditableRecordSet>> visitString(@Nullable @Value String s) throws InternalException, UserException
+            public ImmutableList<Pair<String, EditableRecordSet>> visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
             {
                 return singleColumn();
             }
@@ -1361,9 +1363,9 @@ public class RData
             }
 
             @Override
-            public @Nullable Void visitString(@Nullable @Value String s) throws InternalException, UserException
+            public @Nullable Void visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
             {
-                b.append("\"" + s + "\"");
+                b.append((isSymbol ? "symb" : "") + "\"" + s + "\"");
                 return null;
             }
 
@@ -1383,7 +1385,7 @@ public class RData
             @Override
             public @Nullable Void visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                b.append("int[" + values.length);
+                b.append("int[" + values.length + ":" + limited(Ints.asList(values)));
                 if (attributes != null)
                 {
                     b.append(", attr=");
@@ -1409,7 +1411,7 @@ public class RData
             @Override
             public @Nullable Void visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                b.append("String[" + values.size());
+                b.append("String[" + values.size() + ": "+ limited(values));
                 if (attributes != null)
                 {
                     b.append(", attr=");
@@ -1417,6 +1419,11 @@ public class RData
                 }
                 b.append("]");
                 return null;
+            }
+
+            private String limited(List<?> values)
+            {
+                return values.stream().limit(3).map(o -> "" + o).collect(Collectors.joining(","));
             }
 
             @Override
@@ -1490,12 +1497,12 @@ public class RData
     public static RValue convertTableToR(RecordSet recordSet) throws UserException, InternalException
     {
         // A table is a generic list of columns with class data.frame
-        return genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c)), makeClassAttributes("data.frame", ImmutableMap.<String, RValue>of("names", stringVector(Utility.<Column, Optional<@Value String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(c.getName().getRaw()))), null))));
+        return genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c)), makeClassAttributes("data.frame", ImmutableMap.<String, RValue>of("names", stringVector(Utility.<Column, Optional<@Value String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(c.getName().getRaw()))), null), "row.names", intVector(new int[]{-2147483648,0}, null))));
     }
 
     private static RValue makeClassAttributes(String className, ImmutableMap<String, RValue> otherItems)
     {
-        return pairListFromMap(Utility.appendToMap(otherItems, "class", genericVector(ImmutableList.of(string(className)), null), null));
+        return pairListFromMap(Utility.appendToMap(otherItems, "class", stringVector(DataTypeUtility.value(className)), null));
     }
 
     private static RValue convertColumnToR(Column column) throws UserException, InternalException
@@ -1814,21 +1821,21 @@ public class RData
         };
     }
     
-    private static RValue string(@Nullable String value)
+    private static RValue string(@Nullable String value, boolean isSymbol)
     {
         return new RValue()
         {
             @Override
             public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
             {
-                return visitor.visitString(value == null ? null : DataTypeUtility.value(value));
+                return visitor.visitString(value == null ? null : DataTypeUtility.value(value), isSymbol);
             }
         };
     }
 
     private static RValue pairListFromMap(ImmutableMap<String, RValue> values)
     {
-        return makePairList(values.entrySet().stream().map(e -> new PairListEntry(null, string(e.getKey()), e.getValue())).collect(ImmutableList.<PairListEntry>toImmutableList()));
+        return makePairList(values.entrySet().stream().map(e -> new PairListEntry(null, string(e.getKey(), true), e.getValue())).collect(ImmutableList.<PairListEntry>toImmutableList()));
     }
     
     private static RValue makePairList(ImmutableList<PairListEntry> values)
@@ -1919,8 +1926,10 @@ public class RData
             }
             
             @Override
-            public @Nullable Void visitString(@Nullable @Value String s) throws InternalException, UserException
+            public @Nullable Void visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
             {
+                if (isSymbol)
+                    writeInt(SYMBOL);
                 writeInt(STRING_SINGLE);
                 writeLenString(s);
                 return null;
@@ -2116,7 +2125,7 @@ public class RData
             @Override
             public @Nullable Void visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
-                RValue attributes = makePairList(ImmutableList.of(new PairListEntry(null, string("levels"), stringVector(Utility.<String, Optional<@Value String>>mapListI(levelNames, s -> Optional.of(DataTypeUtility.value(s))), null))));
+                RValue attributes = makePairList(ImmutableList.of(new PairListEntry(null, string("levels", false), stringVector(Utility.<String, Optional<@Value String>>mapListI(levelNames, s -> Optional.of(DataTypeUtility.value(s))), null))));
                 return visitIntList(values, attributes);
             }
 
