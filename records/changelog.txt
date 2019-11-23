@@ -12,10 +12,12 @@ Add Linux version, fix name resolution bugs.
 - Fixed some name resolution bugs.
 - Improved some visual styling.
 
-Version 0.6.2 (YYYY-MM-DD)
+Version 0.6.2 (2019-11-23)
 ==========================
+Added import/export for the R data format (RDS).
 
 - Added import and export to/from R's RDS format (.rds and .Rdata files)
-- Added pane to display all Check results together
+- Added a pane to display all Check results together
+- Added new-version checking support on Linux
 - Added a couple more weight units (lb, oz)
 - Added a "years between" function.
