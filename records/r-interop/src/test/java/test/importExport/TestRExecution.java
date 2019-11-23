@@ -92,6 +92,19 @@ public class TestRExecution
         DataTestUtil.assertValueListEqual("Column", ImmutableList.of("B", "C"), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
     }
 
+    @SuppressWarnings("valuetype")
+    @Test
+    public void testTable2b() throws InternalException, UserException
+    {
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        RecordSet recordSet = RData.convertRToTable(typeManager, RExecution.runRExpression("data.frame(foo)$baz[2:3]", ImmutableList.of(),
+            ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
+                rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5")),
+                rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, @Value String>right("A"), Either.<String, @Value String>right("B"), Either.<String, @Value String>right("C")), "Z")
+            ), 3)))).get(0).getSecond();
+        DataTestUtil.assertValueListEqual("Column", ImmutableList.of("B", "C"), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
+    }
+
     @Test
     public void testCO2() throws InternalException, UserException
     {
