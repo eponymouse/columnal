@@ -247,6 +247,7 @@ public class RData
 
         switch (objHeader.getType())
         {
+            case 242: // Empty environment; not sure how to handle:
             case NIL: // Nil
                 return new RValue() {
 
@@ -277,6 +278,7 @@ public class RData
                 });
                 return string(getString(symbol), true);
             }
+            case 6:
             case PAIR_LIST: // Pair list
             {
                 RValue attr = objHeader.readAttributes(d, atoms);

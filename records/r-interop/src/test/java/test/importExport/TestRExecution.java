@@ -18,6 +18,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.rinterop.RData;
+import records.rinterop.RData.RValue;
 import records.rinterop.RExecution;
 import utility.SimulationFunction;
 import utility.TaggedValue;
@@ -73,5 +74,16 @@ public class TestRExecution
         TypeManager typeManager = new TypeManager(new UnitManager());
         RecordSet recordSet = RData.convertRToTable(typeManager, RExecution.runRExpression("foo$bar[2:3]", ImmutableList.of(), ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5"))), 3)))).get(0).getSecond();
         DataTestUtil.assertValueListEqual("Column", ImmutableList.of(4, 5), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
+    }
+
+    @Test
+    public void testCO2() throws InternalException, UserException
+    {
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        RValue rValue = RExecution.runRExpression("data.frame(CO2)");
+        System.out.println(RData.prettyPrint(rValue));
+        RecordSet recordSet = RData.convertRToTable(typeManager, rValue).get(0).getSecond();
+        TaggedValue taggedValue = Utility.cast(recordSet.getColumn(new ColumnId("Plant")).getType().getCollapsed(0), TaggedValue.class);
+        assertEquals("Qn1", taggedValue.getTagName());
     }
 }
