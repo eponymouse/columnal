@@ -1,5 +1,6 @@
 package test.importExport;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -11,6 +12,7 @@ import records.data.DataTestUtil;
 import records.data.EditableColumn;
 import records.data.KnownLengthRecordSet;
 import records.data.MemoryNumericColumn;
+import records.data.MemoryStringColumn;
 import records.data.RecordSet;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
@@ -20,6 +22,7 @@ import records.error.UserException;
 import records.rinterop.RData;
 import records.rinterop.RData.RValue;
 import records.rinterop.RExecution;
+import utility.Either;
 import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
@@ -74,6 +77,19 @@ public class TestRExecution
         TypeManager typeManager = new TypeManager(new UnitManager());
         RecordSet recordSet = RData.convertRToTable(typeManager, RExecution.runRExpression("foo$bar[2:3]", ImmutableList.of(), ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5"))), 3)))).get(0).getSecond();
         DataTestUtil.assertValueListEqual("Column", ImmutableList.of(4, 5), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
+    }
+
+    @SuppressWarnings("valuetype")
+    @Test
+    public void testTable2() throws InternalException, UserException
+    {
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        RecordSet recordSet = RData.convertRToTable(typeManager, RExecution.runRExpression("foo$baz[2:3]", ImmutableList.of(),
+            ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
+                rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5")),
+                rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, @Value String>right("A"), Either.<String, @Value String>right("B"), Either.<String, @Value String>right("C")), "Z")
+            ), 3)))).get(0).getSecond();
+        DataTestUtil.assertValueListEqual("Column", ImmutableList.of("B", "C"), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
     }
 
     @Test
