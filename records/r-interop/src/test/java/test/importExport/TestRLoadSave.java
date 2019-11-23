@@ -253,7 +253,7 @@ public class TestRLoadSave
                     if (kind == 2)
                     {
                         long lenBefore = f.length();
-                        String[] command = new String[] {"R",  "-e", "saveRDS(readRDS(\"" + f.getAbsolutePath() + "\"),\"" + f.getAbsolutePath() + "\");"};
+                        String[] command = new String[] {"R",  "-e", "'saveRDS(readRDS(\"" + f.getAbsolutePath().replace("\\", "\\\\") + "\"),\"" + f.getAbsolutePath().replace("\\", "\\\\") + "\");'"};
                         Process process = Runtime.getRuntime().exec(command);
                         StringWriter stdout = new StringWriter();
                         IOUtils.copy(process.getInputStream(), stdout, StandardCharsets.UTF_8);

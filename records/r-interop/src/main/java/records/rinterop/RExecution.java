@@ -39,14 +39,14 @@ public class RExecution
                 RValue rTable = RData.convertTableToR(entry.getValue());
                 System.out.println(RData.prettyPrint(rTable));
                 RData.writeRData(tableFile, rTable);
-                String read = entry.getKey() + " <- readRDS(\"" + tableFile.getAbsolutePath() + "\")";
+                String read = entry.getKey() + " <- readRDS(\"" + escape(tableFile.getAbsolutePath()) + "\")";
                 System.out.println(read);
                 cmdStream.println(read);
             }
             
             String[] lines = rExpression.split("\\r?\\n");
             File outputFile = rdsFile.addRDSFile("output");
-            lines[lines.length - 1] = "saveRDS(" + lines[lines.length - 1] + ", file=\"" + outputFile.getAbsolutePath() + "\")";
+            lines[lines.length - 1] = "saveRDS(" + lines[lines.length - 1] + ", file=\"" + escape(outputFile.getAbsolutePath()) + "\")";
             
             for (String line : lines)
             {
@@ -68,6 +68,11 @@ public class RExecution
         {
             throw new UserException("Problem running R", e);
         }
+    }
+    
+    private static String escape(String original)
+    {
+        return original.replace("\\", "\\\\");
     }
 
     private static class TemporaryFileHandler implements AutoCloseable
