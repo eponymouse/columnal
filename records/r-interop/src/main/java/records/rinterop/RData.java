@@ -1499,7 +1499,11 @@ public class RData
     public static RValue convertTableToR(RecordSet recordSet) throws UserException, InternalException
     {
         // A table is a generic list of columns with class data.frame
-        return genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c)), makeClassAttributes("data.frame", ImmutableMap.<String, RValue>of("names", stringVector(Utility.<Column, Optional<@Value String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(c.getName().getRaw()))), null), "row.names", intVector(new int[]{-2147483648,0}, null))));
+        return genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c)),
+            makeClassAttributes("data.frame", ImmutableMap.<String, RValue>of(
+                "names", stringVector(Utility.<Column, Optional<@Value String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(c.getName().getRaw().replace(" ", ".")))), null),
+                "row.names", intVector(new int[] {NA_AS_INTEGER, -recordSet.getLength()}, null)
+            )));
     }
 
     private static RValue makeClassAttributes(String className, ImmutableMap<String, RValue> otherItems)
