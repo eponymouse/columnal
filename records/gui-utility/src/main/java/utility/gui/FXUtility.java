@@ -508,27 +508,6 @@ public class FXUtility
         testingMode = true;
     }
 
-    public static @Nullable File getFileSaveAs(DimmableParent parent)
-    {
-        return parent.<@Nullable File>dimAndWait(FXUtility::getFileSaveAs);
-    }
-
-    public static @Nullable File getFileSaveAs(Window parentWindow)
-    {
-        if (testingMode)
-        {
-            TextInputDialog textInputDialog = new TextInputDialog();
-            if (parentWindow != null)
-                textInputDialog.initOwner(parentWindow);
-            return textInputDialog.showAndWait().map(File::new).orElse(null);
-        }
-        else
-        {
-            return new FileChooser().showSaveDialog(parentWindow);
-        }
-    }
-
-
     private static List<Exception> queuedErrors = new ArrayList<>();
     private static boolean showingError = false;
 
@@ -1299,6 +1278,38 @@ public class FXUtility
             fc.setInitialDirectory(new File(initialDir));
         fc.getExtensionFilters().setAll(extensionFilters);
         File file = fc.showOpenDialog(parent);
+        if (file != null)
+        {
+            @Nullable String parentDir = file.getAbsoluteFile().getParent();
+            if (parentDir != null)
+                Utility.setProperty("recentdirs.txt", tag, parentDir);
+        }
+        return file;
+    }
+
+    /**
+     * Choose a file.  The tag is used to store and recall the last
+     * used directory for this type of file choice.
+     * @param tag
+     * @return
+     */
+    public static @Nullable File chooseFileSave(@LocalizableKey String titleKey, String tag, Window parent, ExtensionFilter... extensionFilters)
+    {
+        if (testingMode)
+        {
+            TextInputDialog textInputDialog = new TextInputDialog();
+            if (parent != null)
+                textInputDialog.initOwner(parent);
+            return textInputDialog.showAndWait().map(File::new).orElse(null);
+        }
+        
+        FileChooser fc = new FileChooser();
+        fc.setTitle(TranslationUtility.getString(titleKey));
+        String initialDir = Utility.getProperty("recentdirs.txt", tag);
+        if (initialDir != null)
+            fc.setInitialDirectory(new File(initialDir));
+        fc.getExtensionFilters().setAll(extensionFilters);
+        File file = fc.showSaveDialog(parent);
         if (file != null)
         {
             @Nullable String parentDir = file.getAbsoluteFile().getParent();

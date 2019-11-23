@@ -9,6 +9,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import org.apache.commons.io.FilenameUtils;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -51,7 +52,11 @@ public class ExporterManager
     public void chooseAndExportFile(DimmableParent parent, Table table)
     {
         new PickExporterDialog().showAndWait().ifPresent(exporter -> {
-            File file = FXUtility.getFileSaveAs(parent);
+            ArrayList<ExtensionFilter> filters = new ArrayList<>();
+            filters.add(new ExtensionFilter(exporter.getName(), exporter.getSupportedFileTypes()));
+            filters.add(new ExtensionFilter(TranslationUtility.getString("exporter.all.files"), "*.*"));
+            
+            File file = parent.<@Nullable File>dimAndWait(w -> FXUtility.chooseFileSave("data.export.dialogTitle", "dataExport", w, filters.toArray(new ExtensionFilter[0])));
             if (file != null)
             {
                 final File fileNonNull = file;
