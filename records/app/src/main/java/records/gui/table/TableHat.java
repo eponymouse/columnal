@@ -42,17 +42,9 @@ import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.highlights.TableHighlights.HighlightType;
 import records.gui.highlights.TableHighlights.PickResult;
 import records.gui.table.TableHat.TableHatDisplay;
-import records.transformations.Aggregate;
-import records.transformations.Calculate;
-import records.transformations.Check;
+import records.transformations.*;
 import records.transformations.Check.CheckType;
-import records.transformations.Concatenate;
-import records.transformations.Filter;
-import records.transformations.HideColumns;
-import records.transformations.Join;
-import records.transformations.ManualEdit;
 import records.transformations.ManualEdit.ColumnReplacementValues;
-import records.transformations.Sort;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
@@ -89,195 +81,202 @@ import java.util.stream.Stream;
 class TableHat extends FloatingItem<TableHatDisplay>
 {
     private FXPlatformRunnable updateGUI = () -> {};
-    private HeadedDisplay tableDisplay;
+    private final HeadedDisplay tableDisplay;
     private StyledString content;
-    private final StyledString collapsedContent;
+    private StyledString collapsedContent = StyledString.s("Transformation");
     private boolean collapsed = false;
     
-    public TableHat(@UnknownInitialization(HeadedDisplay.class) HeadedDisplay tableDisplay, View parent, Transformation table)
+    public TableHat(@UnknownInitialization(HeadedDisplay.class) HeadedDisplay tableDisplay, View parent, VisitableTransformation table)
     {
         super(ViewOrder.TABLE_HAT);
-        if (table instanceof Filter)
+        this.content = table.visit(new TransformationVisitor<StyledString>()
         {
-            Filter filter = (Filter)table;
-            content = StyledString.concat(
-                collapsedContent = StyledString.s("Filter"),
-                StyledString.s(" "),
-                editSourceLink(parent, filter),
-                StyledString.s(", keeping rows where: "),
-                editExpressionLink(parent, filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSrcTableId()), new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId(), null), () -> Filter.makeTypeState(parent.getManager().getTypeManager()), DataType.BOOLEAN, "filter.header", newExp ->
-                    parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
-                        table.getDetailsForCopy(), filter.getSrcTableId(), newExp), null))
-            );
-        }
-        else if (table instanceof Sort)
-        {
-            Sort sort = (Sort)table;
-            StyledString sourceText = sort.getSortBy().isEmpty() ?
-                StyledString.s("original order") :
-                sort.getSortBy().stream().map(c -> StyledString.concat(c.getFirst().toStyledString(), c.getSecond().toStyledString())).collect(StyledString.joining(", "));
-            sourceText = sourceText.withStyle(new Clickable()
+            @Override
+            public StyledString filter(Filter filter)
             {
-                @Override
-                @OnThread(Tag.FXPlatform)
-                protected void onClick(MouseButton mouseButton, Point2D screenPoint)
-                {
-                    if (mouseButton == MouseButton.PRIMARY)
-                    {
-                        editSort(screenPoint, parent, sort);
-                    }
-                }
-            }).withStyle(new StyledCSS("edit-sort-by"));
-            content = StyledString.concat(
-                collapsedContent = StyledString.s("Sort"),
-                StyledString.s(" "),
-                editSourceLink(parent, sort),
-                StyledString.s(" by "),
-                sourceText
-            );
-        }
-        else if (table instanceof Aggregate)
-        {
-            Aggregate aggregate = (Aggregate)table;
-            StyledString.Builder builder = new StyledString.Builder();
-            builder.append(collapsedContent = StyledString.s("Aggregate"));
-            builder.append(" ");
-            builder.append(editSourceLink(parent, aggregate));
-            // TODO should we add the calculations here if there are only one or two?
-            
-            List<ColumnId> splitBy = aggregate.getSplitBy();
-            Clickable editSplitBy = new Clickable()
-            {
-                @Override
-                protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
-                {
-                    TransformationEdits.editAggregateSplitBy(parent, aggregate);
-                }
-            };
-            if (!splitBy.isEmpty())
-            {
-                builder.append(" splitting by ");
-                builder.append(splitBy.stream().map(c -> c.toStyledString()).collect(StyledString.joining(", ")).withStyle(editSplitBy));
+                return StyledString.concat(
+                        collapsedContent = StyledString.s("Filter"),
+                        StyledString.s(" "),
+                        editSourceLink(parent, filter),
+                        StyledString.s(", keeping rows where: "),
+                        editExpressionLink(parent, filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSrcTableId()), new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId(), null), () -> Filter.makeTypeState(parent.getManager().getTypeManager()), DataType.BOOLEAN, "filter.header", newExp ->
+                                parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
+                                        table.getDetailsForCopy(), filter.getSrcTableId(), newExp), null))
+                );
             }
-            else
-            {
-                builder.append(StyledString.s(" across whole table").withStyle(editSplitBy));
-                builder.append(".");
-            }
-            content = builder.build();
-        }
-        else if (table instanceof Concatenate)
-        {
-            Concatenate concatenate = (Concatenate)table;
-            Stream<TableId> sources = concatenate.getPrimarySources();
-            StyledString sourceText = sources.map(t -> t.toStyledString()).collect(StyledString.joining(", "));
-            if (sourceText.toPlain().isEmpty())
-            {
-                sourceText = StyledString.s("no tables");
-            }
-            content = StyledString.concat(
-                collapsedContent = StyledString.s("Concatenate"),
-                StyledString.s(" "),
-                sourceText.withStyle(
-                    new Clickable("click.to.change") {
-                        @Override
-                        @OnThread(Tag.FXPlatform)
-                        protected void onClick(MouseButton mouseButton, Point2D screenPoint)
-                        {
-                            if (mouseButton == MouseButton.PRIMARY)
-                            {
-                                editConcatenate(screenPoint, parent, concatenate);
-                            }
-                        }
 
-                        @Override
-                        protected void setHovering(boolean hovering, Point2D screenPos)
-                        {
-                            if (hovering)
-                            {
-                                ImmutableList<TableDisplay> tableDisplays = Utility.filterOutNulls(Utility.filterOutNulls(concatenate.getPrimarySources().<@Nullable Table>map(id -> parent.getManager().getSingleTableOrNull(id))).<@Nullable TableDisplay>map(t -> (TableDisplay)t.getDisplay())).collect(ImmutableList.<TableDisplay>toImmutableList());
-                                ImmutableList<RectangleBounds> srcTableBounds = Utility.mapListI(tableDisplays, t -> new RectangleBounds(t.getMostRecentPosition(), t.getBottomRightIncl()));
-                                parent.getHighlights().highlightAtScreenPos(new Point2D(0, 0), p -> {
-                                        return new PickResult<String>(srcTableBounds, HighlightType.SOURCE, "", ImmutableList.<FXPlatformFunction<Point2D, Point2D>>copyOf(Utility.<FXPlatformFunction<Point2D, Point2D>>replicate(srcTableBounds.size(), s -> screenPos)));
-                                }, c -> {
-                                });
-                            }
-                            else
-                                parent.getHighlights().stopHighlightingGridArea();
-                        }
-                    }
-                ),
-                StyledString.s(" - "),
-                StyledString.s(
-                    concatenate.isIncludeMarkerColumn()
-                    ? "with source column"
-                    : "without source column"
-                ).withStyle(new Clickable("click.to.toggle") {
+            @Override
+            public StyledString sort(Sort sort)
+            {
+                StyledString sourceText = sort.getSortBy().isEmpty() ?
+                        StyledString.s("original order") :
+                        sort.getSortBy().stream().map(c -> StyledString.concat(c.getFirst().toStyledString(), c.getSecond().toStyledString())).collect(StyledString.joining(", "));
+                sourceText = sourceText.withStyle(new Clickable()
+                {
                     @Override
-                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    @OnThread(Tag.FXPlatform)
+                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
                         if (mouseButton == MouseButton.PRIMARY)
                         {
-                            Workers.onWorkerThread("Editing concatenate", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing concatenate", () -> {
-                                parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), concatenate.getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()), concatenate.getIncompleteColumnHandling(), !concatenate.isIncludeMarkerColumn()), null);
-                            }));
+                            editSort(screenPoint, parent, sort);
                         }
                     }
-                })
-            );
-        }
-        else if (table instanceof Check)
-        {
-            Check check = (Check)table;
-            String type = "";
-            switch (check.getCheckType())
-            {
-                case ALL_ROWS:
-                    type = "for all rows ";
-                    break;
-                case ANY_ROW:
-                    type = "at least one row ";
-                    break;
-                case NO_ROWS:
-                    type = "no rows ";
-                    break;
+                }).withStyle(new StyledCSS("edit-sort-by"));
+                return StyledString.concat(
+                        collapsedContent = StyledString.s("Sort"),
+                        StyledString.s(" "),
+                        editSourceLink(parent, sort),
+                        StyledString.s(" by "),
+                        sourceText
+                );
             }
-            content = StyledString.concat(
-                collapsedContent = StyledString.s("Check"),
-                StyledString.s(" "),
-                editSourceLink(parent, check),
-                StyledString.s(" that "),
-                StyledString.s(type),
-                editCheckLink(parent, check, parent.getManager().getSingleTableOrNull(check.getSrcTableId()))
-            );
-        }
-        else if (table instanceof Calculate)
-        {
-            Calculate calc = (Calculate)table;
-            collapsedContent = StyledString.s("Calculate");
-            StyledString.Builder builder = new Builder();
-            builder.append("From ");
-            builder.append(editSourceLink(parent, calc));
-            builder.append(" calculate ");
-            if (calc.getCalculatedColumns().isEmpty())
+            
+            @Override
+            public StyledString aggregate(Aggregate aggregate)
             {
-                builder.append("<none>");
-            }
-            else
-            {
-                // Mention max three columns
-                Stream<StyledString> threeEditLinks = calc.getCalculatedColumns().keySet().stream().limit(3).map(c -> c.toStyledString().withStyle(new Clickable()
+                StyledString.Builder builder = new StyledString.Builder();
+                builder.append(collapsedContent = StyledString.s("Aggregate"));
+                builder.append(" ");
+                builder.append(editSourceLink(parent, aggregate));
+                // TODO should we add the calculations here if there are only one or two?
+
+                List<ColumnId> splitBy = aggregate.getSplitBy();
+                Clickable editSplitBy = new Clickable()
                 {
                     @Override
                     protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
-                        FXUtility.alertOnErrorFX_("Error editing column", () -> TransformationEdits.editColumn_Calc(parent, calc, c));
+                        TransformationEdits.editAggregateSplitBy(parent, aggregate);
                     }
-                }).withStyle(new StyledCSS("edit-calculate-column")));
-                if (calc.getCalculatedColumns().keySet().size() > 3)
-                    threeEditLinks = Stream.<StyledString>concat(threeEditLinks, Stream.<StyledString>of(StyledString.s("...")));
-                builder.append(StyledString.intercalate(StyledString.s(", "), threeEditLinks.collect(Collectors.<StyledString>toList())));
+                };
+                if (!splitBy.isEmpty())
+                {
+                    builder.append(" splitting by ");
+                    builder.append(splitBy.stream().map(c -> c.toStyledString()).collect(StyledString.joining(", ")).withStyle(editSplitBy));
+                }
+                else
+                {
+                    builder.append(StyledString.s(" across whole table").withStyle(editSplitBy));
+                    builder.append(".");
+                }
+                return builder.build();
             }
+
+            @Override
+            public StyledString concatenate(Concatenate concatenate)
+            {
+                Stream<TableId> sources = concatenate.getPrimarySources();
+                StyledString sourceText = sources.map(t -> t.toStyledString()).collect(StyledString.joining(", "));
+                if (sourceText.toPlain().isEmpty())
+                {
+                    sourceText = StyledString.s("no tables");
+                }
+                return StyledString.concat(
+                        collapsedContent = StyledString.s("Concatenate"),
+                        StyledString.s(" "),
+                        sourceText.withStyle(
+                                new Clickable("click.to.change") {
+                                    @Override
+                                    @OnThread(Tag.FXPlatform)
+                                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+                                    {
+                                        if (mouseButton == MouseButton.PRIMARY)
+                                        {
+                                            editConcatenate(screenPoint, parent, concatenate);
+                                        }
+                                    }
+
+                                    @Override
+                                    protected void setHovering(boolean hovering, Point2D screenPos)
+                                    {
+                                        if (hovering)
+                                        {
+                                            ImmutableList<TableDisplay> tableDisplays = Utility.filterOutNulls(Utility.filterOutNulls(concatenate.getPrimarySources().<@Nullable Table>map(id -> parent.getManager().getSingleTableOrNull(id))).<@Nullable TableDisplay>map(t -> (TableDisplay)t.getDisplay())).collect(ImmutableList.<TableDisplay>toImmutableList());
+                                            ImmutableList<RectangleBounds> srcTableBounds = Utility.mapListI(tableDisplays, t -> new RectangleBounds(t.getMostRecentPosition(), t.getBottomRightIncl()));
+                                            parent.getHighlights().highlightAtScreenPos(new Point2D(0, 0), p -> {
+                                                return new PickResult<String>(srcTableBounds, HighlightType.SOURCE, "", ImmutableList.<FXPlatformFunction<Point2D, Point2D>>copyOf(Utility.<FXPlatformFunction<Point2D, Point2D>>replicate(srcTableBounds.size(), s -> screenPos)));
+                                            }, c -> {
+                                            });
+                                        }
+                                        else
+                                            parent.getHighlights().stopHighlightingGridArea();
+                                    }
+                                }
+                        ),
+                        StyledString.s(" - "),
+                        StyledString.s(
+                                concatenate.isIncludeMarkerColumn()
+                                        ? "with source column"
+                                        : "without source column"
+                        ).withStyle(new Clickable("click.to.toggle") {
+                            @Override
+                            protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                            {
+                                if (mouseButton == MouseButton.PRIMARY)
+                                {
+                                    Workers.onWorkerThread("Editing concatenate", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing concatenate", () -> {
+                                        parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), concatenate.getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()), concatenate.getIncompleteColumnHandling(), !concatenate.isIncludeMarkerColumn()), null);
+                                    }));
+                                }
+                            }
+                        })
+                );
+            }
+
+            @Override
+            public StyledString check(Check check)
+            {
+                String type = "";
+                switch (check.getCheckType())
+                {
+                    case ALL_ROWS:
+                        type = "for all rows ";
+                        break;
+                    case ANY_ROW:
+                        type = "at least one row ";
+                        break;
+                    case NO_ROWS:
+                        type = "no rows ";
+                        break;
+                }
+                return StyledString.concat(
+                        collapsedContent = StyledString.s("Check"),
+                        StyledString.s(" "),
+                        editSourceLink(parent, check),
+                        StyledString.s(" that "),
+                        StyledString.s(type),
+                        editCheckLink(parent, check, parent.getManager().getSingleTableOrNull(check.getSrcTableId()))
+                );
+            }
+            
+            @Override
+            public StyledString calculate(Calculate calc)
+            {
+                collapsedContent = StyledString.s("Calculate");
+                StyledString.Builder builder = new Builder();
+                builder.append("From ");
+                builder.append(editSourceLink(parent, calc));
+                builder.append(" calculate ");
+                if (calc.getCalculatedColumns().isEmpty())
+                {
+                    builder.append("<none>");
+                }
+                else
+                {
+                    // Mention max three columns
+                    Stream<StyledString> threeEditLinks = calc.getCalculatedColumns().keySet().stream().limit(3).map(c -> c.toStyledString().withStyle(new Clickable()
+                    {
+                        @Override
+                        protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                        {
+                            FXUtility.alertOnErrorFX_("Error editing column", () -> TransformationEdits.editColumn_Calc(parent, calc, c));
+                        }
+                    }).withStyle(new StyledCSS("edit-calculate-column")));
+                    if (calc.getCalculatedColumns().keySet().size() > 3)
+                        threeEditLinks = Stream.<StyledString>concat(threeEditLinks, Stream.<StyledString>of(StyledString.s("...")));
+                    builder.append(StyledString.intercalate(StyledString.s(", "), threeEditLinks.collect(Collectors.<StyledString>toList())));
+                }
             /*
             builder.append(" ");
             builder.append(StyledString.s("(add new)").withStyle(new Clickable() {
@@ -291,195 +290,193 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 }
             }));
             */
-            content = builder.build();
-        }
-        else if (table instanceof HideColumns)
-        {
-            HideColumns hide = (HideColumns) table;
+                return builder.build();
+            }
             
-            Clickable edit = new Clickable(null, "edit-hide-columns")
+            @Override
+            public StyledString hideColumns(HideColumns hide)
             {
-                @OnThread(Tag.FXPlatform)
-                @Override
-                protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+                Clickable edit = new Clickable(null, "edit-hide-columns")
                 {
-                    editHideColumns(parent, hide);
-                }
-            };
-            
-            collapsedContent = StyledString.s("Exclude columns");
-            content = StyledString.concat(
-                    StyledString.s("From "),
-                    editSourceLink(parent, hide),
-                    StyledString.s(", exclude columns: "),
-                    hide.getHiddenColumns().isEmpty() ? StyledString.s("<none>") : hide.getHiddenColumns().stream().map(c -> c.toStyledString()).collect(StyledString.joining(", ")),
-                    StyledString.s(" "),
-                    StyledString.s("(edit)").withStyle(edit)
-            );
-        }
-        else if (table instanceof ManualEdit)
-        {
-            ManualEdit manualEdit = (ManualEdit) table;
-            collapsedContent = StyledString.s("Edit");
-            
-            Clickable editBy = new Clickable()
+                    @OnThread(Tag.FXPlatform)
+                    @Override
+                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    {
+                        editHideColumns(parent, hide);
+                    }
+                };
+
+                collapsedContent = StyledString.s("Exclude columns");
+                return StyledString.concat(
+                        StyledString.s("From "),
+                        editSourceLink(parent, hide),
+                        StyledString.s(", exclude columns: "),
+                        hide.getHiddenColumns().isEmpty() ? StyledString.s("<none>") : hide.getHiddenColumns().stream().map(c -> c.toStyledString()).collect(StyledString.joining(", ")),
+                        StyledString.s(" "),
+                        StyledString.s("(edit)").withStyle(edit)
+                );
+            }
+
+            @Override
+            public StyledString manualEdit(ManualEdit manualEdit)
             {
-                @Override
-                protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
-                {
+                collapsedContent = StyledString.s("Edit");
 
-                    ImmutableList<ColumnId> columnIds = ImmutableList.of();
-                    try
-                    {
-                        columnIds = manualEdit.getData().getColumnIds();
-                    }
-                    catch (InternalException | UserException e)
-                    {
-                        if (e instanceof InternalException)
-                            Log.log(e);
-                    }
-                    new PickManualEditIdentifierDialog(parent, Optional.of(manualEdit.getReplacementIdentifier()), columnIds).showAndWait().ifPresent(newEditBy -> {
-                        Workers.onWorkerThread("Changing edit transformation", Priority.SAVE, () -> FXUtility.alertOnError_("Changing edit transformation", () -> {
-                            TableMaker<ManualEdit> maker = manualEdit.swapReplacementIdentifierTo(newEditBy.orElse(null));
-                            parent.getManager().edit(manualEdit.getId(), maker, null);
-                        }));
-                    });
-                }
-            };
-            
-            Clickable editList = new Clickable() {
-
-                @Override
-                protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                Clickable editBy = new Clickable()
                 {
-                    Workers.onWorkerThread("Fetching manual edit entries", Priority.FETCH, () -> {
-                        ImmutableList<Entry> entries = ManualEditEntriesDialog.getEntries(manualEdit);
-                        Platform.runLater(() -> {
-                            ExFunction<ColumnId, DataType> lookupColumnType = c -> manualEdit.getData().getColumn(c).getType().getType();
-                            new ManualEditEntriesDialog(parent, manualEdit.getReplacementIdentifier().orElse(null), lookupColumnType, entries).showAndWait().ifPresent(p -> {
-                                // We store this before editing as it will generate a new table display:
-                                TableDisplay tableDisplayCast = (TableDisplay) FXUtility.mouse(tableDisplay);
-                                ImmutableList<ColumnId> displayColumns = Utility.mapListI(tableDisplayCast.getDisplayColumns(), d -> d.getColumnId());
-                                
-                                // Need to change the values
-                                Workers.onWorkerThread("Removing manual edit entries", Priority.SAVE, () -> FXUtility.alertOnError_("Deleting manual edits", () -> {
-                                    ImmutableMap<ColumnId, ColumnReplacementValues> newValues = p.getSecond().get();
-                                    if (!newValues.equals(manualEdit.getReplacements()))
-                                    {
-                                        parent.getManager().edit(manualEdit.getId(), () -> manualEdit.swapReplacementsTo(newValues), null);
-                                    }
-                                }));
-                                
-                                // This is a hack; we need to wait until the new table display is shown for the manual edit before
-                                // querying it, especially because we need its known rows count to be accurate.  So we wait, but if the
-                                // system is loaded, it's possible this may not jump to the location:
-                                FXUtility.runAfterDelay(Duration.millis(500), () -> p.getFirst().ifPresent(jumpTo -> {
-                                    Utility.findFirstIndex(displayColumns, c -> c.equals(jumpTo.getSecond())).ifPresent(colIndex -> {
-                                        Workers.onWorkerThread("Finding manual edit location", Priority.FETCH, () -> {
-                                            int rowIndex = -1;
-                                            try
-                                            {
-                                                Table srcTable = manualEdit.getSrcTable();
-                                                if (srcTable == null)
-                                                    return; // Give up
-                                                RecordSet srcData = srcTable.getData();
-                                                int length = srcData.getLength();
-                                                @Nullable ColumnId keyColumnId = manualEdit.getReplacementIdentifier().orElse(null);
-                                                if (keyColumnId == null)
+                    @Override
+                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    {
+
+                        ImmutableList<ColumnId> columnIds = ImmutableList.of();
+                        try
+                        {
+                            columnIds = manualEdit.getData().getColumnIds();
+                        }
+                        catch (InternalException | UserException e)
+                        {
+                            if (e instanceof InternalException)
+                                Log.log(e);
+                        }
+                        new PickManualEditIdentifierDialog(parent, Optional.of(manualEdit.getReplacementIdentifier()), columnIds).showAndWait().ifPresent(newEditBy -> {
+                            Workers.onWorkerThread("Changing edit transformation", Priority.SAVE, () -> FXUtility.alertOnError_("Changing edit transformation", () -> {
+                                TableMaker<ManualEdit> maker = manualEdit.swapReplacementIdentifierTo(newEditBy.orElse(null));
+                                parent.getManager().edit(manualEdit.getId(), maker, null);
+                            }));
+                        });
+                    }
+                };
+
+                Clickable editList = new Clickable() {
+
+                    @Override
+                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    {
+                        Workers.onWorkerThread("Fetching manual edit entries", Priority.FETCH, () -> {
+                            ImmutableList<Entry> entries = ManualEditEntriesDialog.getEntries(manualEdit);
+                            Platform.runLater(() -> {
+                                ExFunction<ColumnId, DataType> lookupColumnType = c -> manualEdit.getData().getColumn(c).getType().getType();
+                                new ManualEditEntriesDialog(parent, manualEdit.getReplacementIdentifier().orElse(null), lookupColumnType, entries).showAndWait().ifPresent(p -> {
+                                    // We store this before editing as it will generate a new table display:
+                                    TableDisplay tableDisplayCast = (TableDisplay) FXUtility.mouse(tableDisplay);
+                                    ImmutableList<ColumnId> displayColumns = Utility.mapListI(tableDisplayCast.getDisplayColumns(), d -> d.getColumnId());
+
+                                    // Need to change the values
+                                    Workers.onWorkerThread("Removing manual edit entries", Priority.SAVE, () -> FXUtility.alertOnError_("Deleting manual edits", () -> {
+                                        ImmutableMap<ColumnId, ColumnReplacementValues> newValues = p.getSecond().get();
+                                        if (!newValues.equals(manualEdit.getReplacements()))
+                                        {
+                                            parent.getManager().edit(manualEdit.getId(), () -> manualEdit.swapReplacementsTo(newValues), null);
+                                        }
+                                    }));
+
+                                    // This is a hack; we need to wait until the new table display is shown for the manual edit before
+                                    // querying it, especially because we need its known rows count to be accurate.  So we wait, but if the
+                                    // system is loaded, it's possible this may not jump to the location:
+                                    FXUtility.runAfterDelay(Duration.millis(500), () -> p.getFirst().ifPresent(jumpTo -> {
+                                        Utility.findFirstIndex(displayColumns, c -> c.equals(jumpTo.getSecond())).ifPresent(colIndex -> {
+                                            Workers.onWorkerThread("Finding manual edit location", Priority.FETCH, () -> {
+                                                int rowIndex = -1;
+                                                try
                                                 {
-                                                    rowIndex = ((Number)jumpTo.getFirst().getValue()).intValue();
-                                                }
-                                                else
-                                                {
-                                                    DataTypeValue keyColumn = srcData.getColumn(keyColumnId).getType();
-                                                    for (int row = 0; row < length; row++)
+                                                    Table srcTable = manualEdit.getSrcTable();
+                                                    if (srcTable == null)
+                                                        return; // Give up
+                                                    RecordSet srcData = srcTable.getData();
+                                                    int length = srcData.getLength();
+                                                    @Nullable ColumnId keyColumnId = manualEdit.getReplacementIdentifier().orElse(null);
+                                                    if (keyColumnId == null)
                                                     {
-                                                        try
+                                                        rowIndex = ((Number)jumpTo.getFirst().getValue()).intValue();
+                                                    }
+                                                    else
+                                                    {
+                                                        DataTypeValue keyColumn = srcData.getColumn(keyColumnId).getType();
+                                                        for (int row = 0; row < length; row++)
                                                         {
-                                                            if (Utility.compareValues(keyColumn.getCollapsed(row), jumpTo.getFirst().getValue()) == 0)
-                                                                rowIndex = row;
-                                                        }
-                                                        catch (UserException e)
-                                                        {
-                                                            // Ignore fetch issues, just check following value.
+                                                            try
+                                                            {
+                                                                if (Utility.compareValues(keyColumn.getCollapsed(row), jumpTo.getFirst().getValue()) == 0)
+                                                                    rowIndex = row;
+                                                            }
+                                                            catch (UserException e)
+                                                            {
+                                                                // Ignore fetch issues, just check following value.
+                                                            }
                                                         }
                                                     }
+                                                    int rowIndexFinal = rowIndex;
+                                                    if (rowIndexFinal != -1)
+                                                    {
+                                                        Platform.runLater(() -> {
+                                                            Table latestManualEdit = parent.getManager().getSingleTableOrNull(manualEdit.getId());
+                                                            if (latestManualEdit != null && latestManualEdit.getDisplay() instanceof TableDisplay)
+                                                            {
+                                                                TableDisplay latestTableDisplay = (TableDisplay) latestManualEdit.getDisplay();
+                                                                CellPosition cellPosition = latestTableDisplay.getDataPosition(DataItemPosition.row(rowIndexFinal), DataItemPosition.col(colIndex));
+                                                                parent.getGrid().findAndSelect(Either.left(cellPosition));
+                                                            }
+                                                        });
+                                                    }
                                                 }
-                                                int rowIndexFinal = rowIndex;
-                                                if (rowIndexFinal != -1)
+                                                catch (InternalException | UserException e)
                                                 {
-                                                    Platform.runLater(() -> {
-                                                        Table latestManualEdit = parent.getManager().getSingleTableOrNull(manualEdit.getId());
-                                                        if (latestManualEdit != null && latestManualEdit.getDisplay() instanceof TableDisplay)
-                                                        {
-                                                            TableDisplay latestTableDisplay = (TableDisplay) latestManualEdit.getDisplay();
-                                                            CellPosition cellPosition = latestTableDisplay.getDataPosition(DataItemPosition.row(rowIndexFinal), DataItemPosition.col(colIndex));
-                                                            parent.getGrid().findAndSelect(Either.left(cellPosition));
-                                                        }
-                                                    });
+                                                    if (e instanceof InternalException)
+                                                        Log.log(e);
                                                 }
-                                            }
-                                            catch (InternalException | UserException e)
-                                            {
-                                                if (e instanceof InternalException)
-                                                    Log.log(e);
-                                            }
+                                            });
                                         });
-                                    });
-                                }));
+                                    }));
+                                });
                             });
                         });
-                    });
-                }
-            };
-            
-            // Satisfy static analysis (will be overwritten by the runnable):
-            content = StyledString.s("");
-            
-            FXPlatformRunnable setContent = () -> {
-                Optional<ColumnId> byColumn = manualEdit.getReplacementIdentifier();
-                content = StyledString.concat(
-                    StyledString.s("Edit "),
-                    editSourceLink(parent, manualEdit),
-                    StyledString.s(" to change "),
-                    StyledString.s(Integer.toString(manualEdit.getReplacementCount()) + " entries").withStyle(editList).withStyle(new StyledCSS("manual-edit-entries")),
-                    StyledString.s(" identified by "),
-                    byColumn.map(c -> c.toStyledString()).orElse(StyledString.s("row number")).withStyle(editBy)
+                    }
+                };
+
+                FXPlatformRunnable setContent = () -> {
+                    Optional<ColumnId> byColumn = manualEdit.getReplacementIdentifier();
+                    content = StyledString.concat(
+                            StyledString.s("Edit "),
+                            editSourceLink(parent, manualEdit),
+                            StyledString.s(" to change "),
+                            StyledString.s(Integer.toString(manualEdit.getReplacementCount()) + " entries").withStyle(editList).withStyle(new StyledCSS("manual-edit-entries")),
+                            StyledString.s(" identified by "),
+                            byColumn.map(c -> c.toStyledString()).orElse(StyledString.s("row number")).withStyle(editBy)
+                    );
+                    updateGUI.run();
+                };
+                setContent.run();
+                Workers.onWorkerThread("Adding edit listener", Priority.FETCH, () -> manualEdit.addModificationListener(() -> FXUtility.runFX(setContent)));
+
+                // Satisfy static analysis (will be overwritten by the runnable):
+                return StyledString.s("");
+            }
+
+            @Override
+            public StyledString join(Join join)
+            {
+                collapsedContent = StyledString.s("Join");
+                Clickable clickToEdit = new Clickable() {
+
+                    @Override
+                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    {
+                        editJoin(parent, join);
+                    }
+                };
+                return StyledString.concat(
+                        StyledString.s("Join "),
+                        join.getPrimarySource().toStyledString().withStyle(clickToEdit),
+                        StyledString.s(" with "),
+                        join.getSecondarySource().toStyledString().withStyle(clickToEdit),
+                        join.getColumnsToMatch().isEmpty() ? StyledString.s("") :
+                                StyledString.concat(StyledString.s(" on "),
+                                        join.getColumnsToMatch().stream().map(p -> p.getFirst().equals(p.getSecond()) ? p.getFirst().toStyledString() : StyledString.concat(p.getFirst().toStyledString(), StyledString.s(" = "), p.getSecond().toStyledString())).collect(StyledString.joining(" and ")).withStyle(clickToEdit)
+                                )
                 );
-                updateGUI.run();
-            };
-            setContent.run();
-            Workers.onWorkerThread("Adding edit listener", Priority.FETCH, () -> manualEdit.addModificationListener(() -> FXUtility.runFX(setContent)));
-        }
-        else if (table instanceof Join)
-        {
-            Join join = (Join) table;
-            collapsedContent = StyledString.s("Join");
-            Clickable clickToEdit = new Clickable() {
-
-                @Override
-                protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
-                {
-                    editJoin(parent, join);
-                }
-            };
-            content = StyledString.concat(
-                StyledString.s("Join "),
-                join.getPrimarySource().toStyledString().withStyle(clickToEdit),
-                StyledString.s(" with "),
-                join.getSecondarySource().toStyledString().withStyle(clickToEdit),
-                join.getColumnsToMatch().isEmpty() ? StyledString.s("") : 
-                    StyledString.concat(StyledString.s(" on "),
-                    join.getColumnsToMatch().stream().map(p -> p.getFirst().equals(p.getSecond()) ? p.getFirst().toStyledString() : StyledString.concat(p.getFirst().toStyledString(), StyledString.s(" = "), p.getSecond().toStyledString())).collect(StyledString.joining(" and ")).withStyle(clickToEdit)
-                )
-            );
-        }
-        else
-        {
-            content = StyledString.s("");
-            collapsedContent = StyledString.s("");
-        }
-
+            }    
+        });
+        
         this.tableDisplay = Utility.later(tableDisplay);
     }
 

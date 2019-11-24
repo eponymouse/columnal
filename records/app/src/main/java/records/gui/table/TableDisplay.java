@@ -731,11 +731,11 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             setupWithRecordSet();
         
         // Hat:
-        if (table instanceof Transformation)
+        if (table instanceof VisitableTransformation)
         {
             @UnknownInitialization(DataDisplay.class) TableDisplay us = this;
             @SuppressWarnings("initialization") // Don't understand why we need this here
-            @Initialized TableHat hat = new TableHat(us, parent, (Transformation) table);
+            @Initialized TableHat hat = new TableHat(us, parent, (VisitableTransformation) table);
             this.tableHat = hat;
             supplierFloating.addItem(this.tableHat);
         }
