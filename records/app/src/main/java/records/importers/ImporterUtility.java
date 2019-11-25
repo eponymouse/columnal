@@ -51,6 +51,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 public class ImporterUtility
 {
@@ -127,7 +128,14 @@ public class ImporterUtility
                     if (item.isEmpty() || item.trim().equals(or.getBlankString()))
                         return Either.<String, TaggedValue>right(new TaggedValue(0, null, mgr.getMaybeType()));
                     else
-                        return Utility.parseNumberOpt(inner.removePrefixAndSuffix(item)).map((@ImmediateValue Number n) -> Either.<String, TaggedValue>right(new TaggedValue(1, n, mgr.getMaybeType()))).orElse(Either.left(item));
+                        return Utility.parseNumberOpt(inner.removePrefixAndSuffix(item)).map(new Function<@ImmediateValue Number, Either<String, TaggedValue>>()
+                        {
+                            @Override
+                            public Either<String, TaggedValue> apply(@ImmediateValue Number n)
+                            {
+                                return Either.<String, TaggedValue>right(new TaggedValue(1, n, mgr.getMaybeType()));
+                            }
+                        }).orElse(Either.left(item));
                 }), new TaggedValue(0, null, mgr.getMaybeType())));
             }
             else
