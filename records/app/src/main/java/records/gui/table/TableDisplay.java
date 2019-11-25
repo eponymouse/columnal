@@ -1542,72 +1542,105 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
 
     public void editAfterCreation()
     {
-        if (table instanceof Calculate)
+        if (table instanceof VisitableTransformation)
         {
-            addColumnBefore_Calc(parent, (Calculate)table, null, "transform.calculate.addInitial");
-        }
-        else if (table instanceof Filter)
-        {
-            Filter filter = (Filter)table;
-            new EditExpressionDialog(parent, 
-                parent.getManager().getSingleTableOrNull(filter.getSrcTableId()),
-                filter.getFilterExpression(), true,
-                new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId(), null),
-                    () -> Filter.makeTypeState(parent.getManager().getTypeManager()),
-                DataType.BOOLEAN, "filter.header").showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_("Error editing filter", () -> 
+            ((VisitableTransformation)table).visit(new TransformationVisitor<@Nullable Void>()
             {
-                
-                    parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
-                        table.getDetailsForCopy(), filter.getSrcTableId(), newExp), null);
-            })));    
-        }
-        else if (table instanceof Aggregate)
-        {
-            Aggregate aggregate = (Aggregate)table;
-            Optional<EditColumnExpressionDialog<ImmutableList<ColumnId>>.Result> result = AggregateSplitByPane.editColumn(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), null, null, _ed -> aggregate.getColumnLookup(), () -> Aggregate.makeTypeState(parent.getManager()), null, aggregate.getSplitBy()).showAndWait();
-            if (result.isPresent())
-            {
-                Workers.onWorkerThread("Adding column", Priority.SAVE, () -> {
-                    try
+                @Override
+                public @Nullable Void calculate(Calculate calculate)
+                {
+                    addColumnBefore_Calc(parent, calculate, null, "transform.calculate.addInitial");
+                    return null;
+                }
+
+                @Override
+                public @Nullable Void filter(Filter filter)
+                {
+                    new EditExpressionDialog(parent,
+                            parent.getManager().getSingleTableOrNull(filter.getSrcTableId()),
+                            filter.getFilterExpression(), true,
+                            new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId(), null),
+                            () -> Filter.makeTypeState(parent.getManager().getTypeManager()),
+                            DataType.BOOLEAN, "filter.header").showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_("Error editing filter", () ->
                     {
-                        parent.getManager().<Aggregate>edit(aggregate.getId(), () -> {
-                            return new Aggregate(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), Utility.appendToList(aggregate.getColumnExpressions(), new Pair<>(result.get().columnId, result.get().expression)), result.get().extra);
-                        }, null);
-                    }
-                    catch (InternalException e)
+
+                        parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
+                                table.getDetailsForCopy(), filter.getSrcTableId(), newExp), null);
+                    })));
+                    return null;
+                }
+
+                @Override
+                public @Nullable Void aggregate(Aggregate aggregate)
+                {
+                    Optional<EditColumnExpressionDialog<ImmutableList<ColumnId>>.Result> result = AggregateSplitByPane.editColumn(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), null, null, _ed -> aggregate.getColumnLookup(), () -> Aggregate.makeTypeState(parent.getManager()), null, aggregate.getSplitBy()).showAndWait();
+                    if (result.isPresent())
                     {
-                        Log.log(e);
+                        Workers.onWorkerThread("Adding column", Priority.SAVE, () -> {
+                            try
+                            {
+                                parent.getManager().<Aggregate>edit(aggregate.getId(), () -> {
+                                    return new Aggregate(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), Utility.appendToList(aggregate.getColumnExpressions(), new Pair<>(result.get().columnId, result.get().expression)), result.get().extra);
+                                }, null);
+                            }
+                            catch (InternalException e)
+                            {
+                                Log.log(e);
+                            }
+                        });
                     }
-                });
-            }
-            else
-            {
-                Workers.onWorkerThread("Cancelling aggregate", Priority.SAVE, () -> {
-                    parent.getManager().remove(aggregate.getId());
-                });
-            }
+                    else
+                    {
+                        Workers.onWorkerThread("Cancelling aggregate", Priority.SAVE, () -> {
+                            parent.getManager().remove(aggregate.getId());
+                        });
+                    }
+                    return null;
+                }
+
+                @Override
+                public @Nullable Void sort(Sort sort)
+                {
+                    TableHat.editSort(null, parent, sort);
+                    return null;
+                }
+
+                @Override
+                public @Nullable Void manualEdit(ManualEdit manualEdit)
+                {
+                    TableHat.editManualEdit(parent, manualEdit, true);
+                    return null;
+                }
+
+                @Override
+                public @Nullable Void concatenate(Concatenate concatenate)
+                {
+                    TableHat.editConcatenate(new Point2D(0, 0), parent, concatenate);
+                    return null;
+                }
+
+                @Override
+                public @Nullable Void join(Join join)
+                {
+                    TableHat.editJoin(parent, join);
+                    return null;
+                }
+
+                @Override
+                public @Nullable Void hideColumns(HideColumns hideColumns)
+                {
+                    TableHat.editHideColumns(parent, hideColumns);
+                    return null;
+                }
+
+                @Override
+                public @Nullable Void check(Check check)
+                {
+                    // Not handled in this method
+                    return null;
+                }
+            });
         }
-        else if (table instanceof Sort)
-        {
-            TableHat.editSort(null, parent, (Sort)table);
-        }
-        else if (table instanceof ManualEdit)
-        {
-            TableHat.editManualEdit(parent, (ManualEdit)table, true);
-        }
-        else if (table instanceof Concatenate)
-        {
-            TableHat.editConcatenate(new Point2D(0, 0), parent, (Concatenate)table);
-        }
-        else if (table instanceof Join)
-        {
-            TableHat.editJoin(parent, (Join)table);
-        }
-        else if (table instanceof HideColumns)
-        {
-            TableHat.editHideColumns(parent, (HideColumns)table);
-        }
-        // For other tables, do nothing
     }
 
     private class CompleteRowRangeSupplier implements SimulationSupplier<RowRange>
