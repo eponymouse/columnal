@@ -78,6 +78,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
     }
 
     @Override
+    @SuppressWarnings("i18n") // For now
     protected Either<@Localized String, RDetails> calculateResult()
     {
         ImmutableList.Builder<TableId> tables = ImmutableList.builder();
@@ -85,13 +86,13 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
         {
             @ExpressionIdentifier String t = IdentifierUtility.asExpressionIdentifier(item);
             if (t == null)
-                return Either.left("Invalid table identifier: \"" + t + "\"");
+                return Either.<@Localized String, RDetails>left("Invalid table identifier: \"" + t + "\"");
             tables.add(new TableId(t));
         }
         String rExpression = expressionTextArea.getText().trim();
         if (rExpression.isEmpty())
-            return Either.left("R expression cannot be blank");
-        return Either.right(new RDetails(tables.build(), Arrays.stream(packageField.getText().split(",")).map(s -> s.trim()).filter(s -> !s.isEmpty()).collect(ImmutableList.<String>toImmutableList()), rExpression));
+            return Either.<@Localized String, RDetails>left("R expression cannot be blank");
+        return Either.<@Localized String, RDetails>right(new RDetails(tables.build(), Arrays.stream(packageField.getText().split(",")).map(s -> s.trim()).filter(s -> !s.isEmpty()).collect(ImmutableList.<String>toImmutableList()), rExpression));
     }
 
 
