@@ -106,6 +106,24 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
 
             @Override
+            public StyledString runR(RTransformation rTransformation)
+            {
+                String rExpression = rTransformation.getRExpression();
+                return StyledString.concat(
+                    collapsedContent = StyledString.s("Run R"),
+                    StyledString.s(" expression "),
+                    StyledString.s(rExpression.trim().isEmpty() ? "<blank>" : rExpression).limit(60).withStyle(new Clickable() {
+
+                        @Override
+                        protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+                        {
+                        editR(parent, rTransformation, false);
+                        }
+                    })
+                );
+            }
+
+            @Override
             public StyledString sort(Sort sort)
             {
                 StyledString sourceText = sort.getSortBy().isEmpty() ?
@@ -563,6 +581,15 @@ class TableHat extends FloatingItem<TableHatDisplay>
             Workers.onWorkerThread("Editing join", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing join", () -> {
                 parent.getManager().edit(join.getId(), () -> new Join(parent.getManager(), join.getDetailsForCopy(), details.primaryTableId, details.secondaryTableId, details.isLeftJoin, details.joinOn), null);
         })));
+    }
+
+    public static void editR(View parent, RTransformation rTransformation, boolean selectWholeExpression)
+    {
+        new EditRTransformationDialog(parent, rTransformation, selectWholeExpression).showAndWait().ifPresent(details -> {
+            Workers.onWorkerThread("Editing R transformation", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing R transformation", () -> {
+                parent.getManager().edit(rTransformation.getId(), () -> new RTransformation(parent.getManager(), rTransformation.getDetailsForCopy(), details.includedTables, details.packages, details.rExpression), null);
+            }));
+        });
     }
 
     @Override

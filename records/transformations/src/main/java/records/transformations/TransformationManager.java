@@ -62,6 +62,7 @@ public class TransformationManager implements TransformationLoader
             new Concatenate.Info(),
             new HideColumns.Info(),
             new ManualEdit.Info(),
+            new RTransformation.Info(),
                 
             // Not shown in dialog, as shown separately:
             new Check.Info()

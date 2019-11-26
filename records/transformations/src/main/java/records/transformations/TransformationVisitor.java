@@ -11,4 +11,5 @@ public interface TransformationVisitor<T>
     T join(Join join);
     T manualEdit(ManualEdit manualEdit);
     T sort(Sort sort);
+    T runR(RTransformation rTransformation);
 }

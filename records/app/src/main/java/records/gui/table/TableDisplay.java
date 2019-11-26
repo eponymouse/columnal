@@ -413,6 +413,12 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
+                public @Nullable FXPlatformRunnable runR(RTransformation rTransformation)
+                {
+                    return null;
+                }
+
+                @Override
                 public @Nullable FXPlatformRunnable filter(Filter filter)
                 {
                     return () -> {
@@ -1546,6 +1552,13 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         {
             ((VisitableTransformation)table).visit(new TransformationVisitor<@Nullable Void>()
             {
+                @Override
+                public @Nullable Void runR(RTransformation rTransformation)
+                {
+                    TableHat.editR(parent, rTransformation, true);
+                    return null;
+                }
+                
                 @Override
                 public @Nullable Void calculate(Calculate calculate)
                 {
