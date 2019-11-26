@@ -3,10 +3,16 @@ package records.gui;
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
 import org.checkerframework.checker.i18n.qual.Localized;
 import records.data.Table;
 import records.data.TableId;
@@ -15,6 +21,7 @@ import records.transformations.RTransformation;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplier;
 import utility.IdentifierUtility;
 import utility.Pair;
@@ -62,10 +69,19 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
         // For some reason, this seems to produce a width similar to 70 chars:
         expressionTextArea.setPrefColumnCount(30);
         expressionTextArea.setPrefRowCount(6);
+        Text text = new Text("Variables: <none>");
+        Timeline refresh = new Timeline(new KeyFrame(Duration.millis(1000), e -> {
+            ImmutableList<String> items = tableList.getItems();
+            text.setText("Variables: " + (items.isEmpty() ? "<none>" : items.stream().map(s -> s.replace(' ', '.')).collect(Collectors.joining(", "))));
+        }));
+        refresh.setCycleCount(Animation.INDEFINITE);
+        refresh.playFromStart();
+        setOnHidden(e -> refresh.stop());
         getDialogPane().setContent(new LabelledGrid(
-                LabelledGrid.labelledGridRow("edit.r.srcTables", "edit-r-srctables", tableList.getNode()),
-                LabelledGrid.labelledGridRow("edit.r.packages", "edit-r-packages", packageField),
-                LabelledGrid.labelledGridRow("edit.r.expression", "edit-r-expression", expressionTextArea),
+                LabelledGrid.labelledGridRow("edit.r.srcTables", "edit-r/srctables", tableList.getNode()),
+                LabelledGrid.contentOnlyRow(new TextFlow(text)),
+                LabelledGrid.labelledGridRow("edit.r.packages", "edit-r/packages", packageField),
+                LabelledGrid.labelledGridRow("edit.r.expression", "edit-r/expression", expressionTextArea),
                 LabelledGrid.fullWidthRow(getErrorLabel())
         ));
         Platform.runLater(() -> {

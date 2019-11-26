@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dialog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="help.xsd"
+        id="edit-r" title="Edit R Transformation">
+    <help id="srctables" title="Tables to pass to R">
+        <short>The tables to make available to the R expression.</short>
+        <full>
+            <p>Only the tables listed here are available to the R expression.  Table names are automatically adjusted to be valid R names if needed, and are listed below.</p>
+        </full>
+    </help>
+    <help id="packages" title="Packages to load in R">
+        <short>The packages to import for use in the R expression.</short>
+        <full>
+            <p>These packages will be imported (and installed, if needed) for you.  List them here, separated by commas.</p>
+        </full>
+    </help>
+    <help id="expression" title="The R expression to run">
+        <short>The R code to run and turn into a table.</short>
+        <full>
+            <p>The R code can have multiple lines.  The last line will be turned into a Columnal table.</p>
+            <p>If it's a data frame it will be turned into a full table.  If it's a column or single value, it will be turned into a table with a single column.</p>
+            <p>R types will be converted to the most suitable Columnal types.  Note that numbers in Columnal may be more precise than in R.</p>
+        </full>
+    </help>
+</dialog>
