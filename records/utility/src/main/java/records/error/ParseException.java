@@ -5,8 +5,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.commons.lang3.StringUtils;
-import records.grammar.DataLexer;
-import records.grammar.DataParser;
+import utility.Utility;
 
 /**
  * Created by neil on 14/01/2017.
@@ -43,7 +42,7 @@ public class ParseException extends UserException
         // Line starts at 1, so rebase to zero:
         line -= 1;
         
-        String[] lines = input.split("\\r?\\n");
+        String[] lines = Utility.splitLines(input);
         if (line < lines.length && charPositionInLine <= lines[line].length())
         {
             // Position is valid.

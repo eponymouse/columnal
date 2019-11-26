@@ -247,8 +247,7 @@ public class Main extends Application
         
         try
         {
-            String[] lines = IOUtils.toString(new URL("https", DOMAIN, "/version/" + os + "/" + currentVersion + "/check/" + uuid), StandardCharsets.UTF_8)
-                .split("\\r?\\n");
+            String[] lines = Utility.splitLines(IOUtils.toString(new URL("https", DOMAIN, "/version/" + os + "/" + currentVersion + "/check/" + uuid), StandardCharsets.UTF_8));
             HashMap<String, String> props = toLowerCaseTrimmedProperties(lines);
             String latestVersion = props.get("version");
             String description = props.get("description");

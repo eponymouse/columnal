@@ -8,6 +8,7 @@ import records.data.RecordSet;
 import records.error.InternalException;
 import records.error.UserException;
 import records.rinterop.RData.RValue;
+import utility.Utility;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -44,7 +45,7 @@ public class RExecution
                 cmdStream.println(read);
             }
             
-            String[] lines = rExpression.split("\\r?\\n");
+            String[] lines = Utility.splitLines(rExpression);
             File outputFile = rdsFile.addRDSFile("output");
             lines[lines.length - 1] = "saveRDS(" + lines[lines.length - 1] + ", file=\"" + escape(outputFile.getAbsolutePath()) + "\")";
             
