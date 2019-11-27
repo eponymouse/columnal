@@ -51,6 +51,14 @@ public class TestRExecution
         Column column = RData.convertRToTable(typeManager, RExecution.runRExpression("seq(1,10,2)")).get(0).getSecond().getColumns().get(0);
         DataTestUtil.assertValueListEqual("Column", ImmutableList.of(1, 3, 5, 7, 9), DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
+
+    @Test
+    public void testSimple3() throws UserException, InternalException
+    {
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        Column column = RData.convertRToTable(typeManager, RExecution.runRExpression("\"Möøõsę!\"")).get(0).getSecond().getColumns().get(0);
+        DataTestUtil.assertValueListEqual("Column", ImmutableList.of("Möøõsę!"), DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
+    }
     
     @Test
     public void testAIC() throws InternalException, UserException
