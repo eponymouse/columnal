@@ -15,19 +15,18 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
-import javafx.scene.control.Alert;
+import javafx.scene.Node;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.RadioMenuItem;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.ButtonBar.ButtonData;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
 import log.ErrorHandler.RunOrError;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -125,6 +124,7 @@ import utility.Workers.Priority;
 import utility.gui.Clickable;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.ScrollPaneFill;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
@@ -1796,6 +1796,14 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             textFlow.getStyleClass().add("table-error-message-text-flow");
             BorderPane container = new BorderPane(textFlow);
             container.getStyleClass().add("table-error-message-container");
+            container.setOnMouseClicked(e -> {
+                ExceptionWithStyle err = errorMessage.get();
+                if (e.getButton() == MouseButton.PRIMARY && err != null)
+                {
+                    // Show error in a popup window:
+                    new ErrorDetailsDialog(err.getStyledMessage().toGUI(), err.getStyledMessage().toPlain()).show();
+                }
+            });
             this.container = container;
             this.textFlow = textFlow;
             return this.container;
@@ -1814,6 +1822,22 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         public void keyboardActivate(CellPosition cellPosition)
         {
             // Nothing to activate
+        }
+    }
+    
+    private static class ErrorDetailsDialog extends Dialog<Object>
+    {
+        public ErrorDetailsDialog(ImmutableList<Text> details, String plainContent)
+        {
+            setTitle("Error details");
+            initModality(Modality.NONE);
+            ButtonType copyButtonType = new ButtonType("Copy", ButtonData.OTHER);
+            getDialogPane().getButtonTypes().setAll(ButtonType.OK, copyButtonType);
+            ((Button)getDialogPane().lookupButton(copyButtonType)).setOnAction(e -> {
+                Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, plainContent));
+                e.consume();
+            });
+            getDialogPane().setContent(new ScrollPaneFill(new TextFlow(details.toArray(new Node[0]))));
         }
     }
 }

@@ -302,6 +302,12 @@
     -fx-background-radius: 5;
     -fx-padding: 5;
     -fx-font-size: 80%;
+    &:hover {
+        -fx-cursor: hand;
+        .table-error-message-text-flow .styled-text {
+            -fx-underline: true;
+        }
+    }
     .table-error-message-text-flow .styled-text {
         -fx-fill: white;
     }
