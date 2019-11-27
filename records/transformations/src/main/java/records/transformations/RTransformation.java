@@ -105,6 +105,12 @@ public class RTransformation extends VisitableTransformation
         {
             HashMap<String, RecordSet> tablesToPass = new HashMap<>();
 
+            for (TableId srcTableId : srcTableIds)
+            {
+                Table t = getManager().getSingleTableOrThrow(srcTableId);
+                tablesToPass.put(RData.usToRTable(t.getId()), t.getData());
+            }
+
             RValue rResult = RExecution.runRExpression(rExpression, packagesToLoad, ImmutableMap.copyOf(tablesToPass));
 
             ImmutableList<Pair<String, EditableRecordSet>> tables = RData.convertRToTable(getManager().getTypeManager(), rResult);

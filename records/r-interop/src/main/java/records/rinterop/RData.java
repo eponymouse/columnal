@@ -11,6 +11,7 @@ import com.google.common.primitives.Booleans;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.*;
 import records.data.datatype.DataType;
@@ -1507,9 +1508,19 @@ public class RData
         // A table is a generic list of columns with class data.frame
         return genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c)),
             makeClassAttributes("data.frame", ImmutableMap.<String, RValue>of(
-                "names", stringVector(Utility.<Column, Optional<@Value String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(c.getName().getRaw().replace(" ", ".")))), null),
+                "names", stringVector(Utility.<Column, Optional<@Value String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(usToRColumn(c.getName())))), null),
                 "row.names", intVector(new int[] {NA_AS_INTEGER, -recordSet.getLength()}, null)
             )), true);
+    }
+
+    public static String usToRColumn(ColumnId columnId)
+    {
+        return columnId.getRaw().replace(" ", ".");
+    }
+
+    public static String usToRTable(TableId tableId)
+    {
+        return tableId.getRaw().replace(" ", ".");
     }
 
     private static RValue makeClassAttributes(String className, ImmutableMap<String, RValue> otherItems)

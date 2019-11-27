@@ -22,4 +22,10 @@
             <p>R types will be converted to the most suitable Columnal types.  Note that numbers in Columnal may be more precise than in R.</p>
         </full>
     </help>
+    <help id="variables" title="Available R variables">
+        <short>The tables and columns that will be available in R</short>
+        <full>
+            <p>Based on the selected tables, this is a convenience list of available tables and columns in R.  You can click each one to insert it at the current cursor position in the R expression, rather than having to type them out yourself.</p>
+        </full>
+    </help>
 </dialog>

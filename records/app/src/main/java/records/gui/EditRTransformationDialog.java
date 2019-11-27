@@ -8,32 +8,52 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.Point2D;
+import javafx.scene.Node;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
 import javafx.util.Duration;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import records.data.ColumnId;
+import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableId;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.EditRTransformationDialog.RDetails;
+import records.gui.View.Pick;
+import records.rinterop.RData;
 import records.transformations.RTransformation;
+import styled.StyledCSS;
+import styled.StyledString;
+import styled.StyledString.Builder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplier;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.Clickable;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
+import utility.gui.FocusTracker;
 import utility.gui.LabelledGrid;
+import utility.gui.ScrollPaneFill;
 
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
 {
@@ -42,6 +62,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
     private final TableList tableList;
     private final TextArea expressionTextArea;
     private final TextField packageField;
+    private final FocusTracker focusTracker = new FocusTracker();
 
     public static class RDetails
     {
@@ -62,35 +83,139 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
         super(parent, true);
         this.parent = parent;
         this.existing = existing;
+        FXUtility.preventCloseOnEscape(getDialogPane());
+        initModality(Modality.NONE);
         setResizable(true);
+        getDialogPane().getStyleClass().add("edit-r");
         tableList = new TableList(existing.getInputTables());
         packageField = new TextField(existing.getPackagesToLoad().stream().collect(Collectors.joining(", ")));
+        packageField.setPromptText("None");
         expressionTextArea = new TextArea(existing.getRExpression());
         // For some reason, this seems to produce a width similar to 70 chars:
         expressionTextArea.setPrefColumnCount(30);
         expressionTextArea.setPrefRowCount(6);
         Text text = new Text("Variables: <none>");
+        TextFlow textFlow = new TextFlow(text);
+        textFlow.setPrefWidth(100); // Stop it enlarging window
         Timeline refresh = new Timeline(new KeyFrame(Duration.millis(1000), e -> {
-            ImmutableList<String> items = tableList.getItems();
-            text.setText("Variables: " + (items.isEmpty() ? "<none>" : items.stream().map(s -> s.replace(' ', '.')).collect(Collectors.joining(", "))));
+            Pair<ImmutableList<String>, ImmutableList<String>> vars = getAvailableVars();
+            StyledString.Builder b = new StyledString.Builder();
+            b.append(StyledString.s("Tables: ").withStyle(new StyledCSS("r-insertable-header")));
+            for (int i = 0; i < vars.getFirst().size(); i++)
+            {
+                if (i != 0)
+                    b.append(", ");
+                final String content = vars.getFirst().get(i);
+                b.append(StyledString.s(content).withStyle(new Clickable("edit.r.clickToInsert") {
+                    @Override
+                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    {
+                        expressionTextArea.replaceSelection(content);
+                    }
+                }).withStyle(new StyledCSS("r-insertable-link")));
+            }
+            b.append(StyledString.s("\nColumns: ").withStyle(new StyledCSS("r-insertable-header")));
+            for (int i = 0; i < vars.getSecond().size(); i++)
+            {
+                if (i != 0)
+                    b.append(", ");
+                final String content = vars.getSecond().get(i);
+                b.append(StyledString.s(content).withStyle(new Clickable("edit.r.clickToInsert") {
+                    @Override
+                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    {
+                        expressionTextArea.replaceSelection(content);
+                    }
+                }).withStyle(new StyledCSS("r-insertable-link")));
+            }
+            textFlow.getChildren().setAll(b.build().toGUI());
         }));
         refresh.setCycleCount(Animation.INDEFINITE);
-        refresh.playFromStart();
-        setOnHidden(e -> refresh.stop());
+        refresh.playFrom(Duration.millis(900));
+        ScrollPaneFill scroll = new ScrollPaneFill(textFlow);
+        scroll.setMinHeight(75);
         getDialogPane().setContent(new LabelledGrid(
-                LabelledGrid.labelledGridRow("edit.r.srcTables", "edit-r/srctables", tableList.getNode()),
-                LabelledGrid.contentOnlyRow(new TextFlow(text)),
-                LabelledGrid.labelledGridRow("edit.r.packages", "edit-r/packages", packageField),
-                LabelledGrid.labelledGridRow("edit.r.expression", "edit-r/expression", expressionTextArea),
-                LabelledGrid.fullWidthRow(getErrorLabel())
+            LabelledGrid.labelledGridRow("edit.r.packages", "edit-r/packages", packageField),
+            LabelledGrid.labelledGridRow("edit.r.srcTables", "edit-r/srctables", tableList.getNode()),
+            LabelledGrid.labelledGridRow("edit.r.variables", "edit-r/variables", scroll),
+            LabelledGrid.labelledGridRow("edit.r.expression", "edit-r/expression", expressionTextArea),
+            LabelledGrid.fullWidthRow(getErrorLabel())
         ));
-        Platform.runLater(() -> {
-            expressionTextArea.requestFocus();
-            if (selectWholeExpression)
-                expressionTextArea.selectAll();
-            else
-                expressionTextArea.end();
+        focusTracker.addNode(expressionTextArea);
+        setOnShowing(e -> {
+            Platform.runLater(() -> {
+                expressionTextArea.requestFocus();
+                if (selectWholeExpression)
+                    expressionTextArea.selectAll();
+                else
+                    expressionTextArea.end();
+            });
+            parent.enableTableOrColumnPickingMode(null, getDialogPane().sceneProperty(), p -> {
+                // Can't ever pick ourselves:
+                if (existing.getId().equals(p.getFirst().getId()))
+                    return Pick.NONE;
+                else if (expressionTextArea.isFocused())
+                    return Pick.COLUMN;
+                else if (focusTracker.getRecentlyFocused() instanceof PickTablePane)
+                    return Pick.TABLE;
+                else
+                    return Pick.NONE;
+            }, p -> {
+                Node focused = focusTracker.getRecentlyFocused();
+                if (expressionTextArea.equals(focused))
+                {
+                    // Add table to sources if not already there:
+                    if (!tableList.getItems().contains(p.getFirst().getId().getRaw()))
+                    {
+                        tableList.addToEnd(p.getFirst().getId().getRaw(), false);
+                    }
+                    
+                    expressionTextArea.replaceSelection(RData.usToRTable(p.getFirst().getId()) + (p.getSecond() == null ? "" : "$" + RData.usToRColumn(p.getSecond())));
+                }
+                else if (focused instanceof PickTablePane)
+                {
+                    tableList.pickTableIfEditing(p.getFirst());
+                }
+            });
         });
+        setOnHiding(e -> {
+            refresh.stop();
+            parent.disablePickingMode();
+        });
+    }
+    
+    // First is tables, second is columns
+    @RequiresNonNull({"tableList", "parent"})
+    private Pair<ImmutableList<String>, ImmutableList<String>> getAvailableVars(@UnknownInitialization(Object.class) EditRTransformationDialog this)
+    {
+        ImmutableList.Builder<String> tableVars = ImmutableList.builder();
+        ImmutableList.Builder<String> columnVars = ImmutableList.builder();
+        
+        ImmutableList<String> items = tableList.getItems();
+        for (String item : items)
+        {
+            @ExpressionIdentifier String ident = IdentifierUtility.asExpressionIdentifier(item);
+            if (ident != null)
+            {
+                TableId tableId = new TableId(ident);
+                tableVars.add(RData.usToRTable(tableId));
+                try
+                {
+                    RecordSet rs = parent.getManager().getSingleTableOrThrow(tableId).getData();
+                    for (ColumnId columnId : rs.getColumnIds())
+                    {
+                        columnVars.add(RData.usToRTable(tableId) + "$" + RData.usToRColumn(columnId));
+                    }
+                }
+                catch (InternalException | UserException e)
+                {
+                    // Just swallow it, but log if internal
+                    if (e instanceof InternalException)
+                        Log.log(e);
+                }
+            }
+        }
+        return new Pair<>(tableVars.build(), columnVars.build());
     }
 
     @Override
@@ -119,6 +244,19 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
         {
             super(Utility.mapListI(originalItems, t -> t.getRaw()), true, true, true);
             getStyleClass().add("table-list");
+            listenForCellChange(c -> {
+                while (c.next())
+                {
+                    for (Cell cell : c.getAddedSubList())
+                    {
+                        focusTracker.addNode(cell.getContent());
+                    }
+                    for (Cell cell : c.getRemoved())
+                    {
+                        focusTracker.removeNode(cell.getContent());
+                    }
+                }
+            });
         }
 
         @Override
@@ -154,7 +292,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
             long curTime = System.currentTimeMillis();
             PickTablePane curEditing = streamCells()
                     .map(cell -> cell.getContent())
-                    .filter(p -> p.lastEditTimeMillis() > curTime - 200L).findFirst().orElse(null);
+                    .filter(p -> p.lastFocusedTime() > curTime - 200L).findFirst().orElse(null);
             if (curEditing != null)
             {
                 curEditing.setContent(t);

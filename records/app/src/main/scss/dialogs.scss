@@ -297,3 +297,16 @@
         -fx-min-height: 150px;
     }
 }
+
+.edit-r {
+    .r-insertable-header {
+        -fx-fill: black;
+    }
+    .r-insertable-link {
+        -fx-underline: true;
+        -fx-fill: #666;
+        &:hover {
+            -fx-fill: black;
+        }
+    }
+}
