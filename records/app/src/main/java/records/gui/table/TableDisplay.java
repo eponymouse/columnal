@@ -1778,7 +1778,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 double x = 20 + visibleBounds.getXCoord(getPosition().columnIndex);
                 double endX = -20 + visibleBounds.getXCoordAfter(getBottomRightIncl().columnIndex);
                 double y = visibleBounds.getYCoord(getPosition().rowIndex + CellPosition.row(getHeaderRowCount()));
-                double width = endX - x;
+                double width = Math.max(180.0, endX - x);
                 double height = containerFinal.prefHeight(width);
                 return Optional.of(new BoundingBox(x, y, width, height));
             }
