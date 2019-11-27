@@ -127,7 +127,7 @@ public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>
             long curTime = System.currentTimeMillis();
             PickTablePane curEditing = streamCells()
                 .map(cell -> cell.getContent())
-                .filter(p -> p.lastEditTimeMillis() > curTime - 200L).findFirst().orElse(null);
+                .filter(p -> p.lastFocusedTime() > curTime - 200L).findFirst().orElse(null);
             if (curEditing != null)
             {
                 curEditing.setContent(t);

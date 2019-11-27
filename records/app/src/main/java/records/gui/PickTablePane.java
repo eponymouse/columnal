@@ -21,11 +21,12 @@ import utility.FXPlatformConsumer;
 import utility.IdentifierUtility;
 import utility.gui.FXUtility;
 import utility.gui.Instruction;
+import utility.gui.TimedFocusable;
 
 import java.util.List;
 
 @OnThread(Tag.FXPlatform)
-public class PickTablePane extends BorderPane
+public class PickTablePane extends BorderPane implements TimedFocusable
 {
     private final TextField tableField = new TextField();
     private final AutoComplete autoComplete;
@@ -116,7 +117,8 @@ public class PickTablePane extends BorderPane
         return tableField.focusedProperty();
     }
     
-    public long lastEditTimeMillis()
+    @Override
+    public long lastFocusedTime()
     {
         return tableField.isFocused() ? System.currentTimeMillis() : lastEditTimeMillis;
     }

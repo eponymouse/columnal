@@ -10,6 +10,7 @@ import java.util.Comparator;
 
 public interface TimedFocusable
 {
+    // In terms of System.currentTimeMillis()
     @OnThread(Tag.FXPlatform)
     public long lastFocusedTime();
     

@@ -122,8 +122,8 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
     {
         long curTime = System.currentTimeMillis();
         return Stream.<Pair<Long, Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>>>concat(Stream.<Pair<Long, Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>>>of(
-                new Pair<>(primaryTableNamePane.lastEditTimeMillis(), Either.<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>left(t -> primaryTableNamePane.setContent(t))),
-                new Pair<>(secondaryTableNamePane.lastEditTimeMillis(), Either.<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>left(t -> secondaryTableNamePane.setContent(t)))
+                new Pair<>(primaryTableNamePane.lastFocusedTime(), Either.<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>left(t -> primaryTableNamePane.setContent(t))),
+                new Pair<>(secondaryTableNamePane.lastFocusedTime(), Either.<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>left(t -> secondaryTableNamePane.setContent(t)))
             ),
             joinOn.pick(primaryTableNamePane.getValue(), secondaryTableNamePane.getValue())
         ).filter(p -> p.getFirst() > curTime - 500).sorted(Pair.<Long, Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>>comparatorFirst()).findFirst().map(p -> p.getSecond()).orElse(null);
