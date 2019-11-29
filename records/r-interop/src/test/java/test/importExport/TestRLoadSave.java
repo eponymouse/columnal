@@ -172,7 +172,7 @@ public class TestRLoadSave
         DataTestUtil.assertValueListEqual("Bool column", ImmutableList.of(new TaggedValue(1, true, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, false, typeManager.getMaybeType())), asList(r.getColumns().get(0)));
 
         assertEquals(maybeType(typeManager, DataType.NUMBER), r.getColumns().get(1).getType().getType());
-        DataTestUtil.assertValueListEqual("Double column", ImmutableList.of(new TaggedValue(1, 36, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, new BigDecimal(-35.2), typeManager.getMaybeType())), asList(r.getColumns().get(1)));
+        DataTestUtil.assertValueListEqual("Double column", ImmutableList.of(new TaggedValue(1, 36, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, new BigDecimal("-35.2"), typeManager.getMaybeType())), asList(r.getColumns().get(1)));
 
         assertEquals(maybeType(typeManager, DataType.NUMBER), r.getColumns().get(2).getType().getType());
         DataTestUtil.assertValueListEqual("Int column", ImmutableList.of(new TaggedValue(1, 1, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, new BigDecimal(2), typeManager.getMaybeType())), asList(r.getColumns().get(2)));
@@ -306,8 +306,7 @@ public class TestRLoadSave
 
     private static @Value BigDecimal d(String s)
     {
-        // We go through double to replicate the R value exactly
-        return DataTypeUtility.value(new BigDecimal(Double.parseDouble(s)));
+        return DataTypeUtility.value(new BigDecimal(s));
     }
 
 
@@ -327,7 +326,7 @@ public class TestRLoadSave
             {
                 @Value Number orig = g.get(i);
                 double d = orig.doubleValue();
-                BigDecimal bd = new BigDecimal(d);
+                BigDecimal bd = new BigDecimal(Double.toString(d));
                 if (Utility.compareNumbers(orig, bd) != 0)
                 {
                     g.set(i, Either.<String, @Value Number>right(DataTypeUtility.<BigDecimal>value(bd)));

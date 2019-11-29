@@ -1,6 +1,7 @@
 package records.rinterop;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -1061,7 +1062,7 @@ public class RData
                         if (Double.isNaN(values[i]))
                             maybeValues.add(Either.right(typeManager.maybeMissing()));
                         else
-                            maybeValues.add(Either.right(typeManager.maybePresent(DataTypeUtility.value(new BigDecimal(values[i])))));
+                            maybeValues.add(Either.right(typeManager.maybePresent(doubleToValue(values[i]))));
                     }
 
                     return makeMaybeColumn(DataType.NUMBER, maybeValues.build());
@@ -1071,7 +1072,7 @@ public class RData
                     return new Pair<>(rs -> new MemoryNumericColumn(rs, columnName, NumberInfo.DEFAULT, DoubleStream.of(values).mapToObj(n -> {
                         try
                         {
-                            return Either.<String, Number>right(DataTypeUtility.<Number>value(new BigDecimal(n)));
+                            return Either.<String, Number>right(doubleToValue(n));
                         }
                         catch (NumberFormatException e)
                         {
@@ -1079,6 +1080,12 @@ public class RData
                         }
                     }).collect(ImmutableList.<Either<String, Number>>toImmutableList()), DataTypeUtility.value(0)), values.length);
                 }
+            }
+
+            public @ImmediateValue BigDecimal doubleToValue(double value)
+            {
+                // Go through Double.toString which zeroes out the boring end part:
+                return DataTypeUtility.value(new BigDecimal(Double.toString(value)));
             }
 
             @Override
