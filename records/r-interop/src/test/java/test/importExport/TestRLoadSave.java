@@ -47,6 +47,7 @@ import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.ListExList;
 import utility.Utility.Record;
 
 import java.io.File;
@@ -210,6 +211,24 @@ public class TestRLoadSave
 
         assertEquals(ImmutableList.of(new ColumnId("bar")), rs.getColumnIds());
 
+    }
+
+    @Test
+    @SuppressWarnings("valuetype")
+    public void testImportRData9() throws Exception
+    {
+        @SuppressWarnings("nullness")
+        @NonNull URL resource = getClass().getClassLoader().getResource("tibble.rds");
+        RValue loaded = RData.readRData(new File(resource.toURI()));
+        System.out.println(RData.prettyPrint(loaded));
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0).getSecond();
+
+        assertEquals(ImmutableList.of(new ColumnId("x"), new ColumnId("nested lists")), rs.getColumnIds());
+
+        // t <- tibble(x = 1:3, "nested lists" = list(1:5, 1:10, 20:5))
+        DataTestUtil.assertValueListEqual("Row 0", ImmutableList.<@Value Object>of(DataTypeUtility.value(1), new ListExList(ImmutableList.<Integer>of(1,2,3,4,5))), DataTestUtil.getRowVals(rs, 0));
+        DataTestUtil.assertValueListEqual("Row 2", ImmutableList.<@Value Object>of(DataTypeUtility.value(3), new ListExList(ImmutableList.<Integer>of(20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5))), DataTestUtil.getRowVals(rs, 2));
     }
 
     private ImmutableList<@Value Object> asList(Column column) throws InternalException, UserException

@@ -44,6 +44,7 @@ import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.ListExList;
 import utility.Utility.Record;
 
 import java.io.BufferedInputStream;
@@ -651,6 +652,25 @@ public class RData
                 return (state, attr) -> {
                     return state;
                 };
+            case "base#compact_intseq":
+                return (state, attr) -> {
+                    // It's a triple: number of steps, the start value, and the step increment
+                    return state.visit(new SpecificRVisitor<RValue>()
+                    {
+                        @Override
+                        public RValue visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+                        {
+                            double[] expanded = new double[(int)values[0]];
+                            double x = values[1];
+                            for (int i = 0; i < expanded.length; i++)
+                            {
+                                expanded[i] = x;
+                                x += values[2];
+                            }
+                            return doubleVector(expanded, null);
+                        }
+                    });
+                };
         }
         throw new UserException("Unsupported R class: " + p + " " + c);
     }
@@ -925,7 +945,8 @@ public class RData
             @Override
             public Pair<DataType, @Value Object> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
             {
-                throw new UserException("List found when single value expected: " + prettyPrint(rValue));
+                Pair<DataType, ImmutableList<@Value Object>> inner = rListToValueList(typeManager, values);
+                return new Pair<>(DataType.array(inner.getFirst()), new ListExList(inner.getSecond()));
             }
 
             @Override
@@ -1142,17 +1163,8 @@ public class RData
             @Override
             public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
             {
-                ImmutableList<Pair<DataType, @Value Object>> typedPairs = Utility.<RValue, Pair<DataType, @Value Object>>mapListExI(values, v -> convertRToTypedValue(typeManager, v));
-                Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> m = generaliseType(Utility.mapListExI(typedPairs, p -> p.getFirst()));
-                return new Pair<>(m.getFirst().makeImmediateColumn(columnName, Utility.<Pair<DataType, @Value Object>, Either<String, @Value Object>>mapListExI(typedPairs, p -> Either.<String, @Value Object>right(getOrInternal(m.getSecond(), p.getFirst()).apply(p.getSecond()))), DataTypeUtility.makeDefaultValue(m.getFirst())), typedPairs.size());
-            }
-
-            private SimulationFunction<@Value Object, @Value Object> getOrInternal(ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>> map, DataType key) throws InternalException
-            {
-                SimulationFunction<@Value Object, @Value Object> f = map.get(key);
-                if (f == null)
-                    throw new InternalException("No conversion found for type " + key);
-                return f;
+                Pair<DataType, ImmutableList<@Value Object>> loaded = rListToValueList(typeManager, values);
+                return new Pair<>(loaded.getFirst().makeImmediateColumn(columnName, Utility.<@Value Object, Either<String, @Value Object>>mapListExI(loaded.getSecond(), v -> Either.<String, @Value Object>right(v)), DataTypeUtility.makeDefaultValue(loaded.getFirst())), loaded.getSecond().size());
             }
 
             @Override
@@ -1177,6 +1189,24 @@ public class RData
                 throw new UserException("Pair list found when column expected: " + prettyPrint(rValue));
             }
         });
+    }
+
+    private static SimulationFunction<@Value Object, @Value Object> getOrInternal(ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>> map, DataType key) throws InternalException
+    {
+        SimulationFunction<@Value Object, @Value Object> f = map.get(key);
+        if (f == null)
+            throw new InternalException("No conversion found for type " + key);
+        return f;
+    }
+    
+    // The DataType is the type of the list *elements*, not the list as a whole.
+    // e.g. the return may be (Number, [1,2,3])
+    private static Pair<DataType, ImmutableList<@Value Object>> rListToValueList(TypeManager typeManager, List<RValue> values) throws UserException, InternalException
+    {
+        ImmutableList<Pair<DataType, @Value Object>> typedPairs = Utility.<RValue, Pair<DataType, @Value Object>>mapListExI(values, v -> convertRToTypedValue(typeManager, v));
+        Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> m = generaliseType(Utility.mapListExI(typedPairs, p -> p.getFirst()));
+        ImmutableList<@Value Object> loaded = Utility.<Pair<DataType, @Value Object>, @Value Object>mapListExI(typedPairs, p -> getOrInternal(m.getSecond(), p.getFirst()).apply(p.getSecond()));
+        return new Pair<DataType, ImmutableList<@Value Object>>(m.getFirst(), loaded);
     }
     
     private static Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> generaliseType(ImmutableList<DataType> types) throws UserException
@@ -1290,7 +1320,7 @@ public class RData
                 // First try as table (list of columns):
                 final ImmutableMap<String, RValue> attrMap = pairListToMap(attributes);
 
-                boolean isDataFrame = isObject && isClass(attrMap, "data.frame");
+                boolean isDataFrame = isObject && isDataFrameOrTibble(attrMap);
                 if (isDataFrame)
                 {
                     ImmutableList<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>> columns = Utility.mapListExI_Index(values, (i, v) -> convertRToColumn(typeManager, v, getColumnName(attrMap.get("names"), i)));
@@ -1312,7 +1342,7 @@ public class RData
                             public Boolean visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
                             {
                                 final ImmutableMap<String, RValue> valueAttrMap = pairListToMap(attributes);
-                                return isObject && isClass(valueAttrMap, "data.frame");
+                                return isObject && isDataFrameOrTibble(valueAttrMap);
                             }
                         });
                         
@@ -1336,11 +1366,22 @@ public class RData
         });
     }
 
-    private static boolean isClass(ImmutableMap<String, RValue> attrMap, String className) throws UserException, InternalException
+    private static boolean isDataFrameOrTibble(ImmutableMap<String, RValue> attrMap) throws InternalException, UserException
+    {
+        return isClass(attrMap, "data.frame") || isClass(attrMap, "tbl_df", "tbl", "data.frame");
+    }
+
+    private static boolean isClass(ImmutableMap<String, RValue> attrMap, String... classNames) throws UserException, InternalException
     {
         RValue classRList = attrMap.get("class");
-        RValue classRValue = classRList == null ? null : getListItem(classRList, 0);
-        return classRValue != null && className.equals(getString(classRValue));
+        if (classRList == null)
+            return false;
+        for (int i = 0; i < classNames.length; i++)
+        {
+            if (!classNames[i].equals(getString(getListItem(classRList, i))))
+                return false;
+        }
+        return true;
     }
 
     private static ImmutableMap<String, RValue> pairListToMap(@Nullable RValue attributes) throws UserException, InternalException
