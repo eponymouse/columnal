@@ -1691,8 +1691,36 @@ public class RData
                             }
 
                             @Override
-                            public RValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+                            public RValue tagged(TypeId innerTypeName, ImmutableList<Either<Unit, DataType>> innerTypeVars, ImmutableList<TagType<DataType>> innerTags) throws InternalException, UserException
                             {
+                                if (innerTags.stream().allMatch(tt -> tt.getInner() == null))
+                                {
+                                    int[] vals = new int[length];
+                                    for (int i = 0; i < length; i++)
+                                    {
+                                        @Value TaggedValue val = g.get(i);
+                                        if (val.getTagIndex() == 0)
+                                            vals[i] = NA_AS_INTEGER;
+                                        else
+                                        {
+                                            @Value Object valInner = val.getInner();
+                                            if (valInner == null)
+                                                throw new InternalException("Null inner value of present optional value in row " + i);
+                                            vals[i] = Utility.cast(valInner, TaggedValue.class).getTagIndex() + 1;
+                                        }
+                                    }
+
+                                    // Convert to factors:
+                                    return new RValue()
+                                    {
+                                        @Override
+                                        public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+                                        {
+                                            return visitor.visitFactorList(vals, Utility.mapListI(innerTags, tt -> tt.getName()));
+                                        }
+                                    };
+                                }
+                                
                                 throw new UserException("Nested tagged types are not supported");
                             }
 
