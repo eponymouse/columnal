@@ -100,10 +100,8 @@ public class ConvertFromR
             @Override
             public Pair<DataType,ImmutableList<@Value Object>> visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                if (Ints.contains(values, RUtility.NA_AS_INTEGER))
-                    return new Pair<>(typeManager.makeMaybeType(DataType.NUMBER), Utility.<@ImmediateValue Integer, @Value Object>mapListI(Ints.asList(values), i -> i == RUtility.NA_AS_INTEGER ? typeManager.maybeMissing() : typeManager.maybePresent(DataTypeUtility.value(i))));
-                else
-                    return new Pair<>(DataType.NUMBER, Utility.<@ImmediateValue Integer, @Value Object>mapListI(Ints.asList(values), i -> DataTypeUtility.value(i)));
+                // int[] doesn't use NA; always doubles if has NA
+                return new Pair<>(DataType.NUMBER, Utility.<@ImmediateValue Integer, @Value Object>mapListI(Ints.asList(values), i -> DataTypeUtility.value(i)));
             }
 
             @Override
