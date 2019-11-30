@@ -89,92 +89,6 @@ public class RData
     public static final String[] CLASS_DATA_FRAME = {"data.frame"};
     public static final String[] CLASS_TIBBLE = {"tbl_df", "tbl", "data.frame"};
 
-    private static class V2Header
-    {
-        private final byte header[];
-        private final int formatVersion;
-        private final int writerVersion;
-        private final int readerVersion;
-        
-        public V2Header(DataInputStream d) throws IOException
-        {
-            header = new byte[2];
-            d.readFully(header);
-            formatVersion = d.readInt();
-            writerVersion = d.readInt();
-            readerVersion = d.readInt();
-        }
-    }
-    
-    private static final class TypeHeader
-    {
-        private final int headerBits;
-        
-        public TypeHeader(DataInputStream d, HashMap<Integer, String> atoms) throws IOException, InternalException, UserException
-        {
-            headerBits = d.readInt();
-        }
-
-        private @Nullable RValue readAttributes(DataInputStream d, HashMap<Integer, String> atoms) throws IOException, UserException, InternalException
-        {
-            final @Nullable RValue attr;
-            if (hasAttributes())
-            {
-                // Also read trailing attributes:
-                attr = readItem(d, atoms);
-            }
-            else
-            {
-                attr = null;
-            }
-            return attr;
-        }
-
-        private @Nullable RValue readTag(DataInputStream d, HashMap<Integer, String> atoms) throws IOException, UserException, InternalException
-        {
-            final @Nullable RValue tag;
-            if (hasTag())
-            {
-                // Also read trailing attributes:
-                tag = readItem(d, atoms);
-            }
-            else
-            {
-                tag = null;
-            }
-            return tag;
-        }
-
-        public int getType()
-        {
-            return headerBits & 0xFF;
-        }
-        
-        public boolean hasAttributes()
-        {
-            return (headerBits & 0x200) != 0;
-        }
-
-        public boolean hasTag()
-        {
-            return (headerBits & 0x400) != 0;
-        }
-
-        public boolean isObject()
-        {
-            return (headerBits & 0x100) != 0;
-        }
-        
-        public int getReference(DataInputStream d) throws IOException
-        {
-            int ref = headerBits >>> 8;
-            if (ref == 0)
-                return d.readInt();
-            else
-                return ref;
-        }
-    }
-
     private static int addAtom(HashMap<Integer, String> atoms, String atom)
     {
         int newKey = atoms.size() + 1;
@@ -233,7 +147,7 @@ public class RData
         return result;
     }
 
-    private static RValue readItem(DataInputStream d, HashMap<Integer, String> atoms) throws IOException, UserException, InternalException
+    static RValue readItem(DataInputStream d, HashMap<Integer, String> atoms) throws IOException, UserException, InternalException
     {
         TypeHeader objHeader = new TypeHeader(d, atoms);
         String indent = Arrays.stream(Thread.currentThread().getStackTrace()).map(s -> s.getMethodName().equals("readItem") ? "  " : "").collect(Collectors.joining());
