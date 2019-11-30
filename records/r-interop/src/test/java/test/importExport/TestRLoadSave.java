@@ -39,10 +39,12 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType.UnknownTypeException;
-import records.rinterop.RData;
+import records.rinterop.ConvertToR;
+import records.rinterop.ConvertFromR;
 import records.rinterop.RPrettyPrint;
+import records.rinterop.RRead;
 import records.rinterop.RValue;
-import records.rinterop.RData.TableType;
+import records.rinterop.ConvertFromR.TableType;
 import records.rinterop.RWrite;
 import utility.Either;
 import utility.Pair;
@@ -77,7 +79,7 @@ public class TestRLoadSave
     {
         @SuppressWarnings("nullness")
         @NonNull URL resource = getClass().getClassLoader().getResource("iris.rds");
-        RValue loaded = RData.readRData(new File(resource.toURI()));
+        RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
         /*
             @Nullable InputStream stream = ResourceUtility.getResourceAsStream("builtin_units.txt");
@@ -85,7 +87,7 @@ public class TestRLoadSave
                 return new UnitManager(null);
             else */
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0).getSecond();
+        RecordSet rs = ConvertFromR.convertRToTable(typeManager, loaded).get(0).getSecond();
                 
         assertEquals(ImmutableList.of(new ColumnId("Sepal Length"), new ColumnId("Sepal Width"), new ColumnId("Petal Length"), new ColumnId("Petal Width"), new ColumnId("Species")), rs.getColumnIds());
         
@@ -99,7 +101,7 @@ public class TestRLoadSave
     {
         @SuppressWarnings("nullness")
         @NonNull URL resource = getClass().getClassLoader().getResource("mtcars.rds");
-        RValue loaded = RData.readRData(new File(resource.toURI()));
+        RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
         /*
             @Nullable InputStream stream = ResourceUtility.getResourceAsStream("builtin_units.txt");
@@ -107,7 +109,7 @@ public class TestRLoadSave
                 return new UnitManager(null);
             else */
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0).getSecond();
+        RecordSet rs = ConvertFromR.convertRToTable(typeManager, loaded).get(0).getSecond();
 
         assertEquals(ImmutableList.of(new ColumnId("mpg"), new ColumnId("cyl"), new ColumnId("disp"), new ColumnId("hp"), new ColumnId("drat"), new ColumnId("wt"), new ColumnId("qsec"), new ColumnId("vs"), new ColumnId("am"), new ColumnId("gear"), new ColumnId("carb")), rs.getColumnIds());
 
@@ -121,7 +123,7 @@ public class TestRLoadSave
     {
         @SuppressWarnings("nullness")
         @NonNull URL resource = getClass().getClassLoader().getResource("aggr_results.Rdata");
-        RValue loaded = RData.readRData(new File(resource.toURI()));
+        RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
         /*
             @Nullable InputStream stream = ResourceUtility.getResourceAsStream("builtin_units.txt");
@@ -129,7 +131,7 @@ public class TestRLoadSave
                 return new UnitManager(null);
             else */
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RData.convertRToTable(typeManager, loaded);
+        ConvertFromR.convertRToTable(typeManager, loaded);
     }
 
     @Test
@@ -137,9 +139,9 @@ public class TestRLoadSave
     {
         @SuppressWarnings("nullness")
         @NonNull URL resource = getClass().getClassLoader().getResource("date.rds");
-        RValue loaded = RData.readRData(new File(resource.toURI()));
+        RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
-        Pair<DataType, @Value Object> r = RData.convertRToTypedValue(new TypeManager(new UnitManager()), loaded);
+        Pair<DataType, @Value Object> r = ConvertFromR.convertRToTypedValue(new TypeManager(new UnitManager()), loaded);
         assertEquals(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), r.getFirst());
         DataTestUtil.assertValueEqual("Date", LocalDate.of(1950, 2, 1), r.getSecond());
     }
@@ -149,9 +151,9 @@ public class TestRLoadSave
     {
         @SuppressWarnings("nullness")
         @NonNull URL resource = getClass().getClassLoader().getResource("datetimezoned.rds");
-        RValue loaded = RData.readRData(new File(resource.toURI()));
+        RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
-        Pair<DataType, @Value Object> r = RData.convertRToTypedValue(new TypeManager(new UnitManager()), loaded);
+        Pair<DataType, @Value Object> r = ConvertFromR.convertRToTypedValue(new TypeManager(new UnitManager()), loaded);
         assertEquals(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), r.getFirst());
         @SuppressWarnings("valuetype")
         @Value ZonedDateTime zdt = ZonedDateTime.of(2005, 10, 21, 18, 47, 22, 0, ZoneId.of("America/New_York"));
@@ -165,10 +167,10 @@ public class TestRLoadSave
     {
         @SuppressWarnings("nullness")
         @NonNull URL resource = getClass().getClassLoader().getResource("na.rds");
-        RValue loaded = RData.readRData(new File(resource.toURI()));
+        RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet r = RData.convertRToTable(typeManager, loaded).get(0).getSecond();
+        RecordSet r = ConvertFromR.convertRToTable(typeManager, loaded).get(0).getSecond();
         // df <- data.frame(c(TRUE, NA, FALSE), c(36, NA, -35.2), c(1, NA, 2), factor(c("A", NA, "B")), as.character(c("Hello", NA, "Bye")), c(ISOdate(2005,10,21,18,47,22,tz="America/New_York"), NA, NA), stringsAsFactors=FALSE)
         
         assertEquals(maybeType(typeManager, DataType.BOOLEAN), r.getColumns().get(0).getType().getType());
@@ -194,10 +196,10 @@ public class TestRLoadSave
     {
         @SuppressWarnings("nullness")
         @NonNull URL resource = getClass().getClassLoader().getResource("df-df2.Rdata");
-        RValue loaded = RData.readRData(new File(resource.toURI()));
+        RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(new UnitManager());
-        ImmutableList<Pair<String, EditableRecordSet>> rs = RData.convertRToTable(typeManager, loaded);
+        ImmutableList<Pair<String, EditableRecordSet>> rs = ConvertFromR.convertRToTable(typeManager, loaded);
         assertEquals(ImmutableSet.of("df", "df2", "datetimeZoned2"), rs.stream().map(p -> p.getFirst()).collect(ImmutableSet.<String>toImmutableSet()));
     }
 
@@ -206,10 +208,10 @@ public class TestRLoadSave
     {
         @SuppressWarnings("nullness")
         @NonNull URL resource = getClass().getClassLoader().getResource("simple345.rds");
-        RValue loaded = RData.readRData(new File(resource.toURI()));
+        RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0).getSecond();
+        RecordSet rs = ConvertFromR.convertRToTable(typeManager, loaded).get(0).getSecond();
 
         assertEquals(ImmutableList.of(new ColumnId("bar")), rs.getColumnIds());
 
@@ -221,10 +223,10 @@ public class TestRLoadSave
     {
         @SuppressWarnings("nullness")
         @NonNull URL resource = getClass().getClassLoader().getResource("tibble.rds");
-        RValue loaded = RData.readRData(new File(resource.toURI()));
+        RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet rs = RData.convertRToTable(typeManager, loaded).get(0).getSecond();
+        RecordSet rs = ConvertFromR.convertRToTable(typeManager, loaded).get(0).getSecond();
 
         assertEquals(ImmutableList.of(new ColumnId("x"), new ColumnId("nested lists")), rs.getColumnIds());
 
@@ -267,7 +269,7 @@ public class TestRLoadSave
         {
             for (int kind = 0; kind < 3; kind++)
             {
-                RValue tableAsR = RData.convertTableToR(original.recordSet, tableType);
+                RValue tableAsR = ConvertToR.convertTableToR(original.recordSet, tableType);
                 final RValue roundTripped;
                 switch (kind)
                 {
@@ -291,7 +293,7 @@ public class TestRLoadSave
                             long lenAfter = f.length();
                             System.out.println("Length before R: " + lenBefore + " after: " + lenAfter);
                         }
-                        roundTripped = RData.readRData(f);
+                        roundTripped = RRead.readRData(f);
                         f.delete();
                         break;
                     default:
@@ -300,7 +302,7 @@ public class TestRLoadSave
                 }
                 TypeManager typeManager = original.typeManager;
                 System.out.println(RPrettyPrint.prettyPrint(roundTripped));
-                RecordSet reloaded = RData.convertRToTable(typeManager, roundTripped).get(0).getSecond();
+                RecordSet reloaded = ConvertFromR.convertRToTable(typeManager, roundTripped).get(0).getSecond();
                 assertEquals(original.recordSet.getColumnIds(), reloaded.getColumnIds());
                 assertEquals(original.recordSet.getLength(), reloaded.getLength());
                 for (Column column : original.recordSet.getColumns())

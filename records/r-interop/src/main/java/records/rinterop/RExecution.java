@@ -6,7 +6,7 @@ import org.apache.commons.io.IOUtils;
 import records.data.RecordSet;
 import records.error.InternalException;
 import records.error.UserException;
-import records.rinterop.RData.TableType;
+import records.rinterop.ConvertFromR.TableType;
 import utility.Utility;
 
 import java.io.File;
@@ -36,7 +36,7 @@ public class RExecution
             for (Entry<String, RecordSet> entry : tablesToPass.entrySet())
             {
                 File tableFile = rdsFile.addRDSFile("table");
-                RValue rTable = RData.convertTableToR(entry.getValue(), TableType.TIBBLE);
+                RValue rTable = ConvertToR.convertTableToR(entry.getValue(), TableType.TIBBLE);
                 //System.out.println(RData.prettyPrint(rTable));
                 RWrite.writeRData(tableFile, rTable);
                 String read = entry.getKey() + " <- readRDS(\"" + escape(tableFile.getAbsolutePath()) + "\")";
@@ -61,7 +61,7 @@ public class RExecution
             int exitCode = p.waitFor();
             if (exitCode != 0)
                 throw new UserException("Exit code from running R (" + exitCode + ") indicates error.  Output was:\n" + stdout.toString() + "\nError was:\n" + stderr.toString());
-            return RData.readRData(outputFile);
+            return RRead.readRData(outputFile);
         }
         catch (IOException | InterruptedException e)
         {

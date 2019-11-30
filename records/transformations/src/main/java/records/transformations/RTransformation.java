@@ -16,7 +16,7 @@ import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.Versions.ExpressionVersion;
-import records.rinterop.RData;
+import records.rinterop.ConvertFromR;
 import records.rinterop.RValue;
 import records.rinterop.RExecution;
 import styled.StyledString;
@@ -108,12 +108,12 @@ public class RTransformation extends VisitableTransformation
             for (TableId srcTableId : srcTableIds)
             {
                 Table t = getManager().getSingleTableOrThrow(srcTableId);
-                tablesToPass.put(RData.usToRTable(t.getId()), t.getData());
+                tablesToPass.put(ConvertFromR.usToRTable(t.getId()), t.getData());
             }
 
             RValue rResult = RExecution.runRExpression(rExpression, packagesToLoad, ImmutableMap.copyOf(tablesToPass));
 
-            ImmutableList<Pair<String, EditableRecordSet>> tables = RData.convertRToTable(getManager().getTypeManager(), rResult);
+            ImmutableList<Pair<String, EditableRecordSet>> tables = ConvertFromR.convertRToTable(getManager().getTypeManager(), rResult);
             
             if (tables.isEmpty())
                 result = Either.left(StyledString.s("R result empty"));

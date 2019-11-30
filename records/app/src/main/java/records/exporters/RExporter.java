@@ -5,8 +5,8 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import records.data.Table;
 import records.error.InternalException;
 import records.error.UserException;
-import records.rinterop.RData;
-import records.rinterop.RData.TableType;
+import records.rinterop.ConvertToR;
+import records.rinterop.ConvertFromR.TableType;
 import records.rinterop.RWrite;
 import utility.TranslationUtility;
 
@@ -20,7 +20,7 @@ public class RExporter implements Exporter
     {
         try
         {
-            RWrite.writeRData(destination, RData.convertTableToR(data.getData(), TableType.TIBBLE));
+            RWrite.writeRData(destination, ConvertToR.convertTableToR(data.getData(), TableType.TIBBLE));
         }
         catch (IOException e)
         {

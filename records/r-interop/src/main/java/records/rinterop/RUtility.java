@@ -6,6 +6,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Booleans;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
@@ -13,13 +15,34 @@ import records.rinterop.RVisitor.PairListEntry;
 import utility.Pair;
 import utility.Utility;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 class RUtility
 {
+    static final int STRING_SINGLE = 9;
+    static final int LOGICAL_VECTOR = 10;
+    static final int INT_VECTOR = 13;
+    static final int DOUBLE_VECTOR = 14;
+    static final int STRING_VECTOR = 16;
+    static final int GENERIC_VECTOR = 19;
+    static final int PAIR_LIST = 2;
+    static final int NIL = 254;
+    static final int NA_AS_INTEGER = 0x80000000;
+    static final int SYMBOL = 1;
+    static final String[] CLASS_DATA_FRAME = {"data.frame"};
+    static final String[] CLASS_TIBBLE = {"tbl_df", "tbl", "data.frame"};
+
     public static RValue intVector(int[] values, @Nullable RValue attributes)
     {
         return new RValue()
@@ -214,5 +237,90 @@ class RUtility
     static RValue makeClassAttributes(String[] className, ImmutableMap<String, RValue> otherItems)
     {
         return pairListFromMap(Utility.appendToMap(otherItems, "class", stringVector(Arrays.stream(className).<Optional<@Value String>>map(s -> Optional.<@Value String>of(DataTypeUtility.value(s))).collect(ImmutableList.<Optional<@Value String>>toImmutableList()), null), null));
+    }
+
+    static RValue dateTimeZonedVector(double[] values, @Nullable RValue attr) throws InternalException, UserException
+    {
+        ImmutableMap<String, RValue> attrMap = pairListToMap(attr);
+        RValue tzone = attrMap.get("tzone");
+        if (tzone != null)
+        {
+            ImmutableList.Builder<Optional<@Value TemporalAccessor>> b = ImmutableList.builderWithExpectedSize(values.length);
+            for (double value : values)
+            {
+                if (Double.isNaN(value))
+                    b.add(Optional.empty());
+                else
+                {
+                    @SuppressWarnings("valuetype")
+                    @Value ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond((long) roundTowardsZero(value), (long) (1_000_000_000.0 * (value - roundTowardsZero(value)))), ZoneId.of(getStringNN(getListItem(tzone, 0))));
+                    b.add(Optional.of(zdt));
+                }
+            }
+            return ConvertToR.temporalVector(new DateTimeInfo(DateTimeType.DATETIMEZONED), b.build());
+        }
+        else
+        {
+            ImmutableList.Builder<Optional<@Value TemporalAccessor>> b = ImmutableList.builderWithExpectedSize(values.length);
+            for (double value : values)
+            {
+                if (Double.isNaN(value))
+                    b.add(Optional.empty());
+                else
+                {
+                    @SuppressWarnings("valuetype")
+                    @Value LocalDateTime ldt = LocalDateTime.ofInstant(Instant.ofEpochSecond((long) roundTowardsZero(value)), ZoneId.of("UTC"));
+                    b.add(Optional.of(ldt));
+                }
+            }
+            return ConvertToR.temporalVector(new DateTimeInfo(DateTimeType.DATETIME), b.build());
+        }
+    }
+
+    private static double roundTowardsZero(double seconds)
+    {
+        return Math.signum(seconds) * Math.floor(Math.abs(seconds));
+    }
+
+    static RValue dateVector(double[] values, @Nullable RValue attr) throws InternalException
+    {
+        if (DoubleStream.of(values).allMatch(d -> Double.isNaN(d) || d == (int)d))
+        {
+            ImmutableList<Optional<@Value TemporalAccessor>> dates = DoubleStream.of(values).<Optional<@Value TemporalAccessor>>mapToObj(d -> {
+                if (Double.isNaN(d))
+                    return Optional.empty();
+                @SuppressWarnings("valuetype")
+                @Value LocalDate date = LocalDate.ofEpochDay((int) d);
+                return Optional.of(date);
+            }).collect(ImmutableList.<Optional<@Value TemporalAccessor>>toImmutableList());
+            return new RValue()
+            {
+                @Override
+                public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+                {
+                    return visitor.visitTemporalList(DateTimeType.YEARMONTHDAY, dates, attr);
+                }
+            };
+        }
+        else
+        {
+            ImmutableList<Optional<@Value TemporalAccessor>> dates = DoubleStream.of(values).<Optional<@Value TemporalAccessor>>mapToObj(d -> {
+                if (Double.isNaN(d))
+                    return Optional.empty();
+                double seconds = d * (60.0 * 60.0 * 24.0);
+                double wholeSeconds = Math.floor(seconds);
+                @SuppressWarnings("valuetype")
+                @Value LocalDateTime date = LocalDateTime.ofEpochSecond((long)wholeSeconds, (int)(1_000_000_000 * (seconds - wholeSeconds)), ZoneOffset.UTC);
+                return Optional.of(date);
+            }).collect(ImmutableList.<Optional<@Value TemporalAccessor>>toImmutableList());
+            return new RValue()
+            {
+                @Override
+                public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+                {
+                    return visitor.visitTemporalList(DateTimeType.DATETIME, dates, attr);
+                }
+            };
+        }
     }
 }

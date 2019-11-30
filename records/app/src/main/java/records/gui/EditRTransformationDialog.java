@@ -10,7 +10,6 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
@@ -30,12 +29,12 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.EditRTransformationDialog.RDetails;
 import records.gui.View.Pick;
-import records.rinterop.RData;
-import records.rinterop.RData.TableType;
+import records.rinterop.ConvertToR;
+import records.rinterop.ConvertFromR;
+import records.rinterop.ConvertFromR.TableType;
 import records.transformations.RTransformation;
 import styled.StyledCSS;
 import styled.StyledString;
-import styled.StyledString.Builder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -54,7 +53,6 @@ import utility.gui.ScrollPaneFill;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
 {
@@ -171,7 +169,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
                         tableList.addToEnd(p.getFirst().getId().getRaw(), false);
                     }
                     
-                    expressionTextArea.replaceSelection(RData.usToRTable(p.getFirst().getId()) + (p.getSecond() == null ? "" : "$" + RData.usToRColumn(p.getSecond(), TableType.TIBBLE)));
+                    expressionTextArea.replaceSelection(ConvertFromR.usToRTable(p.getFirst().getId()) + (p.getSecond() == null ? "" : "$" + ConvertToR.usToRColumn(p.getSecond(), TableType.TIBBLE)));
                 }
                 else if (focused instanceof PickTablePane)
                 {
@@ -199,13 +197,13 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
             if (ident != null)
             {
                 TableId tableId = new TableId(ident);
-                tableVars.add(RData.usToRTable(tableId));
+                tableVars.add(ConvertFromR.usToRTable(tableId));
                 try
                 {
                     RecordSet rs = parent.getManager().getSingleTableOrThrow(tableId).getData();
                     for (ColumnId columnId : rs.getColumnIds())
                     {
-                        columnVars.add(RData.usToRTable(tableId) + "$" + RData.usToRColumn(columnId, TableType.TIBBLE));
+                        columnVars.add(ConvertFromR.usToRTable(tableId) + "$" + ConvertToR.usToRColumn(columnId, TableType.TIBBLE));
                     }
                 }
                 catch (InternalException | UserException e)

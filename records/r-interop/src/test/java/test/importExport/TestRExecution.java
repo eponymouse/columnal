@@ -19,7 +19,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.rinterop.RData;
+import records.rinterop.ConvertFromR;
 import records.rinterop.RPrettyPrint;
 import records.rinterop.RValue;
 import records.rinterop.RExecution;
@@ -41,7 +41,7 @@ public class TestRExecution
     public void testSimple() throws UserException, InternalException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
-        Column column = RData.convertRToTable(typeManager, RExecution.runRExpression("c(6, 8)")).get(0).getSecond().getColumns().get(0);
+        Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("c(6, 8)")).get(0).getSecond().getColumns().get(0);
         DataTestUtil.assertValueListEqual("Column", ImmutableList.of(6, 8), DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
     
@@ -49,7 +49,7 @@ public class TestRExecution
     public void testSimple2() throws UserException, InternalException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
-        Column column = RData.convertRToTable(typeManager, RExecution.runRExpression("seq(1,10,2)")).get(0).getSecond().getColumns().get(0);
+        Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("seq(1,10,2)")).get(0).getSecond().getColumns().get(0);
         DataTestUtil.assertValueListEqual("Column", ImmutableList.of(1, 3, 5, 7, 9), DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
 
@@ -57,7 +57,7 @@ public class TestRExecution
     public void testSimple3() throws UserException, InternalException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
-        Column column = RData.convertRToTable(typeManager, RExecution.runRExpression("\"Möøõsę!\"")).get(0).getSecond().getColumns().get(0);
+        Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("\"Möøõsę!\"")).get(0).getSecond().getColumns().get(0);
         DataTestUtil.assertValueListEqual("Column", ImmutableList.of("Möøõsę!"), DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
     
@@ -65,7 +65,7 @@ public class TestRExecution
     public void testAIC() throws InternalException, UserException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet recordSet = RData.convertRToTable(typeManager, RExecution.runRExpression(
+        RecordSet recordSet = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression(
         // From docs
                 "lm1 <- lm(Fertility ~ . , data = swiss)\n" +
                 "AIC(lm1)\n" +
@@ -84,7 +84,7 @@ public class TestRExecution
     public void testTable() throws InternalException, UserException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet recordSet = RData.convertRToTable(typeManager, RExecution.runRExpression("foo$bar[2:3]", ImmutableList.of(), ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5"))), 3)))).get(0).getSecond();
+        RecordSet recordSet = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("foo$bar[2:3]", ImmutableList.of(), ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5"))), 3)))).get(0).getSecond();
         DataTestUtil.assertValueListEqual("Column", ImmutableList.of(4, 5), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
     }
 
@@ -93,7 +93,7 @@ public class TestRExecution
     public void testTable2() throws InternalException, UserException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet recordSet = RData.convertRToTable(typeManager, RExecution.runRExpression("foo$baz[2:3]", ImmutableList.of(),
+        RecordSet recordSet = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("foo$baz[2:3]", ImmutableList.of(),
             ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
                 rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5")),
                 rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, @Value String>right("A"), Either.<String, @Value String>right("B"), Either.<String, @Value String>right("C")), "Z")
@@ -106,7 +106,7 @@ public class TestRExecution
     public void testTable2b() throws InternalException, UserException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet recordSet = RData.convertRToTable(typeManager, RExecution.runRExpression("data.frame(foo)$baz[2:3]", ImmutableList.of(),
+        RecordSet recordSet = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("data.frame(foo)$baz[2:3]", ImmutableList.of(),
             ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
                 rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5")),
                 rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, @Value String>right("A"), Either.<String, @Value String>right("B"), Either.<String, @Value String>right("C")), "Z")
@@ -120,7 +120,7 @@ public class TestRExecution
         TypeManager typeManager = new TypeManager(new UnitManager());
         RValue rValue = RExecution.runRExpression("data.frame(CO2)");
         System.out.println(RPrettyPrint.prettyPrint(rValue));
-        RecordSet recordSet = RData.convertRToTable(typeManager, rValue).get(0).getSecond();
+        RecordSet recordSet = ConvertFromR.convertRToTable(typeManager, rValue).get(0).getSecond();
         TaggedValue taggedValue = Utility.cast(recordSet.getColumn(new ColumnId("Plant")).getType().getCollapsed(0), TaggedValue.class);
         assertEquals("Qn1", taggedValue.getTagName());
     }

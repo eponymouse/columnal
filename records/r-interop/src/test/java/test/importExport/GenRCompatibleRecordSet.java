@@ -12,7 +12,7 @@ import records.data.EditableColumn;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.datatype.TypeManager;
-import records.rinterop.RData.TableType;
+import records.rinterop.ConvertFromR.TableType;
 import test.gen.type.GenDataTypeMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeAndValueMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeMaker;

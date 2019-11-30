@@ -60,7 +60,7 @@ public class RWrite
                 try
                 {
                     d.writeInt(value | (isObject ? 0x100 : 0) | (attributes != null ? 0x200 : 0) | (tag != null ? 0x400 : 0));
-                    if (value == RData.PAIR_LIST)
+                    if (value == RUtility.PAIR_LIST)
                     {
                         writeAttributes(attributes);
                         writeAttributes(tag);
@@ -109,8 +109,8 @@ public class RWrite
             public @Nullable Void visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
             {
                 if (isSymbol)
-                    writeInt(RData.SYMBOL);
-                writeInt(RData.STRING_SINGLE);
+                    writeInt(RUtility.SYMBOL);
+                writeInt(RUtility.STRING_SINGLE);
                 writeLenString(s);
                 return null;
             }
@@ -130,11 +130,11 @@ public class RWrite
             @Override
             public @Nullable Void visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                writeHeader(RData.STRING_VECTOR, attributes, null);
+                writeHeader(RUtility.STRING_VECTOR, attributes, null);
                 writeInt(values.size());
                 for (Optional<@Value String> value : values)
                 {
-                    writeInt(RData.STRING_SINGLE);
+                    writeInt(RUtility.STRING_SINGLE);
                     writeLenString(value.orElse(null));
                 }
                 writeAttributes(attributes);
@@ -147,7 +147,7 @@ public class RWrite
                 switch (dateTimeType)
                 {
                     case YEARMONTHDAY:
-                        writeHeader(RData.DOUBLE_VECTOR, attributes, null);
+                        writeHeader(RUtility.DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
                         for (Optional<@Value TemporalAccessor> value : values)
                         {
@@ -159,7 +159,7 @@ public class RWrite
                         writeAttributes(attributes);
                         break;
                     case DATETIME:
-                        writeHeader(RData.DOUBLE_VECTOR, attributes, null);
+                        writeHeader(RUtility.DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
                         for (Optional<@Value TemporalAccessor> value : values)
                         {
@@ -175,7 +175,7 @@ public class RWrite
                         writeAttributes(attributes);
                         break;
                     case DATETIMEZONED:
-                        writeHeader(RData.DOUBLE_VECTOR, attributes, null);
+                        writeHeader(RUtility.DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
                         for (Optional<@Value TemporalAccessor> value : values)
                         {
@@ -190,7 +190,7 @@ public class RWrite
                         writeAttributes(attributes);
                         break;
                     case TIMEOFDAY:
-                        writeHeader(RData.DOUBLE_VECTOR, attributes, null);
+                        writeHeader(RUtility.DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
                         for (Optional<@Value TemporalAccessor> value : values)
                         {
@@ -205,7 +205,7 @@ public class RWrite
                         writeAttributes(attributes);
                         break;
                     case YEARMONTH:
-                        writeHeader(RData.DOUBLE_VECTOR, attributes, null);
+                        writeHeader(RUtility.DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
                         for (Optional<@Value TemporalAccessor> value : values)
                         {
@@ -226,7 +226,7 @@ public class RWrite
             @Override
             public @Nullable Void visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                writeHeader(RData.INT_VECTOR, attributes, null);
+                writeHeader(RUtility.INT_VECTOR, attributes, null);
                 writeInt(values.length);
                 for (int value : values)
                 {
@@ -239,7 +239,7 @@ public class RWrite
             @Override
             public @Nullable Void visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                writeHeader(RData.DOUBLE_VECTOR, attributes, null);
+                writeHeader(RUtility.DOUBLE_VECTOR, attributes, null);
                 writeInt(values.length);
                 for (double value : values)
                 {
@@ -252,11 +252,11 @@ public class RWrite
             @Override
             public @Nullable Void visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
             {
-                writeHeader(RData.LOGICAL_VECTOR, attributes, null);
+                writeHeader(RUtility.LOGICAL_VECTOR, attributes, null);
                 writeInt(values.length);
                 for (int i = 0; i < values.length; i++)
                 {
-                    writeInt(isNA != null && isNA[i] ? RData.NA_AS_INTEGER : (values[i] ? 1 : 0));
+                    writeInt(isNA != null && isNA[i] ? RUtility.NA_AS_INTEGER : (values[i] ? 1 : 0));
                 }
                 writeAttributes(attributes);
                 return null;
@@ -265,7 +265,7 @@ public class RWrite
             @Override
             public @Nullable Void visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
             {
-                writeHeader(RData.GENERIC_VECTOR, attributes, null, isObject);
+                writeHeader(RUtility.GENERIC_VECTOR, attributes, null, isObject);
                 writeInt(values.size());
                 for (RValue value : values)
                 {
@@ -283,7 +283,7 @@ public class RWrite
                     case 0:
                         break;
                     case 1:
-                        writeHeader(RData.PAIR_LIST, items.get(0).attributes, items.get(0).tag);
+                        writeHeader(RUtility.PAIR_LIST, items.get(0).attributes, items.get(0).tag);
                         items.get(0).item.visit(this);
                         visitNil();
                         break;
@@ -294,7 +294,7 @@ public class RWrite
                         items.get(1).item.visit(this);
                         break;*/
                     default:
-                        writeHeader(RData.PAIR_LIST, items.get(0).attributes, items.get(0).tag);
+                        writeHeader(RUtility.PAIR_LIST, items.get(0).attributes, items.get(0).tag);
                         items.get(0).item.visit(this);
                         visitPairList(items.subList(1, items.size()));
                         break;
@@ -312,7 +312,7 @@ public class RWrite
             @Override
             public @Nullable Void visitNil() throws InternalException, UserException
             {
-                writeInt(RData.NIL);
+                writeInt(RUtility.NIL);
                 return null;
             }
         });

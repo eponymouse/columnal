@@ -26,7 +26,7 @@ final class TypeHeader
         if (hasAttributes())
         {
             // Also read trailing attributes:
-            attr = RData.readItem(d, atoms);
+            attr = RRead.readItem(d, atoms);
         }
         else
         {
@@ -41,7 +41,7 @@ final class TypeHeader
         if (hasTag())
         {
             // Also read trailing attributes:
-            tag = RData.readItem(d, atoms);
+            tag = RRead.readItem(d, atoms);
         }
         else
         {

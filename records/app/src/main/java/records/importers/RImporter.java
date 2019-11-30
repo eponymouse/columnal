@@ -15,13 +15,13 @@ import records.data.CellPosition;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
-import records.data.RecordSet;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.rinterop.RData;
+import records.rinterop.ConvertFromR;
+import records.rinterop.RRead;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.IdentifierUtility;
@@ -54,7 +54,7 @@ public class RImporter implements Importer
     {
         try
         {
-            ImmutableList<Pair<String, EditableRecordSet>> tables = RData.convertRToTable(tableManager.getTypeManager(), RData.readRData(src));
+            ImmutableList<Pair<String, EditableRecordSet>> tables = ConvertFromR.convertRToTable(tableManager.getTypeManager(), RRead.readRData(src));
 
             switch (tables.size())
             {
