@@ -42,6 +42,7 @@ import records.error.UserException;
 import records.jellytype.JellyType.UnknownTypeException;
 import records.rinterop.RData;
 import records.rinterop.RData.RValue;
+import records.rinterop.RData.TableType;
 import utility.Either;
 import utility.Pair;
 import utility.TaggedValue;
@@ -247,7 +248,7 @@ public class TestRLoadSave
     }
 
     @Property(trials = 100)
-    public void testRoundTrip(@From(GenRCompatibleRecordSet.class) GenRCompatibleRecordSet.RCompatibleRecordSet original) throws Exception
+    public void testRoundTrip(@When(seed=1L) @From(GenRCompatibleRecordSet.class) GenRCompatibleRecordSet.RCompatibleRecordSet original) throws Exception
     {
         // Need to get rid of any numbers which won't survive round trip:
         for (Column column : original.recordSet.getColumns())
@@ -256,57 +257,60 @@ public class TestRLoadSave
         }
         
         // We can only test us->R->us, because to test R->us->R we'd still need to convert at start and end (i.e. us->R->us->R->us which is the same).
-        for (int kind = 0; kind < 3; kind++)
+        for (TableType tableType : original.supportedTableTypes)
         {
-            RValue tableAsR = RData.convertTableToR(original.recordSet);
-            final RValue roundTripped;
-            switch (kind)
+            for (int kind = 0; kind < 3; kind++)
             {
-                case 0:
-                    roundTripped = tableAsR;
-                    break;
-                case 1:
-                case 2:
-                    File f = File.createTempFile("columnaltest", "rds");
-                    RData.writeRData(f, tableAsR);
-                    if (kind == 2)
-                    {
-                        long lenBefore = f.length();
-                        String[] command = new String[] {"R",  "-e", "'saveRDS(readRDS(\"" + f.getAbsolutePath().replace("\\", "\\\\") + "\"),\"" + f.getAbsolutePath().replace("\\", "\\\\") + "\");'"};
-                        Process process = Runtime.getRuntime().exec(command);
-                        StringWriter stdout = new StringWriter();
-                        IOUtils.copy(process.getInputStream(), stdout, StandardCharsets.UTF_8);
-                        StringWriter stderr = new StringWriter();
-                        IOUtils.copy(process.getErrorStream(), stderr, StandardCharsets.UTF_8);
-                        assertEquals("stdout: " + stdout.toString() + "stderr: " + stderr.toString(), 0, process.waitFor());
-                        long lenAfter = f.length();
-                        System.out.println("Length before R: " + lenBefore + " after: " + lenAfter);
-                    }
-                    roundTripped = RData.readRData(f);
-                    f.delete();
-                    break;
-                default:
-                    Assert.fail("Missing case");
-                    return;
-            }
-            TypeManager typeManager = original.typeManager;
-            RecordSet reloaded = RData.convertRToTable(typeManager, roundTripped).get(0).getSecond();
-            System.out.println(RData.prettyPrint(roundTripped));
-            assertEquals(original.recordSet.getColumnIds(), reloaded.getColumnIds());
-            assertEquals(original.recordSet.getLength(), reloaded.getLength());
-            for (Column column : original.recordSet.getColumns())
-            {
-                Column reloadedColumn = reloaded.getColumn(column.getName());
-                
-                // Can't do this because it may need coercing:
-                //assertEquals(getTypeName(column.getType().getType()), getTypeName(reloadedColumn.getType().getType()));
-                
-                for (int i = 0; i < original.recordSet.getLength(); i++)
+                RValue tableAsR = RData.convertTableToR(original.recordSet, tableType);
+                final RValue roundTripped;
+                switch (kind)
                 {
-                    final @Value Object reloadedVal = reloadedColumn.getType().getCollapsed(i);
-                    // Not all date types survive, so need to coerce:
-                    @Value Object reloadedValCoerced = column.getType().getType().apply(new CoerceValueToThisType(reloadedVal, typeManager));
-                    DataTestUtil.assertValueEqual("Row " + i + " column " + column.getName(), column.getType().getCollapsed(i), reloadedValCoerced);
+                    case 0:
+                        roundTripped = tableAsR;
+                        break;
+                    case 1:
+                    case 2:
+                        File f = File.createTempFile("columnaltest", "rds");
+                        RData.writeRData(f, tableAsR);
+                        if (kind == 2)
+                        {
+                            long lenBefore = f.length();
+                            String[] command = new String[]{"R", "-e", "'saveRDS(readRDS(\"" + f.getAbsolutePath().replace("\\", "\\\\") + "\"),\"" + f.getAbsolutePath().replace("\\", "\\\\") + "\");'"};
+                            Process process = Runtime.getRuntime().exec(command);
+                            StringWriter stdout = new StringWriter();
+                            IOUtils.copy(process.getInputStream(), stdout, StandardCharsets.UTF_8);
+                            StringWriter stderr = new StringWriter();
+                            IOUtils.copy(process.getErrorStream(), stderr, StandardCharsets.UTF_8);
+                            assertEquals("stdout: " + stdout.toString() + "stderr: " + stderr.toString(), 0, process.waitFor());
+                            long lenAfter = f.length();
+                            System.out.println("Length before R: " + lenBefore + " after: " + lenAfter);
+                        }
+                        roundTripped = RData.readRData(f);
+                        f.delete();
+                        break;
+                    default:
+                        Assert.fail("Missing case");
+                        return;
+                }
+                TypeManager typeManager = original.typeManager;
+                System.out.println(RData.prettyPrint(roundTripped));
+                RecordSet reloaded = RData.convertRToTable(typeManager, roundTripped).get(0).getSecond();
+                assertEquals(original.recordSet.getColumnIds(), reloaded.getColumnIds());
+                assertEquals(original.recordSet.getLength(), reloaded.getLength());
+                for (Column column : original.recordSet.getColumns())
+                {
+                    Column reloadedColumn = reloaded.getColumn(column.getName());
+
+                    // Can't do this because it may need coercing:
+                    //assertEquals(getTypeName(column.getType().getType()), getTypeName(reloadedColumn.getType().getType()));
+
+                    for (int i = 0; i < original.recordSet.getLength(); i++)
+                    {
+                        final @Value Object reloadedVal = reloadedColumn.getType().getCollapsed(i);
+                        // Not all date types survive, so need to coerce:
+                        @Value Object reloadedValCoerced = column.getType().getType().apply(new CoerceValueToThisType(reloadedVal, typeManager));
+                        DataTestUtil.assertValueEqual("Row " + i + " column " + column.getName(), column.getType().getCollapsed(i), reloadedValCoerced);
+                    }
                 }
             }
         }

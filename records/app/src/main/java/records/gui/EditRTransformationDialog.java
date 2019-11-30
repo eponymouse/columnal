@@ -31,6 +31,7 @@ import records.error.UserException;
 import records.gui.EditRTransformationDialog.RDetails;
 import records.gui.View.Pick;
 import records.rinterop.RData;
+import records.rinterop.RData.TableType;
 import records.transformations.RTransformation;
 import styled.StyledCSS;
 import styled.StyledString;
@@ -170,7 +171,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
                         tableList.addToEnd(p.getFirst().getId().getRaw(), false);
                     }
                     
-                    expressionTextArea.replaceSelection(RData.usToRTable(p.getFirst().getId()) + (p.getSecond() == null ? "" : "$" + RData.usToRColumn(p.getSecond())));
+                    expressionTextArea.replaceSelection(RData.usToRTable(p.getFirst().getId()) + (p.getSecond() == null ? "" : "$" + RData.usToRColumn(p.getSecond(), TableType.TIBBLE)));
                 }
                 else if (focused instanceof PickTablePane)
                 {
@@ -204,7 +205,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
                     RecordSet rs = parent.getManager().getSingleTableOrThrow(tableId).getData();
                     for (ColumnId columnId : rs.getColumnIds())
                     {
-                        columnVars.add(RData.usToRTable(tableId) + "$" + RData.usToRColumn(columnId));
+                        columnVars.add(RData.usToRTable(tableId) + "$" + RData.usToRColumn(columnId, TableType.TIBBLE));
                     }
                 }
                 catch (InternalException | UserException e)

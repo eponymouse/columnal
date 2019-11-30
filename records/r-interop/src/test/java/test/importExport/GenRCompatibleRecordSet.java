@@ -6,15 +6,13 @@ import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import records.data.Column;
 import records.data.ColumnId;
 import records.data.DataTestUtil;
 import records.data.EditableColumn;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.datatype.TypeManager;
-import records.data.unit.UnitManager;
-import records.rinterop.RData;
+import records.rinterop.RData.TableType;
 import test.gen.type.GenDataTypeMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeAndValueMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeMaker;
@@ -22,8 +20,7 @@ import test.gen.type.GenJellyTypeMaker.TypeKinds;
 import test.importExport.GenRCompatibleRecordSet.RCompatibleRecordSet;
 import utility.Either;
 import utility.SimulationFunction;
-
-import java.io.File;
+import utility.Utility;
 
 import static org.junit.Assert.assertEquals;
 
@@ -33,11 +30,13 @@ public class GenRCompatibleRecordSet extends Generator<RCompatibleRecordSet>
     {
         public final KnownLengthRecordSet recordSet;
         public final TypeManager typeManager;
+        public final ImmutableSet<TableType> supportedTableTypes;
 
-        public RCompatibleRecordSet(KnownLengthRecordSet recordSet, TypeManager typeManager)
+        public RCompatibleRecordSet(KnownLengthRecordSet recordSet, TypeManager typeManager, ImmutableSet<TableType> supportedTableTypes)
         {
             this.recordSet = recordSet;
             this.typeManager = typeManager;
+            this.supportedTableTypes = supportedTableTypes;
         }
     }
     
@@ -49,7 +48,11 @@ public class GenRCompatibleRecordSet extends Generator<RCompatibleRecordSet>
     @Override
     public RCompatibleRecordSet generate(SourceOfRandomness random, GenerationStatus status)
     {
-        GenDataTypeMaker gen = new GenDataTypeMaker(ImmutableSet.of(TypeKinds.NUM_TEXT_TEMPORAL, TypeKinds.MAYBE_UNNESTED, TypeKinds.NEW_TAGGED_NO_INNER, TypeKinds.BOOLEAN), true);
+        boolean tibbleOnly = random.nextBoolean();
+        ImmutableSet<TypeKinds> core = ImmutableSet.of(TypeKinds.NUM_TEXT_TEMPORAL, TypeKinds.MAYBE_UNNESTED, TypeKinds.NEW_TAGGED_NO_INNER, TypeKinds.BOOLEAN);
+        GenDataTypeMaker gen = new GenDataTypeMaker(
+                tibbleOnly ? Utility.appendToSet(core, TypeKinds.LIST) : core, 
+                true);
 
         int numColumns = 1 + random.nextInt(10);
         int numRows = random.nextInt(20);
@@ -63,7 +66,7 @@ public class GenRCompatibleRecordSet extends Generator<RCompatibleRecordSet>
                 @SuppressWarnings("identifier")
                 @ExpressionIdentifier String columnId = "Col " + nextCol[0]++;
                 return type.getDataType().makeImmediateColumn(new ColumnId(columnId), DataTestUtil.<Either<String, @Value Object>>makeList(random, numRows, numRows, () -> Either.<String, @Value Object>right(type.makeValue())), type.makeValue());
-            }), numRows), dataTypeMaker.getTypeManager());
+            }), numRows), dataTypeMaker.getTypeManager(), tibbleOnly ? ImmutableSet.of(TableType.TIBBLE) : ImmutableSet.of(TableType.DATA_FRAME, TableType.TIBBLE));
         }
         catch (Exception e)
         {

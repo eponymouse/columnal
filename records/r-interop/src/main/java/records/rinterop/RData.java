@@ -89,6 +89,8 @@ public class RData
     public static final int NIL = 254;
     public static final int NA_AS_INTEGER = 0x80000000;
     public static final int SYMBOL = 1;
+    public static final String[] CLASS_DATA_FRAME = {"data.frame"};
+    public static final String[] CLASS_TIBBLE = {"tbl_df", "tbl", "data.frame"};
 
     private static class V2Header
     {
@@ -1228,6 +1230,18 @@ public class RData
                 conversions.put(nextType, x -> x);
                 continue;
             }
+            if (nextType.equals(DataType.array(curType)))
+            {
+                conversions.put(curType, x -> new ListExList(ImmutableList.of(x)));
+                conversions.put(nextType, x -> x);
+                curType = nextType;
+                continue;
+            }
+            if (curType.equals(DataType.array(nextType)))
+            {
+                conversions.put(nextType, x -> new ListExList(ImmutableList.of(x)));
+                continue;
+            }
             throw new UserException("Cannot generalise " + curType + " and " + nextType + " into a single type");
         }
         return new Pair<>(curType, ImmutableMap.copyOf(conversions));
@@ -1371,7 +1385,7 @@ public class RData
 
     private static boolean isDataFrameOrTibble(ImmutableMap<String, RValue> attrMap) throws InternalException, UserException
     {
-        return isClass(attrMap, "data.frame") || isClass(attrMap, "tbl_df", "tbl", "data.frame");
+        return isClass(attrMap, CLASS_DATA_FRAME) || isClass(attrMap, CLASS_TIBBLE);
     }
 
     private static boolean isClass(ImmutableMap<String, RValue> attrMap, String... classNames) throws UserException, InternalException
@@ -1554,19 +1568,21 @@ public class RData
         });
     }
     
-    public static RValue convertTableToR(RecordSet recordSet) throws UserException, InternalException
+    public static enum TableType { DATA_FRAME, TIBBLE }
+    
+    public static RValue convertTableToR(RecordSet recordSet, TableType tableType) throws UserException, InternalException
     {
         // A table is a generic list of columns with class data.frame
-        return genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c)),
-            makeClassAttributes("data.frame", ImmutableMap.<String, RValue>of(
-                "names", stringVector(Utility.<Column, Optional<@Value String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(usToRColumn(c.getName())))), null),
+        return genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c, tableType)),
+            makeClassAttributes(tableType == TableType.DATA_FRAME ? CLASS_DATA_FRAME : CLASS_TIBBLE, ImmutableMap.<String, RValue>of(
+                "names", stringVector(Utility.<Column, Optional<@Value String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(usToRColumn(c.getName(), tableType)))), null),
                 "row.names", intVector(new int[] {NA_AS_INTEGER, -recordSet.getLength()}, null)
             )), true);
     }
 
-    public static String usToRColumn(ColumnId columnId)
+    public static String usToRColumn(ColumnId columnId, TableType tableType)
     {
-        return columnId.getRaw().replace(" ", ".");
+        return tableType == TableType.TIBBLE ? columnId.getRaw() : columnId.getRaw().replace(" ", ".");
     }
 
     public static String usToRTable(TableId tableId)
@@ -1579,10 +1595,20 @@ public class RData
         return pairListFromMap(Utility.appendToMap(otherItems, "class", stringVector(DataTypeUtility.value(className)), null));
     }
 
-    private static RValue convertColumnToR(Column column) throws UserException, InternalException
+    private static RValue makeClassAttributes(String[] className, ImmutableMap<String, RValue> otherItems)
+    {
+        return pairListFromMap(Utility.appendToMap(otherItems, "class", stringVector(Arrays.stream(className).<Optional<@Value String>>map(s -> Optional.<@Value String>of(DataTypeUtility.value(s))).collect(ImmutableList.<Optional<@Value String>>toImmutableList()), null), null));
+    }
+
+    private static RValue convertColumnToR(Column column, TableType tableType) throws UserException, InternalException
     {
         DataTypeValue dataTypeValue = column.getType();
         int length = column.getLength();
+        return convertListToR(dataTypeValue, length, tableType == TableType.TIBBLE);
+    }
+    
+    private static RValue convertListToR(DataTypeValue dataTypeValue, int length, boolean allowSubLists) throws UserException, InternalException
+    {
         return dataTypeValue.applyGet(new DataTypeVisitorGet<RValue>()
         {
             @Override
@@ -1813,6 +1839,16 @@ public class RData
             @Override
             public RValue array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
             {
+                if (allowSubLists)
+                {
+                    ImmutableList.Builder<RValue> listOfLists = ImmutableList.builderWithExpectedSize(length);
+                    for (int outer = 0; outer < length; outer++)
+                    {
+                        @Value ListEx outerValues = g.get(outer);
+                        listOfLists.add(convertListToR(inner.fromCollapsed((innerIndex, prog) -> outerValues.get(innerIndex)), outerValues.size(), true));
+                    }
+                    return genericVector(listOfLists.build(), null, false);
+                }
                 throw new UserException("Cannot convert lists to R");
             }
         });

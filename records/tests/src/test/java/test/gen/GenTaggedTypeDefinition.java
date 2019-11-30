@@ -46,7 +46,7 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
                 typeVars = ImmutableList.of();
             }
             GenJellyTypeMaker genDataType = new GenJellyTypeMaker(ImmutableSet.of(NUM_TEXT_TEMPORAL,
-                    BOOLEAN, RECORD_LIST,
+                    BOOLEAN, RECORD, LIST,
                     MAYBE_UNNESTED, OTHER_BUILTIN_TAGGED), typeVars.stream().map(p -> p.getSecond()).collect(ImmutableSet.toImmutableSet()), false);
             
             // Outside type variables are not visible in a new tagged type:

@@ -42,7 +42,8 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
     public static enum TypeKinds {
         NUM_TEXT_TEMPORAL,
         BOOLEAN,
-        RECORD_LIST,
+        RECORD,
+        LIST,
         MAYBE_UNNESTED,
         OTHER_BUILTIN_TAGGED, // besides maybe
         NEW_TAGGED_NO_INNER,
@@ -133,12 +134,17 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
         {
             options.add(() -> JellyType.fromConcrete(DataType.BOOLEAN));
         }
-        if (maxDepth > 1 && typeKinds.contains(TypeKinds.RECORD_LIST))
+        if (maxDepth > 1 && typeKinds.contains(TypeKinds.RECORD))
         {
-            options.addAll(Arrays.asList(
-                    () -> JellyType.record(DataTestUtil.<Pair<@ExpressionIdentifier String, JellyType>>makeList(r, 2, 5, () -> new Pair<>(DataTestUtil.generateExpressionIdentifier(r), genDepth(typeManager, r, maxDepth - 1, gs, typeKinds))).stream().collect(ImmutableMap.<Pair<@ExpressionIdentifier String, JellyType>, @ExpressionIdentifier String, Field>toImmutableMap((Pair<@ExpressionIdentifier String, JellyType> p) -> p.getFirst(), p -> new Field(p.getSecond(), true), (Field a, Field b) -> a))),
-                    () -> JellyType.list(genDepth(typeManager, r, maxDepth - 1, gs, typeKinds))
-            ));
+            options.add(
+                    () -> JellyType.record(DataTestUtil.<Pair<@ExpressionIdentifier String, JellyType>>makeList(r, 2, 5, () -> new Pair<>(DataTestUtil.generateExpressionIdentifier(r), genDepth(typeManager, r, maxDepth - 1, gs, typeKinds))).stream().collect(ImmutableMap.<Pair<@ExpressionIdentifier String, JellyType>, @ExpressionIdentifier String, Field>toImmutableMap((Pair<@ExpressionIdentifier String, JellyType> p) -> p.getFirst(), p -> new Field(p.getSecond(), true), (Field a, Field b) -> a)))
+            );
+        }
+        if (maxDepth > 1 && typeKinds.contains(TypeKinds.LIST))
+        {
+            options.add(
+                () -> JellyType.list(genDepth(typeManager, r, maxDepth - 1, gs, typeKinds))
+            );
         }
         if ((typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED_INNER) || typeKinds.contains(TypeKinds.NEW_TAGGED_NO_INNER) || typeKinds.contains(TypeKinds.MAYBE_UNNESTED)) && maxDepth > 1)
             options.add(() -> genTagged(typeManager, r, maxDepth, gs, typeKinds));

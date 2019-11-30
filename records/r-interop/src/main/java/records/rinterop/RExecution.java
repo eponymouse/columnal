@@ -8,6 +8,7 @@ import records.data.RecordSet;
 import records.error.InternalException;
 import records.error.UserException;
 import records.rinterop.RData.RValue;
+import records.rinterop.RData.TableType;
 import utility.Utility;
 
 import java.io.BufferedOutputStream;
@@ -33,15 +34,16 @@ public class RExecution
         {
             Process p = Runtime.getRuntime().exec(new String[]{"R", "--vanilla", "--slave"});
             PrintStream cmdStream = new PrintStream(p.getOutputStream());
+            // TODO install it if not present
+            cmdStream.println("library(tibble)");
 
             for (Entry<String, RecordSet> entry : tablesToPass.entrySet())
             {
                 File tableFile = rdsFile.addRDSFile("table");
-                RValue rTable = RData.convertTableToR(entry.getValue());
-                System.out.println(RData.prettyPrint(rTable));
+                RValue rTable = RData.convertTableToR(entry.getValue(), TableType.TIBBLE);
+                //System.out.println(RData.prettyPrint(rTable));
                 RData.writeRData(tableFile, rTable);
                 String read = entry.getKey() + " <- readRDS(\"" + escape(tableFile.getAbsolutePath()) + "\")";
-                System.out.println(read);
                 cmdStream.println(read);
             }
             
@@ -51,7 +53,7 @@ public class RExecution
             
             for (String line : lines)
             {
-                System.out.println(line);
+                //System.out.println(line);
                 cmdStream.println(line);
             }
             cmdStream.println("quit();");

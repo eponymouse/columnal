@@ -6,6 +6,7 @@ import records.data.Table;
 import records.error.InternalException;
 import records.error.UserException;
 import records.rinterop.RData;
+import records.rinterop.RData.TableType;
 import utility.Pair;
 import utility.TranslationUtility;
 
@@ -19,7 +20,7 @@ public class RExporter implements Exporter
     {
         try
         {
-            RData.writeRData(destination, RData.convertTableToR(data.getData()));
+            RData.writeRData(destination, RData.convertTableToR(data.getData(), TableType.TIBBLE));
         }
         catch (IOException e)
         {
