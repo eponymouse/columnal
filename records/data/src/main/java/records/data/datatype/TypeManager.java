@@ -431,6 +431,11 @@ public class TypeManager
         return maybeType;
     }
     
+    public DataType makeMaybeType(DataType inner) throws InternalException, TaggedInstantiationException, UnknownTypeException
+    {
+        return maybeType.instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(inner)), this);
+    }
+    
     public TaggedTypeDefinition getVoidType()
     {
         return voidType;

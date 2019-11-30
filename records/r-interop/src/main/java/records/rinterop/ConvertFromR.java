@@ -77,28 +77,64 @@ public class ConvertFromR
             @Override
             public Pair<DataType, ImmutableList<@Value Object>> visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
             {
-                if (s != null)
-                    return new Pair<>(DataType.TEXT, ImmutableList.<@Value Object>of(DataTypeUtility.value(s)));
-                else
-                    return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.TEXT)), typeManager), ImmutableList.<@Value Object>of(typeManager.maybeMissing()));
+                return visitStringList(ImmutableList.<Optional<@Value String>>of(Optional.<@Value String>ofNullable(s)), null);
             }
 
             @Override
             public Pair<DataType, ImmutableList<@Value Object>> visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
             {
-                return new Pair<>(DataType.BOOLEAN, Utility.<@ImmediateValue Boolean, @Value Object>mapListI(Booleans.asList(values), b -> DataTypeUtility.value(b)));
+                if (isNA == null)
+                    return new Pair<>(DataType.BOOLEAN, Utility.<@ImmediateValue Boolean, @Value Object>mapListI(Booleans.asList(values), b -> DataTypeUtility.value(b)));
+
+                ImmutableList.Builder<@Value Object> maybeValues = ImmutableList.builderWithExpectedSize(values.length);
+                for (int i = 0; i < values.length; i++)
+                {
+                    if (isNA[i])
+                        maybeValues.add(typeManager.maybeMissing());
+                    else
+                        maybeValues.add(typeManager.maybePresent(DataTypeUtility.value(values[i])));
+                }
+                return new Pair<>(typeManager.makeMaybeType(DataType.BOOLEAN), maybeValues.build());
             }
 
             @Override
             public Pair<DataType,ImmutableList<@Value Object>> visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                return new Pair<>(DataType.NUMBER, Utility.<@ImmediateValue Integer, @Value Object>mapListI(Ints.asList(values), i -> DataTypeUtility.value(i)));
+                if (Ints.contains(values, RUtility.NA_AS_INTEGER))
+                    return new Pair<>(typeManager.makeMaybeType(DataType.NUMBER), Utility.<@ImmediateValue Integer, @Value Object>mapListI(Ints.asList(values), i -> i == RUtility.NA_AS_INTEGER ? typeManager.maybeMissing() : typeManager.maybePresent(DataTypeUtility.value(i))));
+                else
+                    return new Pair<>(DataType.NUMBER, Utility.<@ImmediateValue Integer, @Value Object>mapListI(Ints.asList(values), i -> DataTypeUtility.value(i)));
             }
 
             @Override
             public Pair<DataType, ImmutableList<@Value Object>> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                return new Pair<>(DataType.NUMBER, DoubleStream.of(values).<@ImmediateValue Object>mapToObj(d -> doubleToValue(d)).collect(ImmutableList.<@Value @NonNull Object>toImmutableList()));
+                boolean hasNaNs = false;
+                for (int i = 0; i < values.length; i++)
+                {
+                    if (Double.isNaN(values[i]))
+                    {
+                        hasNaNs = true;
+                        break;
+                    }
+                }
+                if (hasNaNs)
+                {
+                    ImmutableList.Builder<@Value Object> maybeValues = ImmutableList.builderWithExpectedSize(values.length);
+                    for (int i = 0; i < values.length; i++)
+                    {
+                        if (Double.isNaN(values[i]))
+                            maybeValues.add(typeManager.maybeMissing());
+                        else
+                            maybeValues.add(typeManager.maybePresent(doubleToValue(values[i])));
+                    }
+
+                    return new Pair<>(typeManager.makeMaybeType(DataType.NUMBER), maybeValues.build());
+                }
+                else
+                {
+                    return new Pair<>(DataType.NUMBER, DoubleStream.of(values).<@ImmediateValue Object>mapToObj(d -> doubleToValue(d)).collect(ImmutableList.<@Value @NonNull Object>toImmutableList()));
+                }
             }
 
             @Override
@@ -111,7 +147,7 @@ public class ConvertFromR
                 }
                 else 
                 {
-                    return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.TEXT)), typeManager), Utility.<Optional<@Value String>, @Value Object>mapListI(values, v -> v.<@Value Object>map(s -> typeManager.maybePresent(s)).orElseGet(typeManager::maybeMissing)));
+                    return new Pair<>(typeManager.makeMaybeType(DataType.TEXT), Utility.<Optional<@Value String>, @Value Object>mapListI(values, v -> v.<@Value Object>map(s -> typeManager.maybePresent(s)).orElseGet(typeManager::maybeMissing)));
                 }
             }
 
@@ -126,7 +162,7 @@ public class ConvertFromR
                 }
                 else
                 {
-                    return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.date(t))), typeManager), Utility.<Optional<@Value TemporalAccessor>, @Value Object>mapListI(values, v -> v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing)));
+                    return new Pair<>(typeManager.makeMaybeType(DataType.date(t)), Utility.<Optional<@Value TemporalAccessor>, @Value Object>mapListI(values, v -> v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing)));
                 }
             }
 
@@ -140,14 +176,66 @@ public class ConvertFromR
             @Override
             public Pair<DataType, ImmutableList<@Value Object>> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
             {
-                throw new UserException("List found when single value expected: " + RPrettyPrint.prettyPrint(rValue));
+                // For some reason, factor columns appear as pair list of two with an int[] as second item:
+                if (items.size() == 2)
+                {
+                    RVisitor<Pair<DataType, ImmutableList<@Value Object>>> outer = this;
+                    @Nullable Pair<DataType, ImmutableList<@Value Object>> asFactors = items.get(0).item.visit(new DefaultRVisitor<@Nullable Pair<DataType, ImmutableList<@Value Object>>>(null)
+                    {
+                        @Override
+                        public @Nullable Pair<DataType, ImmutableList<@Value Object>> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
+                        {
+                            return outer.visitFactorList(values, levelNames);
+                        }
+                    });
+                    if (asFactors != null)
+                        return asFactors;
+                }
+
+                throw new UserException("Pair list found when column expected: " + RPrettyPrint.prettyPrint(rValue));
             }
 
             @Override
             public Pair<DataType, ImmutableList<@Value Object>> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
+                boolean hasNAs = false;
+                for (int value : values)
+                {
+                    if (value == RUtility.NA_AS_INTEGER)
+                    {
+                        hasNAs = true;
+                        break;
+                    }
+                }
+
                 TaggedTypeDefinition taggedTypeDefinition = getTaggedTypeForFactors(levelNames, typeManager);
-                return new Pair<>(taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager), IntStream.of(values).mapToObj(n -> new TaggedValue(n - 1, null, taggedTypeDefinition)).collect(ImmutableList.<@Value Object>toImmutableList()));
+                ImmutableList.Builder<@Value Object> factorValueBuilder = ImmutableList.builderWithExpectedSize(values.length);
+                for (int n : values)
+                {
+                    if (hasNAs && n == RUtility.NA_AS_INTEGER)
+                    {
+                        factorValueBuilder.add(typeManager.maybeMissing());
+                    }
+                    else
+                    {
+                        @Value TaggedValue taggedValue = new TaggedValue(lookupTag(n, levelNames, taggedTypeDefinition), null, taggedTypeDefinition);
+                        factorValueBuilder.add(hasNAs ? typeManager.maybePresent(taggedValue) : taggedValue);
+                    }
+                }
+                ImmutableList<@Value Object> factorValues = factorValueBuilder.build();
+
+                DataType taggedDataType = taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager);
+                return new Pair<>(hasNAs ? typeManager.makeMaybeType(taggedDataType) : taggedDataType, factorValues);
+            }
+
+            private int lookupTag(int tagIndex, ImmutableList<String> levelNames, TaggedTypeDefinition taggedTypeDefinition) throws UserException
+            {
+                if (tagIndex > levelNames.size())
+                    throw new UserException("Factor index does not have name");
+                // Map one-based back to zero-based:
+                @SuppressWarnings("identifier")
+                String name = IdentifierUtility.fixExpressionIdentifier(levelNames.get(tagIndex - 1), levelNames.get(tagIndex - 1));
+                return Utility.findFirstIndex(taggedTypeDefinition.getTags(), tt -> tt.getName().equals(name)).orElseThrow(() -> new UserException("Could not find tag named " + name + " in definition"));
             }
         });
     }
@@ -177,201 +265,9 @@ public class ConvertFromR
 
     public static Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> convertRToColumn(TypeManager typeManager, RValue rValue, ColumnId columnName) throws UserException, InternalException
     {
-        return rValue.visit(new RVisitor<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>>()
-        {
-            @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitNil() throws InternalException, UserException
-            {
-                throw new UserException("Cannot make column from nil value");
-            }
-
-            @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
-            {
-                return visitStringList(ImmutableList.<Optional<@Value String>>of(Optional.<@Value String>ofNullable(s)), null);
-            }
-
-            @SuppressWarnings("optional")
-            @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
-            {
-                if (values.stream().allMatch(v -> v.isPresent()))
-                    return new Pair<>(rs -> new MemoryStringColumn(rs, columnName, Utility.mapList(values, v -> Either.<String, String>right(v.get())), ""), values.size());
-                else
-                    return makeMaybeColumn(DataType.TEXT, Utility.mapListI(values, v -> Either.<String, TaggedValue>right(v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing))));
-            }
-
-            @SuppressWarnings("optional")
-            @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
-            {
-                DateTimeInfo t = new DateTimeInfo(dateTimeType);
-                if (values.stream().allMatch(v -> v.isPresent()))
-                    return new Pair<>(rs -> new MemoryTemporalColumn(rs, columnName, t, Utility.mapListI(values, v -> Either.<String, TemporalAccessor>right(v.get())), t.getDefaultValue()), values.size());
-                else
-                    return makeMaybeColumn(DataType.date(t), Utility.mapListI(values, v -> Either.<String, TaggedValue>right(v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing))));
-            }
-
-            @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
-            {
-                if (isNA == null)
-                    return new Pair<>(rs -> new MemoryBooleanColumn(rs, columnName, Booleans.asList(values).stream().map(n -> Either.<String, Boolean>right(n)).collect(ImmutableList.<Either<String, Boolean>>toImmutableList()), false), values.length);
-                else
-                {
-                    ImmutableList.Builder<Either<String, @Value TaggedValue>> maybeValues = ImmutableList.builderWithExpectedSize(values.length);
-                    for (int i = 0; i < values.length; i++)
-                    {
-                        if (isNA[i])
-                            maybeValues.add(Either.right(typeManager.maybeMissing()));
-                        else
-                            maybeValues.add(Either.right(typeManager.maybePresent(DataTypeUtility.value(values[i]))));
-                    }
-
-                    return makeMaybeColumn(DataType.BOOLEAN, maybeValues.build());
-                }
-            }
-
-            private Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> makeMaybeColumn(DataType inner, ImmutableList<Either<String, @Value TaggedValue>> maybeValues) throws TaggedInstantiationException, InternalException, UnknownTypeException
-            {
-                ImmutableList<Either<Unit, DataType>> typeVar = ImmutableList.of(Either.<Unit, DataType>right(inner));
-                DataType maybeDataType = typeManager.getMaybeType().instantiate(typeVar, typeManager);
-                return new Pair<>(rs -> new MemoryTaggedColumn(rs, columnName, typeManager.getMaybeType().getTaggedTypeName(), typeVar, maybeDataType.apply(new SpecificDataTypeVisitor<ImmutableList<TagType<DataType>>>() {
-                    @Override
-                    public ImmutableList<TagType<DataType>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
-                    {
-                        return tags;
-                    }
-                }), maybeValues, typeManager.maybeMissing()), maybeValues.size());
-            }
-
-            @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
-            {
-                return new Pair<>(rs -> new MemoryNumericColumn(rs, columnName, NumberInfo.DEFAULT, IntStream.of(values).mapToObj(n -> Either.<String, Number>right(n)).collect(ImmutableList.<Either<String, Number>>toImmutableList()), DataTypeUtility.value(0)), values.length);
-            }
-
-            @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
-            {
-                boolean hasNaNs = false;
-                for (int i = 0; i < values.length; i++)
-                {
-                    if (Double.isNaN(values[i]))
-                    {
-                        hasNaNs = true;
-                        break;
-                    }
-                }
-                if (hasNaNs)
-                {
-                    ImmutableList.Builder<Either<String, @Value TaggedValue>> maybeValues = ImmutableList.builderWithExpectedSize(values.length);
-                    for (int i = 0; i < values.length; i++)
-                    {
-                        if (Double.isNaN(values[i]))
-                            maybeValues.add(Either.right(typeManager.maybeMissing()));
-                        else
-                            maybeValues.add(Either.right(typeManager.maybePresent(doubleToValue(values[i]))));
-                    }
-
-                    return makeMaybeColumn(DataType.NUMBER, maybeValues.build());
-                }
-                else
-                {
-                    return new Pair<>(rs -> new MemoryNumericColumn(rs, columnName, NumberInfo.DEFAULT, DoubleStream.of(values).mapToObj(n -> {
-                        try
-                        {
-                            return Either.<String, Number>right(doubleToValue(n));
-                        }
-                        catch (NumberFormatException e)
-                        {
-                            return Either.<String, Number>left(Double.toString(n));
-                        }
-                    }).collect(ImmutableList.<Either<String, Number>>toImmutableList()), DataTypeUtility.value(0)), values.length);
-                }
-            }
-
-            @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
-            {
-                boolean hasNAs = false;
-                for (int value : values)
-                {
-                    if (value == RUtility.NA_AS_INTEGER)
-                    {
-                        hasNAs = true;
-                        break;
-                    }
-                }
-
-                TaggedTypeDefinition taggedTypeDefinition = getTaggedTypeForFactors(levelNames, typeManager);
-                ImmutableList.Builder<Either<String, TaggedValue>> factorValueBuilder = ImmutableList.builderWithExpectedSize(values.length);
-                for (int n : values)
-                {
-                    if (hasNAs)
-                    {
-                        factorValueBuilder.add(Either.<String, TaggedValue>right(n == RUtility.NA_AS_INTEGER ? typeManager.maybeMissing() : typeManager.maybePresent(new TaggedValue(lookupTag(n, levelNames, taggedTypeDefinition), null, taggedTypeDefinition))));
-                    }
-                    else
-                    {
-                        factorValueBuilder.add(Either.<String, TaggedValue>right(new TaggedValue(lookupTag(n, levelNames, taggedTypeDefinition), null, taggedTypeDefinition)));
-                    }
-                }
-                ImmutableList<Either<String, TaggedValue>> factorValues = factorValueBuilder.build();
-                
-                if (hasNAs)
-                {
-                    
-                    return makeMaybeColumn(taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager), factorValues);
-                }
-                else
-                {
-                    return new Pair<>(rs -> {
-                        return new MemoryTaggedColumn(rs, columnName, taggedTypeDefinition.getTaggedTypeName(), ImmutableList.of(), Utility.mapList(taggedTypeDefinition.getTags(), t -> new TagType<>(t.getName(), null)), factorValues, new TaggedValue(0, null, taggedTypeDefinition));
-                    }, values.length);
-                }
-            }
-
-            private int lookupTag(int tagIndex, ImmutableList<String> levelNames, TaggedTypeDefinition taggedTypeDefinition) throws UserException
-            {
-                if (tagIndex > levelNames.size())
-                    throw new UserException("Factor index does not have name");
-                // Map one-based back to zero-based:
-                @SuppressWarnings("identifier")
-                String name = IdentifierUtility.fixExpressionIdentifier(levelNames.get(tagIndex - 1), levelNames.get(tagIndex - 1));
-                return Utility.findFirstIndex(taggedTypeDefinition.getTags(), tt -> tt.getName().equals(name)).orElseThrow(() -> new UserException("Could not find tag named " + name + " in definition"));
-            }
-
-            @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
-            {
-                Pair<DataType, ImmutableList<@Value Object>> loaded = rListToValueList(typeManager, values);
-                return new Pair<>(loaded.getFirst().makeImmediateColumn(columnName, Utility.<@Value Object, Either<String, @Value Object>>mapListExI(loaded.getSecond(), v -> Either.<String, @Value Object>right(v)), DataTypeUtility.makeDefaultValue(loaded.getFirst())), loaded.getSecond().size());
-            }
-
-            @Override
-            public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
-            {
-                // For some reason, factor columns appear as pair list of two with an int[] as second item:
-                if (items.size() == 2)
-                {
-                    RVisitor<Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>> outer = this;
-                    @Nullable Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> asFactors = items.get(0).item.visit(new DefaultRVisitor<@Nullable Pair<SimulationFunction<RecordSet, EditableColumn>, Integer>>(null)
-                    {
-                        @Override
-                        public @Nullable Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
-                        {
-                            return outer.visitFactorList(values, levelNames);
-                        }
-                    });
-                    if (asFactors != null)
-                        return asFactors;
-                }
-                
-                throw new UserException("Pair list found when column expected: " + RPrettyPrint.prettyPrint(rValue));
-            }
-        });
-    }
+        Pair<DataType, ImmutableList<@Value Object>> converted = convertRToTypedValueList(typeManager, rValue);
+        return new Pair<>(converted.getFirst().makeImmediateColumn(columnName, Utility.<@Value Object, Either<String, @Value Object>>mapListI(converted.getSecond(), x -> Either.<String, @Value Object>right(x)), DataTypeUtility.makeDefaultValue(converted.getFirst())), converted.getSecond().size());
+    }          
 
     private static @ImmediateValue BigDecimal doubleToValue(double value)
     {
