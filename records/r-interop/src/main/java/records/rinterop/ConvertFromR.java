@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.common.primitives.Booleans;
+import com.google.common.primitives.Ints;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.*;
@@ -60,114 +61,93 @@ public class ConvertFromR
         return new ColumnId(def);
     }
 
-    public static Pair<DataType, @Value Object> convertRToTypedValue(TypeManager typeManager, RValue rValue) throws InternalException, UserException
+    /**
+     * The returned type is the type of each list element (i.e. is not [necessarily] an array type).
+     */
+    public static Pair<DataType, ImmutableList<@Value Object>> convertRToTypedValueList(TypeManager typeManager, RValue rValue) throws InternalException, UserException
     {
-        return rValue.visit(new RVisitor<Pair<DataType, @Value Object>>()
+        return rValue.visit(new RVisitor<Pair<DataType, ImmutableList<@Value Object>>>()
         {
             @Override
-            public Pair<DataType, @Value Object> visitNil() throws InternalException, UserException
+            public Pair<DataType, ImmutableList<@Value Object>> visitNil() throws InternalException, UserException
             {
                 throw new UserException("Cannot turn nil into value");
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<@Value Object>> visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
             {
                 if (s != null)
-                    return new Pair<>(DataType.TEXT, DataTypeUtility.value(s));
+                    return new Pair<>(DataType.TEXT, ImmutableList.<@Value Object>of(DataTypeUtility.value(s)));
                 else
-                    return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.TEXT)), typeManager), typeManager.maybeMissing());
+                    return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.TEXT)), typeManager), ImmutableList.<@Value Object>of(typeManager.maybeMissing()));
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<@Value Object>> visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
             {
-                if (values.length == 1)
-                    return new Pair<>(DataType.BOOLEAN, DataTypeUtility.value(values[0]));
-                else
-                    return new Pair<>(DataType.array(DataType.BOOLEAN), RUtility.valueImmediate(values));
+                return new Pair<>(DataType.BOOLEAN, Utility.<@ImmediateValue Boolean, @Value Object>mapListI(Booleans.asList(values), b -> DataTypeUtility.value(b)));
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType,ImmutableList<@Value Object>> visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                if (values.length == 1)
-                    return new Pair<>(DataType.NUMBER, DataTypeUtility.value(values[0]));
-                else
-                    return new Pair<>(DataType.array(DataType.NUMBER), RUtility.valueImmediate(values));
+                return new Pair<>(DataType.NUMBER, Utility.<@ImmediateValue Integer, @Value Object>mapListI(Ints.asList(values), i -> DataTypeUtility.value(i)));
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<@Value Object>> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
-                if (values.length == 1)
-                    return new Pair<>(DataType.NUMBER, DataTypeUtility.value(doubleToValue(values[0])));
-                else
-                    return new Pair<>(DataType.array(DataType.NUMBER), DataTypeUtility.<@ImmediateValue @NonNull Object>valueImmediate(DoubleStream.of(values).<@ImmediateValue Object>mapToObj(d -> doubleToValue(d)).collect(ImmutableList.<@ImmediateValue @NonNull Object>toImmutableList())));
+                return new Pair<>(DataType.NUMBER, DoubleStream.of(values).<@ImmediateValue Object>mapToObj(d -> doubleToValue(d)).collect(ImmutableList.<@Value @NonNull Object>toImmutableList()));
             }
 
             @Override
             @SuppressWarnings("optional")
-            public Pair<DataType, @Value Object> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<@Value Object>> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 if (values.stream().allMatch(v -> v.isPresent()))
                 {
-                    if (values.size() == 1)
-                        return new Pair<>(DataType.TEXT, values.get(0).get());
-                    else
-                        return new Pair<>(DataType.array(DataType.TEXT), DataTypeUtility.value(Utility.<Optional<@Value String>, @Value Object>mapListI(values, v -> v.get())));
+                    return new Pair<>(DataType.TEXT, Utility.<Optional<@Value String>, @Value Object>mapListI(values, v -> v.get()));
                 }
                 else 
                 {
-                    if (values.size() == 1) // Must actually be empty if not all present:
-                        return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.TEXT)), typeManager), typeManager.maybeMissing());
-                    else
-                        return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.TEXT)), typeManager), DataTypeUtility.<@Value Object>value(Utility.<Optional<@Value String>, @Value Object>mapListI(values, v -> v.<@Value Object>map(s -> typeManager.maybePresent(s)).orElseGet(typeManager::maybeMissing))));
+                    return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.TEXT)), typeManager), Utility.<Optional<@Value String>, @Value Object>mapListI(values, v -> v.<@Value Object>map(s -> typeManager.maybePresent(s)).orElseGet(typeManager::maybeMissing)));
                 }
             }
 
             @SuppressWarnings("optional")
             @Override
-            public Pair<DataType, @Value Object> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<@Value Object>> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 DateTimeInfo t = new DateTimeInfo(dateTimeType);
                 if (values.stream().allMatch(v -> v.isPresent()))
                 {
-                    if (values.size() == 1)
-                        return new Pair<>(DataType.date(t), values.get(0).get());
-                    else
-                        return new Pair<>(DataType.array(DataType.date(t)), DataTypeUtility.value(Utility.<Optional<@Value TemporalAccessor>, @Value Object>mapListI(values, v -> v.get())));
+                    return new Pair<>(DataType.date(t), Utility.<Optional<@Value TemporalAccessor>, @Value Object>mapListI(values, v -> v.get()));
                 }
                 else
                 {
-                    if (values.size() == 1) // Must actually be empty if not all present:
-                        return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.date(t))), typeManager), typeManager.maybeMissing());
-                    else
-                        return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.date(t))), typeManager), DataTypeUtility.<@Value Object>value(Utility.<Optional<@Value TemporalAccessor>, @Value Object>mapListI(values, v -> v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing))));
+                    return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.date(t))), typeManager), Utility.<Optional<@Value TemporalAccessor>, @Value Object>mapListI(values, v -> v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing)));
                 }
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<@Value Object>> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
             {
                 Pair<DataType, ImmutableList<@Value Object>> inner = rListToValueList(typeManager, values);
-                return new Pair<>(DataType.array(inner.getFirst()), new ListExList(inner.getSecond()));
+                return new Pair<>(inner.getFirst(), inner.getSecond());
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<@Value Object>> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
             {
                 throw new UserException("List found when single value expected: " + RPrettyPrint.prettyPrint(rValue));
             }
 
             @Override
-            public Pair<DataType, @Value Object> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<@Value Object>> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
                 TaggedTypeDefinition taggedTypeDefinition = getTaggedTypeForFactors(levelNames, typeManager);
-                if (values.length == 1)
-                    return new Pair<>(taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager), new TaggedValue(values[0] - 1, null, taggedTypeDefinition));
-                else
-                    return new Pair<>(DataType.array(taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager)), DataTypeUtility.value(IntStream.of(values).mapToObj(n -> new TaggedValue(n - 1, null, taggedTypeDefinition)).collect(ImmutableList.<@Value Object>toImmutableList())));
+                return new Pair<>(taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager), IntStream.of(values).mapToObj(n -> new TaggedValue(n - 1, null, taggedTypeDefinition)).collect(ImmutableList.<@Value Object>toImmutableList()));
             }
         });
     }
@@ -411,7 +391,14 @@ public class ConvertFromR
     // e.g. the return may be (Number, [1,2,3])
     private static Pair<DataType, ImmutableList<@Value Object>> rListToValueList(TypeManager typeManager, List<RValue> values) throws UserException, InternalException
     {
-        ImmutableList<Pair<DataType, @Value Object>> typedPairs = Utility.<RValue, Pair<DataType, @Value Object>>mapListExI(values, v -> convertRToTypedValue(typeManager, v));
+        // The type here will be the type of the object on the right
+        ImmutableList<Pair<DataType, @Value Object>> typedPairs = Utility.<RValue, Pair<DataType, @Value Object>>mapListExI(values, v -> {
+            Pair<DataType, ImmutableList<@Value Object>> r = convertRToTypedValueList(typeManager, v);
+            if (r.getSecond().size() == 1)
+                return r.replaceSecond(r.getSecond().get(0));
+            else
+                return new Pair<>(DataType.array(r.getFirst()), DataTypeUtility.value(r.getSecond()));
+        });
         Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> m = generaliseType(Utility.mapListExI(typedPairs, p -> p.getFirst()));
         ImmutableList<@Value Object> loaded = Utility.<Pair<DataType, @Value Object>, @Value Object>mapListExI(typedPairs, p -> getOrInternal(m.getSecond(), p.getFirst()).apply(p.getSecond()));
         return new Pair<DataType, ImmutableList<@Value Object>>(m.getFirst(), loaded);

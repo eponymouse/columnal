@@ -141,9 +141,9 @@ public class TestRLoadSave
         @NonNull URL resource = getClass().getClassLoader().getResource("date.rds");
         RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
-        Pair<DataType, @Value Object> r = ConvertFromR.convertRToTypedValue(new TypeManager(new UnitManager()), loaded);
+        Pair<DataType, ImmutableList<@Value Object>> r = ConvertFromR.convertRToTypedValueList(new TypeManager(new UnitManager()), loaded);
         assertEquals(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), r.getFirst());
-        DataTestUtil.assertValueEqual("Date", LocalDate.of(1950, 2, 1), r.getSecond());
+        DataTestUtil.assertValueEqual("Date", LocalDate.of(1950, 2, 1), r.getSecond().get(0));
     }
 
     @Test
@@ -153,12 +153,12 @@ public class TestRLoadSave
         @NonNull URL resource = getClass().getClassLoader().getResource("datetimezoned.rds");
         RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
-        Pair<DataType, @Value Object> r = ConvertFromR.convertRToTypedValue(new TypeManager(new UnitManager()), loaded);
+        Pair<DataType, ImmutableList<@Value Object>> r = ConvertFromR.convertRToTypedValueList(new TypeManager(new UnitManager()), loaded);
         assertEquals(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), r.getFirst());
         @SuppressWarnings("valuetype")
         @Value ZonedDateTime zdt = ZonedDateTime.of(2005, 10, 21, 18, 47, 22, 0, ZoneId.of("America/New_York"));
-        DataTestUtil.assertValueEqual("DateTimeZoned", zdt, r.getSecond());
-        assertEquals(zdt, r.getSecond());
+        DataTestUtil.assertValueEqual("DateTimeZoned", zdt, r.getSecond().get(0));
+        assertEquals(zdt, r.getSecond().get(0));
     }
 
     @Test
