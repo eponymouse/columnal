@@ -20,7 +20,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.rinterop.RData;
-import records.rinterop.RData.RValue;
+import records.rinterop.RValue;
 import records.rinterop.RExecution;
 import utility.Either;
 import utility.SimulationFunction;

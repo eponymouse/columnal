@@ -2,23 +2,19 @@ package records.rinterop;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import log.Log;
 import org.apache.commons.io.IOUtils;
 import records.data.RecordSet;
 import records.error.InternalException;
 import records.error.UserException;
-import records.rinterop.RData.RValue;
 import records.rinterop.RData.TableType;
 import utility.Utility;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Map.Entry;
 
 public class RExecution

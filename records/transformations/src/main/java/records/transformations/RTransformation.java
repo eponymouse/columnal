@@ -17,7 +17,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.Versions.ExpressionVersion;
 import records.rinterop.RData;
-import records.rinterop.RData.RValue;
+import records.rinterop.RValue;
 import records.rinterop.RExecution;
 import styled.StyledString;
 import threadchecker.OnThread;

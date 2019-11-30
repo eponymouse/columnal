@@ -159,7 +159,7 @@ public class PropNumericFunctions
             if (instance == null) throw new RuntimeException();
             assertTrue(DataTypeUtility.isNumber(instance.getSecond()));
             assertEquals(mgr.loadUse(expectedUnit), TestUtil.getUnit(instance.getSecond()));
-            @Value Object num = instance.getFirst().call(new @Value Object[] {DataTypeUtility.value(src)});
+            @Value Object num = instance.getFirst().call(new @Value Object[] {DataTypeUtility.value(Utility.<@Value Number, @Value Object>mapList(src, s -> s))});
             return Utility.cast(num, Number.class);
         }
         catch (RuntimeException e)

@@ -4,12 +4,10 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.common.primitives.Booleans;
-import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -32,11 +30,11 @@ import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.UnknownTypeException;
+import records.rinterop.RVisitor.PairListEntry;
 import utility.Either;
 import utility.IdentifierUtility;
 import utility.Pair;
@@ -234,20 +232,6 @@ public class RData
         if (after != -1)
             throw new UserException("Unexpected data at end of file: " + after);
         return result;
-    }
-    
-    private static class PairListEntry
-    {
-        public final @Nullable RValue attributes;
-        public final @Nullable RValue tag;
-        public final RValue item;
-
-        public PairListEntry(@Nullable RValue attributes, @Nullable RValue tag, RValue item)
-        {
-            this.attributes = attributes;
-            this.tag = tag;
-            this.item = item;
-        }
     }
 
     private static RValue readItem(DataInputStream d, HashMap<Integer, String> atoms) throws IOException, UserException, InternalException
@@ -697,164 +681,6 @@ public class RData
         }
         //throw new UserException("Unrecognised file format");
         return new BufferedInputStream(new FileInputStream(rFilePath));
-    }
-    
-    public static interface RVisitor<T>
-    {
-        public T visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException;
-        // If attributes reveal this is a factor, it won't be called; visitFactorList will be instead
-        public T visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException;
-        public T visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException;
-        public T visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException;
-        public T visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException;
-        public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException;
-        public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException;
-        public T visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException;
-        public T visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException;
-        public T visitNil() throws  InternalException, UserException;
-    }
-    
-    public static abstract class DefaultRVisitor<T> implements RVisitor<T>
-    {
-        private final T def;
-
-        public DefaultRVisitor(T def)
-        {
-            this.def = def;
-        }
-
-        protected final T makeDefault() throws InternalException, UserException
-        {
-            return def;
-        }
-
-        @Override
-        public T visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
-        {
-            return makeDefault();
-        }
-
-        @Override
-        public T visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
-        {
-            return makeDefault();
-        }
-
-        @Override
-        public T visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
-        {
-            return makeDefault();
-        }
-
-        @Override
-        public T visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
-        {
-            return makeDefault();
-        }
-
-        @Override
-        public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
-        {
-            return makeDefault();
-        }
-
-        @Override
-        public T visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
-        {
-            return makeDefault();
-        }
-
-        @Override
-        public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
-        {
-            return makeDefault();
-        }
-
-        @Override
-        public T visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
-        {
-            return makeDefault();
-        }
-
-        @Override
-        public T visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
-        {
-            return makeDefault();
-        }
-
-        @Override
-        public T visitNil() throws InternalException, UserException
-        {
-            return makeDefault();
-        }
-    }
-    
-    public static abstract class SpecificRVisitor<T> implements RVisitor<T>
-    {
-        @Override
-        public T visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
-        {
-            throw new UserException("Unexpected type: string");
-        }
-
-        @Override
-        public T visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
-        {
-            throw new UserException("Unexpected type: list of integer");
-        }
-
-        @Override
-        public T visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
-        {
-            throw new UserException("Unexpected type: list of floating point");
-        }
-
-        @Override
-        public T visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
-        {
-            throw new UserException("Unexpected type: list of booleans");
-        }
-
-        @Override
-        public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
-        {
-            throw new UserException("Unexpected type: list of date/time type");
-        }
-
-        @Override
-        public T visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
-        {
-            throw new UserException("Unexpected type: list of strings");
-        }
-
-        @Override
-        public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
-        {
-            throw new UserException("Unexpected type: generic list");
-        }
-
-        @Override
-        public T visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
-        {
-            throw new UserException("Unexpected type: pair list");
-        }
-
-        @Override
-        public T visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
-        {
-            throw new UserException("Unexpected factor list");
-        }
-
-        @Override
-        public T visitNil() throws InternalException, UserException
-        {
-            throw new UserException("Unexpected nil");
-        }
-    }
-    
-    public static interface RValue
-    {
-        public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException;
     }
 
     public static Pair<DataType, @Value Object> convertRToTypedValue(TypeManager typeManager, RValue rValue) throws InternalException, UserException
