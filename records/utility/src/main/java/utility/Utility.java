@@ -1973,14 +1973,14 @@ public class Utility
     {
         private final List<? extends @Value Object> items;
 
-        @SuppressWarnings("valuetype")
-        public @Value ListExList(List<? extends @Value Object> items)
+        @SuppressWarnings({"valuetype", "nullness"})
+        public @Value <@Value T> ListExList(List<T> items)
         {
             this.items = items;
         }
 
-        @SuppressWarnings("valuetype")
-        public static @ImmediateValue ListExList immediate(List<? extends @ImmediateValue Object> items)
+        @SuppressWarnings({"valuetype", "nullness"})
+        public static @ImmediateValue <@ImmediateValue T> ListExList immediate(List<T> items)
         {
             return new ListExList(items);
         }

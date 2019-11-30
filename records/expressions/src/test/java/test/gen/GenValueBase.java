@@ -131,7 +131,7 @@ public abstract class GenValueBase<T> extends Generator<T>
             public @Value Object array(@Nullable DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
-                    return DataTypeUtility.value(Collections.emptyList());
+                    return DataTypeUtility.<@Value Object>value(Collections.<@Value Object>emptyList());
                 @NonNull DataType innerFinal = inner;
                 return DataTypeUtility.value(DataTestUtil.<@Value Object>makeList(r, 1, 4, () -> makeValue(innerFinal)));
             }

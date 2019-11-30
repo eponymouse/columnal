@@ -177,14 +177,14 @@ public class EditableRecordSet extends RecordSet
                             // Need to look for indexInArray, not index, to get full list:
                             array.add(details.get(indexInArray));
                         }
-                        r.add(Either.right(DataTypeUtility.value(array.build())));
+                        r.add(Either.right(DataTypeUtility.<@Value Object>value(array.build())));
                     }
                     catch (InvalidImmediateValueException e)
                     {
                         r.add(Either.left(e.getInvalid()));
                     }
                 }
-                return new MemoryArrayColumn(rs, original.getName(), inner, r, Utility.cast(Utility.replaceNull(defaultValue, new ListExList(Collections.emptyList())), ListEx.class));
+                return new MemoryArrayColumn(rs, original.getName(), inner, r, Utility.cast(Utility.replaceNull(defaultValue, new <@Value Object>ListExList(Collections.<@Value Object>emptyList())), ListEx.class));
             }
         });
     }

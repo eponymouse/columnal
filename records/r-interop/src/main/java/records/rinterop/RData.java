@@ -882,7 +882,7 @@ public class RData
                 if (values.length == 1)
                     return new Pair<>(DataType.BOOLEAN, DataTypeUtility.value(values[0]));
                 else
-                    return new Pair<>(DataType.array(DataType.BOOLEAN), DataTypeUtility.valueImmediate(Booleans.asList(values)));
+                    return new Pair<>(DataType.array(DataType.BOOLEAN), valueImmediate(values));
             }
 
             @Override
@@ -891,16 +891,16 @@ public class RData
                 if (values.length == 1)
                     return new Pair<>(DataType.NUMBER, DataTypeUtility.value(values[0]));
                 else
-                    return new Pair<>(DataType.array(DataType.NUMBER), DataTypeUtility.valueImmediate(Ints.asList(values)));
+                    return new Pair<>(DataType.array(DataType.NUMBER), valueImmediate(values));
             }
 
             @Override
             public Pair<DataType, @Value Object> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
             {
                 if (values.length == 1)
-                    return new Pair<>(DataType.NUMBER, DataTypeUtility.value(new BigDecimal(values[0])));
+                    return new Pair<>(DataType.NUMBER, DataTypeUtility.value(doubleToValue(values[0])));
                 else
-                    return new Pair<>(DataType.array(DataType.NUMBER), DataTypeUtility.valueImmediate(Doubles.asList(values)));
+                    return new Pair<>(DataType.array(DataType.NUMBER), DataTypeUtility.<@ImmediateValue @NonNull Object>valueImmediate(DoubleStream.of(values).<@ImmediateValue Object>mapToObj(d -> doubleToValue(d)).collect(ImmutableList.<@ImmediateValue @NonNull Object>toImmutableList())));
             }
 
             @Override
@@ -912,14 +912,14 @@ public class RData
                     if (values.size() == 1)
                         return new Pair<>(DataType.TEXT, values.get(0).get());
                     else
-                        return new Pair<>(DataType.array(DataType.TEXT), DataTypeUtility.value(Utility.<Optional<@Value String>, @Value String>mapListI(values, v -> v.get())));
+                        return new Pair<>(DataType.array(DataType.TEXT), DataTypeUtility.value(Utility.<Optional<@Value String>, @Value Object>mapListI(values, v -> v.get())));
                 }
                 else 
                 {
                     if (values.size() == 1) // Must actually be empty if not all present:
                         return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.TEXT)), typeManager), typeManager.maybeMissing());
                     else
-                        return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.TEXT)), typeManager), DataTypeUtility.value(Utility.mapListI(values, v -> v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing))));
+                        return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.TEXT)), typeManager), DataTypeUtility.<@Value Object>value(Utility.<Optional<@Value String>, @Value Object>mapListI(values, v -> v.<@Value Object>map(s -> typeManager.maybePresent(s)).orElseGet(typeManager::maybeMissing))));
                 }
             }
 
@@ -933,14 +933,14 @@ public class RData
                     if (values.size() == 1)
                         return new Pair<>(DataType.date(t), values.get(0).get());
                     else
-                        return new Pair<>(DataType.array(DataType.date(t)), DataTypeUtility.value(Utility.<Optional<@Value TemporalAccessor>, @Value TemporalAccessor>mapListI(values, v -> v.get())));
+                        return new Pair<>(DataType.array(DataType.date(t)), DataTypeUtility.value(Utility.<Optional<@Value TemporalAccessor>, @Value Object>mapListI(values, v -> v.get())));
                 }
                 else
                 {
                     if (values.size() == 1) // Must actually be empty if not all present:
                         return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.date(t))), typeManager), typeManager.maybeMissing());
                     else
-                        return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.date(t))), typeManager), DataTypeUtility.value(Utility.mapListI(values, v -> v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing))));
+                        return new Pair<>(typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(DataType.date(t))), typeManager), DataTypeUtility.<@Value Object>value(Utility.<Optional<@Value TemporalAccessor>, @Value Object>mapListI(values, v -> v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing))));
                 }
             }
 
@@ -964,9 +964,19 @@ public class RData
                 if (values.length == 1)
                     return new Pair<>(taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager), new TaggedValue(values[0] - 1, null, taggedTypeDefinition));
                 else
-                    return new Pair<>(DataType.array(taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager)), DataTypeUtility.value(IntStream.of(values).mapToObj(n -> new TaggedValue(n - 1, null, taggedTypeDefinition)).collect(ImmutableList.<TaggedValue>toImmutableList())));
+                    return new Pair<>(DataType.array(taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager)), DataTypeUtility.value(IntStream.of(values).mapToObj(n -> new TaggedValue(n - 1, null, taggedTypeDefinition)).collect(ImmutableList.<@Value Object>toImmutableList())));
             }
         });
+    }
+
+    private static @ImmediateValue ListEx valueImmediate(int[] values)
+    {
+        return DataTypeUtility.valueImmediate(IntStream.of(values).<@ImmediateValue Object>mapToObj(i -> DataTypeUtility.value(i)).collect(ImmutableList.<@ImmediateValue Object>toImmutableList()));
+    }
+
+    private static @ImmediateValue ListEx valueImmediate(boolean[] values)
+    {
+        return DataTypeUtility.valueImmediate(Booleans.asList(values).stream().<@ImmediateValue Object>map(b -> DataTypeUtility.value(b)).collect(ImmutableList.<@ImmediateValue Object>toImmutableList()));
     }
 
     private static TaggedTypeDefinition getTaggedTypeForFactors(ImmutableList<String> levelNames, TypeManager typeManager) throws InternalException, UserException
@@ -1108,12 +1118,6 @@ public class RData
                 }
             }
 
-            public @ImmediateValue BigDecimal doubleToValue(double value)
-            {
-                // Go through Double.toString which zeroes out the boring end part:
-                return DataTypeUtility.value(new BigDecimal(Double.toString(value)));
-            }
-
             @Override
             public Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
@@ -1196,6 +1200,12 @@ public class RData
         });
     }
 
+    private static @ImmediateValue BigDecimal doubleToValue(double value)
+    {
+        // Go through Double.toString which zeroes out the boring end part:
+        return DataTypeUtility.value(new BigDecimal(Double.toString(value)));
+    }
+
     private static SimulationFunction<@Value Object, @Value Object> getOrInternal(ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>> map, DataType key) throws InternalException
     {
         SimulationFunction<@Value Object, @Value Object> f = map.get(key);
@@ -1232,14 +1242,14 @@ public class RData
             }
             if (nextType.equals(DataType.array(curType)))
             {
-                conversions.put(curType, x -> new ListExList(ImmutableList.of(x)));
+                conversions.put(curType, x -> DataTypeUtility.value(ImmutableList.<@Value Object>of(x)));
                 conversions.put(nextType, x -> x);
                 curType = nextType;
                 continue;
             }
             if (curType.equals(DataType.array(nextType)))
             {
-                conversions.put(nextType, x -> new ListExList(ImmutableList.of(x)));
+                conversions.put(nextType, x -> DataTypeUtility.value(ImmutableList.<@Value Object>of(x)));
                 continue;
             }
             throw new UserException("Cannot generalise " + curType + " and " + nextType + " into a single type");

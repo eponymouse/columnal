@@ -83,12 +83,12 @@ public class TypeManager
         allKnownTypes.putAll(builtInTypes);
     }
 
-    public TaggedValue maybeMissing()
+    public @Value TaggedValue maybeMissing()
     {
         return maybeMissing;
     }
     
-    public TaggedValue maybePresent(@Value Object content)
+    public @Value TaggedValue maybePresent(@Value Object content)
     {
         return new TaggedValue(1, content, maybeType);
     }

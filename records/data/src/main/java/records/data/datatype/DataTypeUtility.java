@@ -9,7 +9,9 @@ import annotation.userindex.qual.UserIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
 import records.data.ColumnStorage;
@@ -348,13 +350,13 @@ public class DataTypeUtility
     }
 
     @SuppressWarnings("valuetype")
-    public static Utility.@Value ListEx value(@UnknownIfValue List<@Value ? extends @Value Object> list)
+    public static Utility.@Value ListEx value(@UnknownIfValue List<@Value Object> list)
     {
         return new ListExList(list);
     }
 
     @SuppressWarnings("valuetype")
-    public static Utility.@ImmediateValue ListEx valueImmediate(@UnknownIfValue List<@ImmediateValue ? extends @ImmediateValue Object> list)
+    public static Utility.@ImmediateValue ListEx valueImmediate(@UnknownIfValue List<@ImmediateValue Object> list)
     {
         return new ListExList(list);
     }
@@ -620,7 +622,7 @@ public class DataTypeUtility
             @Override
             public @ImmediateValue Object array(@Nullable DataType inner) throws InternalException, InternalException
             {
-                return DataTypeUtility.valueImmediate(Collections.emptyList());
+                return DataTypeUtility.<@Value Object>valueImmediate(Collections.<@ImmediateValue Object>emptyList());
             }
         });
     }
