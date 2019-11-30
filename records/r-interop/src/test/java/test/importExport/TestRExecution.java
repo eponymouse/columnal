@@ -11,9 +11,12 @@ import records.data.ColumnId;
 import records.data.DataTestUtil;
 import records.data.EditableColumn;
 import records.data.KnownLengthRecordSet;
+import records.data.MemoryArrayColumn;
 import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.RecordSet;
+import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
@@ -27,8 +30,10 @@ import utility.Either;
 import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
+import utility.Utility.ListEx;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
@@ -77,7 +82,7 @@ public class TestRExecution
                 "AIC(lm1, lm2)"
         , ImmutableList.of("stats"), ImmutableMap.of())).get(0).getSecond();
         assertEquals(ImmutableList.of(new ColumnId("df"), new ColumnId("AIC")), recordSet.getColumnIds());
-        assertEquals(ImmutableList.of(new BigDecimal("326.07156844054867406157427467405796051025390625"), new BigDecimal("325.2408440639818536510574631392955780029296875")), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumn(new ColumnId("AIC")).getType(), recordSet.getLength()));
+        assertEquals(ImmutableList.of(new BigDecimal("326.0715684405487"), new BigDecimal("325.2408440639819")), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumn(new ColumnId("AIC")).getType(), recordSet.getLength()));
     }
 
     @Test
@@ -112,6 +117,25 @@ public class TestRExecution
                 rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, @Value String>right("A"), Either.<String, @Value String>right("B"), Either.<String, @Value String>right("C")), "Z")
             ), 3)))).get(0).getSecond();
         DataTestUtil.assertValueListEqual("Column", ImmutableList.of("B", "C"), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
+    }
+
+    // Test tibble features: spaces in column names, lists in cells
+    @SuppressWarnings("valuetype")
+    @Test
+    public void testTable3() throws InternalException, UserException
+    {
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        RecordSet recordSet = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("foo$\"bar bar black sheep\"[2:3]", ImmutableList.of(),
+            ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
+                rs -> new MemoryArrayColumn(rs, new ColumnId("bar bar black sheep"), DataType.NUMBER, ImmutableList.of(numberList("3"), numberList("4", "4.1"), numberList("5", "5.2", "5.21")), DataTypeUtility.value(ImmutableList.<@Value Object>of())),
+                rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, @Value String>right("A"), Either.<String, @Value String>right("B"), Either.<String, @Value String>right("C")), "Z")
+            ), 3)))).get(0).getSecond();
+        DataTestUtil.assertValueListEqual("Column", ImmutableList.of(DataTypeUtility.value(ImmutableList.of(new BigDecimal("4"), new BigDecimal("4.1"))), DataTypeUtility.value(ImmutableList.of(new BigDecimal("5.0"), new BigDecimal("5.2"), new BigDecimal("5.21")))), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
+    }
+
+    private Either<String, @Value ListEx> numberList(String... numbers)
+    {
+        return Either.right(DataTypeUtility.value(Arrays.stream(numbers).map(s -> DataTypeUtility.value(new BigDecimal(s))).collect(ImmutableList.<@Value Object>toImmutableList())));
     }
 
     @Test
