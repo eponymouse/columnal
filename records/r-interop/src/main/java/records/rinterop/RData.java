@@ -959,7 +959,10 @@ public class RData
             public Pair<DataType, @Value Object> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
                 TaggedTypeDefinition taggedTypeDefinition = getTaggedTypeForFactors(levelNames, typeManager);
-                return new Pair<>(taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager), DataTypeUtility.value(IntStream.of(values).mapToObj(n -> new TaggedValue(n, null, taggedTypeDefinition)).collect(ImmutableList.<TaggedValue>toImmutableList())));
+                if (values.length == 1)
+                    return new Pair<>(taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager), new TaggedValue(values[0] - 1, null, taggedTypeDefinition));
+                else
+                    return new Pair<>(DataType.array(taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager)), DataTypeUtility.value(IntStream.of(values).mapToObj(n -> new TaggedValue(n - 1, null, taggedTypeDefinition)).collect(ImmutableList.<TaggedValue>toImmutableList())));
             }
         });
     }
