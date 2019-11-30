@@ -526,5 +526,26 @@ public class TestRLoadSave
                     return taggedValue;
             }
         }
+
+        @Override
+        public @Value Object array(DataType inner) throws InternalException, InternalException
+        {
+            try
+            {
+                @Value ListEx list = Utility.cast(reloadedVal, ListEx.class);
+                int length = list.size();
+                ImmutableList.Builder<@Value Object> coercedList = ImmutableList.builderWithExpectedSize(length);
+                for (int i = 0; i < length; i++)
+                {
+                    coercedList.add(inner.apply(new CoerceValueToThisType(list.get(i), typeManager)));
+                }
+                return DataTypeUtility.value(coercedList.build());
+            }
+            catch (UserException e)
+            {
+                // Fine because it's test code:
+                throw new InternalException("UserEx", e);
+            }
+        }
     }
 }

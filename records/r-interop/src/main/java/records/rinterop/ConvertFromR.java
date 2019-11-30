@@ -13,8 +13,10 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.*;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataType.FlatDataTypeVisitor;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
@@ -35,12 +37,14 @@ import utility.Pair;
 import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
+import utility.Utility.ListEx;
 import utility.Utility.ListExList;
 
 import java.math.BigDecimal;
 import java.time.temporal.TemporalAccessor;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
@@ -167,8 +171,7 @@ public class ConvertFromR
             @Override
             public Pair<DataType, ImmutableList<@Value Object>> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
             {
-                Pair<DataType, ImmutableList<@Value Object>> inner = rListToValueList(typeManager, values);
-                return new Pair<>(inner.getFirst(), inner.getSecond());
+                return rListToValueList(typeManager, values);
             }
 
             @Override
@@ -293,12 +296,66 @@ public class ConvertFromR
             else
                 return new Pair<>(DataType.array(r.getFirst()), DataTypeUtility.value(r.getSecond()));
         });
-        Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> m = generaliseType(Utility.mapListExI(typedPairs, p -> p.getFirst()));
+        Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> m = generaliseType(typeManager, Utility.mapListExI(typedPairs, p -> p.getFirst()));
         ImmutableList<@Value Object> loaded = Utility.<Pair<DataType, @Value Object>, @Value Object>mapListExI(typedPairs, p -> getOrInternal(m.getSecond(), p.getFirst()).apply(p.getSecond()));
         return new Pair<DataType, ImmutableList<@Value Object>>(m.getFirst(), loaded);
     }
     
-    private static Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> generaliseType(ImmutableList<DataType> types) throws UserException
+    // If smaller can be generalised into larger, returns the conversion function from small to large.  If not (including case where larger can generalise to smaller), return null
+    static @Nullable SimulationFunction<@Value Object, @Value Object> generaliseType(TypeManager typeManager, DataType smaller, DataType larger) throws InternalException, TaggedInstantiationException, UnknownTypeException
+    {
+        if (smaller.equals(larger))
+            return x -> x;
+        if (larger.equals(typeManager.makeMaybeType(smaller)))
+            return x -> typeManager.maybePresent(x);
+        DataType largeInner = getArrayInner(larger);
+        if (largeInner != null)
+        {
+            if (largeInner.equals(smaller))
+                return x -> DataTypeUtility.value(ImmutableList.of(x));
+            else if (largeInner.equals(typeManager.makeMaybeType(smaller)))
+                return x -> DataTypeUtility.value(ImmutableList.of(typeManager.maybePresent(x)));
+
+            DataType smallInner = getArrayInner(smaller);
+            @Nullable SimulationFunction<@Value Object, @Value Object> genInners = smallInner == null ? null : generaliseType(typeManager, smallInner, largeInner);
+            if (genInners != null)
+            {
+                return x -> {
+                    @Value ListEx list = Utility.cast(x, ListEx.class);
+                    int length = list.size();
+                    ImmutableList.Builder<@Value Object> processed = ImmutableList.builderWithExpectedSize(length);
+                    for (int i = 0; i < length; i++)
+                    {
+                        processed.add(genInners.apply(list.get(i)));
+                    }
+                    return DataTypeUtility.value(processed.build());
+                };
+            }
+        }
+        return null;
+    }
+
+    private static @Nullable DataType getArrayInner(DataType dataType) throws InternalException
+    {
+        return dataType.apply(new FlatDataTypeVisitor<@Nullable DataType>(null) {
+            @Override
+            public DataType array(DataType inner) throws InternalException, InternalException
+            {
+                return inner;
+            }
+        });
+    }
+
+    /**
+     * The generalisations available here are x -> Optional(x), and x -> List(x), as well as List(x) -> List(Optional(x))
+     * @param typeManager
+     * @param types
+     * @return
+     * @throws UserException
+     * @throws InternalException
+     */
+    
+    private static Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> generaliseType(TypeManager typeManager, ImmutableList<DataType> types) throws UserException, InternalException
     {
         if (types.isEmpty())
             return new Pair<>(DataType.TEXT, ImmutableMap.<DataType, SimulationFunction<@Value Object, @Value Object>>of());
@@ -307,27 +364,36 @@ public class ConvertFromR
         conversions.put(curType, x -> x);
         for (DataType nextType : types.subList(1, types.size()))
         {
-            if (nextType.equals(curType))
-                continue;
-            if (DataTypeUtility.isNumber(nextType) && DataTypeUtility.isNumber(curType))
+            if (conversions.containsKey(nextType))
             {
-                conversions.put(nextType, x -> x);
+                // Fine, already dealt with
                 continue;
             }
-            if (nextType.equals(DataType.array(curType)))
+            @Nullable SimulationFunction<@Value Object, @Value Object> curToNext = generaliseType(typeManager, curType, nextType);
+            if (curToNext != null)
             {
-                conversions.put(curType, x -> DataTypeUtility.value(ImmutableList.<@Value Object>of(x)));
-                conversions.put(nextType, x -> x);
+                conversions.put(curType, curToNext);
                 curType = nextType;
+                conversions.put(curType, x -> x);
                 continue;
             }
-            if (curType.equals(DataType.array(nextType)))
+            @Nullable SimulationFunction<@Value Object, @Value Object> nextToCur = generaliseType(typeManager, nextType, curType);
+            if (nextToCur != null)
             {
-                conversions.put(nextType, x -> DataTypeUtility.value(ImmutableList.<@Value Object>of(x)));
+                conversions.put(nextType, nextToCur);
                 continue;
             }
             throw new UserException("Cannot generalise " + curType + " and " + nextType + " into a single type");
         }
+        // Have to redo in case we generalised twice:
+        for (Entry<DataType, SimulationFunction<@Value Object, @Value Object>> entry : conversions.entrySet())
+        {
+            SimulationFunction<@Value Object, @Value Object> f = generaliseType(typeManager, entry.getKey(), curType);
+            if (f == null)
+                throw new InternalException("No generalisation from " + entry.getKey() + " to " + curType);
+            entry.setValue(f);
+        }
+        
         return new Pair<>(curType, ImmutableMap.copyOf(conversions));
     }
     
