@@ -291,9 +291,6 @@ public class ConvertFromR
         // The type here will be the type of the object on the right
         ImmutableList<Pair<DataType, @Value Object>> typedPairs = Utility.<RValue, Pair<DataType, @Value Object>>mapListExI(values, v -> {
             Pair<DataType, ImmutableList<@Value Object>> r = convertRToTypedValueList(typeManager, v);
-            if (r.getSecond().size() == 1)
-                return r.replaceSecond(r.getSecond().get(0));
-            else
                 return new Pair<>(DataType.array(r.getFirst()), DataTypeUtility.value(r.getSecond()));
         });
         Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> m = generaliseType(typeManager, Utility.mapListExI(typedPairs, p -> p.getFirst()));
