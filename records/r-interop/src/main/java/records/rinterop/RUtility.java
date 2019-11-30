@@ -15,6 +15,7 @@ import records.rinterop.RVisitor.PairListEntry;
 import utility.Pair;
 import utility.Utility;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -252,8 +253,9 @@ class RUtility
                     b.add(Optional.empty());
                 else
                 {
+                    BigDecimal bd = doubleToValue(value);
                     @SuppressWarnings("valuetype")
-                    @Value ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond((long) roundTowardsZero(value), (long) (1_000_000_000.0 * (value - roundTowardsZero(value)))), ZoneId.of(getStringNN(getListItem(tzone, 0))));
+                    @Value ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond(bd.longValue(), bd.remainder(BigDecimal.ONE).scaleByPowerOfTen(9).longValue()), ZoneId.of(getStringNN(getListItem(tzone, 0))));
                     b.add(Optional.of(zdt));
                 }
             }
@@ -268,18 +270,14 @@ class RUtility
                     b.add(Optional.empty());
                 else
                 {
+                    BigDecimal bd = doubleToValue(value);
                     @SuppressWarnings("valuetype")
-                    @Value LocalDateTime ldt = LocalDateTime.ofInstant(Instant.ofEpochSecond((long) roundTowardsZero(value)), ZoneId.of("UTC"));
+                    @Value LocalDateTime ldt = LocalDateTime.ofInstant(Instant.ofEpochSecond(bd.longValue(), bd.remainder(BigDecimal.ONE).scaleByPowerOfTen(9).longValue()), ZoneId.of("UTC"));
                     b.add(Optional.of(ldt));
                 }
             }
             return ConvertToR.temporalVector(new DateTimeInfo(DateTimeType.DATETIME), b.build());
         }
-    }
-
-    private static double roundTowardsZero(double seconds)
-    {
-        return Math.signum(seconds) * Math.floor(Math.abs(seconds));
     }
 
     static RValue dateVector(double[] values, @Nullable RValue attr) throws InternalException
@@ -307,10 +305,9 @@ class RUtility
             ImmutableList<Optional<@Value TemporalAccessor>> dates = DoubleStream.of(values).<Optional<@Value TemporalAccessor>>mapToObj(d -> {
                 if (Double.isNaN(d))
                     return Optional.empty();
-                double seconds = d * (60.0 * 60.0 * 24.0);
-                double wholeSeconds = Math.floor(seconds);
+                BigDecimal bd = doubleToValue(d).multiply(new BigDecimal(60.0 * 60.0 * 24.0));
                 @SuppressWarnings("valuetype")
-                @Value LocalDateTime date = LocalDateTime.ofEpochSecond((long)wholeSeconds, (int)(1_000_000_000 * (seconds - wholeSeconds)), ZoneOffset.UTC);
+                @Value LocalDateTime date = LocalDateTime.ofEpochSecond(bd.longValue(), bd.remainder(BigDecimal.ONE).abs().scaleByPowerOfTen(9).intValue(), ZoneOffset.UTC);
                 return Optional.of(date);
             }).collect(ImmutableList.<Optional<@Value TemporalAccessor>>toImmutableList());
             return new RValue()
@@ -322,5 +319,11 @@ class RUtility
                 }
             };
         }
+    }
+
+    static @ImmediateValue BigDecimal doubleToValue(double value)
+    {
+        // Go through Double.toString which zeroes out the boring end part:
+        return DataTypeUtility.value(new BigDecimal(Double.toString(value)));
     }
 }

@@ -200,7 +200,7 @@ public class ConvertToR
                                         return RUtility.dateTimeZonedVector(inners.stream().mapToDouble(md -> md.map(d -> {
                                             ZonedDateTime zdt = (ZonedDateTime) d;
                                             return (double) zdt.toEpochSecond() + ((double) zdt.getNano() / 1_000_000_000.0);
-                                        }).orElse(Double.NaN)).toArray(), RUtility.makeClassAttributes("Date", ImmutableMap.of()));
+                                        }).orElse(Double.NaN)).toArray(), RUtility.makeClassAttributes("POSIXct", ImmutableMap.of()));
                                     case DATETIME:
                                         return RUtility.dateTimeZonedVector(inners.stream().mapToDouble(md -> md.map(d -> {
                                             LocalDateTime ldt = (LocalDateTime) d;

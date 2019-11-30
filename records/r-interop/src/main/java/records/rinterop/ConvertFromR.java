@@ -13,20 +13,15 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.*;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.FlatDataTypeVisitor;
-import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
-import records.data.datatype.NumberInfo;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
-import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
-import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
@@ -38,9 +33,7 @@ import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
-import utility.Utility.ListExList;
 
-import java.math.BigDecimal;
 import java.time.temporal.TemporalAccessor;
 import java.util.HashMap;
 import java.util.List;
@@ -48,7 +41,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
 
 public class ConvertFromR
 {
@@ -128,14 +120,14 @@ public class ConvertFromR
                         if (Double.isNaN(values[i]))
                             maybeValues.add(typeManager.maybeMissing());
                         else
-                            maybeValues.add(typeManager.maybePresent(doubleToValue(values[i])));
+                            maybeValues.add(typeManager.maybePresent(RUtility.doubleToValue(values[i])));
                     }
 
                     return new Pair<>(typeManager.makeMaybeType(DataType.NUMBER), maybeValues.build());
                 }
                 else
                 {
-                    return new Pair<>(DataType.NUMBER, DoubleStream.of(values).<@ImmediateValue Object>mapToObj(d -> doubleToValue(d)).collect(ImmutableList.<@Value @NonNull Object>toImmutableList()));
+                    return new Pair<>(DataType.NUMBER, DoubleStream.of(values).<@ImmediateValue Object>mapToObj(d -> RUtility.doubleToValue(d)).collect(ImmutableList.<@Value @NonNull Object>toImmutableList()));
                 }
             }
 
@@ -268,12 +260,6 @@ public class ConvertFromR
     {
         Pair<DataType, ImmutableList<@Value Object>> converted = convertRToTypedValueList(typeManager, rValue);
         return new Pair<>(converted.getFirst().makeImmediateColumn(columnName, Utility.<@Value Object, Either<String, @Value Object>>mapListI(converted.getSecond(), x -> Either.<String, @Value Object>right(x)), DataTypeUtility.makeDefaultValue(converted.getFirst())), converted.getSecond().size());
-    }          
-
-    private static @ImmediateValue BigDecimal doubleToValue(double value)
-    {
-        // Go through Double.toString which zeroes out the boring end part:
-        return DataTypeUtility.value(new BigDecimal(Double.toString(value)));
     }
 
     private static SimulationFunction<@Value Object, @Value Object> getOrInternal(ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>> map, DataType key) throws InternalException

@@ -408,8 +408,7 @@ public class TestRLoadSave
                         @Value TemporalAccessor orig = g.get(i);
                         Instant origInstant = makeInstant(orig);
                         double seconds = origInstant.getEpochSecond() + ((double)origInstant.getNano()) / 1_000_000_000.0;
-                        if (dateTimeInfo.getType() == DateTimeType.DATETIME)
-                            seconds = Math.round(seconds / (60.0 * 60.0 * 24.0)) * (60.0 * 60.0 * 24.0);
+                        seconds = Math.round(seconds / (60.0 * 60.0 * 24.0)) * (60.0 * 60.0 * 24.0);
                         // From https://stackoverflow.com/a/38544355/412908
                         double secondsRoundTowardsZero = Math.signum(seconds) * Math.floor(Math.abs(seconds));
                         Instant instantFromDouble = Instant.ofEpochSecond((long) secondsRoundTowardsZero, (long) (1_000_000_000.0 * (seconds - secondsRoundTowardsZero)));
