@@ -18,7 +18,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-public class RUtility
+class RUtility
 {
     public static RValue intVector(int[] values, @Nullable RValue attributes)
     {

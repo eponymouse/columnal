@@ -20,6 +20,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.rinterop.RData;
+import records.rinterop.RPrettyPrint;
 import records.rinterop.RValue;
 import records.rinterop.RExecution;
 import utility.Either;
@@ -118,7 +119,7 @@ public class TestRExecution
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
         RValue rValue = RExecution.runRExpression("data.frame(CO2)");
-        System.out.println(RData.prettyPrint(rValue));
+        System.out.println(RPrettyPrint.prettyPrint(rValue));
         RecordSet recordSet = RData.convertRToTable(typeManager, rValue).get(0).getSecond();
         TaggedValue taggedValue = Utility.cast(recordSet.getColumn(new ColumnId("Plant")).getType().getCollapsed(0), TaggedValue.class);
         assertEquals("Qn1", taggedValue.getTagName());

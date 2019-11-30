@@ -38,7 +38,7 @@ public class RExecution
                 File tableFile = rdsFile.addRDSFile("table");
                 RValue rTable = RData.convertTableToR(entry.getValue(), TableType.TIBBLE);
                 //System.out.println(RData.prettyPrint(rTable));
-                RData.writeRData(tableFile, rTable);
+                RWrite.writeRData(tableFile, rTable);
                 String read = entry.getKey() + " <- readRDS(\"" + escape(tableFile.getAbsolutePath()) + "\")";
                 cmdStream.println(read);
             }
