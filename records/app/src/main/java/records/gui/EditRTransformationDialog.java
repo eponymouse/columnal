@@ -88,6 +88,8 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
         getDialogPane().getStyleClass().add("edit-r");
         tableList = new TableList(existing.getInputTables());
         packageField = new TextField(existing.getPackagesToLoad().stream().collect(Collectors.joining(", ")));
+        // Mainly for testing:
+        packageField.getStyleClass().add("r-package-field");
         packageField.setPromptText("None");
         expressionTextArea = new TextArea(existing.getRExpression());
         // For some reason, this seems to produce a width similar to 70 chars:

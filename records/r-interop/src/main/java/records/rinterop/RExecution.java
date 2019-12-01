@@ -30,8 +30,11 @@ public class RExecution
         {
             Process p = Runtime.getRuntime().exec(new String[]{"R", "--vanilla", "--slave"});
             PrintStream cmdStream = new PrintStream(p.getOutputStream());
-            // TODO install it if not present
-            cmdStream.println("library(tibble)");
+            
+            for (String pkg : Utility.prependToList("tibble", packages))
+            {
+                cmdStream.println("require(\"" + pkg + "\") || install.packages(\"" + pkg + "\", repos=\"https://cloud.r-project.org/\")");
+            }
 
             for (Entry<String, RecordSet> entry : tablesToPass.entrySet())
             {
