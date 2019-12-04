@@ -21,3 +21,11 @@ Added import/export for the R data format (RDS).
 - Added new-version checking support on Linux
 - Added a couple more weight units (lb, oz)
 - Added a "years between" function.
+
+Version 0.6.3 (2019-12-07)
+==========================
+Added a transformation that runs an R expression.
+
+- A new transformation lets you write an R expression that operates on a Columnal table and automatically shows the result as a table in Columnal.
+- Fixed a few small bugs in the R import/export, and improved conversion of double to decimal
+- Improved the R import/export to allow export of columns with lists (by exporting to tibbles).
