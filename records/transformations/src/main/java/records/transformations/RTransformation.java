@@ -3,6 +3,7 @@ package records.transformations;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.CellPosition;
@@ -12,19 +13,21 @@ import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.TableManager.TableMaker;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.Versions.ExpressionVersion;
 import records.rinterop.ConvertFromR;
-import records.rinterop.RValue;
 import records.rinterop.RExecution;
+import records.rinterop.RValue;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformSupplier;
 import utility.Pair;
+import utility.SimulationRunnable;
 import utility.SimulationSupplier;
 import utility.Utility;
 
@@ -103,6 +106,15 @@ public class RTransformation extends VisitableTransformation
     {
         if (result == null)
         {
+            result = runR();
+        }
+        return result.eitherEx(err -> {throw new UserException(err);}, r -> r);
+    }
+
+    private Either<StyledString, RecordSet> runR() throws InternalException
+    {
+        try
+        {
             HashMap<String, RecordSet> tablesToPass = new HashMap<>();
 
             for (TableId srcTableId : srcTableIds)
@@ -114,21 +126,39 @@ public class RTransformation extends VisitableTransformation
             RValue rResult = RExecution.runRExpression(rExpression, packagesToLoad, ImmutableMap.copyOf(tablesToPass));
 
             ImmutableList<Pair<String, EditableRecordSet>> tables = ConvertFromR.convertRToTable(getManager().getTypeManager(), rResult);
-            
+
             if (tables.isEmpty())
-                result = Either.left(StyledString.s("R result empty"));
+                return Either.left(StyledString.s("R result empty"));
             else if (tables.size() > 1)
-                result = Either.left(StyledString.s("R result has multiple tables"));
+                return Either.left(StyledString.s("R result has multiple tables"));
             else
-                result = Either.right(tables.get(0).getSecond());
+                return Either.right(tables.get(0).getSecond());
         }
-        return result.eitherEx(err -> {throw new UserException(err);}, r -> r);
+        catch (UserException e)
+        {
+            return Either.left(e.getStyledMessage());
+        }
     }
 
     @Override
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.runR(this);
+    }
+
+    @Override
+    public @Nullable SimulationRunnable getReevaluateOperation()
+    {
+        return () -> {
+            getManager().edit(getId(), new TableMaker<RTransformation>()
+            {
+                @Override
+                public @NonNull RTransformation make() throws InternalException
+                {
+                    return new RTransformation(RTransformation.this.getManager(), RTransformation.this.getDetailsForCopy(), srcTableIds, packagesToLoad, rExpression);
+                }
+            }, null);
+        };
     }
 
     @Pure

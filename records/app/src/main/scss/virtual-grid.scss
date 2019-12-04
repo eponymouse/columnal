@@ -64,6 +64,21 @@
         -fx-background-insets: 0, 1;
         -fx-padding: -1 1 -1 1;
     }
+    
+    .table-display-rerun {
+        -fx-cursor: hand;
+        -fx-text-fill: $table-header-text-color;
+        & .label {
+            -fx-text-fill: $table-header-text-color;
+            -fx-cursor: hand;
+        }
+        &:hover {
+            -fx-underline: true;
+        }
+        & > .text {
+            -fx-font-size: 80%;
+        }
+    }
 }
 
 .table-display-column-title, .table-display-column-type {

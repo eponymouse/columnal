@@ -33,6 +33,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.IdentifierUtility;
 import utility.Pair;
+import utility.SimulationRunnable;
 import utility.Utility;
 import utility.TranslationUtility;
 
@@ -446,4 +447,10 @@ public abstract class Table
         }
     }
 
+    // Returns the runnable that re-evaluates the table, if applicable
+    @OnThread(Tag.Any)
+    public @Nullable SimulationRunnable getReevaluateOperation()
+    {
+        return null;
+    }
 }

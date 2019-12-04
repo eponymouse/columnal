@@ -21,6 +21,8 @@ import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.geometry.VPos;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.Effect;
 import javafx.scene.input.MouseButton;
@@ -58,8 +60,13 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.SimulationRunnable;
+import utility.SimulationRunnableNoError;
 import utility.Utility;
+import utility.Workers;
+import utility.Workers.Priority;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 import utility.gui.ResizableRectangle;
 
 import java.util.ArrayList;
@@ -208,12 +215,32 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
                         renameTable.consume(t);
                 });
             }
-            final BorderPane borderPane = new BorderPane(tableNameField.getNode());
+            final Label reRun;
+            @Nullable SimulationRunnable rerunOp = table.getReevaluateOperation();
+            if (rerunOp != null)
+            {
+                reRun = GUI.label("transformation.rerun", "table-display-rerun");
+                reRun.setGraphic(new Label("\u2b6e"));
+                reRun.setGraphicTextGap(4);
+                reRun.setTextOverrun(OverrunStyle.ELLIPSIS);
+                BorderPane.setAlignment(reRun, Pos.CENTER_LEFT);
+                reRun.setOnMouseClicked(e -> {
+                    if (e.getButton() == MouseButton.PRIMARY)
+                    {
+                        Workers.onWorkerThread("Re-evaluating " + table.getId().getRaw(), Priority.FETCH, () -> FXUtility.alertOnError_("Error evaluating R", () -> rerunOp.run()));
+                        e.consume();
+                    }
+                    
+                });
+            }
+            else
+                reRun = null;
+            final BorderPane borderPane = GUI.borderLeftCenterRight(tableNameField.getNode(), reRun, null);
             this.borderPane = borderPane;
             borderPane.getStyleClass().add("table-display-table-title");
             borderPane.getStyleClass().addAll(getExtraTitleStyleClasses());
             BorderPane.setAlignment(tableNameField.getNode(), Pos.CENTER_LEFT);
-            BorderPane.setMargin(tableNameField.getNode(), new Insets(0, 0, 0, 8.0));
+            BorderPane.setMargin(tableNameField.getNode(), new Insets(0, 8.0, 0, 8.0));
             ArrayList<MoveDestination> overlays = new ArrayList<>();
             borderPane.setOnDragDetected(e -> {
                 if (overlays.isEmpty())
