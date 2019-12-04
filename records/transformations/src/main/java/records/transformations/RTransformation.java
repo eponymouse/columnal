@@ -151,7 +151,7 @@ public class RTransformation extends VisitableTransformation
     {
         public Info()
         {
-            super(NAME, "transform.runr", "preview-run.png", "runr.explanation.short", ImmutableList.of("R"));
+            super(NAME, "transform.runr", "preview-runr.png", "runr.explanation.short", ImmutableList.of("R"));
         }
 
         @Override
