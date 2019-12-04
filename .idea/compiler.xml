@@ -28,15 +28,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/utility/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processor name="annotation.ValueTypeChecker" />
         <processor name="annotation.identifier.IdentifierChecker" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -56,15 +55,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/gui-utility/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\gui-utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processor name="annotation.ValueTypeChecker" />
         <processor name="annotation.identifier.IdentifierChecker" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -77,15 +75,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/data/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\data/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processor name="annotation.ValueTypeChecker" />
         <processor name="annotation.identifier.IdentifierChecker" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -98,15 +95,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/stf/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\stf/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processor name="annotation.ValueTypeChecker" />
         <processor name="annotation.identifier.IdentifierChecker" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -119,15 +115,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/functions/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\functions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processor name="annotation.ValueTypeChecker" />
         <processor name="annotation.identifier.IdentifierChecker" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -140,15 +135,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/expressions/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\expressions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processor name="annotation.ValueTypeChecker" />
         <processor name="annotation.identifier.IdentifierChecker" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -162,9 +156,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/tests/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\tests/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
-        <processorPath>
+        <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <processor name="org.checkerframework.checker.units.UnitsChecker" />
+        <processor name="annotation.identifier.IdentifierChecker" />
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -177,15 +174,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/lex-editor/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\lex-editor/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processor name="annotation.ValueTypeChecker" />
         <processor name="annotation.identifier.IdentifierChecker" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -198,15 +194,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/transformations/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\transformations/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processor name="annotation.ValueTypeChecker" />
         <processor name="annotation.identifier.IdentifierChecker" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -219,15 +214,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/book/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\book/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processor name="annotation.ValueTypeChecker" />
         <processor name="annotation.identifier.IdentifierChecker" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -240,7 +234,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -253,7 +247,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -266,15 +260,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/r-interop/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\r-interop/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processor name="annotation.ValueTypeChecker" />
         <processor name="annotation.identifier.IdentifierChecker" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -287,15 +280,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="conservativeUninferredTypeArguments" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/app/../stubs" />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\app/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <processor name="annotation.ValueTypeChecker" />
         <processor name="annotation.identifier.IdentifierChecker" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/anns/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/com/io7m/xom/xom/1.2.10/xom-1.2.10.jar" />
           <entry name="$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.3.03/xml-apis-1.3.03.jar" />
@@ -306,26 +298,44 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="anns" target="1.8" />
-      <module name="annsthreadchecker" target="1.8" />
+      <module name="anns" target="11" />
+      <module name="annsthreadchecker" target="11" />
       <module name="app" target="1.8" />
-      <module name="book" target="1.8" />
-      <module name="data" target="1.8" />
-      <module name="expressions" target="1.8" />
-      <module name="functions" target="1.8" />
-      <module name="gui-utility" target="1.8" />
-      <module name="lex-editor" target="1.8" />
-      <module name="parsers" target="1.8" />
-      <module name="r-interop" target="1.8" />
-      <module name="records" target="1.8" />
-      <module name="stf" target="1.8" />
-      <module name="tests" target="1.8" />
-      <module name="threadchecker" target="1.8" />
-      <module name="transformations" target="1.8" />
-      <module name="utility" target="1.8" />
+      <module name="book" target="11" />
+      <module name="data" target="11" />
+      <module name="expressions" target="11" />
+      <module name="functions" target="11" />
+      <module name="gui-utility" target="11" />
+      <module name="lex-editor" target="11" />
+      <module name="parsers" target="11" />
+      <module name="r-interop" target="11" />
+      <module name="records" target="11" />
+      <module name="stf" target="11" />
+      <module name="tests" target="11" />
+      <module name="threadchecker" target="11" />
+      <module name="transformations" target="11" />
+      <module name="utility" target="11" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$MAVEN_REPOSITORY$/org/checkerframework/jdk8/2.10.0/jdk8-2.10.0.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin -Werror -Xmaxerrs 200" />
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="anns" options="" />
+      <module name="annsthreadchecker" options="" />
+      <module name="app" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\app/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="book" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\book/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="data" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\data/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="expressions" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\expressions/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="functions" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\functions/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="gui-utility" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\gui-utility/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="lex-editor" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\lex-editor/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="parsers" options="" />
+      <module name="r-interop" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\r-interop/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="stf" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\stf/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="tests" options="&quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\tests/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="threadchecker" options="" />
+      <module name="transformations" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\transformations/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="utility" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\utility/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+    </option>
   </component>
 </project>

@@ -1,45 +1,18 @@
 package utility;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.StringBinding;
-import javafx.beans.value.ObservableStringValue;
-import javafx.geometry.Bounds;
-import javafx.geometry.Orientation;
-import javafx.scene.Node;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
-import javafx.scene.control.PopupControl;
-import javafx.scene.control.Skin;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCharacterCombination;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyCombination.Modifier;
-import javafx.scene.text.Text;
-import javafx.stage.PopupWindow.AnchorLocation;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.error.InternalException;
-import records.error.UserException;
-import records.grammar.AcceleratorBaseVisitor;
-import records.grammar.AcceleratorLexer;
-import records.grammar.AcceleratorParser;
-import records.grammar.AcceleratorParser.AcceleratorContext;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformSupplier;
-import utility.Pair;
-import utility.Utility;
 
-import java.io.File;
-import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 /**
  * Created by neil on 17/04/2017.

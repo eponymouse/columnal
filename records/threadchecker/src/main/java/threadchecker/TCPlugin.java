@@ -1,23 +1,24 @@
 package threadchecker;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 
-import java.io.File;
-import java.util.Arrays;
-
 public class TCPlugin implements Plugin
 {
     private File tagsDump = new File("found-tags.txt");
-    
+
     public TCPlugin()
     {
         if (tagsDump.exists())
             tagsDump.delete();
     }
-    
+
     @Override
     public String getName()
     {
@@ -25,11 +26,11 @@ public class TCPlugin implements Plugin
     }
 
     @Override
-    public void init(JavacTask task, String... ignorePackages) 
+    public void init(JavacTask task, String... ignorePackages)
     {
         task.setTaskListener(new TCTaskListener(task, ignorePackages));
     }
-    
+
     private class TCTaskListener implements TaskListener
     {
         private TCScanner scanner = null;
@@ -58,6 +59,9 @@ public class TCPlugin implements Plugin
                         e.printStackTrace();
                     }
                 }
+                
+                System.out.println("Scanner: " + scanner);
+                System.out.println("Event: " + evt);
 
                 scanner.scan(evt.getCompilationUnit(), null);
                 // Uncomment to get tags dump:

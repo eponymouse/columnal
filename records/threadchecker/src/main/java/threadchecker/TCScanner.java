@@ -21,12 +21,20 @@
  */
 package threadchecker;
 
-import com.sun.source.tree.*;
-import com.sun.source.util.JavacTask;
-import com.sun.source.util.SimpleTreeVisitor;
-import com.sun.source.util.TreePath;
-import com.sun.source.util.TreePathScanner;
-import com.sun.source.util.Trees;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -36,15 +44,45 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
-import javax.lang.model.type.*;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ErrorType;
+import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.IntersectionType;
+import javax.lang.model.type.NoType;
+import javax.lang.model.type.NullType;
+import javax.lang.model.type.PrimitiveType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
+import javax.lang.model.type.TypeVisitor;
+import javax.lang.model.type.UnionType;
+import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic.Kind;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import com.sun.source.tree.AnnotationTree;
+import com.sun.source.tree.BlockTree;
+import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.LambdaExpressionTree;
+import com.sun.source.tree.MemberReferenceTree;
+import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.NewClassTree;
+import com.sun.source.tree.ReturnTree;
+import com.sun.source.tree.SynchronizedTree;
+import com.sun.source.tree.Tree;
+import com.sun.source.tree.VariableTree;
+import com.sun.source.util.JavacTask;
+import com.sun.source.util.SimpleTreeVisitor;
+import com.sun.source.util.TreePath;
+import com.sun.source.util.TreePathScanner;
+import com.sun.source.util.Trees;
 
 /**
  * A visitor class that visits the whole AST and does checks against the
@@ -72,7 +110,7 @@ class TCScanner extends TreePathScanner<Void, Void>
     private final LinkedList<LocatedTag> lambdaScopeStack = new LinkedList<>();
     private final Map<String, LocatedTag> fields = new HashMap<>();
     private final List<String> objectMembers;
-    
+
     // Types and methods can nest, e.g.
     // class A {public void foo() { Platform.runLater(new Runnable() { public void run() { } }) } }
     // So we keep a stack of the nested types and methods:
@@ -80,9 +118,9 @@ class TCScanner extends TreePathScanner<Void, Void>
     private final List<String> ignorePackages;
     private final LinkedList<List<TypeMirror>> callingMethodStack = new LinkedList<>();
     private final WrapDescent defaultReturn = new WrapDescent(
-            () -> { callingMethodStack.addLast(null); },
-            () -> { callingMethodStack.removeLast(); }
-        );
+        () -> { callingMethodStack.addLast(null); },
+        () -> { callingMethodStack.removeLast(); }
+    );
     // We only process one compilation unit at a time (no nesting), so no need for stack:
     private CompilationUnitTree cu;
     private boolean inSynchronizedThis;
@@ -103,72 +141,72 @@ class TCScanner extends TreePathScanner<Void, Void>
         types = task.getTypes();
         elements = task.getElements();
         this.ignorePackages = new ArrayList<>(ignorePackages);
-        
+
         objectMembers = elements.getAllMembers(elements.getTypeElement("java.lang.Object"))
-                           .stream().map(e -> e.getSimpleName().toString()).collect(Collectors.toList());
-        
+            .stream().map(e -> e.getSimpleName().toString()).collect(Collectors.toList());
+
         // Temporary:
         //this.ignorePackages.addAll(Arrays.asList("bluej.editor.stride"));
         //this.ignorePackages.addAll(Arrays.asList("bluej.stride"));
-        
+
         // Now we have all the business logic for the Java standard libraries:
-        
+
         //Setup default package annotations.  For convenience, we mark that all subclasses
         // of classes in this package (except when overriden by classAnns) will have
         // all their methods tagged accordingly.  So anything inheriting from a JComponent,
         // for example, will have all its methods tagged as Swing.  (You can always
         // override this with a tag on the particular method)
         Arrays.asList(
-                "javafx.application",
-                "javafx.beans.binding",
-                "javafx.beans.value",
-                "javafx.collections",
-                "javafx.css",
-                "javafx.event",
-                "javafx.scene",
-                "javafx.scene.control",
-                "javafx.scene.image",
-                "javafx.scene.layout"
-                ).forEach(pkg -> packageAnns.put(pkg, new LocatedTag(Tag.FX, false, true, "<JavaFX: " + pkg + ">")));
+            "javafx.application",
+            "javafx.beans.binding",
+            "javafx.beans.value",
+            "javafx.collections",
+            "javafx.css",
+            "javafx.event",
+            "javafx.scene",
+            "javafx.scene.control",
+            "javafx.scene.image",
+            "javafx.scene.layout"
+        ).forEach(pkg -> packageAnns.put(pkg, new LocatedTag(Tag.FX, false, true, "<JavaFX: " + pkg + ">")));
 
         // Web must be done solely on actual FX thread:
         packageAnns.put("javafx.scene.web", new LocatedTag(Tag.FXPlatform, false, true, "<JavaFX javafx.scene.web>"));
 
         classAnns.put("javafx.event.EventHandler", new LocatedTag(Tag.FXPlatform, false, true, "<JavaFX EventHandler>"));
-        
+
         Arrays.asList(
-                "java.awt.event",
-                "java.beans",
-                "javax.accessibility",
-                "javax.swing",
-                "javax.swing.border",
-                "javax.swing.event",
-                "javax.swing.table",
-                "javax.swing.text",
-                "javax.swing.filechooser",
-                "javax.swing.plaf.metal"
-                ).forEach(pkg -> packageAnns.put(pkg, new LocatedTag(Tag.Swing, false, true, "<Swing: " + pkg + ">")));
-    
+            "java.awt.event",
+            "java.beans",
+            "javax.accessibility",
+            "javax.swing",
+            "javax.swing.border",
+            "javax.swing.event",
+            "javax.swing.table",
+            "javax.swing.text",
+            "javax.swing.filechooser",
+            "javax.swing.plaf.metal"
+        ).forEach(pkg -> packageAnns.put(pkg, new LocatedTag(Tag.Swing, false, true, "<Swing: " + pkg + ">")));
+
         //An override we need:
         methodAnns.add(new MethodRef("java.awt.Window", "dispose", new LocatedTag(Tag.Any, false, false, "<AWT>")));
         methodAnns.add(new MethodRef("javafx.beans.property.ObjectPropertyBase", "get", new LocatedTag(Tag.Any, false, false, "<JavaFX Beans>")));
         methodAnns.add(new MethodRef("javafx.beans.property.SimpleObjectProperty", "<init>", new LocatedTag(Tag.Any, false, false, "<JavaFX Beans>")));
         methodAnns.add(new MethodRef("javafx.beans.property.SimpleBooleanProperty", "<init>", new LocatedTag(Tag.Any, false, false, "<JavaFX Beans>")));
-
+/*
         methodAnns.add(new MethodRef("javafx.embed.swing.SwingNode", "<init>", new LocatedTag(Tag.Any, false, false, "<SwingNode>")));
         methodAnns.add(new MethodRef("javafx.embed.swing.SwingNode", "setContent", new LocatedTag(Tag.Any, false, false, "<SwingNode>")));
         methodAnns.add(new MethodRef("javafx.embed.swing.SwingNode", "getContent", new LocatedTag(Tag.Any, false, false, "<SwingNode>")));
-
+*/
         methodAnns.add(new MethodRef("javafx.application.Application", "launch", new LocatedTag(Tag.Any, false, false, "<FX launch>")));
         methodAnns.add(new MethodRef("javafx.application.Application", "start", new LocatedTag(Tag.FXPlatform, false, false, "<FX application>")));
         methodAnns.add(new MethodRef("javafx.animation.AnimationTimer", "handle", new LocatedTag(Tag.FXPlatform, false, false, "<AnimationTimer>")));
-        
+
         // This one isn't actually true!  But it's used during printing so let's live:
         methodAnns.add(new MethodRef("javax.swing.JComponent", "paint", new LocatedTag(Tag.Any, false, false, "<Swing paint hack>")));
         // This is actually thread-safe:
         methodAnns.add(new MethodRef("javax.swing.JComponent", "getClientProperty", new LocatedTag(Tag.Any, false, false, "<Swing client properties>")));
         methodAnns.add(new MethodRef("javax.swing.JComponent", "putClientProperty", new LocatedTag(Tag.Any, false, false, "<Swing client properties>")));
-        
+
         classAnns.put("java.awt.event.InputEvent", new LocatedTag(Tag.Any, false, true, "<AWT>"));
         classAnns.put("java.awt.event.ComponentEvent", new LocatedTag(Tag.Any, false, true, "<AWT>"));
         classAnns.put("java.awt.event.KeyEvent", new LocatedTag(Tag.Any, false, true, "<AWT>"));
@@ -176,7 +214,7 @@ class TCScanner extends TreePathScanner<Void, Void>
         classAnns.put("java.awt.event.MouseWheelEvent", new LocatedTag(Tag.Any, false, true, "<AWT>"));
         classAnns.put("javax.swing.SizeRequirements", new LocatedTag(Tag.Any, false, true, "<Swing>"));
         classAnns.put("javax.swing.event.EventListenerList", new LocatedTag(Tag.Any, false, true, "<Swing>"));
-        
+
         // Swing Documents can be played with from any thread:
         classAnns.put("javax.swing.event.DocumentEvent", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
         classAnns.put("javax.swing.text.AttributeSet", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
@@ -196,19 +234,19 @@ class TCScanner extends TreePathScanner<Void, Void>
         classAnns.put("javax.swing.text.StyledDocument", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
         classAnns.put("javax.swing.text.DefaultStyledDocument", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
         classAnns.put("javax.swing.text.StyleContext", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
-        
+
         // Timers can be stopped and started from any thread, looking at the source:
         classAnns.put("javax.swing.Timer", new LocatedTag(Tag.Any, false, true, "<Swing Timer>"));
-        
-        
+
+
         // As far as I can tell, this one is thread safe, and we certainly use it as if it is:
         classAnns.put("javax.swing.KeyStroke", new LocatedTag(Tag.Any, false, false, "<Swing KeyStroke>"));
-        
+
         // You can call the runLater, etc, methods from any thread:
         classAnns.put("javafx.application.Platform", new LocatedTag(Tag.Any, false, false, "<JavaFX Platform>"));
         classAnns.put("java.awt.EventQueue", new LocatedTag(Tag.Any, false, false, "<Swing EventQueue>"));
         classAnns.put("javax.swing.SwingUtilities", new LocatedTag(Tag.Any, false, false, "<Swing EventQueue>"));
-        
+
         // These are dubious, but we've been calling these off the Swing thread for a while:
         classAnns.put("javax.swing.UIManager", new LocatedTag(Tag.Any, false, true, "<Swing UIManager>"));
         classAnns.put("javax.swing.UIManager.LookAndFeelInfo", new LocatedTag(Tag.Any, false, true, "<Swing UIManager>"));
@@ -216,7 +254,7 @@ class TCScanner extends TreePathScanner<Void, Void>
 
         // Desktop should be AWT-only, it seems:
         classAnns.put("java.awt.Desktop", new LocatedTag(Tag.Swing, false, true, "<AWT Desktop>"));
-        
+
         // Threads always run in their own unique thread, of course:
         // Could do: methodAnns.add(new MethodRef("java.lang.Thread", "run", new LocatedTag(Tag.Worker, false, true, "<Thread.run>")));
         // If we use class annotation with applyToSubclasses, it solves a lot of annoyances where inner class Threads get their package's tags:
@@ -238,48 +276,48 @@ class TCScanner extends TreePathScanner<Void, Void>
         methodAnns.add(new MethodRef("java.lang.Thread", "setName", new LocatedTag(Tag.Any, false, true, "<Thread>")));
         methodAnns.add(new MethodRef("java.lang.Thread", "isAlive", new LocatedTag(Tag.Any, false, true, "<Thread>")));
         methodAnns.add(new MethodRef("java.lang.Thread", "<init>", new LocatedTag(Tag.Any, false, true, "<Thread>")));
-        
-        
+
+
         methodAnns.add(new MethodRef("java.util.concurrent.ScheduledExecutorService", "submit", new LocatedTag(Tag.Worker, true, true, "<ScheduledExecutor>")));
-        
+
         // This makes Runnables ignore package tags:
         //classAnns.put("java.lang.Runnable", new LocatedTag(Tag.Any, true, false, "<Runnable>"));
-        
+
         // AWT events are dispatched from the Swing thread:
         methodAnns.add(new MethodRef("java.awt.DefaultKeyboardFocusManager", "processKeyEvent", new LocatedTag(Tag.Swing, false, false, "<AWT events>")));
     }
-    
+
     private static String typeToName(PathAnd<ClassTree> t)
     {
         return "." + t.item.getSimpleName().toString();
     }
-    
+
     private static <E> String enumToQual(E e)
     {
         return e.getClass().getSimpleName() + "." + e.toString();
     }
-    
+
     private <T> void addCur(LinkedList<PathAnd<T>> list, T cur)
     {
         list.add(new PathAnd<T>(cur, getCurrentPath()));
     }
-    
+
     @Override
     public Void visitCompilationUnit(CompilationUnitTree cu, Void arg1) {
         this.cu = cu;
         // If this is a package-info.java file, it will have package annotations
         // which we check for validity:
         checkSingle(cu.getPackageAnnotations().stream().map(t -> getSourceTag(t, () -> cu.getPackageName().toString() + " package")), cu);
-        
-        
+
+
         // If it (or an ancestor package) is in our ignore list, don't process the type:
         if (ignorePackages.stream().anyMatch(pkg -> cu.getPackageName().toString().startsWith(pkg)))
             return null;
         else
             return super.visitCompilationUnit(cu, arg1);
     }
-    
-    
+
+
 
     @Override
     public Void visitClass(ClassTree tree, Void arg1)
@@ -318,7 +356,7 @@ class TCScanner extends TreePathScanner<Void, Void>
     {
         TypeMirror methodType = trees.getTypeMirror(getCurrentPath());
         Collection<? extends TypeMirror> superTypes = allSuperTypes(trees.getTypeMirror(typeScopeStack.getLast().path), method);
-        
+
         // Skip methods with @SuppressWarnings("threadchecker")
         if (!suppressesChecker(method))
         {
@@ -340,7 +378,7 @@ class TCScanner extends TreePathScanner<Void, Void>
     /**
      * Examines a method, to see if the effective tags it has match against any overridden
      * method from a parent class.
-     * 
+     *
      * @param methodName The name of the method to check
      * @param methodTag The tag on the declaration of that method, in the class
      *                  in which it is being declared/invoked-on
@@ -352,7 +390,7 @@ class TCScanner extends TreePathScanner<Void, Void>
      *                   False if we are checking the method when it is being declared
      * @param errorLocation A suitable location (within the compilation unit this.cu)
      *                      at which to issue any compiler errors
-     * 
+     *
      * @return Returns the effective tag of the method
      */
     private LocatedTag checkAgainstOverridden(Name methodName, LocatedTag methodTag,
@@ -383,7 +421,7 @@ class TCScanner extends TreePathScanner<Void, Void>
             }
         }
         // subTag may still be null afterwards if there are no relevant tags
-        
+
         // A list of all tags we've found that apply to this method.  The String key
         // is not semantically important, but it's unique for each tag, and is used when communicating
         // the error back to the user to show the origin of each tag.
@@ -391,14 +429,14 @@ class TCScanner extends TreePathScanner<Void, Void>
         String subTagKey = "." + methodName;
         if (subTag != null)
             appliedTags.put(subTagKey, subTag);
-        
+
         // We look for matching declarations of the method in all super types
         for (TypeMirror st : superTypes.stream().map(types::capture).collect(Collectors.toList()))
         {
             // We must see if there any tags on the super-types themselves, as if they
             // have the applyToSubClasses flag as true (only set on Java library classes) then
             // we apply them to all methods in sub classes
-            
+
             // Look for class, then package:
             LocatedTag superClassTag = getRemoteTag(types.asElement(st), () -> st.toString(), errorLocation);
             if (superClassTag == null)
@@ -415,16 +453,16 @@ class TCScanner extends TreePathScanner<Void, Void>
                 }
             }
             if (superClassTag != null && (superClassTag.applyToAllSubclassMethods() /*&& types.asElement(st).getKind() != ElementKind.INTERFACE*/)
-                    && (subTag == null || subTagWasPackage)
-                    // Special case for Thread subclass constructors:
-                    && !(st.toString().equals("java.lang.Thread") && methodName.equals(elements.getName("<init>")))
-                    )
+                && (subTag == null || subTagWasPackage)
+                // Special case for Thread subclass constructors:
+                && !(st.toString().equals("java.lang.Thread") && methodName.equals(elements.getName("<init>")))
+            )
             {
                 appliedTags.put(st.toString(), superClassTag);
             }
-            
+
             boolean methodNameIsInit = methodName == null ? false : methodName.toString().equals("<init>");
-            
+
             for (Element superMember : types.asElement(st).getEnclosedElements())
             {
                 if (superMember instanceof ExecutableElement)
@@ -433,8 +471,8 @@ class TCScanner extends TreePathScanner<Void, Void>
                     // we are concerned with.  They should have the same name, and the
                     // same method signature.
                     if (methodName != null && !methodNameIsInit // Ignore constructors, they don't actually *override* the parent's
-                            && superMember.getSimpleName().equals(methodName)
-                            && types.isSubsignature((ExecutableType)methodType, (ExecutableType)types.asMemberOf((DeclaredType)st, superMember)))
+                        && superMember.getSimpleName().equals(methodName)
+                        && types.isSubsignature((ExecutableType)methodType, (ExecutableType)types.asMemberOf((DeclaredType)st, superMember)))
                     {
                         // First look at a tag on the method
                         LocatedTag superTag = getRemoteTag(superMember, () -> st.toString() + "." + superMember.getSimpleName().toString(), errorLocation);
@@ -442,10 +480,10 @@ class TCScanner extends TreePathScanner<Void, Void>
                         {
                             // Failing that, look for a tag in our methodAnns override map:
                             superTag = methodAnns.stream()
-                                    .filter(m -> m.matches(st, methodName, types.asMemberOf((DeclaredType)st, superMember)))
-                                    .map(m -> m.tag)
-                                    .findFirst()
-                                    .orElse(null);
+                                .filter(m -> m.matches(st, methodName, types.asMemberOf((DeclaredType)st, superMember)))
+                                .map(m -> m.tag)
+                                .findFirst()
+                                .orElse(null);
                             if (superTag == null)
                             {
                                 // Failing that, look for a tag on the class, then on the package:
@@ -459,13 +497,13 @@ class TCScanner extends TreePathScanner<Void, Void>
                                         superTag = getRemoteTag(pkg, () -> pkg.getQualifiedName().toString(), errorLocation);
                                         if (superTag == null)
                                         {
-                                            superTag = packageAnns.get(pkg.getQualifiedName().toString());                                            
+                                            superTag = packageAnns.get(pkg.getQualifiedName().toString());
                                         }
                                     }
                                 }
                             }
                         }
-                        
+
                         // If we have found any tag on the overridden method, store it:
                         if (superTag != null)
                         {
@@ -475,9 +513,9 @@ class TCScanner extends TreePathScanner<Void, Void>
                                 appliedTags.remove(subTagKey);
                                 subTag = null;
                             }
-                                
+
                         }
-                        
+
                         if (superTag != null && subTag == null)
                         {
                             // If the parent has a tag, and child doesn't, we simply inherit the tag from the parent method,
@@ -485,15 +523,15 @@ class TCScanner extends TreePathScanner<Void, Void>
                         }
                         else if (typeScopeStack.getLast().item.getSimpleName().length() == 0)
                         {
-                               // Ignore anonymous inner classes.  They have no callable methods except their parent's
-                               // and cannot be called except via the parent interface, so we can safely assume
-                               // that they must take all the tags of their parent, no more and no less)
+                            // Ignore anonymous inner classes.  They have no callable methods except their parent's
+                            // and cannot be called except via the parent interface, so we can safely assume
+                            // that they must take all the tags of their parent, no more and no less)
                         }
                         // If we are an invocation, we don't mind if parent has no tag and we do, we just mind if it exists and doesn't match
                         // If we are not an invocation (i.e. declaration) then we care if parent has no tag and we do
                         else if ((!invocation || superTag != null) && subTag != null && !subTag.tag.canOverride(superTag == null ? null : superTag.tag) && !subTag.ignoreParent())
                         {
-                            if (st.toString().equals("java.lang.Object") || st.toString().startsWith("java.lang.Comparable") || st.toString().startsWith("java.util.Comparator")) 
+                            if (st.toString().equals("java.lang.Object") || st.toString().startsWith("java.lang.Comparable") || st.toString().startsWith("java.util.Comparator"))
                             {
                                 // Don't complain about toString, equals, hashCode, compare
                             }
@@ -503,43 +541,43 @@ class TCScanner extends TreePathScanner<Void, Void>
                             }
                             //else if (methodName.toString().equals("run") && st.toString().equals("java.lang.Runnable") && matchesSpecial(subTag))
                             //{
-                                // Don't complain about Runnable.run if it's being given directly to a runLater-style method.
+                            // Don't complain about Runnable.run if it's being given directly to a runLater-style method.
                             //}
                             else
                                 issueError("\nOverridden method " + methodName + " can be called via parent " + st.toString() + ", tagged " + superTag + "\n  without thread tag: " + subTag, errorLocation);
                         }
                     }
                 }
-                
+
             }
         }
-        
+
         // Now that we have collected up relevant tags, see if there are conflicts:   
         final LocatedTag subTagFinal = subTag;
         if ((subTag == null || !subTag.ignoreParent()) && !"<init>".equals(methodName == null ? null : methodName.toString()) && appliedTags.values().stream().distinct().collect(Collectors.toList()).size() > 1
-                && (subTag == null || !appliedTags.values().stream().allMatch(t -> subTagFinal.tag.canOverride(t.tag))))
+            && (subTag == null || !appliedTags.values().stream().allMatch(t -> subTagFinal.tag.canOverride(t.tag))))
         {
             issueError("\nMethod " + methodName + " overrides parent methods with conflicting thread tags:\n" + appliedTags.entrySet().stream().map(t -> "  " + t.getKey() + ": " + t.getValue()).collect(Collectors.joining("\n")), errorLocation);
         }
-        
+
         // As long as there was no error, appliedTags has zero or one entries:
         return appliedTags.isEmpty() ? null : appliedTags.values().iterator().next();
     }
-    
+
 
     @Override
     public Void visitMethodInvocation(MethodInvocationTree invocation, Void arg1)
     {
         AtomicReference<Name> name = new AtomicReference<>();
-        
+
         // The method invocation, like manager.open("x.txt"), is split into the arguments
         // and the "method select", which is the "manager.open" part.  We use a visitor
         // to dig into the method select and pick out just the method name ("open"):
-        
+
         ExpressionTree lhs = invocation.getMethodSelect().accept(new SimpleTreeVisitor<ExpressionTree, Void>() {
             @Override
             public ExpressionTree visitMemberReference(
-                    MemberReferenceTree arg0, Void arg1) {
+                MemberReferenceTree arg0, Void arg1) {
                 name.set(arg0.getName());
                 return arg0.getQualifierExpression();
             }
@@ -550,7 +588,7 @@ class TCScanner extends TreePathScanner<Void, Void>
                 name.set(arg0.getIdentifier());
                 return arg0.getExpression();
             }
-            
+
             @Override
             public ExpressionTree visitIdentifier(IdentifierTree id, Void arg1)
             {
@@ -559,7 +597,7 @@ class TCScanner extends TreePathScanner<Void, Void>
             }
 
         }, null);
-        
+
         // Stores the type of the invocation target class containing the method
         TypeMirror invokeTargetType = null;
         try
@@ -568,7 +606,7 @@ class TCScanner extends TreePathScanner<Void, Void>
                 invokeTargetType = trees.getTypeMirror(trees.getPath(cu, lhs));
             else
                 invokeTargetType = trees.getTypeMirror(typeScopeStack.getLast().path);
-            
+
         }
         // Had some trouble here with unexpected NPE.  Now fixed, I think, so TODO remove
         catch (NullPointerException e)
@@ -577,11 +615,11 @@ class TCScanner extends TreePathScanner<Void, Void>
             e.printStackTrace();
             trees.printMessage(Kind.ERROR, "NPE", invocation, cu);
         }
-        
+
         List<TypeMirror> argTypes = invocation.getArguments().stream()
-                .map(arg -> trees.getTypeMirror(new TreePath(getCurrentPath(), arg)))
-                .collect(Collectors.toList());
-        
+            .map(arg -> trees.getTypeMirror(new TreePath(getCurrentPath(), arg)))
+            .collect(Collectors.toList());
+
         WrapDescent wrap = checkInvocation(name.get(), lhs, invokeTargetType, invocation.getMethodSelect().toString(), argTypes, arg1, invocation);
         Void r = scan(invocation.getTypeArguments(), arg1);
         r = scan(invocation.getMethodSelect(), arg1);
@@ -590,24 +628,24 @@ class TCScanner extends TreePathScanner<Void, Void>
         if (wrap.after != null) wrap.after.run();
         return r;
     }
-    
+
     private WrapDescent checkInvocation(Name name, Tree lhs, TypeMirror invokeTargetType, String methodSelect, List<TypeMirror> invokeArgTypes, Void arg1, Tree errorLocation)
     {
         if (inDebugClass())
         {
             System.err.println("Checking invocation: " + lhs + " # " + name + " # " + invokeTargetType + " # " + methodSelect);
         }
-        
+
         if (invokeTargetType == null)
         {
             // Odd javac-added method (e.g. access method), skip:
             return defaultReturn;
         }
-        
+
         invokeTargetType = types.capture(invokeTargetType);
-        
+
         Element invokedOn = types.asElement(invokeTargetType);
-        
+
         if (invokedOn == null)
         {
             if (invokeTargetType instanceof ArrayType)
@@ -620,71 +658,71 @@ class TCScanner extends TreePathScanner<Void, Void>
             }
             return defaultReturn;
         }
-        
+
         Collection<? extends TypeMirror> superTypes = allSuperTypes(trees.getTypeMirror(typeScopeStack.getLast().path), lhs);
-        
+
         LocatedTag invokedOnTag = null;
-        
+
         List<TypeMirror> candidateArgs = null;
-        
+
         final String nameString = name.toString();
-        
+
         if (nameString.equals("this"))
         {
-         // TODO handle this method (follow to appropriate constructor in same class)
+            // TODO handle this method (follow to appropriate constructor in same class)
         }
         else if (nameString.equals("super"))
         {
-         // TODO handle super method (follow to appropriate constructor in parent class)
+            // TODO handle super method (follow to appropriate constructor in parent class)
         }
         else
         {
             // Look for matching method and check its annotations
             List<ExecutableElement> candidates = getMembers(invokedOn, lhs == null /*Including enclosing if no prefix */, false).stream()
-              .filter(el -> el instanceof ExecutableElement)
-              .map(el -> (ExecutableElement)el)
-              .filter(el -> el.getSimpleName().toString().equals(nameString))
-              .filter(el -> el.isVarArgs() || invokeArgTypes == null || el.getParameters().size() == invokeArgTypes.size())
-              .collect(Collectors.toList());
-            
+                .filter(el -> el instanceof ExecutableElement)
+                .map(el -> (ExecutableElement)el)
+                .filter(el -> el.getSimpleName().toString().equals(nameString))
+                .filter(el -> el.isVarArgs() || invokeArgTypes == null || el.getParameters().size() == invokeArgTypes.size())
+                .collect(Collectors.toList());
+
             // Only look at types if there is still ambiguity:
             if (candidates.size() > 1)
             {
                 candidates = candidates.stream()
-                        .filter(el -> {
-                            if (el.isVarArgs() || invokeArgTypes == null)
-                                return true;
-                            
-                            for (int i = 0; i < invokeArgTypes.size(); i++)
-                            {
-                                if (!types.isAssignable(types.capture(invokeArgTypes.get(i)), el.getParameters().get(i).asType()))
-                                    return false;
-                            }
+                    .filter(el -> {
+                        if (el.isVarArgs() || invokeArgTypes == null)
                             return true;
-                        })
-                        .collect(Collectors.toList());
+
+                        for (int i = 0; i < invokeArgTypes.size(); i++)
+                        {
+                            if (!types.isAssignable(types.capture(invokeArgTypes.get(i)), el.getParameters().get(i).asType()))
+                                return false;
+                        }
+                        return true;
+                    })
+                    .collect(Collectors.toList());
             }
-            
+
             if (candidates.size() == 1)
             {
                 candidateArgs = candidates.get(0).getParameters().stream().
-                        map(e -> types.capture(e.asType())).collect(Collectors.toList());
+                    map(e -> types.capture(e.asType())).collect(Collectors.toList());
             }
-            
+
             final TypeMirror tmFinal = invokeTargetType;
-            List<LocatedTag> candidateDirectTags = candidates.stream().map(e -> 
+            List<LocatedTag> candidateDirectTags = candidates.stream().map(e ->
                 getRemoteTag(e, () -> tmFinal.toString() + "." + e.getSimpleName().toString(), errorLocation)
             ).distinct().collect(Collectors.toList());
-            
+
             // Sometimes we may not be clever enough yet to distinguish methods,
             // but if they are have the same tag applied (or no tags) then it doesn't
             // matter which is which.  We only have a problem if there are multiple distinct tags:
-            
+
             // TODO Although it also matters if the parent tags for each candidate differ!
             if (candidateDirectTags.size() > 1)
             {
                 trees.printMessage(Kind.ERROR, "\nCould not find unambigious declaration of method " + name + " in " + invokedOn.asType().toString() + " (and tags differ between resolutions)", errorLocation, cu);
-                
+
             }
             else if (candidates.size() == 0)
             {
@@ -739,44 +777,44 @@ class TCScanner extends TreePathScanner<Void, Void>
                 invokeTargetType = e.getEnclosingElement().asType(); //TODO deal with wildcards?
                 final TypeMirror invokeTargetTypeFinal = invokeTargetType;
                 LocatedTag directTag = getRemoteTag(e, () -> invokeTargetTypeFinal.toString() + "." + e.getSimpleName().toString(), errorLocation);
-            
+
                 Collection<? extends TypeMirror> invokeTargetSuperTypes = allSuperTypes(invokeTargetType, lhs);
-            
+
                 LocatedTag overridden = checkAgainstOverridden(name, directTag, e.asType(), invokeTargetSuperTypes, true, errorLocation);
-             
+
                 // Look for class, then package:
                 LocatedTag classTag = getRemoteTag(e.getEnclosingElement(), () -> e.getEnclosingElement().getSimpleName().toString(), errorLocation);
                 PackageElement pkg = elements.getPackageOf(e.getEnclosingElement());
                 LocatedTag packageDirectTag = getRemoteTag(pkg, () -> pkg.getQualifiedName().toString() + " package", errorLocation);
                 LocatedTag packagePriorTag = packageAnns.get(pkg.getQualifiedName().toString());
-                
+
                 LocatedTag superInherit = checkSingle(invokeTargetSuperTypes.stream()
-                        //.filter(ty -> types.asElement(ty).getKind() != ElementKind.INTERFACE)
-                        .map(ty -> {
-                            LocatedTag t = getRemoteTag(types.asElement(ty), () -> ty.toString(), errorLocation);
+                    //.filter(ty -> types.asElement(ty).getKind() != ElementKind.INTERFACE)
+                    .map(ty -> {
+                        LocatedTag t = getRemoteTag(types.asElement(ty), () -> ty.toString(), errorLocation);
+                        if (t == null)
+                        {
+                            PackageElement superPkg = elements.getPackageOf(types.asElement(ty));
+                            t = getRemoteTag(superPkg, () -> superPkg.getQualifiedName().toString() + " package", errorLocation);
                             if (t == null)
                             {
-                                PackageElement superPkg = elements.getPackageOf(types.asElement(ty));
-                                t = getRemoteTag(superPkg, () -> superPkg.getQualifiedName().toString() + " package", errorLocation);
-                                if (t == null)
-                                {
-                                    t = packageAnns.get(superPkg.getQualifiedName().toString());
-                                }
+                                t = packageAnns.get(superPkg.getQualifiedName().toString());
                             }
-                            return t;
-                        })
-                        .filter(t -> t != null && t.applyToAllSubclassMethods()), errorLocation);
-                
+                        }
+                        return t;
+                    })
+                    .filter(t -> t != null && t.applyToAllSubclassMethods()), errorLocation);
+
                 //System.err.println("Candidates: " + candidates.stream().map(Object::toString).collect(Collectors.joining("\n\n")));
                 LocatedTag methodAnnTag = methodAnns.stream()
-                        .filter(m -> m.matches(invokeTargetTypeFinal, name, types.asMemberOf((DeclaredType)invokeTargetTypeFinal, e)))
-                        .map(m -> m.tag)
-                        .findFirst()
-                        .orElse(null);
-                
+                    .filter(m -> m.matches(invokeTargetTypeFinal, name, types.asMemberOf((DeclaredType)invokeTargetTypeFinal, e)))
+                    .map(m -> m.tag)
+                    .findFirst()
+                    .orElse(null);
+
                 List<LocatedTag> tagList = Arrays.asList(directTag, methodAnnTag,
-                        classAnns.get(types.erasure(e.getEnclosingElement().asType()).toString()),
-                        classTag, packageDirectTag, packagePriorTag, overridden, superInherit);
+                    classAnns.get(types.erasure(e.getEnclosingElement().asType()).toString()),
+                    classTag, packageDirectTag, packagePriorTag, overridden, superInherit);
                 invokedOnTag = tagList.stream().filter(t -> t != null).findFirst().orElse(null);
                 if (inDebugClass())
                 {
@@ -793,16 +831,16 @@ class TCScanner extends TreePathScanner<Void, Void>
                 }
             }
         }
-        
+
         if (invokedOnTag != null)
         {
             // The method has a tag, so we need to check if we match it
             if (inDebugClass())
                 System.err.println("Finding tag for: " + lhs + "." + methodSelect + "(...)");
             Optional<LocatedTag> ann = getCurrentTag(superTypes, errorLocation);
-            
+
             boolean sameInstance = lhs == null;
-            
+
             if ((ann.isPresent() == false && invokedOnTag.tag != Tag.Any) || (ann.isPresent() && !ann.get().tag.canCall(invokedOnTag.tag, sameInstance)))
             {
                 if (!inSynthetic())
@@ -810,7 +848,7 @@ class TCScanner extends TreePathScanner<Void, Void>
                     issueError("\n    Method " + invokeTargetType.toString() + "." + name + " being called requires " + invokedOnTag + "\nbut this code may be running on another thread: " + ann.map(Object::toString).orElse("unspecified") + " lambda: " + lambdaScopeStack.size() + " " + lambdaScopeStack.stream().map(x -> "" + x).collect(Collectors.joining(", ")), errorLocation);
                 }
             }
-            
+
             if (ann.isPresent() && (ann.get().tag == Tag.FX || ann.get().tag == Tag.FX) && Arrays.asList("SwingUtilities.invokeAndWait", "EventQueue.invokeAndWait").contains(methodSelect))
             {
                 issueError("\n    Swing invokeAndWait method is being called, but from tag " + ann.get() + " (you cannot make FX wait for Swing)", errorLocation);
@@ -853,7 +891,7 @@ class TCScanner extends TreePathScanner<Void, Void>
             return s.contains("$");
         });
     }
-    
+
     private Optional<LocatedTag> getCurrentTag(Collection<? extends TypeMirror> superTypes,
                                                Tree errorLocation)
     {
@@ -863,7 +901,7 @@ class TCScanner extends TreePathScanner<Void, Void>
         LocatedTag methodAnn;
         LocatedTag classAnn;
         LocatedTag knownMethodAnn = null;
-        
+
         if (methodScopeStack.isEmpty() || (methodScopeStack.getLast().item == null && methodScopeStack.size() == 1))
         {
             // We are in an initializer block for a top-level class or a named inner class.  No method annotations but there might be
@@ -879,7 +917,7 @@ class TCScanner extends TreePathScanner<Void, Void>
             // (if methodScopeStack was size 1, we would have taken previous branch.  We are
             // only here if we are inside a method, and you can only have an initializer block
             // inside a method by using an anonymous inner class.)
-            
+
             // The initializer will be run on object creation, which occurs immediately inside the method
             // So we just grab the tag info from the surrounding method (and its class):
             MethodTree surroundingMethod = methodScopeStack.get(methodScopeStack.size() - 2).item;
@@ -888,13 +926,13 @@ class TCScanner extends TreePathScanner<Void, Void>
             methodAnn = getSourceTag(surroundingMethod, () -> cu.getPackageName().toString() + typeScopeStack.stream().limit(typeScopeStack.size() - 1).map(TCScanner::typeToName).collect(Collectors.joining(".")));
             classAnn = getSourceTag(typeScopeStack.get(typeScopeStack.size() - 2).item, () -> cu.getPackageName().toString() + typeScopeStack.stream().limit(typeScopeStack.size() - 2).map(TCScanner::typeToName).collect(Collectors.joining(".")));
             knownMethodAnn = methodAnns.stream()
-                    .filter(m -> allSuperTypes(
-                            trees.getTypeMirror(typeScopeStack.get(typeScopeStack.size() - 2).path),
-                            errorLocation)
-                                .stream()
-                                .anyMatch(ty -> m.matches(ty, methodName, methodType)))
-                    .map(m -> m.tag)
-                    .findFirst().orElse(null);
+                .filter(m -> allSuperTypes(
+                    trees.getTypeMirror(typeScopeStack.get(typeScopeStack.size() - 2).path),
+                    errorLocation)
+                    .stream()
+                    .anyMatch(ty -> m.matches(ty, methodName, methodType)))
+                .map(m -> m.tag)
+                .findFirst().orElse(null);
         }
         else
         {
@@ -904,17 +942,17 @@ class TCScanner extends TreePathScanner<Void, Void>
             methodAnn = getSourceTag(methodScopeStack.getLast().item, () -> cu.getPackageName().toString() + typeScopeStack.stream().limit(typeScopeStack.size()).map(TCScanner::typeToName).collect(Collectors.joining(".")));
             classAnn = getSourceTag(typeScopeStack.getLast().item, () -> cu.getPackageName().toString() + typeScopeStack.stream().limit(typeScopeStack.size() - 1).map(TCScanner::typeToName).collect(Collectors.joining(".")));
             knownMethodAnn = methodAnns.stream()
-                    .filter(m -> allSuperTypes(trees.getTypeMirror(typeScopeStack.getLast().path),
-                            errorLocation).stream().anyMatch(ty -> m.matches(ty, methodName, methodType)))
-                    .map(m -> m.tag)
-                    .findFirst().orElse(null);
+                .filter(m -> allSuperTypes(trees.getTypeMirror(typeScopeStack.getLast().path),
+                    errorLocation).stream().anyMatch(ty -> m.matches(ty, methodName, methodType)))
+                .map(m -> m.tag)
+                .findFirst().orElse(null);
         }
-        
+
         LocatedTag inheritedTag = methodScopeStack.isEmpty() ? null : checkAgainstOverridden(methodName, methodAnn, methodType, superTypes, false, errorLocation);
         PackageElement pkg = (PackageElement)trees.getElement(typeScopeStack.getFirst().path).getEnclosingElement();
-        LocatedTag packageAnn = getRemoteTag(pkg, () -> pkg.getQualifiedName().toString() + " package", errorLocation);  
-                //cu.getPackageAnnotations().stream().map(t -> getSourceTag(t, cu.getPackageName().toString() + " package")).filter(t -> t != null).findFirst().orElse(null);
-        
+        LocatedTag packageAnn = getRemoteTag(pkg, () -> pkg.getQualifiedName().toString() + " package", errorLocation);
+        //cu.getPackageAnnotations().stream().map(t -> getSourceTag(t, cu.getPackageName().toString() + " package")).filter(t -> t != null).findFirst().orElse(null);
+
         LocatedTag lambdaAnn = null;
         if (inDebugClass())
             System.err.println("  >>Lambda stack size: " + lambdaScopeStack.size());
@@ -928,26 +966,26 @@ class TCScanner extends TreePathScanner<Void, Void>
                 break;
             }
         }
-        
+
         Optional<LocatedTag> ann = Optional.empty();
-            
+
         // If we are inside a lambda, it overrides everything else:
         if (lambdaAnn != null)
             ann = Optional.of(lambdaAnn);
-        // If there is method, it overrides class:
+            // If there is method, it overrides class:
         else if (methodAnn != null)
             ann = Optional.of(methodAnn);
         else if (knownMethodAnn != null)
             ann = Optional.of(knownMethodAnn);
-        // Otherwise if there is class, overrides package:
+            // Otherwise if there is class, overrides package:
         else if (classAnn != null)
             ann = Optional.of(classAnn);
-        // Otherwise if there is package, use that:
+            // Otherwise if there is package, use that:
         else if (packageAnn != null)
             ann = Optional.of(packageAnn);
         else if (packageAnns.containsKey(cu.getPackageName().toString()))
             ann = Optional.of(packageAnns.get(cu.getPackageName().toString()));
-        // Or an inherited method/class:
+            // Or an inherited method/class:
         else if (inheritedTag != null)
             ann = Optional.of(inheritedTag);
         return ann;
@@ -971,10 +1009,10 @@ class TCScanner extends TreePathScanner<Void, Void>
         return false;
     }
     */
-    
+
     private LocatedTag fromSpecial(String typeName, String call, Optional<LocatedTag> calledFrom_, Tree errorLocation)
     {
-        Tag calledFrom = calledFrom_.map(lt -> lt.tag).orElse(Tag.Any); 
+        Tag calledFrom = calledFrom_.map(lt -> lt.tag).orElse(Tag.Any);
         if (Arrays.asList("Platform.runLater").contains(call))
         {
             if (calledFrom == Tag.FXPlatform || calledFrom == Tag.FX)
@@ -989,11 +1027,11 @@ class TCScanner extends TreePathScanner<Void, Void>
         }
         else if (Arrays.asList("background.execute").contains(call))
             return new LocatedTag(Tag.Worker, true, true, "<Executor.execute>");
-        //else if (typeName.startsWith("java.") && call.endsWith("forEach")) // Bit hacky
-        //{
-        //    System.err.println("Found a forEach: " + call + " so returning: " + calledFrom_);
-        //    return calledFrom_.orElse(null);
-        //}
+            //else if (typeName.startsWith("java.") && call.endsWith("forEach")) // Bit hacky
+            //{
+            //    System.err.println("Found a forEach: " + call + " so returning: " + calledFrom_);
+            //    return calledFrom_.orElse(null);
+            //}
         else
             return null;
     }
@@ -1030,16 +1068,16 @@ class TCScanner extends TreePathScanner<Void, Void>
         {
             return Collections.emptyList();
         }
-        
+
         LocatedTag ttag = getRemoteTag(types.asElement(orig), () -> orig.toString(), errorLocation);
         if (ttag != null && ttag.ignoreParent())
         {
             return Collections.emptyList();
         }
-        
+
         List<? extends TypeMirror> supers = types.directSupertypes(orig);
         return Stream.concat(supers.stream(), supers.stream()
-                .flatMap(t -> allSuperTypes(t, errorLocation).stream())).collect(Collectors.toList());
+            .flatMap(t -> allSuperTypes(t, errorLocation).stream())).collect(Collectors.toList());
     }
 
     /**
@@ -1068,7 +1106,7 @@ class TCScanner extends TreePathScanner<Void, Void>
             }
             if (tag != null)
                 return new LocatedTag(tag, ignoreParent, requireSynchronized, false, info);
-            
+
             throw new IllegalStateException("Unknown tag: " + a.getArguments().get(0) + " in " + info);
         }
         return null;
@@ -1106,12 +1144,12 @@ class TCScanner extends TreePathScanner<Void, Void>
         //Debug:
         //if ("bluej.pkgmgr.PkgMgrFrame.setStatus".equals(info))
         //    throw new IllegalStateException("" + stringValues.stream().collect(Collectors.joining("++")) + " " + ignoreParent);
-        
+
         if (tag != null)
             return new LocatedTag(tag, ignoreParent, requireSynchronized, false, info);
         throw new IllegalArgumentException("Unknown tag: " + stringValues.stream().collect(Collectors.joining(", ")) + " in " + cu.getSourceFile().toString());
     }
-    
+
     /**
      * Fetches a tag by looking at an Element, which may well come from a separate compilation unit
      * The name is meant to contrast with getSourceTag, which does come from the current compilation unit
@@ -1120,7 +1158,7 @@ class TCScanner extends TreePathScanner<Void, Void>
     {
         return checkSingle(e.getAnnotationMirrors().stream().map(m -> getRemoteTag(m, info)), errorLocation);
     }
-    
+
     /**
      * Fetches a tag by looking at annotations on a given piece of program source
      */
@@ -1136,7 +1174,7 @@ class TCScanner extends TreePathScanner<Void, Void>
     {
         return checkSingle(t.getModifiers().getAnnotations().stream().map(a -> getSourceTag(a, () -> enclosingStem.get() + "." + t.getName().toString() + " field")), t);
     }
-    
+
     /**
      * Fetches a tag by looking at annotations on a given piece of program source
      */
@@ -1158,7 +1196,7 @@ class TCScanner extends TreePathScanner<Void, Void>
             return false;
         });
     }
-    
+
     /**
      * Checks that the given stream of tags only contains a single distinct kind of tag (or none).
      * If it has multiple distinct tags, a compiler error is issued at the given location.
@@ -1172,7 +1210,7 @@ class TCScanner extends TreePathScanner<Void, Void>
         }
         return tags.isEmpty() ? null : tags.get(0);
     }
-    
+
     @Override
     public Void visitLambdaExpression(LambdaExpressionTree node, Void p)
     {
@@ -1212,11 +1250,11 @@ class TCScanner extends TreePathScanner<Void, Void>
         // Look for the method we must be overriding:
         Element lambdaClassElement = types.asElement(lambdaClassType);
         List<Element> lambdaClassMembers = getMembers(lambdaClassElement, false, true)
-                .stream()
-                .filter(e -> e instanceof ExecutableElement)
-                .filter(e -> !e.getModifiers().contains(Modifier.STATIC) && !e.getModifiers().contains(Modifier.DEFAULT))
-                .filter(e -> !objectMembers.contains(e.getSimpleName().toString()))
-                .collect(Collectors.toList());
+            .stream()
+            .filter(e -> e instanceof ExecutableElement)
+            .filter(e -> !e.getModifiers().contains(Modifier.STATIC) && !e.getModifiers().contains(Modifier.DEFAULT))
+            .filter(e -> !objectMembers.contains(e.getSimpleName().toString()))
+            .collect(Collectors.toList());
         if (lambdaClassMembers.size() != 1)
         {
             if (issueError && !(lambdaClassType.getKind() == TypeKind.TYPEVAR))
@@ -1234,10 +1272,10 @@ class TCScanner extends TreePathScanner<Void, Void>
         }
         if (lambdaAnn != null)
             return Optional.of(lambdaAnn);
-        
+
         if (inDebugClass())
             System.err.println("  >>Getting remote tag for " + lambdaClassMembers.get(0));
-        
+
         // Check for tags put on the method in the lambda's class:
         lambdaAnn = getRemoteTag(lambdaClassMembers.get(0), () -> "", errorLocation);
         if (inDebugClass())
@@ -1409,7 +1447,7 @@ class TCScanner extends TreePathScanner<Void, Void>
                 }
                 return null;
             }
-            
+
         }, null);
     }
 
@@ -1417,9 +1455,9 @@ class TCScanner extends TreePathScanner<Void, Void>
     public Void visitNewClass(NewClassTree node, Void arg1)
     {
         List<TypeMirror> argTypes = node.getArguments().stream()
-                .map(arg -> trees.getTypeMirror(new TreePath(getCurrentPath(), arg)))
-                .collect(Collectors.toList());
-        
+            .map(arg -> trees.getTypeMirror(new TreePath(getCurrentPath(), arg)))
+            .collect(Collectors.toList());
+
         WrapDescent wrap = checkInvocation(elements.getName("<init>"), node.getIdentifier(), trees.getTypeMirror(trees.getPath(cu, node.getIdentifier())), null, argTypes, arg1, node);
         if (wrap.before != null) wrap.before.run();
         Void r = super.visitNewClass(node, arg1);
@@ -1450,7 +1488,7 @@ class TCScanner extends TreePathScanner<Void, Void>
         {
             TypeElement el = elements.getTypeElement(className);
             if (el == null)
-                throw new NoSuchMethodException();
+                throw new NoSuchMethodException("Class: " + className);
             this.classType = el.asType();
             this.methodName = methodName;
             this.methodType = elements.getAllMembers(el).stream().filter(e -> methodName.equals(e.getSimpleName().toString())).map(Element::asType).collect(Collectors.toList());
@@ -1461,18 +1499,18 @@ class TCScanner extends TreePathScanner<Void, Void>
         {
             // Check methodName first as it's quickest:
             return this.methodName.equals(methodName.toString()) &&
-                     isSameType(types.erasure(this.classType), types.erasure(classType)) &&
-                     // TODO should we re-enable parameter comparison?
-                     (true || this.methodType.contains(methodType));
-        }        
-        
+                isSameType(types.erasure(this.classType), types.erasure(classType)) &&
+                // TODO should we re-enable parameter comparison?
+                (true || this.methodType.contains(methodType));
+        }
+
     }
 
     private class WrapDescent
     {
         Runnable before;
         Runnable after;
-        
+
         public WrapDescent(Runnable before, Runnable after)
         {
             this.before = before;
@@ -1487,27 +1525,27 @@ class TCScanner extends TreePathScanner<Void, Void>
         // Can't have unsafe field accesses in constructors or initialisers:
         if (methodScopeStack.size() > 0 && (methodScopeStack.getLast().item == null || methodScopeStack.getLast().item.getReturnType() == null))
             return super.visitIdentifier(node, aVoid);
-        
+
         LocatedTag tag = fields.get(node.getName().toString());
-        if (tag != null) 
+        if (tag != null)
         {
             // Our present tag:
             Collection<? extends TypeMirror> superTypes = allSuperTypes(
-                    trees.getTypeMirror(typeScopeStack.getLast().path), node);
+                trees.getTypeMirror(typeScopeStack.getLast().path), node);
 
             Optional<LocatedTag> ann = getCurrentTag(superTypes, node);
-            
+
             if (ann.isPresent() && !ann.get().tag.canCall(tag.tag, true))
             {
                 issueError("\n    Field " + node.getName() + " being used requires " + tag + "\nbut this code may be running on another thread: " + ann.map(Object::toString).orElse("unspecified"), node);
             }
-            
+
             if (tag.requireSynchronized() && methodScopeStack.size() > 0 && methodScopeStack.getLast().item != null && !methodScopeStack.getLast().item.getModifiers().getFlags().contains(Modifier.SYNCHRONIZED) && !inSynchronizedThis)
             {
                 issueError("\n    Field " + node.getName() + " being used requires synchronized but method is not synchronized", node);
             }
         }
-        
+
         return super.visitIdentifier(node, aVoid);
     }
 
@@ -1548,7 +1586,7 @@ class TCScanner extends TreePathScanner<Void, Void>
         
         Thus you should only get field problems flagged when some methods have different tags to the class as a whole, or you use fields from inside invokeLater/runLater.  Otherwise, all your methods are assumed to be running on the same thread, and thus there are no race hazards.
         */
-        
+
         if (typeScopeStack.size() == 1 && methodScopeStack.size() == 0)
         {
             // Field of top-level class.  Look for tags on the field itself:
@@ -1605,11 +1643,11 @@ class TCScanner extends TreePathScanner<Void, Void>
                         }
                     }
                 }
-                
+
             }
             // Give it default tag from class if none explicitly:
             Collection<? extends TypeMirror> superTypes = allSuperTypes(
-                    trees.getTypeMirror(typeScopeStack.getLast().path), node);
+                trees.getTypeMirror(typeScopeStack.getLast().path), node);
 
             Optional<LocatedTag> ann = getCurrentTag(superTypes, cu);
             fields.put(node.getName().toString(), ann.orElse(null));
@@ -1623,7 +1661,7 @@ class TCScanner extends TreePathScanner<Void, Void>
         // you may get a different one than is in the JDK.  So as a backup we use qualified name
         // comparison if the types aren't found to be the same:
         return types.isSameType(a, b)
-             || a.toString().equals(b.toString());
+            || a.toString().equals(b.toString());
 
     }
 }

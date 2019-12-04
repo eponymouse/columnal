@@ -30,20 +30,20 @@
         <dependency>
             <groupId>org.checkerframework</groupId>
             <artifactId>checker-qual</artifactId>
-            <version>2.10.0</version>
+            <version>3.0.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.checkerframework</groupId>
             <artifactId>checker</artifactId>
-            <version>2.10.0</version>
+            <version>3.0.1</version>
             <scope>provided</scope>
         </dependency>
         <!-- The annotated JDK to use (change to jdk7 if using Java 7) -->
         <dependency>
             <groupId>org.checkerframework</groupId>
             <artifactId>jdk8</artifactId>
-            <version>2.10.0</version>
+            <version>3.0.1</version>
             <scope>provided</scope>
         </dependency>
 
@@ -90,6 +90,22 @@
             <artifactId>jna-platform</artifactId>
             <version>5.4.0</version>
             <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
+            <version>11.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>11.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>11.0.2</version>
         </dependency>
     </dependencies>
 
