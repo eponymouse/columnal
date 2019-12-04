@@ -47,14 +47,14 @@ public class ConvertToR
         // A table is a generic list of columns with class data.frame
         return RUtility.genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c, tableType)),
             RUtility.makeClassAttributes(tableType == TableType.DATA_FRAME ? RUtility.CLASS_DATA_FRAME : RUtility.CLASS_TIBBLE, ImmutableMap.<String, RValue>of(
-                "names", RUtility.stringVector(Utility.<Column, Optional<@Value String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(usToRColumn(c.getName(), tableType)))), null),
+                "names", RUtility.stringVector(Utility.<Column, Optional<@Value String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(usToRColumn(c.getName(), tableType, false)))), null),
                 "row.names", RUtility.intVector(new int[] {RUtility.NA_AS_INTEGER, -recordSet.getLength()}, null)
             )), true);
     }
 
-    public static String usToRColumn(ColumnId columnId, TableType tableType)
+    public static String usToRColumn(ColumnId columnId, TableType tableType, boolean quotesIfNeeded)
     {
-        return tableType == TableType.TIBBLE ? columnId.getRaw() : columnId.getRaw().replace(" ", ".");
+        return tableType == TableType.TIBBLE ? (columnId.getRaw().contains(" ") && quotesIfNeeded ? "\""+ columnId.getRaw() + "\"" : columnId.getRaw()) : columnId.getRaw().replace(" ", ".");
     }
 
     private static RValue convertColumnToR(Column column, TableType tableType) throws UserException, InternalException

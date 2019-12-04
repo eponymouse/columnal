@@ -111,7 +111,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
                     @Override
                     protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
-                        expressionTextArea.replaceSelection(content);
+                        FXUtility.mouse(EditRTransformationDialog.this).insertIntoExpression(content);
                     }
                 }).withStyle(new StyledCSS("r-insertable-link")));
             }
@@ -125,7 +125,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
                     @Override
                     protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
-                        expressionTextArea.replaceSelection(content);
+                        FXUtility.mouse(EditRTransformationDialog.this).insertIntoExpression(content);
                     }
                 }).withStyle(new StyledCSS("r-insertable-link")));
             }
@@ -133,7 +133,13 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
         }));
         refresh.setCycleCount(Animation.INDEFINITE);
         refresh.playFrom(Duration.millis(900));
-        ScrollPaneFill scroll = new ScrollPaneFill(textFlow);
+        ScrollPaneFill scroll = new ScrollPaneFill(textFlow) {
+            @Override
+            public void requestFocus()
+            {
+                // Don't receive focus
+            }
+        };
         scroll.setMinHeight(75);
         getDialogPane().setContent(new LabelledGrid(
             LabelledGrid.labelledGridRow("edit.r.packages", "edit-r/packages", packageField),
@@ -171,7 +177,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
                         tableList.addToEnd(p.getFirst().getId().getRaw(), false);
                     }
                     
-                    expressionTextArea.replaceSelection(ConvertFromR.usToRTable(p.getFirst().getId()) + (p.getSecond() == null ? "" : "$" + ConvertToR.usToRColumn(p.getSecond(), TableType.TIBBLE)));
+                    FXUtility.mouse(EditRTransformationDialog.this).insertIntoExpression(ConvertFromR.usToRTable(p.getFirst().getId()) + (p.getSecond() == null ? "" : "$" + ConvertToR.usToRColumn(p.getSecond(), TableType.TIBBLE, true)));
                 }
                 else if (focused instanceof PickTablePane)
                 {
@@ -183,6 +189,12 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
             refresh.stop();
             parent.disablePickingMode();
         });
+    }
+    
+    private void insertIntoExpression(String content)
+    {
+        expressionTextArea.replaceSelection(content);
+        FXUtility.runAfter(expressionTextArea::requestFocus);
     }
     
     // First is tables, second is columns
@@ -205,7 +217,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
                     RecordSet rs = parent.getManager().getSingleTableOrThrow(tableId).getData();
                     for (ColumnId columnId : rs.getColumnIds())
                     {
-                        columnVars.add(ConvertFromR.usToRTable(tableId) + "$" + ConvertToR.usToRColumn(columnId, TableType.TIBBLE));
+                        columnVars.add(ConvertFromR.usToRTable(tableId) + "$" + ConvertToR.usToRColumn(columnId, TableType.TIBBLE, true));
                     }
                 }
                 catch (InternalException | UserException e)
