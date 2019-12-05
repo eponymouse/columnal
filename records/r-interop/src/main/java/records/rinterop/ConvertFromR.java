@@ -33,6 +33,7 @@ import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.RecordMap;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.HashMap;
@@ -163,6 +164,38 @@ public class ConvertFromR
             @Override
             public Pair<DataType, ImmutableList<@Value Object>> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
             {
+                if (attributes != null)
+                {
+                    ImmutableMap<String, RValue> attrMap = RUtility.pairListToMap(attributes);
+                    RValue namesRValue = attrMap.get("names");
+                    if (namesRValue != null)
+                    {
+                        ImmutableList<Optional<@Value String>> names = namesRValue.visit(new SpecificRVisitor<ImmutableList<Optional<@Value String>>>()
+                        {
+                            @Override
+                            public ImmutableList<Optional<@Value String>> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
+                            {
+                                return values;
+                            }
+                        });
+                        if (names.size() != values.size())
+                        {
+                            throw new UserException("List has named values, but names not same length as items");
+                        }
+                        HashMap<@ExpressionIdentifier String, DataType> fieldTypes = new HashMap<>();
+                        HashMap<@ExpressionIdentifier String, @Value Object> fieldValues = new HashMap<>();
+                        for (int i = 0; i < names.size(); i++)
+                        {
+                            @ExpressionIdentifier String name = IdentifierUtility.fixExpressionIdentifier(names.get(i).orElse(DataTypeUtility.value("")), IdentifierUtility.identNum("Field", i));
+                            Pair<DataType, ImmutableList<@Value Object>> val = convertRToTypedValueList(typeManager, values.get(i));
+                            // TODO check duplicate names
+                            fieldTypes.put(name, val.getSecond().size() == 1 ? val.getFirst() : DataType.array(val.getFirst()));
+                            fieldValues.put(name, val.getSecond().size() == 1 ? val.getSecond().get(0) : DataTypeUtility.value(val.getSecond()));
+                            
+                        }
+                        return new Pair<>(DataType.record(fieldTypes), ImmutableList.<@Value Object>of(DataTypeUtility.value(new RecordMap(fieldValues))));
+                    }
+                }
                 return rListToValueList(typeManager, values);
             }
 
@@ -277,6 +310,9 @@ public class ConvertFromR
         // The type here will be the type of the object on the right
         ImmutableList<Pair<DataType, @Value Object>> typedPairs = Utility.<RValue, Pair<DataType, @Value Object>>mapListExI(values, v -> {
             Pair<DataType, ImmutableList<@Value Object>> r = convertRToTypedValueList(typeManager, v);
+            if (r.getSecond().size() == 1)
+                return r.replaceSecond(r.getSecond().get(0));
+            else
                 return new Pair<>(DataType.array(r.getFirst()), DataTypeUtility.value(r.getSecond()));
         });
         Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> m = generaliseType(typeManager, Utility.mapListExI(typedPairs, p -> p.getFirst()));

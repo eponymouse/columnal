@@ -1,5 +1,6 @@
 package test.importExport;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -31,6 +32,7 @@ import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.RecordMap;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -64,6 +66,33 @@ public class TestRExecution
         TypeManager typeManager = new TypeManager(new UnitManager());
         Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("\"Möøõsę!\"")).get(0).getSecond().getColumns().get(0);
         DataTestUtil.assertValueListEqual("Column", ImmutableList.of("Möøõsę!"), DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
+    }
+
+    @Test
+    public void testSimple4() throws UserException, InternalException
+    {
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("4611686018427387904L")).get(0).getSecond().getColumns().get(0);
+        DataTestUtil.assertValueListEqual("Column", ImmutableList.of(new BigDecimal("4611686018427387900")), DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
+    }
+
+    @SuppressWarnings("valuetype")
+    @Test
+    public void testRecord() throws UserException, InternalException
+    {
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("list(x=5, y= 7)")).get(0).getSecond().getColumns().get(0);
+        DataTestUtil.assertValueListEqual("Column", ImmutableList.of(new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", 5, "y", 7))), DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
+    }
+
+    @SuppressWarnings("valuetype")
+    @Test
+    public void testRecord2() throws UserException, InternalException
+    {
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        ImmutableList<@Value Object> expected = ImmutableList.of(new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", 5, "y", 7)), new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", new BigDecimal("1.2"), "y", -3)));
+        Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("list(list(x=5, y= 7), list(x=1.2, y= -3))")).get(0).getSecond().getColumns().get(0);
+        DataTestUtil.assertValueListEqual("Column", expected, DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
     
     @Test
