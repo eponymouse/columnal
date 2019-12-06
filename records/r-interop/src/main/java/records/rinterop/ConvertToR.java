@@ -5,6 +5,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Booleans;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
@@ -39,6 +40,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Optional;
+import java.util.TreeSet;
 
 public class ConvertToR
 {
@@ -290,6 +292,31 @@ public class ConvertToR
             @Override
             public RValue record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
             {
+                if (allowSubLists)
+                {
+                    ImmutableList.Builder<RValue> listOfRecords = ImmutableList.builderWithExpectedSize(length);
+                    for (int outer = 0; outer < length; outer++)
+                    {
+                        @Value Record outerValue = g.get(outer);
+                        ImmutableMap<@ExpressionIdentifier String, @Value Object> content = outerValue.getFullContent();
+                        
+                        ImmutableList.Builder<Optional<@Value String>> fieldNames = ImmutableList.builderWithExpectedSize(content.size());
+                        ImmutableList.Builder<RValue> fieldValues = ImmutableList.builderWithExpectedSize(content.size());
+
+                        @SuppressWarnings("keyfor") // Shouldn't need this; should be fine.s
+                        TreeSet<@KeyFor("content") @ExpressionIdentifier String> orderedKeys = new TreeSet<@KeyFor("content") @ExpressionIdentifier String>(content.keySet());
+                        for (@KeyFor("content") @ExpressionIdentifier String name : orderedKeys)
+                        {
+                            DataType fieldType = types.get(name);
+                            if (fieldType == null)
+                                throw new InternalException("Could not find type for field: \"" + name + "\"");
+                            fieldValues.add(RUtility.getListItem(convertListToR(fieldType.fromCollapsed((i, prog) -> content.get(name)), 1, allowSubLists), 0));
+                            fieldNames.add(Optional.<@Value String>of(DataTypeUtility.value(name)));
+                        }
+                        listOfRecords.add(RUtility.genericVector(fieldValues.build(), RUtility.pairListFromMap(ImmutableMap.of("names", RUtility.stringVector(fieldNames.build(), null))), false));
+                    }
+                    return RUtility.genericVector(listOfRecords.build(), null, false);
+                }
                 throw new UserException("Cannot convert records to R");
             }
 

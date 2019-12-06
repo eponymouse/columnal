@@ -53,6 +53,7 @@ import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.Record;
+import utility.Utility.RecordMap;
 
 import java.io.File;
 import java.io.StringWriter;
@@ -68,6 +69,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Map.Entry;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
@@ -478,6 +480,23 @@ public class TestRLoadSave
         @Override
         public @Nullable Void record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
         {
+            for (Entry<@ExpressionIdentifier String, DataType> fieldType : types.entrySet())
+            {
+                fieldType.getValue().fromCollapsed(new GetValue<@Value Object>()
+                {
+                    @Override
+                    public @Value Object getWithProgress(int i, Column.@Nullable ProgressListener prog) throws UserException, InternalException
+                    {
+                        return g.get(i).getField(fieldType.getKey());
+                    }
+
+                    @Override
+                    public void set(int i, Either<String, @Value Object> value) throws InternalException, UserException
+                    {
+                        g.set(i, Either.<String, @Value Record>right(DataTypeUtility.value(new RecordMap(Utility.appendToMap(g.get(i).getFullContent(), fieldType.getKey(), value.getRight("Setting error"), null)))));
+                    }
+                }).applyGet(new EnsureRoundTrip(length));
+            }
             return null;
         }
 
@@ -564,6 +583,19 @@ public class TestRLoadSave
                 else
                     return taggedValue;
             }
+        }
+
+        @Override
+        public @Value Object record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+        {
+            ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> mappedValues = ImmutableMap.builder();
+            for (Entry<@ExpressionIdentifier String, @Value Object> field : Utility.cast(reloadedVal, Record.class).getFullContent().entrySet())
+            {
+                @SuppressWarnings("nullness") // This is test code
+                @NonNull DataType fieldType = fields.get(field.getKey());
+                mappedValues.put(field.getKey(), fieldType.apply(new CoerceValueToThisType(field.getValue(), typeManager)));
+            }
+            return DataTypeUtility.value(new RecordMap(mappedValues.build()));
         }
 
         @Override

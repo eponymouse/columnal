@@ -552,11 +552,6 @@ public class DataTypeUtility
         }
     }
 
-    public static DataTypeValue listToType(DataType elementType, ListEx listEx) throws InternalException, UserException
-    {
-        return elementType.fromCollapsed((i, prog) -> listEx.get(i));
-    }
-
     public static <DT extends DataType> @ImmediateValue TaggedValue makeDefaultTaggedValue(ImmutableList<TagType<DT>> tagTypes) throws InternalException
     {
         OptionalInt noInnerIndex = Utility.findFirstIndex(tagTypes, tt -> tt.getInner() == null);

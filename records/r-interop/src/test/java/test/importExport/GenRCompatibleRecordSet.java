@@ -51,7 +51,7 @@ public class GenRCompatibleRecordSet extends Generator<RCompatibleRecordSet>
         boolean tibbleOnly = random.nextBoolean();
         ImmutableSet<TypeKinds> core = ImmutableSet.of(TypeKinds.NUM_TEXT_TEMPORAL, TypeKinds.MAYBE_UNNESTED, TypeKinds.NEW_TAGGED_NO_INNER, TypeKinds.BOOLEAN);
         GenDataTypeMaker gen = new GenDataTypeMaker(
-                tibbleOnly ? Utility.appendToSet(core, TypeKinds.LIST) : core, 
+                tibbleOnly ? Utility.<TypeKinds>appendToSet(Utility.<TypeKinds>appendToSet(core, TypeKinds.LIST), TypeKinds.RECORD) : core, 
                 true);
 
         int numColumns = 1 + random.nextInt(10);

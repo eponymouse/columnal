@@ -261,7 +261,7 @@ public abstract class DataType implements StyledShowable
             @OnThread(Tag.Simulation)
             public DataTypeValue record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                return DataTypeValue.record(fields, (i, prog) -> Utility.cast(get.getWithProgress(i, prog), Record.class));
+                return DataTypeValue.record(fields, castTo(Record.class));
             }
 
             @Override

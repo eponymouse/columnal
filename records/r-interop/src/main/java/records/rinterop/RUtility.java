@@ -186,6 +186,50 @@ class RUtility
             {
                 return items.get(index).item;
             }
+
+            @Override
+            public RValue visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                return doubleVector(new double [] {values[index]}, attributes);
+            }
+
+            @Override
+            public RValue visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                return intVector(new int[] {values[index]}, attributes);
+            }
+
+            @Override
+            public RValue visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                return logicalVector(new boolean[] {values[index]}, isNA == null ? null : new boolean[] {isNA[index]}, attributes);
+            }
+
+            @Override
+            public RValue visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
+            {
+                return new RValue()
+                {
+                    @Override
+                    public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+                    {
+                        return visitor.visitTemporalList(dateTimeType, values.subList(index, index + 1), attributes);
+                    }
+                };
+            }
+
+            @Override
+            public RValue visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
+            {
+                return new RValue()
+                {
+                    @Override
+                    public <T> T visit(RVisitor<T> visitor) throws InternalException, UserException
+                    {
+                        return visitor.visitFactorList(new int[] {values[index]}, levelNames);
+                    }
+                };
+            }
         });
     }
 
