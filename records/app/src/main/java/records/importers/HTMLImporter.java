@@ -339,23 +339,30 @@ public class HTMLImporter implements Importer
             }
         };
 
-        results.add(() -> {
-            @Nullable ImportInfo<PlainImportInfo> outcome = new ImportChoicesDialog<>(parentWindow, htmlFile.getName(), imp).showAndWait().orElse(null);
-
-            if (outcome != null)
+        results.add(new FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>()
+        {
+            @Override
+            @OnThread(Tag.FXPlatform)
+            public @Nullable SimulationSupplier<DataSource> get()
             {
-                @NonNull ImportInfo<PlainImportInfo> outcomeNonNull = outcome;
-                SimulationSupplier<DataSource> makeDataSource = new SimulationSupplier<DataSource>()
+                @Nullable ImportInfo<PlainImportInfo> outcome = new ImportChoicesDialog<>(parentWindow, htmlFile.getName(), imp).showAndWait().orElse(null);
+
+                if (outcome != null)
                 {
-                    @Override
-                    public DataSource get() throws InternalException, UserException
+                    @NonNull ImportInfo<PlainImportInfo> outcomeNonNull = outcome;
+                    SimulationSupplier<DataSource> makeDataSource = new SimulationSupplier<DataSource>()
                     {
-                        return new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), imp.processTrimmed(outcomeNonNull.getFormat().trim.trim(vals)), outcomeNonNull.getFormat().columnInfo));
-                    }
-                };
-                return makeDataSource;
-            } else
-                return null;
+                        @Override
+                        @OnThread(Tag.Simulation)
+                        public DataSource get() throws InternalException, UserException
+                        {
+                            return new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), imp.processTrimmed(outcomeNonNull.getFormat().trim.trim(vals)), outcomeNonNull.getFormat().columnInfo));
+                        }
+                    };
+                    return makeDataSource;
+                } else
+                    return null;
+            }
         });
 
         List<SimulationSupplier<DataSource>> sources = results.stream().flatMap((FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>> s) -> Utility.streamNullable(s.get())).collect(Collectors.<SimulationSupplier<DataSource>>toList());

@@ -36,6 +36,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.WeakHashMap;
 
+@OnThread(Tag.FXPlatform)
 public final class CheckSummaryLabel extends BorderPane
 {
     // Note that weakKeys makes an identity hash map, deliberately: 
@@ -143,11 +144,13 @@ public final class CheckSummaryLabel extends BorderPane
         return this.hasChecksProperty;
     }
 
+    @OnThread(Tag.Simulation)
     public ImmutableList<Check> getFailingChecks()
     {
         return currentResults.entrySet().stream().filter(e -> e.getValue().isPresent() && !e.getValue().get()).map(e -> e.getKey()).sorted(Comparator.comparing(c -> c.getId().getRaw())).collect(ImmutableList.<Check>toImmutableList());
     }
 
+    @OnThread(Tag.Simulation)
     public ImmutableList<Check> getPassingChecks()
     {
         return currentResults.entrySet().stream().filter(e -> e.getValue().isPresent() && e.getValue().get()).map(e -> e.getKey()).sorted(Comparator.comparing(c -> c.getId().getRaw())).collect(ImmutableList.<Check>toImmutableList());

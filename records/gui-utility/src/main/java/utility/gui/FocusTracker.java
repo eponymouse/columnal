@@ -4,6 +4,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -70,6 +72,7 @@ public class FocusTracker
         }
 
         @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void changed(ObservableValue<? extends Boolean> observable, Boolean wasFocused, Boolean newValue)
         {
             if (wasFocused)
@@ -77,6 +80,7 @@ public class FocusTracker
         }
 
         @Override
+        @OnThread(Tag.FXPlatform)
         public long lastFocusedTime()
         {
             return wrapped.isFocused() ? System.currentTimeMillis() : lastFocusTime;

@@ -189,7 +189,13 @@
             <version>1.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.bluej</groupId>
+            <artifactId>threadchecker</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        
         
         <dependency>
             <groupId>com.badlogicgames.packr</groupId>

@@ -398,12 +398,15 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 @Override
                 public @Nullable FXPlatformRunnable check(Check check)
                 {
-                    Explanation explanation = check.getExplanation();
-                    if (explanation != null)
-                    {
-                        return () -> parent.showExplanationDisplay(check, check.getSrcTableId(), cellPosition, explanation);
-                    }
-                    return null;
+                    return () -> {
+                        Workers.onWorkerThread("Fetching check explanation", Priority.FETCH, () -> {
+                            Explanation explanation = check.getExplanation();
+                            if (explanation != null)
+                            {
+                                FXUtility.runFX(() -> parent.showExplanationDisplay(check, check.getSrcTableId(), cellPosition, explanation));
+                            }
+                        });
+                    };
                 }
 
                 @Override
@@ -1546,6 +1549,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         return currentKnownRows;
     }
 
+    @OnThread(Tag.FXPlatform)
     public void editAfterCreation()
     {
         if (table instanceof VisitableTransformation)
@@ -1553,6 +1557,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             ((VisitableTransformation)table).visit(new TransformationVisitor<@Nullable Void>()
             {
                 @Override
+                @OnThread(Tag.FXPlatform)
                 public @Nullable Void runR(RTransformation rTransformation)
                 {
                     TableHat.editR(parent, rTransformation, true);
@@ -1560,6 +1565,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
                 
                 @Override
+                @OnThread(Tag.FXPlatform)
                 public @Nullable Void calculate(Calculate calculate)
                 {
                     addColumnBefore_Calc(parent, calculate, null, "transform.calculate.addInitial");
@@ -1567,6 +1573,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
+                @OnThread(Tag.FXPlatform)
                 public @Nullable Void filter(Filter filter)
                 {
                     new EditExpressionDialog(parent,
@@ -1584,6 +1591,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
+                @OnThread(Tag.FXPlatform)
                 public @Nullable Void aggregate(Aggregate aggregate)
                 {
                     Optional<EditColumnExpressionDialog<ImmutableList<ColumnId>>.Result> result = AggregateSplitByPane.editColumn(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), null, null, _ed -> aggregate.getColumnLookup(), () -> Aggregate.makeTypeState(parent.getManager()), null, aggregate.getSplitBy()).showAndWait();
@@ -1612,6 +1620,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
+                @OnThread(Tag.FXPlatform)
                 public @Nullable Void sort(Sort sort)
                 {
                     TableHat.editSort(null, parent, sort);
@@ -1619,6 +1628,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
+                @OnThread(Tag.FXPlatform)
                 public @Nullable Void manualEdit(ManualEdit manualEdit)
                 {
                     TableHat.editManualEdit(parent, manualEdit, true);
@@ -1626,6 +1636,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
+                @OnThread(Tag.FXPlatform)
                 public @Nullable Void concatenate(Concatenate concatenate)
                 {
                     TableHat.editConcatenate(new Point2D(0, 0), parent, concatenate);
@@ -1633,6 +1644,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
+                @OnThread(Tag.FXPlatform)
                 public @Nullable Void join(Join join)
                 {
                     TableHat.editJoin(parent, join);
@@ -1640,6 +1652,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
+                @OnThread(Tag.FXPlatform)
                 public @Nullable Void hideColumns(HideColumns hideColumns)
                 {
                     TableHat.editHideColumns(parent, hideColumns);
@@ -1824,7 +1837,8 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             // Nothing to activate
         }
     }
-    
+
+    @OnThread(Tag.FXPlatform)
     private static class ErrorDetailsDialog extends Dialog<Object>
     {
         public ErrorDetailsDialog(ImmutableList<Text> details, String plainContent)

@@ -386,7 +386,7 @@ public class DataTypeUtility
         return valueToString(item, null, false, null);
     }
 
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Any)
     public static String valueToStringFX(@ImmediateValue Object item) throws UserException, InternalException
     {
         return Utility.launderSimulationEx(() -> valueToString(item));
@@ -394,7 +394,7 @@ public class DataTypeUtility
     
     public static interface Truncater
     {
-        public String truncateNumber(@Value Number number) throws InternalException, UserException;
+        public String truncateNumber(@ImmediateValue Number number) throws InternalException, UserException;
         // TODO also allow list truncation
     }
 
@@ -406,8 +406,11 @@ public class DataTypeUtility
         {
             String number;
             if (truncater != null)
-                number = truncater.truncateNumber(Utility.cast(item, Number.class));
-            else if (item instanceof BigDecimal)
+            {
+                @SuppressWarnings("valuetype") // Number is always ImmediateValue
+                @ImmediateValue Number cast = Utility.cast(item, Number.class);
+                number = truncater.truncateNumber(cast);
+            } else if (item instanceof BigDecimal)
             {
                 if (Utility.isIntegral(item))
                 {

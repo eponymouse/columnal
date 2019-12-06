@@ -3,7 +3,8 @@
   <component name="ExternalSystem" externalSystem="Maven" />
   <component name="MavenAnnotationProcessors">
     <modules>
-      <module name="anns" />
+      <module name="annsthreadchecker" />
+      <module name="threadchecker" />
     </modules>
   </component>
   <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">

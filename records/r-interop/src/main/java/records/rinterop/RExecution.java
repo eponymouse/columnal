@@ -7,6 +7,8 @@ import records.data.RecordSet;
 import records.error.InternalException;
 import records.error.UserException;
 import records.rinterop.ConvertFromR.TableType;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Utility;
 
 import java.io.File;
@@ -93,6 +95,7 @@ public class RExecution
         }
 
         @Override
+        @OnThread(Tag.Any)
         public void close()
         {
             for (File f : files)

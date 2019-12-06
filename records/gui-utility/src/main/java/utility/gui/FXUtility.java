@@ -276,9 +276,11 @@ public class FXUtility
     }
     
     // Default theme fetches it from the standard directory:
+    @OnThread(value = Tag.Any, requireSynchronized = true)
     private static Theme theme = new Theme()
     {
         @Override
+        @OnThread(Tag.Any)
         public String getStylesheetURL(String stylesheetName) throws Throwable
         {
             URL resource = ResourceUtility.getResource(stylesheetName);
@@ -290,21 +292,23 @@ public class FXUtility
             return resource.toString();
         }
 
+        @OnThread(Tag.Any)
         @Override
         public String getName()
         {
             return "default";
         }
     };
-    
-    public static void setTheme(Theme theme)
+
+    @OnThread(Tag.FXPlatform)
+    public static synchronized void setTheme(Theme theme)
     {
         Log.normal("Setting theme to: " + theme.getName());
         FXUtility.theme = theme;
     }
 
     @OnThread(Tag.Any)
-    public static String getStylesheet(String stylesheetName)
+    public static synchronized String getStylesheet(String stylesheetName)
     {
         try
         {

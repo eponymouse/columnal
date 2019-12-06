@@ -402,6 +402,7 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
     }
 
     @Override
+    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.sort(this);

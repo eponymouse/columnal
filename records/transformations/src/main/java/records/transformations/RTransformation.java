@@ -2,9 +2,11 @@ package records.transformations;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.CellPosition;
 import records.data.EditableRecordSet;
@@ -45,35 +47,43 @@ public class RTransformation extends VisitableTransformation
 {
     public static final String NAME = "runr";
     // Each table id maps to an R variable by replacing space with dot.
+    @OnThread(Tag.Any)
     private final ImmutableList<TableId> srcTableIds;
     // The packages to load first.
+    @OnThread(Tag.Any)
     private final ImmutableList<String> packagesToLoad;
     // This is the expression to calculate in R:
+    @OnThread(Tag.Any)
     private final String rExpression;
     
-    private @MonotonicNonNull Either<StyledString, RecordSet> result;
+    @OnThread(Tag.Any)
+    private final Either<StyledString, RecordSet> result;
     
-    public RTransformation(TableManager tableManager, InitialLoadDetails initialLoadDetails, ImmutableList<TableId> srcTableIds, ImmutableList<String> packagesToLoad, String rExpression)
+    public RTransformation(TableManager tableManager, InitialLoadDetails initialLoadDetails, ImmutableList<TableId> srcTableIds, ImmutableList<String> packagesToLoad, String rExpression) throws InternalException
     {
         super(tableManager, initialLoadDetails);
         this.srcTableIds = srcTableIds;
         this.packagesToLoad = packagesToLoad;
         this.rExpression = rExpression;
+        this.result = runR();
     }
 
     @Override
+    @OnThread(Tag.Any)
     protected Stream<TableId> getSourcesFromExpressions()
     {
         return Stream.of();
     }
 
     @Override
+    @OnThread(Tag.Any)
     protected Stream<TableId> getPrimarySources()
     {
         return srcTableIds.stream();
     }
 
     @Override
+    @OnThread(Tag.Any)
     protected String getTransformationName()
     {
         return NAME;
@@ -102,16 +112,15 @@ public class RTransformation extends VisitableTransformation
     }
 
     @Override
+    @OnThread(Tag.Any)
     public RecordSet getData() throws UserException, InternalException
     {
-        if (result == null)
-        {
-            result = runR();
-        }
         return result.eitherEx(err -> {throw new UserException(err);}, r -> r);
     }
-
-    private Either<StyledString, RecordSet> runR() throws InternalException
+    
+    @RequiresNonNull({"srcTableIds", "rExpression", "packagesToLoad"})
+    @OnThread(Tag.Simulation)
+    private Either<StyledString, RecordSet> runR(@UnknownInitialization(Transformation.class) RTransformation this) throws InternalException
     {
         try
         {
@@ -141,12 +150,14 @@ public class RTransformation extends VisitableTransformation
     }
 
     @Override
+    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.runR(this);
     }
 
     @Override
+    @OnThread(Tag.Any)
     public @Nullable SimulationRunnable getReevaluateOperation()
     {
         return () -> {
@@ -162,16 +173,21 @@ public class RTransformation extends VisitableTransformation
     }
 
     @Pure
+    @OnThread(Tag.Any)
     public String getRExpression()
     {
         return rExpression;
     }
     
+    @Pure
+    @OnThread(Tag.Any)
     public ImmutableList<String> getPackagesToLoad()
     {
         return packagesToLoad;
     }
 
+    @Pure
+    @OnThread(Tag.Any)
     public ImmutableList<TableId> getInputTables()
     {
         return srcTableIds;

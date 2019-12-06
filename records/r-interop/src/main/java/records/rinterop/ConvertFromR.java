@@ -27,6 +27,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.UnknownTypeException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.IdentifierUtility;
 import utility.Pair;
@@ -48,7 +50,6 @@ import java.util.stream.DoubleStream;
 
 public class ConvertFromR
 {
-
     private static ColumnId getColumnName(@Nullable RValue listColumnNames, int index) throws UserException, InternalException
     {
         @SuppressWarnings("identifier")
@@ -709,6 +710,7 @@ public class ConvertFromR
 
     public static enum TableType { DATA_FRAME, TIBBLE }
 
+    @OnThread(Tag.Any)
     public static String usToRTable(TableId tableId)
     {
         return tableId.getRaw().replace(" ", ".");

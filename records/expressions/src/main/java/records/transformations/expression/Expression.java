@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
@@ -99,6 +100,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
             public ImmutableMap<ColumnId, DataTypeValue> getColumnTypes() throws InternalException, UserException;
 
+            @OnThread(Tag.Simulation)
             public int getRowCount() throws InternalException, UserException;
         }
         
@@ -166,11 +168,13 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             this.table = table;
         }
 
+        @Override
         public TableId getTableId()
         {
             return table.getId();
         }
 
+        @Override
         public ImmutableMap<ColumnId, DataTypeValue> getColumnTypes() throws InternalException, UserException
         {
             ImmutableMap.Builder<ColumnId, DataTypeValue> columns = ImmutableMap.builder();
@@ -181,6 +185,8 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             return columns.build();
         }
 
+        @OnThread(Tag.Simulation)
+        @Override
         public int getRowCount() throws InternalException, UserException
         {
             return table.getData().getLength();
@@ -409,7 +415,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             return StyledString.concat(Expression.this.toDisplay(DisplayType.SIMPLE, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(value, null, false, new Truncater()
             {
                 @Override
-                public String truncateNumber(@Value Number number) throws InternalException, UserException
+                public String truncateNumber(@ImmediateValue Number number) throws InternalException, UserException
                 {
                     if (!Utility.isIntegral(number))
                     {
@@ -422,7 +428,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                         return DataTypeUtility.value(bd).toPlainString() + "\u2026";
                     }
                     // Use default behaviour:
-                    return DataTypeUtility.valueToString(number);
+                    return DataTypeUtility.valueToStringFX(number);
                 }
             })), using);
         }
@@ -498,6 +504,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     public abstract ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException;
     
     // Fetches a sub-expression and adjusts stack trace and explanation if there is an exception.  If not, adds to passed builder and returns
+    @OnThread(Tag.Simulation)
     protected final ValueResult fetchSubExpression(Expression subExpression, EvaluateState state, ImmutableList.Builder<ValueResult> subExpressionsSoFar) throws EvaluationException, InternalException
     {
         try
@@ -512,6 +519,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
     }
 
+    @OnThread(Tag.Simulation)
     protected final ValueResult matchSubExpressionAsPattern(Expression subExpression, @Value Object matchAgainst, EvaluateState state, ImmutableList.Builder<ValueResult> subExpressionsSoFar) throws EvaluationException, InternalException
     {
         try

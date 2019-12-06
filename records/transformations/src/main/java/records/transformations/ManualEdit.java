@@ -665,6 +665,7 @@ edit : editHeader editColumn*;
     }
 
     @Override
+    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.manualEdit(this);

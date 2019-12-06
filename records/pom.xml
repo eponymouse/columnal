@@ -132,6 +132,16 @@
                                         <artifactId>checker</artifactId>
                                         <version>2.10.0</version>
                                     </dependency>
+                                    <path>
+                                        <groupId>org.bluej</groupId>
+                                        <artifactId>anns-threadchecker</artifactId>
+                                        <version>1.0-SNAPSHOT</version>
+                                    </path>
+                                    <path>
+                                        <groupId>org.bluej</groupId>
+                                        <artifactId>threadchecker</artifactId>
+                                        <version>1.0-SNAPSHOT</version>
+                                    </path>
                                 </annotationProcessorPaths>
                                 <compilerArgs>
                                     <!-- location of the annotated JDK, which comes from a Maven dependency -->
@@ -196,6 +206,16 @@
                                         <artifactId>checker</artifactId>
                                         <version>2.10.0</version>
                                     </dependency>
+                                    <path>
+                                        <groupId>org.bluej</groupId>
+                                        <artifactId>anns-threadchecker</artifactId>
+                                        <version>1.0-SNAPSHOT</version>
+                                    </path>
+                                    <path>
+                                        <groupId>org.bluej</groupId>
+                                        <artifactId>threadchecker</artifactId>
+                                        <version>1.0-SNAPSHOT</version>
+                                    </path>
                                 </annotationProcessorPaths>
                                 <compilerArgs>
                                     <!-- location of the annotated JDK, which comes from a Maven dependency -->

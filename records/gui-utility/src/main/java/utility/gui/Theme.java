@@ -8,9 +8,9 @@ import threadchecker.Tag;
  */
 public interface Theme
 {
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Any)
     public String getStylesheetURL(String stylesheetFileName) throws Throwable;
     
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Any)
     public String getName();
 }

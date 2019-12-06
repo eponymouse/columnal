@@ -210,6 +210,7 @@ public class HideColumns extends VisitableTransformation implements SingleSource
     }
 
     @Override
+    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.hideColumns(this);

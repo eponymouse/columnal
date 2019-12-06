@@ -54,6 +54,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@OnThread(Tag.FXPlatform)
 public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
 {
     private final View parent;
@@ -150,7 +151,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
         ));
         focusTracker.addNode(expressionTextArea);
         setOnShowing(e -> {
-            Platform.runLater(() -> {
+            FXUtility.runAfter(() -> {
                 expressionTextArea.requestFocus();
                 if (selectWholeExpression)
                     expressionTextArea.selectAll();

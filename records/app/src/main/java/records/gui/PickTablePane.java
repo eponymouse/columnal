@@ -118,6 +118,7 @@ public class PickTablePane extends BorderPane implements TimedFocusable
     }
     
     @Override
+    @OnThread(Tag.FXPlatform)
     public long lastFocusedTime()
     {
         return tableField.isFocused() ? System.currentTimeMillis() : lastEditTimeMillis;

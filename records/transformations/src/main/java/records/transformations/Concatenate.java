@@ -367,6 +367,7 @@ public class Concatenate extends VisitableTransformation
     }
 
     @Override
+    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.concatenate(this);

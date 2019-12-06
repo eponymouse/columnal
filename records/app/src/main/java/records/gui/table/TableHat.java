@@ -92,6 +92,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         this.content = table.visit(new TransformationVisitor<StyledString>()
         {
             @Override
+            @OnThread(Tag.FXPlatform)
             public StyledString filter(Filter filter)
             {
                 return StyledString.concat(
@@ -106,6 +107,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public StyledString runR(RTransformation rTransformation)
             {
                 String rExpression = rTransformation.getRExpression();
@@ -124,6 +126,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public StyledString sort(Sort sort)
             {
                 StyledString sourceText = sort.getSortBy().isEmpty() ?
@@ -151,6 +154,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
             
             @Override
+            @OnThread(Tag.FXPlatform)
             public StyledString aggregate(Aggregate aggregate)
             {
                 StyledString.Builder builder = new StyledString.Builder();
@@ -182,6 +186,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public StyledString concatenate(Concatenate concatenate)
             {
                 Stream<TableId> sources = concatenate.getPrimarySources();
@@ -243,6 +248,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public StyledString check(Check check)
             {
                 String type = "";
@@ -269,6 +275,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
             
             @Override
+            @OnThread(Tag.FXPlatform)
             public StyledString calculate(Calculate calc)
             {
                 collapsedContent = StyledString.s("Calculate");
@@ -312,6 +319,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
             
             @Override
+            @OnThread(Tag.FXPlatform)
             public StyledString hideColumns(HideColumns hide)
             {
                 Clickable edit = new Clickable(null, "edit-hide-columns")
@@ -336,6 +344,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public StyledString manualEdit(ManualEdit manualEdit)
             {
                 collapsedContent = StyledString.s("Edit");
@@ -471,6 +480,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public StyledString join(Join join)
             {
                 collapsedContent = StyledString.s("Join");

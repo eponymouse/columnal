@@ -25,6 +25,8 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.rinterop.ConvertFromR.TableType;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.TaggedValue;
 import utility.Utility;
@@ -54,6 +56,7 @@ public class ConvertToR
             )), true);
     }
 
+    @OnThread(Tag.Any)
     public static String usToRColumn(ColumnId columnId, TableType tableType, boolean quotesIfNeeded)
     {
         return tableType == TableType.TIBBLE ? (columnId.getRaw().contains(" ") && quotesIfNeeded ? "\""+ columnId.getRaw() + "\"" : columnId.getRaw()) : columnId.getRaw().replace(" ", ".");

@@ -47,6 +47,7 @@ import java.util.stream.Collectors;
 /**
  * Base helper class for text editors
  */
+@OnThread(value = Tag.FXPlatform, ignoreParent = true)
 public abstract class TextEditorBase extends Region
 {
     protected final HelpfulTextFlow textFlow;

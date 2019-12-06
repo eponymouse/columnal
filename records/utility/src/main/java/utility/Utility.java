@@ -2207,7 +2207,7 @@ public class Utility
     /**
      * For running simulation on FX; only to be used where you're certain it's safe.
      */
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Any)
     public static <T> T launderSimulationEx(SimulationSupplier<T> simulationSupplier) throws UserException, InternalException
     {
         return ((ExSupplier<T>)simulationSupplier::get).get();

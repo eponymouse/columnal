@@ -3,7 +3,8 @@
   <component name="ExternalSystem" externalSystem="Maven" />
   <component name="MavenAnnotationProcessors">
     <modules>
-      <module name="anns" />
+      <module name="annsthreadchecker" />
+      <module name="threadchecker" />
     </modules>
   </component>
   <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">
@@ -59,5 +60,15 @@
     <orderEntry type="library" name="Maven: xerces:xercesImpl:2.8.0" level="project" />
     <orderEntry type="library" name="Maven: xalan:xalan:2.7.0" level="project" />
     <orderEntry type="module" module-name="annsthreadchecker" scope="PROVIDED" />
+    <orderEntry type="module" module-name="threadchecker" scope="PROVIDED" />
+    <orderEntry type="module-library">
+      <library name="Maven: com.sun:tools:1.8.0">
+        <CLASSES>
+          <root url="jar://S:/java/x64/jdk1.8.0_171/lib/tools.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

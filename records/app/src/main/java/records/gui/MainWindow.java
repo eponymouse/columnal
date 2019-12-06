@@ -407,6 +407,7 @@ public class MainWindow
         return views;
     }
     
+    @OnThread(Tag.FXPlatform)
     private class LeftPane extends StackPane
     {
         private SmallDeleteButton closeButton = new SmallDeleteButton();
@@ -428,6 +429,7 @@ public class MainWindow
         }
     }
 
+    @OnThread(Tag.FXPlatform)
     private final class ChecksLeftPane extends LeftPane implements ChecksStateListener
     {
         private final CheckSummaryLabel checkSummaryLabel;
@@ -460,29 +462,37 @@ public class MainWindow
 
         private void updateGUI()
         {
-            checkList.getChildren().clear();
-            Label top = new Label("Checks");
-            top.getStyleClass().add("checks-top-header");
-            checkList.getChildren().add(top);
-            
-            ImmutableList<Check> failingChecks = checkSummaryLabel.getFailingChecks();
-            if (!failingChecks.isEmpty())
-            {
-                checkList.getChildren().add(makeHeader("Failing"));
-                for (Check check : failingChecks)
-                {
-                    checkList.getChildren().add(makeItem(check, false));
-                }
-            }
-            ImmutableList<Check> passingChecks = checkSummaryLabel.getPassingChecks();
-            if (!passingChecks.isEmpty())
-            {
-                checkList.getChildren().add(makeHeader("Succeeding"));
-                for (Check check : passingChecks)
-                {
-                    checkList.getChildren().add(makeItem(check, true));
-                }
-            }
+            Workers.onWorkerThread("Updating checks pane", Priority.FETCH, () -> {
+                ImmutableList<Check> failingChecks = checkSummaryLabel.getFailingChecks();
+                ImmutableList<Check> passingChecks = checkSummaryLabel.getPassingChecks();
+                
+                FXUtility.runFX(() -> {
+
+                    checkList.getChildren().clear();
+                    Label top = new Label("Checks");
+                    top.getStyleClass().add("checks-top-header");
+                    checkList.getChildren().add(top);
+
+
+                    if (!failingChecks.isEmpty())
+                    {
+                        checkList.getChildren().add(makeHeader("Failing"));
+                        for (Check check : failingChecks)
+                        {
+                            checkList.getChildren().add(makeItem(check, false));
+                        }
+                    }
+
+                    if (!passingChecks.isEmpty())
+                    {
+                        checkList.getChildren().add(makeHeader("Succeeding"));
+                        for (Check check : passingChecks)
+                        {
+                            checkList.getChildren().add(makeItem(check, true));
+                        }
+                    }
+                });
+            });
         }
 
         @Override

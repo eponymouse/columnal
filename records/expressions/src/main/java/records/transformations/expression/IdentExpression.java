@@ -457,6 +457,7 @@ public class IdentExpression extends NonOperatorExpression
         
         public boolean hideFromExplanation(boolean skipIfTrivial);
 
+        @OnThread(Tag.Simulation)
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException;
         
         public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames);
@@ -510,6 +511,7 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
+        @OnThread(Tag.Simulation)
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException
         {
             if (column == null)
@@ -593,6 +595,7 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
+        @OnThread(Tag.Simulation)
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException
         {
             if (resolvedTable == null)
@@ -735,6 +738,7 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
+        @OnThread(Tag.Simulation)
         public ValueResult getValue(EvaluateState state)
         {
             @Value Object value;
@@ -807,6 +811,7 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
+        @OnThread(Tag.Simulation)
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException
         {
             return result(ValueFunction.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
@@ -873,6 +878,7 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
+        @OnThread(Tag.Simulation)
         public ValueResult getValue(EvaluateState state) throws InternalException
         {
             if (patternMatch)

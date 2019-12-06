@@ -52,30 +52,34 @@ public class RImporter implements Importer
     @Override
     public void importFile(Window parent, TableManager tableManager, CellPosition destPosition, File src, URL origin, SimulationConsumerNoError<DataSource> onLoad)
     {
-        try
-        {
-            ImmutableList<Pair<String, EditableRecordSet>> tables = ConvertFromR.convertRToTable(tableManager.getTypeManager(), RRead.readRData(src));
-
-            switch (tables.size())
+        Workers.onWorkerThread("Loading " + src + " " + origin, Priority.LOAD_FROM_DISK, () -> {
+            try
             {
-                case 0:
-                    throw new UserException("No tables found in file");
-                case 1:
-                    Workers.onWorkerThread("Loading " + src + " " + origin, Priority.LOAD_FROM_DISK, () -> register(tableManager, destPosition, tables.iterator(), onLoad));
-                    break;
-                default:
-                    ImmutableList<Pair<String, EditableRecordSet>> picked = new PickImportsDialog(parent, tables).showAndWait().orElse(ImmutableList.of());
-                    if (!picked.isEmpty())
-                    {
-                        Workers.onWorkerThread("Loading " + src + " " + origin, Priority.LOAD_FROM_DISK, () -> register(tableManager, destPosition, picked.iterator(), onLoad));
-                    }
-                    break;
+                ImmutableList<Pair<String, EditableRecordSet>> tables = ConvertFromR.convertRToTable(tableManager.getTypeManager(), RRead.readRData(src));
+    
+                switch (tables.size())
+                {
+                    case 0:
+                        throw new UserException("No tables found in file");
+                    case 1:
+                        register(tableManager, destPosition, tables.iterator(), onLoad);
+                        break;
+                    default:
+                        FXUtility.runFX(() -> {
+                            ImmutableList<Pair<String, EditableRecordSet>> picked = new PickImportsDialog(parent, tables).showAndWait().orElse(ImmutableList.of());
+                            if (!picked.isEmpty())
+                            {
+                                Workers.onWorkerThread("Loading " + src + " " + origin, Priority.LOAD_FROM_DISK, () -> register(tableManager, destPosition, picked.iterator(), onLoad));
+                            }
+                        });
+                        break;
+                }
             }
-        }
-        catch (InternalException | UserException | IOException ex)
-        {
-            FXUtility.logAndShowError("import.text.error", ex);
-        }
+            catch (InternalException | UserException | IOException ex)
+            {
+                FXUtility.logAndShowError("import.r.error", ex);
+            }
+        });
     }
     
     @OnThread(Tag.Simulation)
@@ -86,7 +90,9 @@ public class RImporter implements Importer
             Pair<String, EditableRecordSet> reg = tables.next();
             ImmediateDataSource immediateDataSource = new ImmediateDataSource(tableManager, new InitialLoadDetails(new TableId(IdentifierUtility.fixExpressionIdentifier(reg.getFirst(), IdentifierUtility.identNum("RTable", new Random().nextInt(10000)))), null, cellPosition, null), reg.getSecond());
             onLoad.consume(immediateDataSource);
-            register(tableManager, tableManager.getNextInsertPosition(immediateDataSource.getId()), tables, onLoad);
+            // Recurse:
+            int width = immediateDataSource.getData().getColumns().size();
+            register(tableManager, cellPosition.offsetByRowCols(0, width + 1), tables, onLoad);
         }
     }
 
@@ -96,6 +102,7 @@ public class RImporter implements Importer
         return TranslationUtility.getString("importer.r.files");
     }
 
+    @OnThread(Tag.FXPlatform)
     private class PickImportsDialog extends Dialog<ImmutableList<Pair<String, EditableRecordSet>>>
     {
         public PickImportsDialog(Window parent, ImmutableList<Pair<String, EditableRecordSet>> tables)

@@ -1040,6 +1040,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
     }
 
     @Override
+    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.aggregate(this);

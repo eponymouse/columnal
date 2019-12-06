@@ -300,6 +300,7 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
     }
 
     @Override
+    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.filter(this);

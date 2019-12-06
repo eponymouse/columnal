@@ -203,6 +203,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
 
     // A simple subclass of STF that holds a version param.  A version is a weak reference
     // to a list of column details
+    @OnThread(Tag.FXPlatform)
     public class VersionedSTF extends DocumentTextField
     {
         @OnThread(Tag.FXPlatform)
