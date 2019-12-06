@@ -562,6 +562,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
         }
     }
     
+    @Override
     public void add(Number n) throws InternalException
     {
         set(OptionalInt.empty(), n);

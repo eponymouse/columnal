@@ -95,6 +95,16 @@ public class TestRExecution
         DataTestUtil.assertValueListEqual("Column", expected, DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
     
+    @SuppressWarnings("valuetype")
+    @Test
+    public void testRecord3() throws UserException, InternalException
+    {
+        TypeManager typeManager = new TypeManager(new UnitManager());
+        ImmutableList<@Value Object> expected = ImmutableList.of(new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", 5, "y", typeManager.maybePresent(7), "z", typeManager.maybeMissing())), new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", new BigDecimal("1.2"), "y", typeManager.maybeMissing(), "z", typeManager.maybePresent(-3))));
+        Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("list(list(x=5, y= 7), list(x=1.2, z = -3))")).get(0).getSecond().getColumns().get(0);
+        DataTestUtil.assertValueListEqual("Column", expected, DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
+    }
+    
     @Test
     public void testAIC() throws InternalException, UserException
     {

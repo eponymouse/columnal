@@ -508,9 +508,20 @@ public class TestRLoadSave
                         anyModified[0] = true;
                     }
                 }).applyGet(new EnsureRoundTrip(listEx.size()));
+                // Single item lists don't survive the trip, so double up:
+                if (modified.size() == 1)
+                {
+                    modified.add(modified.get(0));
+                    anyModified[0] = true;
+                }
+                
                 if (anyModified[0])
                     g.set(i, Either.right(DataTypeUtility.value(modified)));
+                
+                
             }
+            
+            
             return null;
         }
     }

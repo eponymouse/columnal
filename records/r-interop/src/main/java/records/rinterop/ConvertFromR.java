@@ -21,6 +21,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -33,11 +34,13 @@ import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.Record;
 import utility.Utility.RecordMap;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -320,38 +323,147 @@ public class ConvertFromR
         return new Pair<DataType, ImmutableList<@Value Object>>(m.getFirst(), loaded);
     }
     
-    // If smaller can be generalised into larger, returns the conversion function from small to large.  If not (including case where larger can generalise to smaller), return null
-    static @Nullable SimulationFunction<@Value Object, @Value Object> generaliseType(TypeManager typeManager, DataType smaller, DataType larger) throws InternalException, TaggedInstantiationException, UnknownTypeException
+    // If smaller can be generalised into larger (or some even larger type), returns the conversion function from small to large and the destination type.  If not (including case where larger can generalise to smaller), return null
+    static @Nullable GeneralisedTypePair generaliseType(TypeManager typeManager, DataType smaller, DataType larger) throws InternalException, TaggedInstantiationException, UnknownTypeException
     {
         if (smaller.equals(larger))
-            return x -> x;
+            return new GeneralisedTypePair(larger, x -> x);
         if (larger.equals(typeManager.makeMaybeType(smaller)))
-            return x -> typeManager.maybePresent(x);
+            return new GeneralisedTypePair(larger, x -> typeManager.maybePresent(x));
         DataType largeInner = getArrayInner(larger);
         if (largeInner != null)
         {
             if (largeInner.equals(smaller))
-                return x -> DataTypeUtility.value(ImmutableList.of(x));
+                return new GeneralisedTypePair(larger, x -> DataTypeUtility.value(ImmutableList.of(x)));
             else if (largeInner.equals(typeManager.makeMaybeType(smaller)))
-                return x -> DataTypeUtility.value(ImmutableList.of(typeManager.maybePresent(x)));
+                return new GeneralisedTypePair(larger, x -> DataTypeUtility.value(ImmutableList.of(typeManager.maybePresent(x))));
 
             DataType smallInner = getArrayInner(smaller);
-            @Nullable SimulationFunction<@Value Object, @Value Object> genInners = smallInner == null ? null : generaliseType(typeManager, smallInner, largeInner);
+            @Nullable GeneralisedTypePair genInners = smallInner == null ? null : generaliseType(typeManager, smallInner, largeInner);
             if (genInners != null)
             {
-                return x -> {
-                    @Value ListEx list = Utility.cast(x, ListEx.class);
-                    int length = list.size();
-                    ImmutableList.Builder<@Value Object> processed = ImmutableList.builderWithExpectedSize(length);
-                    for (int i = 0; i < length; i++)
-                    {
-                        processed.add(genInners.apply(list.get(i)));
-                    }
-                    return DataTypeUtility.value(processed.build());
-                };
+                return new GeneralisedTypePair(DataType.array(genInners.resultingType), applyToList(genInners.smallToResult), applyToList(genInners.largeToResult));
             }
         }
+        @Nullable ImmutableMap<@ExpressionIdentifier String, DataType> smallFields = getRecordFields(smaller);
+        @Nullable ImmutableMap<@ExpressionIdentifier String, DataType> largeFields = getRecordFields(larger);
+        if (smallFields != null && largeFields != null)
+        {
+            // Generalisation is possible if all shared fields can be generalised pairwise, and all non-shared fields can be generalised into optional
+            // true if large
+            HashMap<@ExpressionIdentifier String, Pair<Boolean, DataType>> nonShared = new HashMap<>();
+            // small, large in pair:
+            HashMap<@ExpressionIdentifier String, Pair<DataType, DataType>> shared = new HashMap<>();
+            nonShared.putAll(Utility.mapValues(smallFields, t -> new Pair<>(false, t)));
+            for (Entry<@ExpressionIdentifier String, DataType> l : largeFields.entrySet())
+            {
+                Pair<Boolean, DataType> s = nonShared.remove(l.getKey());
+                if (s == null)
+                {
+                    // Not in small; add it
+                    nonShared.put(l.getKey(), new Pair<>(true, l.getValue()));
+                }
+                else
+                {
+                    // Move to shared:
+                    shared.put(l.getKey(), new Pair<>(s.getSecond(), l.getValue()));
+                }
+            }
+            // Now shared and nonShared are set-up, so get processing into result:
+            HashMap<@ExpressionIdentifier String, GeneralisedTypePair> result = new HashMap<>();
+            
+            // Non-shared types need to be optional.
+            // (We don't nest optionals)
+            for (Entry<@ExpressionIdentifier String, Pair<Boolean, DataType>> e : nonShared.entrySet())
+            {
+                GeneralisedTypePair r;
+                if (isOptional(e.getValue().getSecond()))
+                {
+                    r = new GeneralisedTypePair(e.getValue().getSecond(), x -> x);
+                }
+                else
+                {
+                    DataType optType = typeManager.makeMaybeType(e.getValue().getSecond());
+                    if (e.getValue().getFirst()) // Large
+                        r = new GeneralisedTypePair(optType, x -> x, x -> typeManager.maybePresent(x));
+                    else
+                        r = new GeneralisedTypePair(optType, x -> typeManager.maybePresent(x));
+                }
+                result.put(e.getKey(), r);
+                
+            }
+
+            for (Entry<@ExpressionIdentifier String, Pair<DataType, DataType>> e : shared.entrySet())
+            {
+                @Nullable GeneralisedTypePair gen = generaliseType(typeManager, e.getValue().getFirst(), e.getValue().getSecond());
+                if (gen == null)
+                    return null;//throw new UserException("Cannot generalise shared field named " + e.getKey() + " types: " + e.getValue().getFirst() + " and " + e.getValue().getSecond() + " are incompatible");
+                result.put(e.getKey(), gen);
+            }
+            
+            return new GeneralisedTypePair(DataType.record(Utility.mapValues(result, p -> p.resultingType)), applyToRecord(typeManager, Utility.<@ExpressionIdentifier String, GeneralisedTypePair, SimulationFunction<@Value Object, @Value Object>>mapValues(result, p -> p.smallToResult)), applyToRecord(typeManager, Utility.<@ExpressionIdentifier String, GeneralisedTypePair, SimulationFunction<@Value Object, @Value Object>>mapValues(result, p -> p.largeToResult)));
+        }
+        
+        
         return null;
+    }
+
+    private static boolean isOptional(DataType dataType) throws InternalException
+    {
+        return dataType.apply(new FlatDataTypeVisitor<Boolean>(false) {
+            @Override
+            public Boolean tagged(TypeId typeName, ImmutableList typeVars, ImmutableList tags) throws InternalException, InternalException
+            {
+                return typeName.getRaw().equals("Optional");
+            }
+        });
+    }
+
+    private static SimulationFunction<@Value Object, @Value Object> applyToRecord(TypeManager typeManager, ImmutableMap<@ExpressionIdentifier String, SimulationFunction<@Value Object, @Value Object>> applyToInner)
+    {
+        return x -> {
+            @Value Record record = Utility.cast(x, Record.class);
+            ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> r = ImmutableMap.builder();
+            HashMap<@ExpressionIdentifier String, SimulationFunction<@Value Object, @Value Object>> stillToApply = new HashMap<>(applyToInner);
+            for (Entry<@ExpressionIdentifier String, @Value Object> entry : record.getFullContent().entrySet())
+            {
+                SimulationFunction<@Value Object, @Value Object> f = stillToApply.remove(entry.getKey());
+                if (f == null)
+                    throw new InternalException("Problem fetching value for " + entry.getKey());
+                r.put(entry.getKey(), f.apply(entry.getValue()));
+            }
+            // Other fields must now be Optional, so insert None values:
+            for (@ExpressionIdentifier String key : stillToApply.keySet())
+            {
+                r.put(key, typeManager.maybeMissing());
+            }
+            return DataTypeUtility.value(new RecordMap(r.build()));
+        };
+    }
+
+    private static SimulationFunction<@Value Object, @Value Object> applyToList(SimulationFunction<@Value Object, @Value Object> applyToInner)
+    {
+        return x -> {
+            @Value ListEx list = Utility.cast(x, ListEx.class);
+            int length = list.size();
+            ImmutableList.Builder<@Value Object> processed = ImmutableList.builderWithExpectedSize(length);
+            for (int i = 0; i < length; i++)
+            {
+                processed.add(applyToInner.apply(list.get(i)));
+            }
+            return DataTypeUtility.value(processed.build());
+        };
+    }
+
+    private static @Nullable ImmutableMap<@ExpressionIdentifier String, DataType> getRecordFields(DataType dataType) throws InternalException
+    {
+        return dataType.apply(new FlatDataTypeVisitor<@Nullable ImmutableMap<@ExpressionIdentifier String, DataType>>(null) {
+            @Override
+            public @Nullable ImmutableMap<@ExpressionIdentifier String, DataType> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            {
+                return fields;
+            }
+        });
     }
 
     private static @Nullable DataType getArrayInner(DataType dataType) throws InternalException
@@ -363,6 +475,32 @@ public class ConvertFromR
                 return inner;
             }
         });
+    }
+
+    /**
+     * Represents the result of generalising two types
+     * (labelled smaller and larger, although these are really just labels)
+     * into a third result type, and gives the value transformations
+     * needed for turning small/large into result.
+     */
+    private static class GeneralisedTypePair
+    {
+        public final DataType resultingType;
+        public final SimulationFunction<@Value Object, @Value Object> smallToResult;
+        public final SimulationFunction<@Value Object, @Value Object> largeToResult;
+
+        public GeneralisedTypePair(DataType resultingType, SimulationFunction<@Value Object, @Value Object> smallToResult, SimulationFunction<@Value Object, @Value Object> largeToResult)
+        {
+            this.resultingType = resultingType;
+            this.smallToResult = smallToResult;
+            this.largeToResult = largeToResult;
+        }
+
+        // For when large is identity transformation
+        public GeneralisedTypePair(DataType resultingType, SimulationFunction<@Value Object, @Value Object> smallToResult)
+        {
+            this(resultingType, smallToResult, x -> x);
+        }
     }
 
     /**
@@ -388,34 +526,46 @@ public class ConvertFromR
                 // Fine, already dealt with
                 continue;
             }
-            @Nullable SimulationFunction<@Value Object, @Value Object> curToNext = generaliseType(typeManager, curType, nextType);
+            @Nullable GeneralisedTypePair curToNext = generaliseType(typeManager, curType, nextType);
             if (curToNext != null)
             {
-                conversions.put(curType, curToNext);
-                curType = nextType;
                 conversions.put(curType, x -> x);
+                composeAllWith(conversions, curToNext.smallToResult);
+                curType = curToNext.resultingType;
+                conversions.put(nextType, curToNext.largeToResult);
                 continue;
             }
-            @Nullable SimulationFunction<@Value Object, @Value Object> nextToCur = generaliseType(typeManager, nextType, curType);
+            @Nullable GeneralisedTypePair nextToCur = generaliseType(typeManager, nextType, curType);
             if (nextToCur != null)
             {
-                conversions.put(nextType, nextToCur);
+                composeAllWith(conversions, nextToCur.largeToResult);
+                conversions.put(nextType, nextToCur.smallToResult);
+                curType = nextToCur.resultingType;
                 continue;
             }
             throw new UserException("Cannot generalise " + curType + " and " + nextType + " into a single type");
         }
-        // Have to redo in case we generalised twice:
-        for (Entry<DataType, SimulationFunction<@Value Object, @Value Object>> entry : conversions.entrySet())
-        {
-            SimulationFunction<@Value Object, @Value Object> f = generaliseType(typeManager, entry.getKey(), curType);
-            if (f == null)
-                throw new InternalException("No generalisation from " + entry.getKey() + " to " + curType);
-            entry.setValue(f);
-        }
         
         return new Pair<>(curType, ImmutableMap.copyOf(conversions));
     }
-    
+
+    private static void composeAllWith(HashMap<DataType, SimulationFunction<@Value Object, @Value Object>> current, SimulationFunction<@Value Object, @Value Object> thenApply)
+    {
+        for (Entry<DataType, SimulationFunction<@Value Object, @Value Object>> e : current.entrySet())
+        {
+            // Must take value outside lambda, since we're about to change it:
+            SimulationFunction<@Value Object, @Value Object> prev = e.getValue();
+            e.setValue(new SimulationFunction<@Value Object, @Value Object>()
+            {
+                @Override
+                public @Value Object apply(@Value Object x) throws InternalException, UserException
+                {
+                    return thenApply.apply(prev.apply(x));
+                }
+            });
+        }
+    }
+
     public static ImmutableList<Pair<String, EditableRecordSet>> convertRToTable(TypeManager typeManager, RValue rValue) throws UserException, InternalException
     {
         // R tables are usually a list of columns, which suits us:
