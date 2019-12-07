@@ -24,6 +24,8 @@ import records.jellytype.JellyTypeRecord.Field;
 import records.jellytype.JellyUnit;
 import test.gen.GenUnit;
 import test.gen.type.GenJellyTypeMaker.JellyTypeMaker;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.ExSupplier;
 import utility.Pair;
@@ -100,6 +102,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
     }
 
     @Override
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public JellyTypeMaker generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
         // Use depth system to prevent infinite generation:

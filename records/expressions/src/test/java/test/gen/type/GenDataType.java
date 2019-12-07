@@ -8,6 +8,8 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import test.gen.type.GenJellyTypeMaker.TypeKinds;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 /**
  * A simplifying wrapper for GenDataTypeMaker that just gives the data type
@@ -35,6 +37,7 @@ public class GenDataType extends Generator<DataType>
     }
     
     @Override
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public DataType generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
         try

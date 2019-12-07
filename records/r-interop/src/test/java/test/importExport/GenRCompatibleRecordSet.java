@@ -18,6 +18,8 @@ import test.gen.type.GenDataTypeMaker.DataTypeAndValueMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeMaker;
 import test.gen.type.GenJellyTypeMaker.TypeKinds;
 import test.importExport.GenRCompatibleRecordSet.RCompatibleRecordSet;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -46,6 +48,7 @@ public class GenRCompatibleRecordSet extends Generator<RCompatibleRecordSet>
     }
 
     @Override
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public RCompatibleRecordSet generate(SourceOfRandomness random, GenerationStatus status)
     {
         boolean tibbleOnly = random.nextBoolean();

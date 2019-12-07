@@ -47,6 +47,8 @@ import records.rinterop.RRead;
 import records.rinterop.RValue;
 import records.rinterop.ConvertFromR.TableType;
 import records.rinterop.RWrite;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.TaggedValue;
@@ -345,6 +347,7 @@ public class TestRLoadSave
     }
 
 
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
     private static class EnsureRoundTrip implements DataTypeVisitorGet<@Nullable Void>
     {
         private final int length;
@@ -559,6 +562,7 @@ public class TestRLoadSave
 
         @Override
         @SuppressWarnings("nullness")
+        @OnThread(value = Tag.Simulation, ignoreParent = true)
         public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
         {
             if (dateTimeInfo.getType() == DateTimeType.TIMEOFDAY && !(reloadedVal instanceof LocalTime))
@@ -571,6 +575,7 @@ public class TestRLoadSave
 
         @Override
         @SuppressWarnings("nullness")
+        @OnThread(value = Tag.Simulation, ignoreParent = true)
         public @Value Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
         {
             if (typeName.getRaw().equals("Optional") && !(reloadedVal instanceof TaggedValue))
@@ -586,6 +591,7 @@ public class TestRLoadSave
         }
 
         @Override
+        @OnThread(value = Tag.Simulation, ignoreParent = true)
         public @Value Object record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
         {
             ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> mappedValues = ImmutableMap.builder();
@@ -599,6 +605,7 @@ public class TestRLoadSave
         }
 
         @Override
+        @OnThread(value = Tag.Simulation, ignoreParent = true)
         public @Value Object array(DataType inner) throws InternalException, InternalException
         {
             try

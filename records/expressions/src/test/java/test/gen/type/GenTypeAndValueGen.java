@@ -15,6 +15,8 @@ import test.gen.type.GenDataTypeMaker.DataTypeAndValueMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeMaker;
 import test.gen.type.GenJellyTypeMaker.TypeKinds;
 import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.util.Random;
 
@@ -70,6 +72,7 @@ public class GenTypeAndValueGen extends Generator<TypeAndValueGen>
 
 
     @Override
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public TypeAndValueGen generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         try

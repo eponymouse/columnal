@@ -24,6 +24,8 @@ import test.gen.type.GenJellyTypeMaker.GenTaggedType;
 import test.gen.type.GenJellyTypeMaker.TypeKinds;
 import test.gen.type.GenDataTypeMaker.DataTypeMaker;
 import test.gen.type.GenJellyTypeMaker.JellyTypeMaker;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 
 import java.lang.annotation.Retention;
@@ -122,6 +124,7 @@ public class GenDataTypeMaker extends GenValueBase<DataTypeMaker>
     }
     
     @Override
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public DataTypeMaker generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
         this.r = r;
