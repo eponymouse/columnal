@@ -3,6 +3,7 @@ package records.rinterop;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.data.RecordSet;
 import records.error.InternalException;
@@ -24,6 +25,8 @@ public class RExecution
 {
     // null means not checked yet
     private static @MonotonicNonNull Boolean isRAvailable;
+    // Uses $PATH by default:
+    private static String rExec = "R";
     
     public static RValue runRExpression(String rExpression) throws UserException, InternalException
     {
@@ -33,7 +36,7 @@ public class RExecution
     public static RValue runRExpression(String rExpression, ImmutableList<String> packages, ImmutableMap<String, RecordSet> tablesToPass) throws UserException, InternalException
     {
         if (isRAvailable == null)
-        {
+        {            
             try
             {
                 Runtime.getRuntime().exec(new String[]{"R", "--version"}).waitFor();
@@ -41,7 +44,27 @@ public class RExecution
             }
             catch (IOException e)
             {
-                isRAvailable = false;
+                // Bit of a quick hack, especially for Mac where PATH is not taken from terminal:
+                if (SystemUtils.IS_OS_MAC_OSX || SystemUtils.IS_OS_LINUX)
+                {
+                    try
+                    {
+                        String local = "/usr/local/bin/R";
+                        Runtime.getRuntime().exec(new String[]{local, "--version"}).waitFor();
+                        isRAvailable = true;
+                        rExec = local;
+                    }
+                    catch (IOException e2)
+                    {
+                        isRAvailable = false;
+                    }
+                    catch (InterruptedException e2)
+                    {
+                        // Hit and hope...
+                    }
+                }
+                else
+                    isRAvailable = false;
             }
             catch (InterruptedException e)
             {
@@ -56,7 +79,7 @@ public class RExecution
         
         try (TemporaryFileHandler rdsFile = new TemporaryFileHandler())
         {
-            Process p = Runtime.getRuntime().exec(new String[]{"R", "--vanilla", "--slave"});
+            Process p = Runtime.getRuntime().exec(new String[]{rExec, "--vanilla", "--slave"});
             PrintStream cmdStream = new PrintStream(p.getOutputStream());
             
             for (String pkg : Utility.prependToList("tibble", packages))
