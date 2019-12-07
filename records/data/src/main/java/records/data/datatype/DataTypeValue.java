@@ -102,9 +102,9 @@ public final class DataTypeValue
         {
             @SuppressWarnings("valuetype")
             @OnThread(Tag.Simulation)
-            private <T> void set(GetValue<@Value T> g, Class<T> castTo) throws UserException, InternalException
+            private <T> void set(GetValue<@Value @NonNull T> g, Class<T> castTo) throws UserException, InternalException
             {
-                g.set(rowIndex, value.<@Value T>map(v -> castTo.cast(v)));
+                g.set(rowIndex, value.<@NonNull @Value T>map(v -> castTo.cast(v)));
             }
             
             @Override
@@ -336,7 +336,7 @@ public final class DataTypeValue
         return getArrayLength.apply(index);
     }*/
 
-    public static interface GetValue<@Value T>
+    public static interface GetValue<T extends @NonNull @Value Object>
     {
         @OnThread(Tag.Simulation)
         @NonNull @Value T getWithProgress(int index, Column.@Nullable ProgressListener progressListener) throws UserException, InternalException;
@@ -476,7 +476,7 @@ public final class DataTypeValue
         }
     }
 
-    private static <T> @Nullable GetValue<@Value T> several(SimulationFunction<Integer, Pair<DataTypeValue, Integer>> getOriginalIndex, @Nullable Function<DataTypeValue, @Nullable GetValue<@Value T>> g)
+    private static <T extends @NonNull Object> @Nullable GetValue<@Value T> several(SimulationFunction<Integer, Pair<DataTypeValue, Integer>> getOriginalIndex, @Nullable Function<DataTypeValue, @Nullable GetValue<@Value T>> g)
     {
         if (g == null)
             return null;
@@ -503,9 +503,9 @@ public final class DataTypeValue
     {
         return applyGet(new DataTypeVisitorGetEx<DataTypeValue, InternalException>()
         {
-            private <@NonNull @Value T> GetValue<@NonNull @Value T> overrideSet(GetValue<@NonNull @Value T> g)
+            private <T extends @NonNull @Value Object> GetValue<T> overrideSet(GetValue<@NonNull @Value T> g)
             {
-                return new GetValue<@NonNull @Value T>()
+                return new GetValue<T>()
                 {
                     @Override
                     public @NonNull @Value T getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
@@ -515,7 +515,7 @@ public final class DataTypeValue
 
                     @Override
                     // @SuppressWarnings("nullness") // I guess checker thinks T could be @Nullable
-                    public @OnThread(Tag.Simulation) void set(int index, Either<String, @NonNull @Value T> value) throws InternalException, UserException
+                    public @OnThread(Tag.Simulation) void set(int index, Either<String, @Value @NonNull T> value) throws InternalException, UserException
                     {
                         set.set(index, value.<@Value Object>map(t -> t));
                     }

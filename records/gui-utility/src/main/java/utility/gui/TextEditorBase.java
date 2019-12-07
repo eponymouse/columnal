@@ -3,8 +3,6 @@ package utility.gui;
 import annotation.units.DisplayLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.sun.javafx.scene.text.HitInfo;
-import com.sun.javafx.scene.text.TextLayout;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -26,6 +24,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.PathElement;
+import javafx.scene.text.HitInfo;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 import log.Log;
@@ -189,12 +188,11 @@ public abstract class TextEditorBase extends Region
             updateCaretShapeQueued = false;
             try
             {
-                TextLayout textLayout = textFlow.getInternalTextLayout();
-                selectionShape.getElements().setAll(textLayout.getRange(Math.min(getDisplayCaretPosition(), getDisplayAnchorPosition()), Math.max(getDisplayCaretPosition(), getDisplayAnchorPosition()), TextLayout.TYPE_TEXT, 0, 0));
+                selectionShape.getElements().setAll(textFlow.rangeShape(Math.min(getDisplayCaretPosition(), getDisplayAnchorPosition()), Math.max(getDisplayCaretPosition(), getDisplayAnchorPosition())));
                 inverter.getElements().setAll(selectionShape.getElements());
-                caretShape.getElements().setAll(textLayout.getCaretShape(getDisplayCaretPosition(), true, 0, 0));
-                errorUnderlinePane.getChildren().setAll(makeSpans(getErrorCharacters()).stream().map(r -> makeErrorUnderline(r.start <= getDisplayCaretPosition() && getDisplayCaretPosition() <= r.end, textLayout.getRange(r.start, r.end, TextLayout.TYPE_TEXT, 0, 0))).collect(Collectors.<Path>toList()));
-                backgroundsPane.getChildren().setAll(Utility.mapListI(getBackgrounds(), b -> makeBackground(textLayout.getRange(b.startIncl, b.endExcl, TextLayout.TYPE_TEXT, 0, 0), b.styleClasses)));
+                caretShape.getElements().setAll(textFlow.caretShape(getDisplayCaretPosition(), true));
+                errorUnderlinePane.getChildren().setAll(makeSpans(getErrorCharacters()).stream().map(r -> makeErrorUnderline(r.start <= getDisplayCaretPosition() && getDisplayCaretPosition() <= r.end, textFlow.rangeShape(r.start, r.end))).collect(Collectors.<Path>toList()));
+                backgroundsPane.getChildren().setAll(Utility.mapListI(getBackgrounds(), b -> makeBackground(textFlow.rangeShape(b.startIncl, b.endExcl), b.styleClasses)));
                 if (isFocused())
                     caretBlink.play();
             }
@@ -303,23 +301,8 @@ public abstract class TextEditorBase extends Region
     @OnThread(Tag.FXPlatform)
     protected @Nullable HitInfo hitTest(double x, double y)
     {
-        TextLayout textLayout;
-        try
-        {
-            textLayout = textFlow.getInternalTextLayout();
-        }
-        catch (Exception e)
-        {
-            Log.log(e);
-            textLayout = null;
-        }
-        if (textLayout == null)
-            return null;
-        else
-        {
-            Point2D translated = translateHit(x, y);
-            return textLayout.getHitInfo((float) translated.getX(), (float) translated.getY());
-        }
+        Point2D translated = translateHit(x, y);
+        return textFlow.hitTest(new Point2D((float) translated.getX(), (float) translated.getY()));
     }
 
     @OnThread(Tag.FXPlatform)

@@ -55,7 +55,7 @@ import java.util.concurrent.ExecutionException;
  * V is the type of the value being displayed, e.g. Number
  */
 @OnThread(Tag.FXPlatform)
-public final class EditorKitCache<@Value V> implements ColumnHandler
+public final class EditorKitCache<@Value V extends @NonNull Object> implements ColumnHandler
 {
     public static enum ProgressState
     {

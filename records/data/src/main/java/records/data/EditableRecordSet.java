@@ -78,7 +78,7 @@ public class EditableRecordSet extends RecordSet
 
         return rs -> original.getType().applyGet(new DataTypeVisitorGet<EditableColumn>()
         {
-            private <T> List<Either<String, @UnknownIfValue T>> getAll(GetValue<@Value T> g) throws InternalException, UserException
+            private <T extends @NonNull Object> List<Either<String, @UnknownIfValue T>> getAll(GetValue<@Value T> g) throws InternalException, UserException
             {
                 List<Either<String, @UnknownIfValue T>> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)

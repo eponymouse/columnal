@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import javafx.application.Platform;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
@@ -59,7 +60,7 @@ public abstract class Transformation extends Table
         b.id(renames.tableId(getId())).nl();
         b.id(getTransformationName(), QuoteBehaviour.DEFAULT).nl();
         b.t(MainLexer.SOURCE);
-        for (TableId src : getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()))
+        for (@NonNull TableId src : getPrimarySources().collect(ImmutableList.<@NonNull TableId>toImmutableList()))
             b.id(renames.tableId(src));
         b.nl();
         b.begin().nl();

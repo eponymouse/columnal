@@ -3,8 +3,6 @@ package records.gui.dtf;
 import annotation.units.CanonicalLocation;
 import annotation.units.DisplayLocation;
 import com.google.common.collect.ImmutableList;
-import com.sun.javafx.scene.text.HitInfo;
-import com.sun.javafx.scene.text.TextLayout;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -18,6 +16,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.shape.Path;
+import javafx.scene.text.HitInfo;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import log.Log;
@@ -389,8 +388,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     {
         try
         {
-            TextLayout textLayout = textFlow.getInternalTextLayout();
-            int index = textLayout.getHitInfo((float) point2D.getX(), (float) point2D.getY()).getInsertionIndex();
+            int index = textFlow.hitTest(new Point2D((float) point2D.getX(), (float) point2D.getY())).getInsertionIndex();
             caretPosition.moveTo(isEffectivelyFocused() ? index : document.mapCaretPos(index));
             moveAnchorToCaret();
         }
@@ -409,8 +407,8 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     {
         try
         {
-            Path path = new Path(textFlow.getInternalTextLayout().getRange(charAfter, charAfter + 1, TextLayout.TYPE_TEXT, (float)textFlow.getInsets().getLeft(), 0));
-            Bounds actualBounds = localToScreen(path.getBoundsInLocal());
+            Path path = new Path(textFlow.rangeShape(charAfter, charAfter + 1));
+            Bounds actualBounds = localToScreen(FXUtility.offsetBoundsBy(path.getBoundsInLocal(), (float)textFlow.getInsets().getLeft(), 0));
             Rectangle2D clipped = FXUtility.intersectRect(
                     FXUtility.boundsToRect(actualBounds),
                     FXUtility.boundsToRect(localToScreen(getBoundsInLocal())));

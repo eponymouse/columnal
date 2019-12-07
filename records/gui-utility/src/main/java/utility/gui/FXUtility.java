@@ -122,30 +122,6 @@ public class FXUtility
     private static ArrayList<TKPulseListener> pulseListeners = new ArrayList<>();
     private static WeakHashMap<Stage, MyHookProc> windowsHookSetOn = new WeakHashMap<>();
 
-    @OnThread(Tag.FXPlatform)
-    public static <T> ListView<@NonNull T> readOnlyListView(ObservableList<@NonNull T> content, Function<T, String> toString)
-    {
-        ListView<@NonNull T> listView = new ListView<>(content);
-        listView.setCellFactory((ListView<@NonNull T> lv) -> {
-            return new TextFieldListCell<@NonNull T>(new StringConverter<@NonNull T>()
-            {
-                @Override
-                public String toString(T t)
-                {
-                    return toString.apply(t);
-                }
-
-                @Override
-                public @NonNull T fromString(String string)
-                {
-                    throw new UnsupportedOperationException();
-                }
-            });
-        });
-        listView.setEditable(false);
-        return listView;
-    }
-
     public static <T> void enableDragFrom(ListView<T> listView, String type, TransferMode transferMode)
     {
         enableDragFrom(listView, type, transferMode, x -> x, null);
@@ -1046,6 +1022,11 @@ public class FXUtility
             return new Pair<>(original, null);
     }
 
+    public static Bounds offsetBoundsBy(Bounds original, float x, float y)
+    {
+        return new BoundingBox(original.getMinX() + x, original.getMinY() + y, original.getWidth(), original.getHeight());
+    }
+
     public static interface DragHandler
     {
         @OnThread(Tag.FXPlatform)
@@ -1321,16 +1302,6 @@ public class FXUtility
                 Utility.setProperty("recentdirs.txt", tag, parentDir);
         }
         return file;
-    }
-
-    // TODO this seems to fall foul of checker, maybe try in 2.2.1?
-    public static <R, T> void bindEager(Property<R> dest, List<ObservableValue<@NonNull ? extends T>> srcs, FXPlatformFunction<Stream<@NonNull T>, R> calculate)
-    {
-        FXPlatformConsumer<@NonNull T> listener = x -> dest.setValue(calculate.apply(srcs.stream().<@NonNull T>map((ObservableValue<@NonNull ? extends @NonNull T> e) -> e.getValue())));
-        for (ObservableValue<@NonNull ? extends T> src : srcs)
-        {
-            //FXUtility.addChangeListenerPlatformNN(src, listener);
-        }
     }
     
     public static <T> void listViewDoubleClick(ListView<T> listView, FXPlatformConsumer<T> onDoubleClick)

@@ -11,6 +11,11 @@ class SimpleObjectProperty<T>
 {
     @Pure T get();
 }
+package javafx.beans.binding;
+class DoubleBinding
+{
+    void bind(@UnknownInitialization(javafx.beans.binding.DoubleBinding.class) DoubleBinding this, Observable... obs);
+}
 
 package javafx.css;
 class Styleable
@@ -148,6 +153,7 @@ class Labeled
 {
     void setContentDisplay(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, ContentDisplay contentDisplay);
     void setText(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, String s);
+    StringProperty textProperty(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this);
     void setGraphic(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, Node graphic);
     void setAlignment(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, Pos value);
 }
@@ -205,15 +211,11 @@ class TableCell<S, T>
 {
      void setGraphic(@Nullable Node a);
 }
-class ListCell<T>
-{
-     StringProperty textProperty(@UnknownInitialization(javafx.scene.control.ListCell.class) ListCell this);
-     void updateItem(@Nullable T item, boolean empty);
-}
 class Cell<T>
 {
      @Nullable T getItem(@UnknownInitialization(javafx.scene.control.Cell.class) Cell this);
      ReadOnlyBooleanProperty emptyProperty(@UnknownInitialization(javafx.scene.control.Cell.class) Cell this);
+     void updateItem(@Nullable T item, boolean empty);
 }
 class IndexedCell<T>
 {

@@ -318,7 +318,7 @@ public class TableDisplayUtility
         public @TableDataRowIndex int getLastVisibleRowIncl();
     }
     
-    public static class GetValueAndComponent<T>
+    public static class GetValueAndComponent<T extends @NonNull Object>
     {
         private final DataType dataType;
         private final Class<@UnknownIfValue T> itemClass;

@@ -199,7 +199,7 @@ public abstract class DataType implements StyledShowable
         return apply(new DataTypeVisitorEx<DataTypeValue, InternalException>()
         {
             @SuppressWarnings("valuetype")
-            private <T> GetValue<@Value T> castTo(Class<T> cls)
+            private <T extends @NonNull Object> GetValue<@Value T> castTo(Class<T> cls)
             {
                 return new GetValue<T>()
                 {
