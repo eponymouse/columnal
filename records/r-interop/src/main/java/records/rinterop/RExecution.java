@@ -3,6 +3,7 @@ package records.rinterop;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.data.RecordSet;
 import records.error.InternalException;
 import records.error.UserException;
@@ -21,6 +22,9 @@ import java.util.Map.Entry;
 
 public class RExecution
 {
+    // null means not checked yet
+    private static @MonotonicNonNull Boolean isRAvailable;
+    
     public static RValue runRExpression(String rExpression) throws UserException, InternalException
     {
         return runRExpression(rExpression, ImmutableList.of(), ImmutableMap.of());
@@ -28,6 +32,28 @@ public class RExecution
     
     public static RValue runRExpression(String rExpression, ImmutableList<String> packages, ImmutableMap<String, RecordSet> tablesToPass) throws UserException, InternalException
     {
+        if (isRAvailable == null)
+        {
+            try
+            {
+                Runtime.getRuntime().exec(new String[]{"R", "--version"}).waitFor();
+                isRAvailable = true;
+            }
+            catch (IOException e)
+            {
+                isRAvailable = false;
+            }
+            catch (InterruptedException e)
+            {
+                // Hit and hope...
+            }
+        }
+        
+        if (isRAvailable != null && isRAvailable == false)
+        {
+            throw new UserException("R not found on your system; R must be installed and in your PATH");
+        }
+        
         try (TemporaryFileHandler rdsFile = new TemporaryFileHandler())
         {
             Process p = Runtime.getRuntime().exec(new String[]{"R", "--vanilla", "--slave"});
