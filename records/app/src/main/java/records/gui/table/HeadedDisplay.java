@@ -29,6 +29,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.stage.Window;
@@ -220,7 +221,12 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
             if (rerunOp != null)
             {
                 reRun = GUI.label("transformation.rerun", "table-display-rerun");
-                reRun.setGraphic(new Label("\u2b6e"));
+                Label arrowLabel = new Label("\u2b6e");
+                Pane stackPane = new StackPane(arrowLabel);
+                stackPane.setMinHeight(0);
+                // Hack:
+                arrowLabel.setTranslateY(-2);
+                reRun.setGraphic(stackPane);
                 reRun.setGraphicTextGap(4);
                 reRun.setTextOverrun(OverrunStyle.ELLIPSIS);
                 BorderPane.setAlignment(reRun, Pos.CENTER_LEFT);

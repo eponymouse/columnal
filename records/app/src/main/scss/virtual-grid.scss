@@ -71,6 +71,7 @@
         & .label {
             -fx-text-fill: $table-header-text-color;
             -fx-cursor: hand;
+            -fx-font-family: 'Noto Sans Symbols2';
         }
         &:hover {
             -fx-underline: true;

@@ -198,6 +198,7 @@ public class Main extends Application
         FXUtility.ensureFontLoaded("NotoMono-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoSans-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoSansSymbols-Regular.ttf");
+        FXUtility.ensureFontLoaded("NotoSansSymbols2-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoSans-Italic.ttf");
         FXUtility.ensureFontLoaded("NotoSans-Bold.ttf");
         FXUtility.ensureFontLoaded("NotoSans-BoldItalic.ttf");
