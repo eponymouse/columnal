@@ -1,23 +1,23 @@
 @font-face {
   font-family: 'Noto Sans';
-  src: url('NotoSans-Regular.ttf') format('truetype');
+  src: url('/static/fonts/NotoSans-Regular.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans';
-  src: url('NotoSans-Bold.ttf') format('truetype');
+  src: url('/static/fonts/NotoSans-Bold.ttf') format('truetype');
   font-weight: bold;
 }
 @font-face {
   font-family: 'Noto Sans';
-  src: url('NotoSans-Italic.ttf') format('truetype');
+  src: url('/static/fonts/NotoSans-Italic.ttf') format('truetype');
   font-style: italic;
 }
 @font-face {
   font-family: 'Noto Sans Symbols';
-  src: url('NotoSansSymbols-Regular.ttf') format('truetype');
+  src: url('/static/fonts/NotoSansSymbols-Regular.ttf') format('truetype');
 }
 
 @font-face {
   font-family: 'Noto Mono';
-  src: url('NotoMono-Regular.ttf') format('truetype');
+  src: url('/static/fonts/NotoMono-Regular.ttf') format('truetype');
 }
