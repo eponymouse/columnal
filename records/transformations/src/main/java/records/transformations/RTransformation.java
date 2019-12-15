@@ -134,7 +134,7 @@ public class RTransformation extends VisitableTransformation
 
             RValue rResult = RExecution.runRExpression(rExpression, packagesToLoad, ImmutableMap.copyOf(tablesToPass));
 
-            ImmutableList<Pair<String, EditableRecordSet>> tables = ConvertFromR.convertRToTable(getManager().getTypeManager(), rResult);
+            ImmutableList<Pair<String, EditableRecordSet>> tables = ConvertFromR.convertRToTable(getManager().getTypeManager(), rResult, false);
 
             if (tables.isEmpty())
                 return Either.left(StyledString.s("R result empty"));

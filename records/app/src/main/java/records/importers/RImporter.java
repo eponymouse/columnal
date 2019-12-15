@@ -55,7 +55,7 @@ public class RImporter implements Importer
         Workers.onWorkerThread("Loading " + src + " " + origin, Priority.LOAD_FROM_DISK, () -> {
             try
             {
-                ImmutableList<Pair<String, EditableRecordSet>> tables = ConvertFromR.convertRToTable(tableManager.getTypeManager(), RRead.readRData(src));
+                ImmutableList<Pair<String, EditableRecordSet>> tables = ConvertFromR.convertRToTable(tableManager.getTypeManager(), RRead.readRData(src), true);
     
                 switch (tables.size())
                 {
