@@ -33,7 +33,7 @@ public class GenNonsenseRTransform extends Generator<Transformation_Mgr>
             DummyManager mgr = TestUtil.managerWithTestTypes().getFirst();
 
             ImmutableList<TableId> srcIds = DataTestUtil.makeList(sourceOfRandomness, 0, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
-            ImmutableList<String> pkgs = TestUtil.makeList(sourceOfRandomness.nextInt(0, 10), new GenString(), sourceOfRandomness, generationStatus);
+            ImmutableList<String> pkgs = DataTestUtil.makeList(sourceOfRandomness, 0, 10, () -> DataTestUtil.generateIdent(sourceOfRandomness));
             String rExpression = TestUtil.makeNonEmptyString(sourceOfRandomness, generationStatus);
             
             return new Transformation_Mgr(mgr, new RTransformation(mgr, TestUtil.ILD, srcIds, pkgs, rExpression));
