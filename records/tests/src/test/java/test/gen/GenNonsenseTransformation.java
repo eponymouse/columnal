@@ -23,7 +23,8 @@ public class GenNonsenseTransformation extends Generator<Transformation_Mgr>
         new GenNonsenseManualEdit(),
         new GenNonsenseSort(),
         new GenNonsenseSummaryStats(),
-        new GenNonsenseTransform()
+        new GenNonsenseTransform(),
+        new GenNonsenseRTransform()
     );
 
     public GenNonsenseTransformation()

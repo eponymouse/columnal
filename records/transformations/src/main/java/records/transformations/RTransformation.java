@@ -98,7 +98,7 @@ public class RTransformation extends VisitableTransformation
     @Override
     protected int transformationHashCode()
     {
-        return Objects.hash(srcTableIds, rExpression);
+        return Objects.hash(packagesToLoad, srcTableIds, rExpression);
     }
 
     @Override
@@ -108,7 +108,7 @@ public class RTransformation extends VisitableTransformation
             return false;
         RTransformation that = (RTransformation)obj;
         
-        return srcTableIds.equals(that.srcTableIds) && rExpression.equals(that.rExpression);
+        return srcTableIds.equals(that.srcTableIds) && packagesToLoad.equals(that.packagesToLoad) && rExpression.equals(that.rExpression);
     }
 
     @Override
