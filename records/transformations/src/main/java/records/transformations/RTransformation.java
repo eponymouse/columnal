@@ -92,7 +92,10 @@ public class RTransformation extends VisitableTransformation
     @Override
     protected List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
-        return Arrays.stream(Utility.splitLines(rExpression)).map(l -> "@R " + l).collect(ImmutableList.<String>toImmutableList());
+        return Stream.<String>concat(
+            packagesToLoad.stream().<String>map(pkg -> "@PACKAGE " + pkg),
+            Arrays.stream(Utility.splitLines(rExpression)).<String>map(l -> "@R " + l))
+            .collect(ImmutableList.<String>toImmutableList());
     }
 
     @Override
