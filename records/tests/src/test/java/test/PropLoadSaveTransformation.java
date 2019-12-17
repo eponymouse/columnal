@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(JUnitQuickcheck.class)
 public class PropLoadSaveTransformation
 {
-    @Property(trials = 1000)
+    @Property(trials = 200)
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public void testLoadSaveTransformation(@From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original)
         throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
