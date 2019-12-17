@@ -2,6 +2,7 @@ package records.rinterop;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import log.Log;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -108,24 +109,59 @@ public class RExecution
             }
             cmdStream.println("quit();");
             cmdStream.flush();
-            StringWriter stdout = new StringWriter();
-            IOUtils.copy(p.getInputStream(), stdout, StandardCharsets.UTF_8);
-            StringWriter stderr = new StringWriter();
-            IOUtils.copy(p.getErrorStream(), stderr, StandardCharsets.UTF_8);
-            int exitCode = p.waitFor();
-            if (exitCode != 0)
-                throw new UserException("Exit code from running R (" + exitCode + ") indicates error.  Output was:\n" + stdout.toString() + "\nError was:\n" + stderr.toString());
-            return RRead.readRData(outputFile);
+            CopyStreamThread copyOut = new CopyStreamThread(p.getInputStream());
+            CopyStreamThread copyErr = new CopyStreamThread(p.getErrorStream());
+            try
+            {
+                copyOut.start();
+                copyErr.start();
+                if (!p.waitFor(15, TimeUnit.SECONDS))
+                    throw new UserException("R process took too long to complete, giving up.");
+                if (p.exitValue() != 0)
+                    throw new UserException("Exit code from running R (" + p.exitValue() + ") indicates error.  Output was:\n" + copyOut.destination.toString() + "\nError was:\n" + copyErr.destination.toString());
+                return RRead.readRData(outputFile);
+            }
+            finally
+            {
+                p.destroyForcibly();
+                copyOut.interrupt();
+                copyErr.interrupt();
+            }
         }
-        catch (IOException | InterruptedException e)
+        catch (IOException | InterruptedException | IllegalThreadStateException e)
         {
             throw new UserException("Problem running R", e);
         }
     }
     
-    private static String escape(String original)
+    private static class CopyStreamThread extends Thread
     {
-        return original.replace("\\", "\\\\");
+        private final StringWriter destination = new StringWriter();
+        private final InputStream source;
+
+        private CopyStreamThread(InputStream source)
+        {
+            this.source = source;
+        }
+
+        @Override
+        public void run()
+        {
+            try
+            {
+                IOUtils.copy(source, destination, StandardCharsets.UTF_8);
+            }
+            catch (IOException e)
+            {
+                Log.log(e);
+            }
+            /*
+            catch (InterruptedException e)
+            {
+                // Just finish...
+            }
+             */
+        }
     }
 
     private static class TemporaryFileHandler implements AutoCloseable

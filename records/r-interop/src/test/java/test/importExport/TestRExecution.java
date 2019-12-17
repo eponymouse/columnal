@@ -6,6 +6,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.hamcrest.Matchers;
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.MatcherAssert;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.Column;
@@ -225,5 +229,22 @@ public class TestRExecution
         RecordSet recordSet = ConvertFromR.convertRToTable(typeManager, rValue, false).get(0).getSecond();
         TaggedValue taggedValue = Utility.cast(recordSet.getColumn(new ColumnId("Plant")).getType().getCollapsed(0), TaggedValue.class);
         assertEquals("Qn1", taggedValue.getTagName());
+    }
+    
+    @Test
+    public void testTimeout() throws InternalException
+    {
+        long start = System.currentTimeMillis();
+        try
+        {
+            RExecution.runRExpression("Sys.sleep(60)");
+            Assert.fail("Should have thrown timeout exception");
+        }
+        catch (UserException e)
+        {
+            // This is the expected outcome.  Check it did actually cut off, and give the right reason:
+            MatcherAssert.assertThat(System.currentTimeMillis(), Matchers.<Long>lessThan(start + 20 * 1000));
+            MatcherAssert.assertThat(e.getLocalizedMessage(), CoreMatchers.containsString("too long"));
+        }
     }
 }
