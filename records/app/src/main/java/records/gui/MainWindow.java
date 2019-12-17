@@ -1,6 +1,5 @@
 package records.gui;
 
-import annotation.units.AbsColIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -12,7 +11,6 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.TitledPane;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
@@ -145,6 +143,10 @@ public class MainWindow
                 GUI.menu("menu.edit",
                         GUI.menuItem("menu.edit.undo", () -> {
                             v.undo();
+                        }),
+                        new SeparatorMenuItem(),
+                        GUI.menuItem("menu.edit.settings", () -> {
+                            v.editSettings();
                         })
                 ),
                 GUI.menu("menu.view",

@@ -63,9 +63,10 @@ import records.gui.highlights.TableHighlights.HighlightType;
 import records.gui.highlights.TableHighlights.PickResult;
 import records.gui.highlights.TableHighlights.Picker;
 import records.gui.lexeditor.ExpressionEditor;
+import records.gui.settings.EditSettingsDialog;
+import records.data.Settings;
 import records.gui.table.CheckDisplay;
 import records.gui.table.ExplanationDisplay;
-import records.gui.table.HeadedDisplay;
 import records.gui.table.TableDisplay;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
@@ -74,6 +75,7 @@ import records.importers.manager.ImporterManager;
 import records.plugins.PluginManager;
 import records.transformations.Check;
 import records.transformations.Check.CheckType;
+import records.transformations.RTransformation;
 import records.transformations.TransformationManager;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.explanation.Explanation;
@@ -379,6 +381,43 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         // Highlight immediately:
         if (screenPos != null)
             tableHighlights.highlightAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
+    }
+
+    public void editSettings()
+    {
+        Settings prevSettings = TableManager.getSettings();
+        Settings newSettings = new EditSettingsDialog(getWindow(), prevSettings).showAndWait().orElse(prevSettings);
+        if (!newSettings.equals(prevSettings))
+        {
+            TableManager.setSettings(newSettings);
+            // TODO should really re-run for all other open windows, too.
+            
+            // We need to re-run R transformations:
+            Workers.onWorkerThread("Re-run R transformations", Priority.LOAD_FROM_DISK, () -> {
+                for (Table t : getManager().getAllTablesAvailableTo(null, true))
+                {
+                    // This may involve running a few twice, but I'll live:
+
+                    // We use ID because re-running may have regenerated table, but ID should be the same:
+                    t = getManager().getSingleTableOrNull(t.getId());
+                    if (t == null)
+                        continue; // Shouldn't happen, but just ignore
+
+                    SimulationRunnable reRun = t.getReevaluateOperation();
+                    if (t instanceof RTransformation && reRun != null)
+                    {
+                        try
+                        {
+                            reRun.run();
+                        }
+                        catch (InternalException e)
+                        {
+                            Log.log(e);
+                        }
+                    }
+                }
+            });
+        }
     }
 
     public static enum Pick {

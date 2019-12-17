@@ -4,21 +4,42 @@
     <file url="file://$PROJECT_DIR$/records" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/anns" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/anns-threadchecker" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/anns-threadchecker/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/anns/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/anns/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/app" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/app/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/app/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/book" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/data" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/data/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/data/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/expressions" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/expressions/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/expressions/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/functions" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/functions/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/functions/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/gui-utility" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/gui-utility/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/gui-utility/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/lex-editor" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/lex-editor/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/parsers" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/parsers/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/r-interop" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/r-interop/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/stf" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/stf/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/stf/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/tests" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/threadchecker" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/threadchecker/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/threadchecker/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/transformations" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/records/types" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/transformations/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/utility" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/utility/src/main/java" charset="UTF-8" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

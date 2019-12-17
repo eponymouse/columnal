@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import log.ErrorHandler;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.KeyFor;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
@@ -60,6 +61,8 @@ import java.util.stream.Stream;
 public class TableManager
 {
     private static final Random RANDOM = new Random();
+    @OnThread(value = Tag.Any, requireSynchronized = true)
+    private static @MonotonicNonNull Settings settings;
     
     // We use a TreeMap here to have reliable ordering for tables, especially when saving:
     @OnThread(value = Tag.Any,requireSynchronized = true)
@@ -81,6 +84,29 @@ public class TableManager
         this.unitManager = new UnitManager();
         this.typeManager = new TypeManager(unitManager);
         this.pluginManager = pluggedContentHandler;
+    }
+    
+    private static final String SETTINGS_FILE_NAME = "settings.txt";
+
+    public static synchronized Settings getSettings()
+    {
+        if (settings == null)
+        {
+            String pathToRExecutable = Utility.getProperty(SETTINGS_FILE_NAME, "pathToRExecutable");
+            String useColumnalRLibs = Utility.getProperty(SETTINGS_FILE_NAME, "useColumnalRLibs");
+            settings = new Settings(pathToRExecutable == null || pathToRExecutable.trim().isEmpty() ? null : new File(pathToRExecutable),
+                // Default is true:
+                useColumnalRLibs == null || "true".equals(useColumnalRLibs));
+        }
+        return settings;
+    }
+
+    public static synchronized void setSettings(Settings settings)
+    {
+        TableManager.settings = settings;
+        // If we have a lot more properties, we may want to batch-set:
+        Utility.setProperty(SETTINGS_FILE_NAME, "pathToRExecutable", settings.pathToRExecutable == null ? "" : settings.pathToRExecutable.getAbsolutePath());
+        Utility.setProperty(SETTINGS_FILE_NAME, "useColumnalRLibs", Boolean.toString(settings.useColumnalRLibs));
     }
 
     @Pure
