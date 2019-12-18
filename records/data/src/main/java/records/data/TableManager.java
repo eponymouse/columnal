@@ -77,6 +77,15 @@ public class TableManager
     private final ArrayList<TableManagerListener> listeners = new ArrayList<>();
     private final TransformationLoader transformationLoader;
     private final PluggedContentHandler pluginManager;
+    
+    // R expressions are automatically run, which is dangerous as they could be modified by an external program, or especially
+    // could be sent from an untrusted source then opened.  So we keep track of files we made and their hashes, and those files
+    // are trusted.  Everything else is untrusted, which is done by banning R expressions during load, and keeping track of all
+    // the banned ones.  They remain banned for the whole session until manually re-run or modified.
+    @OnThread(Tag.Simulation)
+    private boolean banningAllRExpressions = false;
+    @OnThread(Tag.Simulation)
+    private final HashSet<String> bannedRExpressions = new HashSet<>();
 
     public TableManager(TransformationLoader transformationLoader, PluggedContentHandler pluggedContentHandler) throws UserException, InternalException
     {
@@ -212,7 +221,42 @@ public class TableManager
         }
         throw new UserException("Cannot locate file version; corrupt file or not a Columnal file?");
     }
-    
+
+    // Throws exception if not OK
+    @OnThread(Tag.Simulation)
+    public void checkROKToRun(String rExpression) throws UserException
+    {
+        // This is called while loading the R transformation, so if we're in banning mode, ban this one too:
+        if (banningAllRExpressions)
+        {
+            bannedRExpressions.add(rExpression);
+        }
+        
+        // It's ok if it's not explicitly banned
+        if (bannedRExpressions.contains(rExpression))
+        {
+            throw new UserException("R expression in untrusted file; manually click to re-run");
+        }
+    }
+
+    @OnThread(Tag.Simulation)
+    public void setBanAllR(boolean banAllR)
+    {
+        this.banningAllRExpressions = banAllR;
+    }
+
+    @OnThread(Tag.Simulation)
+    public void unban(String rExpression)
+    {
+        bannedRExpressions.remove(rExpression);
+    }
+
+    @OnThread(Tag.Simulation)
+    public boolean isBannedRExpression(String rExpression)
+    {
+        return bannedRExpressions.contains(rExpression);
+    }
+
     public static class Loaded
     {
         public final ImmutableList<StyledString> errors;

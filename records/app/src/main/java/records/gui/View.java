@@ -3,6 +3,8 @@ package records.gui;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -178,6 +180,9 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             {
                 Utility.saveLock.unlock();
             }
+            boolean hasBannedR = tableManager.getAllTables().stream().anyMatch(t -> t instanceof RTransformation && tableManager.isBannedRExpression(((RTransformation)t).getRExpression()));
+            if (!hasBannedR)
+                recordFileHash(dest, Hashing.sha256().hashString(completeFile, StandardCharsets.UTF_8));
             Platform.runLater(() -> lastSaveTime.setValue(now));
         });
     }
@@ -1190,6 +1195,76 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         }, () -> getGrid().positionOrAreaChanged()));
         getGrid().getFloatingSupplier().addItem(explanationDisplay.getSecond());
         getGrid().positionOrAreaChanged();
+    }
+
+    private static final String HASH_FILE_NAME = "hashes.txt";
+
+    // Checks if we have seen that file with that content last time we saved the file.
+    @OnThread(Tag.Simulation)
+    public static boolean checkHashMatch(File file, HashCode contentHash)
+    {
+        try
+        {
+            // Each line in the file is shasha <space> sha256hash <space> sha256hash.  The first hash is the hash of the path to the file, the second is the hash of the content.
+            ImmutableMap<HashCode, HashCode> filesToContent = loadFileHashes();
+            // Missing is the same as untrusted:
+            return contentHash.equals(filesToContent.get(hashFilePath(file)));
+        }
+        catch (IOException e)
+        {
+            // Two choices; assume bad or assume fine.  Too irritating for users if permanent file issue and we assume bad, so I think have to assume fine:
+            Log.log(e);
+            return true;
+        }
+    }
+
+    @OnThread(Tag.Any)
+    private static HashCode hashFilePath(File file)
+    {
+        return Hashing.sha256().hashString(file.getAbsolutePath(), StandardCharsets.UTF_8);
+    }
+
+    @OnThread(Tag.Simulation)
+    private static ImmutableMap<HashCode, HashCode> loadFileHashes() throws IOException
+    {
+        File hashesFile = new File(Utility.getStorageDirectory(), HASH_FILE_NAME);
+        // It's not an error to simply not exist yet:
+        if (!hashesFile.exists())
+            return ImmutableMap.of();
+        return FileUtils.readLines(hashesFile, StandardCharsets.UTF_8)
+            .stream()
+            .flatMap(l -> {
+                String[] parts = l.trim().split(" ");
+                if (parts.length == 3 && parts[0].equals("shasha"))
+                {
+                    try
+                    {
+                        return Stream.of(new Pair<>(HashCode.fromString(parts[1]), HashCode.fromString(parts[2])));
+                    }
+                    catch (Throwable t)
+                    {
+                        Log.log(t);
+                    }
+                }
+                return Stream.of();
+            }).collect(ImmutableMap.<Pair<HashCode, HashCode>, HashCode, HashCode>toImmutableMap(p -> p.getFirst(), p -> p.getSecond()));
+    }
+
+    @OnThread(Tag.Simulation)
+    private static void recordFileHash(File file, HashCode contentHash)
+    {
+        try
+        {
+            ImmutableMap<HashCode, HashCode> updated = Utility.appendToMap(loadFileHashes(), hashFilePath(file), contentHash, null);
+            FileUtils.writeLines(new File(Utility.getStorageDirectory(), HASH_FILE_NAME), "UTF-8",
+                updated.entrySet().stream().map(e -> "shasha " + e.getKey().toString() + " " + e.getValue().toString()).collect(ImmutableList.<String>toImmutableList())
+            );
+        }
+        catch (IOException e)
+        {
+            // Not much we can really do:
+            Log.log(e);
+        }
     }
 
     @OnThread(Tag.FXPlatform)

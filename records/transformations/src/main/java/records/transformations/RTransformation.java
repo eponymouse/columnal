@@ -127,6 +127,9 @@ public class RTransformation extends VisitableTransformation
     {
         try
         {
+            // Throws an exception if not OK:
+            getManager().checkROKToRun(rExpression);
+            
             HashMap<String, RecordSet> tablesToPass = new HashMap<>();
 
             for (TableId srcTableId : srcTableIds)
@@ -164,6 +167,7 @@ public class RTransformation extends VisitableTransformation
     public @Nullable SimulationRunnable getReevaluateOperation()
     {
         return () -> {
+            getManager().unban(rExpression);
             getManager().edit(getId(), new TableMaker<RTransformation>()
             {
                 @Override

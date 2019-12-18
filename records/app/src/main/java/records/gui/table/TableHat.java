@@ -597,6 +597,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
     {
         new EditRTransformationDialog(parent, rTransformation, selectWholeExpression).showAndWait().ifPresent(details -> {
             Workers.onWorkerThread("Editing R transformation", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing R transformation", () -> {
+                parent.getManager().unban(details.rExpression);
                 parent.getManager().edit(rTransformation.getId(), () -> new RTransformation(parent.getManager(), rTransformation.getDetailsForCopy(), details.includedTables, details.packages, details.rExpression), null);
             }));
         });

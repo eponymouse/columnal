@@ -1,6 +1,7 @@
 package records.gui;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.hash.Hashing;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -48,6 +49,7 @@ import utility.gui.SmallDeleteButton;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -252,7 +254,9 @@ public class MainWindow
                 Platform.runLater(() -> updateBanner(v, banner, false));
                 return TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err);
             }, () -> {
+                v.getManager().setBanAllR(!View.checkHashMatch(srcFinal.getFirst(), Hashing.sha256().hashString(srcFinal.getSecond(), StandardCharsets.UTF_8)));
                 v.getManager().loadAll(srcFinal.getSecond(), v::loadColumnWidths);
+                v.getManager().setBanAllR(false);
                 Platform.runLater(() -> {
                     v.enableWriting();
                     updateBanner(v, banner, false);
