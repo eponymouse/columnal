@@ -235,7 +235,7 @@ public class TableManager
         // It's ok if it's not explicitly banned
         if (bannedRExpressions.contains(rExpression))
         {
-            throw new UserException("R expression in untrusted file; manually click to re-run");
+            throw new UserException("R expression in untrusted file; click the circular arrow above to run");
         }
     }
 
