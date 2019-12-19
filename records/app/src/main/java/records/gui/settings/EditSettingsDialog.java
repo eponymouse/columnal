@@ -37,7 +37,7 @@ public class EditSettingsDialog extends ErrorableDialog<Settings>
         this.useRLocalLibs.setSelected(initialSettings.useColumnalRLibs);
         
         getDialogPane().setContent(new LabelledGrid(
-            LabelledGrid.labelledGridRow("settings.rexe", "settings/rexe", GUI.borderLeftCenterRight(null, rLocation, GUI.button("settings.rexe.choose", () -> {
+            LabelledGrid.labelledGridRow("settings.rexe", "edit-settings/rexe", GUI.borderLeftCenterRight(null, rLocation, GUI.button("settings.rexe.choose", () -> {
                 FileChooser fileChooser = new FileChooser();
                 File file = new File(rLocation.getText().trim());
                 if (file.exists())
@@ -58,7 +58,7 @@ public class EditSettingsDialog extends ErrorableDialog<Settings>
                     rLocation.setText(newFile.getAbsolutePath());
                 }
             }))),
-            LabelledGrid.labelledGridRow("settings.rlocallibs.label", "settings/rlocallibs", this.useRLocalLibs)
+            LabelledGrid.labelledGridRow("settings.rlocallibs.label", "edit-settings/rlocallibs", this.useRLocalLibs)
         ));
     }
 
@@ -73,7 +73,7 @@ public class EditSettingsDialog extends ErrorableDialog<Settings>
             rexe = new File(rLocation.getText().trim());
             if (!rexe.isFile())
             {
-                return Either.left("The specified R executable does not exist or is not a file");
+                return Either.left(TranslationUtility.getString("settings.error.rexe.invalid"));
             }
         }
         

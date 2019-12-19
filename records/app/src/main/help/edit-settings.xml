@@ -1,6 +1,6 @@
 <dialog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="help.xsd"
-        id="settings" title="Settings" >
+        id="edit-settings" title="Settings" >
     <help id="rexe" title="R executable">
         <short>The location of the R (or R.exe) executable to run for R transformations</short>
         <full>
