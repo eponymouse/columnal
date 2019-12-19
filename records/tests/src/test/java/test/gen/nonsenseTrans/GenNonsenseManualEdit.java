@@ -1,4 +1,4 @@
-package test.gen;
+package test.gen.nonsenseTrans;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;

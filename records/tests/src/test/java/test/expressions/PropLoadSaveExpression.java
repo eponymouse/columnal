@@ -1,7 +1,5 @@
 package test.expressions;
 
-import annotation.identifier.qual.ExpressionIdentifier;
-import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -22,22 +20,18 @@ import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.SaveDestination;
-import records.transformations.expression.ExpressionUtil;
-import records.transformations.expression.IdentExpression;
-import records.transformations.expression.visitor.ExpressionVisitorStream;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
-import test.gen.GenNonsenseExpression;
+import test.gen.nonsenseTrans.GenNonsenseExpression;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;

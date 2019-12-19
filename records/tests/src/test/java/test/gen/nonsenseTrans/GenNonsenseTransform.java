@@ -1,13 +1,14 @@
-package test.gen;
+package test.gen.nonsenseTrans;
 
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import records.data.ColumnId;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.error.InternalException;
-import records.error.UserException;
-import records.transformations.Filter;
+import records.transformations.Calculate;
 import records.transformations.expression.Expression;
 import test.DummyManager;
 import test.TestUtil;
@@ -16,12 +17,14 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
+import java.util.HashMap;
+
 /**
  * Created by neil on 27/11/2016.
  */
-public class GenNonsenseFilter extends Generator<Transformation_Mgr>
+public class GenNonsenseTransform extends Generator<Transformation_Mgr>
 {
-    public GenNonsenseFilter()
+    public GenNonsenseTransform()
     {
         super(Transformation_Mgr.class);
     }
@@ -36,8 +39,18 @@ public class GenNonsenseFilter extends Generator<Transformation_Mgr>
             DummyManager mgr = TestUtil.managerWithTestTypes().getFirst();
             GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
             genNonsenseExpression.setTableManager(mgr);
-            Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
-            return new Transformation_Mgr(mgr, new Filter(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), nonsenseExpression));
+
+            HashMap<ColumnId, Expression> columns = new HashMap<>();
+            int numColumns = sourceOfRandomness.nextInt(0, 5);
+            for (int i = 0; i < numColumns; i++)
+            {
+                Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
+                ColumnId columnId = TestUtil.generateColumnId(sourceOfRandomness);
+                while (columns.containsKey(columnId))
+                    columnId = TestUtil.generateColumnId(sourceOfRandomness);
+                columns.put(columnId, nonsenseExpression);
+            }
+            return new Transformation_Mgr(mgr, new Calculate(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), ImmutableMap.copyOf(columns)));
         }
         catch (InternalException e)
         {

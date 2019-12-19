@@ -2,35 +2,19 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import javafx.application.Platform;
-import javafx.embed.swing.JFXPanel;
-import javafx.scene.control.ScrollPane;
 import org.junit.runner.RunWith;
 import records.data.Table;
 import records.data.Table.FullSaver;
-import records.data.Table.InitialLoadDetails;
 import records.data.TableManager;
-import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.View;
-import test.gen.GenTableManager;
-import test.gen.GenNonsenseTransformation;
+import test.gen.nonsenseTrans.GenNonsenseTransformation;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.SimulationSupplier;
 
-import javax.swing.SwingUtilities;
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

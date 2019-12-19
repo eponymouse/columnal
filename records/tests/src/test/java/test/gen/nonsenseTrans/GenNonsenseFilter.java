@@ -1,4 +1,4 @@
-package test.gen;
+package test.gen.nonsenseTrans;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -6,8 +6,6 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.error.InternalException;
-import records.transformations.Check;
-import records.transformations.Check.CheckType;
 import records.transformations.Filter;
 import records.transformations.expression.Expression;
 import test.DummyManager;
@@ -20,9 +18,9 @@ import utility.Pair;
 /**
  * Created by neil on 27/11/2016.
  */
-public class GenNonsenseCheck extends Generator<Transformation_Mgr>
+public class GenNonsenseFilter extends Generator<Transformation_Mgr>
 {
-    public GenNonsenseCheck()
+    public GenNonsenseFilter()
     {
         super(Transformation_Mgr.class);
     }
@@ -38,7 +36,7 @@ public class GenNonsenseCheck extends Generator<Transformation_Mgr>
             GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
             genNonsenseExpression.setTableManager(mgr);
             Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
-            return new Transformation_Mgr(mgr, new Check(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), CheckType.values()[sourceOfRandomness.nextInt(CheckType.values().length)], nonsenseExpression));
+            return new Transformation_Mgr(mgr, new Filter(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), nonsenseExpression));
         }
         catch (InternalException e)
         {

@@ -1,4 +1,4 @@
-package test.gen;
+package test.gen.nonsenseTrans;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
