@@ -460,6 +460,9 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     }
                 };
 
+                // Satisfy static analysis (will be overwritten by the runnable):
+                content = StyledString.s("");
+
                 FXPlatformRunnable setContent = () -> {
                     Optional<ColumnId> byColumn = manualEdit.getReplacementIdentifier();
                     content = StyledString.concat(
@@ -475,8 +478,8 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 setContent.run();
                 Workers.onWorkerThread("Adding edit listener", Priority.FETCH, () -> manualEdit.addModificationListener(() -> FXUtility.runFX(setContent)));
 
-                // Satisfy static analysis (will be overwritten by the runnable):
-                return StyledString.s("");
+                
+                return content;
             }
 
             @Override
