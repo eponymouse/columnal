@@ -613,9 +613,17 @@ public class TableManager
         else
         {
             // We usually leave a blank space to the right
-            // of the table, unless there's another table beginning in that row:
-            boolean anyImmediatelyToRight = getAllTables().stream().filter(t -> t.getDisplay() != null && t.getDisplay().getMostRecentPosition().columnIndex == toRightOfDisplay.getBottomRightIncl().offsetByRowCols(0, 1).columnIndex).findFirst().isPresent();
-            return getTopRight(toRightOfDisplay).offsetByRowCols(0, anyImmediatelyToRight ? 1 : 2);
+            // of the table, unless there's another table beginning in that column:
+            @Nullable TableDisplayBase tableToRight = toRightOfDisplay;
+            do
+            {
+                toRightOfDisplay = tableToRight;
+                @AbsColIndex int nextCol = toRightOfDisplay.getBottomRightIncl().offsetByRowCols(0, 1).columnIndex;
+                tableToRight = getAllTables().stream().<@Nullable TableDisplayBase>map(t -> t.getDisplay()).filter(d -> d != null && d.getMostRecentPosition().columnIndex == nextCol).findFirst().orElse(null);
+            }
+            while (tableToRight != null);
+            
+            return getTopRight(toRightOfDisplay).offsetByRowCols(0, 1);
         }
     }
 
