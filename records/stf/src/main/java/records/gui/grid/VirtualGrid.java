@@ -408,6 +408,7 @@ public final class VirtualGrid implements ScrollBindable
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public void changed(ObservableValue<? extends @Nullable CellSelection> prop, @Nullable CellSelection oldVal, @Nullable CellSelection s)
             {
+                //System.out.println("Selection now: " + s);
                 if (suppressSelectionUpdate)
                     return;
                 if (s != null)
