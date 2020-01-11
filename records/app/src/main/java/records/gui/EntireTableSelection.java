@@ -9,6 +9,8 @@ import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.table.HeadedDisplay;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 
 public class EntireTableSelection implements CellSelection
@@ -124,5 +126,13 @@ public class EntireTableSelection implements CellSelection
     public @Nullable CellSelection extendTo(CellPosition cellPosition)
     {
         return null;
+    }
+
+    // For debugging
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public String toString()
+    {
+        return "EntireTableSelection[" + selected.getPosition() + "-" + selected.getBottomRightIncl() + "]";
     }
 }
