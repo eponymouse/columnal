@@ -1840,6 +1840,11 @@ public final class VirtualGrid implements ScrollBindable
         double minY = rowHeight * target.rowIndex;
         return new BoundingBox(minX, minY, getColumnWidth(target.columnIndex), rowHeight);
     }
+    
+    public void _test_ensureVisible(CellPosition position)
+    {
+        smoothScrollToEnsureVisible(position);
+    }
 
     private void smoothScrollToEnsureVisible(CellPosition target)
     {
