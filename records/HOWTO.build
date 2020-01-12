@@ -1,0 +1,11 @@
+Windows:
+ - Use desktop PC
+ - Directory S:\rc\columnal
+ - Go into subdirectory records, run package.bat
+
+Ubuntu:
+ - Use UbuntuLTS18 Virtual Machine on Mac
+ - Directory ~/records
+ - Go into subdirectory records, run package-linux.sh
+
+Mac:
