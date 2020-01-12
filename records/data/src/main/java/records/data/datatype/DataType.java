@@ -117,7 +117,7 @@ import static records.data.datatype.DataType.DateTimeInfo.F.*;
 public abstract class DataType implements StyledShowable
 {
     @OnThread(Tag.Simulation)
-    public Column makeCalculatedColumn(RecordSet rs, ColumnId name, ExFunction<Integer, @Value Object> getItem) throws InternalException
+    public Column makeCalculatedColumn(RecordSet rs, ColumnId name, ExFunction<Integer, @Value Object> getItem, FunctionInt<DataTypeValue, DataTypeValue> addManualEdit) throws InternalException
     {
         return apply(new DataTypeVisitorEx<Column, InternalException>()
         {
@@ -135,7 +135,7 @@ public abstract class DataType implements StyledShowable
             {
                 return new CachedCalculatedColumn<Number, NumericColumnStorage>(rs, name, (BeforeGet<NumericColumnStorage> g) -> new NumericColumnStorage(displayInfo, g, false), i -> {
                     return castTo(Number.class, getItem.apply(i));
-                });
+                }, addManualEdit);
             }
 
             @Override
@@ -144,7 +144,7 @@ public abstract class DataType implements StyledShowable
             {
                 return new CachedCalculatedColumn<String, StringColumnStorage>(rs, name, (BeforeGet<StringColumnStorage> g) -> new StringColumnStorage(g, false), i -> {
                     return castTo(String.class, getItem.apply(i));
-                });
+                }, addManualEdit);
             }
 
             @Override
@@ -153,7 +153,7 @@ public abstract class DataType implements StyledShowable
             {
                 return new CachedCalculatedColumn<TemporalAccessor, TemporalColumnStorage>(rs, name, (BeforeGet<TemporalColumnStorage> g) -> new TemporalColumnStorage(dateTimeInfo, g, false), i -> {
                     return castTo(TemporalAccessor.class, getItem.apply(i));
-                });
+                }, addManualEdit);
             }
 
             @Override
@@ -162,7 +162,7 @@ public abstract class DataType implements StyledShowable
             {
                 return new CachedCalculatedColumn<Boolean, BooleanColumnStorage>(rs, name, (BeforeGet<BooleanColumnStorage> g) -> new BooleanColumnStorage(g, false), i -> {
                     return castTo(Boolean.class, getItem.apply(i));
-                });
+                }, addManualEdit);
             }
 
             @Override
@@ -171,7 +171,7 @@ public abstract class DataType implements StyledShowable
             {
                 return new CachedCalculatedColumn<@Value TaggedValue, TaggedColumnStorage>(rs, name, (BeforeGet<TaggedColumnStorage> g) -> new TaggedColumnStorage(typeName, typeVars, tags, g, false), i -> {
                     return castTo(TaggedValue.class, getItem.apply(i));
-                });
+                }, addManualEdit);
             }
 
             @Override
@@ -180,7 +180,7 @@ public abstract class DataType implements StyledShowable
             {
                 return new CachedCalculatedColumn<@Value Record, RecordColumnStorage>(rs, name, (BeforeGet<RecordColumnStorage> g) -> new RecordColumnStorage(fields, g, false), i -> {
                     return castTo(Record.class, getItem.apply(i));
-                });
+                }, addManualEdit);
             }
 
             @Override
@@ -189,7 +189,7 @@ public abstract class DataType implements StyledShowable
             {
                 return new CachedCalculatedColumn<ListEx, ArrayColumnStorage>(rs, name, (BeforeGet<ArrayColumnStorage> g) -> new ArrayColumnStorage(inner, g, false), i -> {
                     return castTo(ListEx.class, getItem.apply(i));
-                });
+                }, addManualEdit);
             }
         });
     }

@@ -13,6 +13,7 @@ import utility.ExFunction;
 import utility.FunctionInt;
 import utility.Utility;
 
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -22,19 +23,22 @@ public class CachedCalculatedColumn<T, S extends ColumnStorage<T>> extends Calcu
 {
     private final S cache;
     private final ExFunction<Integer, @NonNull T> calculateItem;
+    @OnThread(Tag.Any)
+    private final DataTypeValue cacheType;
 
-    public CachedCalculatedColumn(RecordSet recordSet, ColumnId name, FunctionInt<BeforeGet<S>, S> cache, ExFunction<Integer, @NonNull T> calculateItem) throws InternalException
+    public CachedCalculatedColumn(RecordSet recordSet, ColumnId name, FunctionInt<BeforeGet<S>, S> cache, ExFunction<Integer, @NonNull T> calculateItem, FunctionInt<DataTypeValue, DataTypeValue> addManualEdit) throws InternalException
     {
         super(recordSet, name);
         this.calculateItem = calculateItem;
         this.cache = cache.apply(Utility.later(this));
+        this.cacheType = addManualEdit.apply(this.cache.getType());
     }
 
     @Override
     @OnThread(Tag.Any)
     public DataTypeValue getType() throws InternalException, UserException
     {
-        return cache.getType();
+        return cacheType;
     }
 
     @Override

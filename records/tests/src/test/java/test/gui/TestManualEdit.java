@@ -117,9 +117,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void propManualEdit(
-        @When(seed=1L)
             @From(GenDataAndTransforms.class) TableManager original,
-        @When(seed=1L)
             @From(GenRandom.class) Random r) throws Exception
     {
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original).get();
@@ -253,7 +251,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 enterStructuredValue(columnTypes.get(col).getDataType(), value, r, true, false);
                 push(KeyCode.ENTER);
 
-                assertTrue("Alert should be showing asking whether to create manual edit after editing " + findSrc.get().getClass(), lookup(".alert").tryQuery().isPresent());
+                assertTrue("Alert should be showing asking whether to create manual edit after editing " + findSrc.get().getClass() + " column " + findSrc.get().getData().getColumnIds().get(col).getRaw(), lookup(".alert").tryQuery().isPresent());
                 clickOn(".yes-button");
                 sleep(500);
                 assertFalse("Alert should be dismissed", lookup(".alert").tryQuery().isPresent());

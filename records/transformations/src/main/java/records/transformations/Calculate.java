@@ -178,7 +178,7 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
         };
     }
 
-    private SimulationFunction<RecordSet, Column> makeCalcColumn(@UnknownInitialization(Object.class) Calculate this,
+    private SimulationFunction<RecordSet, Column> makeCalcColumn(@UnknownInitialization(Transformation.class) Calculate this,
                                                                  TableManager mgr, ColumnLookup columnLookup, ColumnId columnId, Expression expression) throws InternalException
     {
         try
@@ -194,7 +194,7 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
                 throw new UserException(StyledString.concat(StyledString.s("Error in " + columnId.getRaw() + " expression: "), checkErrors.toPlain().isEmpty() ? StyledString.s("Invalid expression") : checkErrors)); // A bit redundant to throw and catch again below, but control flow will pan out right
             }
             @NonNull DataType typeFinal = concrete;
-            return rs -> typeFinal.makeCalculatedColumn(rs, columnId, index -> expression.calculateValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index))).value);
+            return rs -> typeFinal.makeCalculatedColumn(rs, columnId, index -> expression.calculateValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index))).value, t -> addManualEditSet(columnId, t));
         }
         catch (UserException e)
         {

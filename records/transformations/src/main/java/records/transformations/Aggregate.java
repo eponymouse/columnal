@@ -254,7 +254,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
                     if (type == null || concrete == null)
                         throw new UserException((@NonNull StyledString) errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
                     @NonNull DataType typeFinal = concrete;
-                    column = rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.calculateValue(makeEvaluateState(splits, mgr.getTypeManager(), i, false)).value);
+                    column = rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.calculateValue(makeEvaluateState(splits, mgr.getTypeManager(), i, false)).value, t -> addManualEditSet(e.getFirst(), t));
                     
                 }
                 catch (UserException ex)
