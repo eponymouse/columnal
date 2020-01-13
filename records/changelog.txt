@@ -30,7 +30,7 @@ Added a transformation that runs an R expression.
 - Fixed a few small bugs in the R import/export, and improved conversion of double to decimal
 - Improved the R import/export to allow export of columns with lists (by exporting to tibbles).
 
-Version 0.6.4 (2020-01-12)
+Version 0.6.4 (2020-01-13)
 ==========================
 Improved R transformation support.
 
