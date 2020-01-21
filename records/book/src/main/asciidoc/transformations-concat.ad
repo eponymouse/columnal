@@ -1,0 +1,94 @@
+Concatenation is a term referring to joining two things together, end-to-end.  In Columnal, a concatenate transformation takes several tables and joins them into one table, with the rows from the different tables glued together.  As a simple example, here are three tables with identical column format:
+
+[%header]
+|===
+2+|Garden
+h|Name h|Species
+
+|Filbert |Fox
+|Herbert |Hedgehog
+|===
+
+[%header]
+|===
+2+|House
+h|Name h|Species
+
+|Ralph |Cat
+|===
+
+[%header]
+|===
+2+|Field
+h|Name h|Species
+
+|Lamar |Vole
+|===
+
+If you concatenate Garden, House and Field in that order you get a fairly straightforward result that puts all the rows one after the other into a result table:
+
+[%header]
+|===
+2+|Concatenated Result
+h|Name h|Species
+
+|Filbert |Fox
+|Herbert |Hedgehog
+|Ralph |Cat
+|Lamar |Vole
+|===
+
+There is also an option with concatenate to add a new column with the name of the source table, which would produce this:
+
+[%header]
+|===
+3+|Concatenated Result
+h|Source h|Name h|Species
+
+|Garden |Filbert |Fox
+|Garden |Herbert |Hedgehog
+|House |Ralph |Cat
+|Field |Lamar |Vole
+|===
+
+Most of the complexity of concatenation comes when the tables do not having matching columns.  In this case, some rows will be missing parts of the data.  Consider concatenating these tables:
+
+[%header]
+|===
+3+|Garden Plus
+h|Name h|Species h|Last Seen
+
+|Filbert |Fox | January
+|Herbert |Hedgehog | November
+|===
+
+[%header]
+|===
+3+|House Plus
+h|Name h|Species h|Last Vet Visit
+
+|Ralph |Cat | October
+|===
+
+[%header]
+|===
+2+|Field
+h|Name h|Species
+
+|Lamar |Vole
+|===
+
+Now, two of the tables have extra columns that are not shared by the others.  In this case, the columns are wrapped in an Optional type, to allow the other parts to be missing:
+
+[%header]
+|===
+4+|Concatenated Result Plus
+h|Name h|Species h|Last Seen h|Last Vet Visit
+
+|Filbert |Fox |Is(January) |None
+|Herbert |Hedgehog |Is(November) |None
+|Ralph |Cat |None |Is(October)
+|Lamar |Vole |None |None
+|===
+
+If you want to produce a different result in these cases, the best way to do it is to use a Calculate transformation.  You can either use a Calculate after to adjust the results of the Concatenate, or you can use a Calculate before, to make the columns in the source tables match, before Concatenate processes them.

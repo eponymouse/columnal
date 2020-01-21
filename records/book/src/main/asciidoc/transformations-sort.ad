@@ -1,0 +1,107 @@
+Sorting is a common operation in data processing.  Sometimes it can be for the purposes of presenting final results, for example, sorting products by highest profit.  But sort transformations can also feed into other transformations; for example, the top ten heaviest animals can be calculated by sorting by weight, then filtering to only keep the top ten.
+
+A sort transformation takes a table and sorts the rows according to some of the columns.  For example, if you have a table like so:
+
+|===
+|Name |Age
+
+|Lily
+|43
+
+|Adam
+|78
+
+|Mo
+|26
+
+|Violeta
+|35
+
+|===
+
+Creating a sort transformation that sorts by age in descending order will give:
+
+|===
+|Name |Age
+
+|Adam
+|78
+
+|Lily
+|43
+
+|Violeta
+|35
+
+|Mo
+|26
+
+|===
+
+If you specify multiple columns to sort by, the first one will be used unless there is a tie, in which case the second one will be used.
+
+For example, if you have the following table of colours and their components:
+
+|===
+| Name | Red | Green | Blue
+
+|Crimson
+|220
+|20
+|60
+
+|Tomato
+|255
+|99
+|71
+
+|Gold
+|255
+|215
+|0
+
+|Magenta
+|255
+|0
+|255
+
+|Cyan
+|0
+|255
+|255
+
+|===
+
+Sorting by red in *descending order* (highest first) then blue in *ascending* order (lowest first) will give:
+
+|===
+| Name | Red | Green | Blue
+
+|Gold
+|255
+|215
+|0
+
+|Tomato
+|255
+|99
+|71
+
+|Magenta
+|255
+|0
+|255
+
+|Crimson
+|220
+|20
+|60
+
+|Cyan
+|0
+|255
+|255
+
+|===
+
+The colors with the most red come first, but three of them are tied on 255.  Then blue is compared (ignoring green because it's not part of the sort criteria), sorting least blue first, which is why gold is before magenta.

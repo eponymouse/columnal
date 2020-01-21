@@ -1,0 +1,53 @@
+Sometimes you have multiple tables that have an identifier column in common, and you want to use this to combine the tables.  For example, say you have the following two tables:
+
+[%header]
+|===
+2+|Capital cities
+h|Country h|Capital city
+
+|USA | Washington D.C.
+|France | Paris
+|Sudan | Khartoum
+|Iran | Tehran
+|===
+
+[%header]
+|===
+2+|Population sizes
+h|Country h|Population
+
+|USA | 330,000,000
+|Nigeria | 200,000,000
+|Indonesia | 260,000,000
+|Sudan | 42,000,000
+|===
+
+You may want to combine these two tables, by merging the rows where the country is shared, to produce:
+
+[%header]
+|===
+3+|Capital cities
+h|Country h|Capital city h|Population
+
+|USA | Washington D.C. | 330,000,000
+|Sudan | Khartoum | 42,000,000
+|===
+
+The obvious complication arises from the fact that, as here, the columns being joined may not have the same set of values.  Nigeria is in the population table, but not the capital cities table.  The default behaviour of join is to exclude any values that are present in only one side of the join.  It is also possible to choose to keep the rows for one side of the join (called the "primary" source) even when they are not present in the other side (called the "secondary" source).
+
+So using the above example, if the capitals is the primary table and you select to keep all primary rows you would get:
+
+[%header]
+|===
+3+|Capital cities
+h|Country h|Capital city h|Population
+
+|USA | Washington D.C. | Is(330,000,000)
+|France | Paris | None
+|Sudan | Khartoum | Is(42,000,000)
+|Iran | Tehran | None
+|===
+
+Because the values are present in some rows and not others, the type of the Population column has become an Optional type.
+
+Joins are always between two tables.  If you need to join three tables, which we'll call A, B and C, then you should do one Join on A and B, then another Join to join that to C.

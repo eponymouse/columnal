@@ -61,9 +61,13 @@ include::data-immutability.ad[]
 
 include::transformations-overview.ad[]
 
-== Filter and sort (missing content)
+== Sorting
 
-Missing content.
+include::transformations-sort.ad[]
+
+== Filtering
+
+include::transformations-filter.ad[]
 
 == Calculate (missing content)
 
@@ -73,9 +77,13 @@ Missing content.
 
 Missing content.
 
-== Concat and join (missing content)
+== Concatenate
 
-Missing content.
+include::transformations-concat.ad[]
+
+== Join
+
+include::transformations-join.ad[]
 
 == Reshaping summary -- what to use when (missing content)
 
