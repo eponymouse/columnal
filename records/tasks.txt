@@ -38,8 +38,6 @@ I thought I made a quick fix for people prefixing "=" to their Calculate formula
 
 Check help thing is incomplete (columnal2.mov, 23:37).  Also Check type should have a custom option (Is that what "Once" is?)
 
-Looks like Check edit dialog is not movable (columnal2.mov, 25:00) but I think it should be.
-
 There should be better text at the top of table selection when you edit an existing table-source by clicking the hyperlink.
 
 The table name was not editable for check (columnal2.mov, 30:43)
@@ -435,3 +433,4 @@ Changelog since 0.6.0 for ???
 ===
 - Improved hint for creating new transformation
 - Fixed a bug where resizing some windows could glitch out if the mouse moved too fast.
+- Added support for dragging around windows that do not have a title bar
