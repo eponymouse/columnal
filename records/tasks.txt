@@ -434,3 +434,4 @@ Changelog since 0.5.1 for 0.6.0
 Changelog since 0.6.0 for ???
 ===
 - Improved hint for creating new transformation
+- Fixed a bug where resizing some windows could glitch out if the mouse moved too fast.

@@ -156,7 +156,8 @@ public abstract class LightDialog<R> extends Dialog<R>
                 }
                 else if (e.getEventType().equals(MouseEvent.MOUSE_EXITED))
                 {
-                    dialogPane.setCursor(null);
+                    // NOTE: do not blank the cursor!  This caused the bug about resizing too fast cancelling the resize.
+                    //dialogPane.setCursor(null);
                 }
                 else if (e.getEventType().equals(MouseEvent.MOUSE_PRESSED))
                 {
