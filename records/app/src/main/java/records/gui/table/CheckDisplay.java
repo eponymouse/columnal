@@ -21,9 +21,11 @@ import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.data.TableOperations.RenameTable;
 import records.data.datatype.DataType;
 import records.gui.EntireTableSelection;
 import records.transformations.expression.explanation.Explanation;
@@ -57,6 +59,7 @@ import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -251,7 +254,18 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     @Override
     protected @Nullable FXPlatformConsumer<TableId> renameTableOperation(Table table)
     {
-        return null;
+        @Nullable RenameTable renameTable = table.getOperations().renameTable;
+        if (renameTable == null)
+            return null;
+        @NonNull RenameTable renameTableFinal = renameTable;
+
+        return newTableId -> {
+            if (Objects.equals(newTableId, check.getId()))
+                return; // Ignore if hasn't actually changed
+
+            if (newTableId != null)
+                Workers.onWorkerThread("Renaming table", Priority.SAVE, () -> renameTableFinal.renameTable(newTableId));
+        };
     }
 
     @Override

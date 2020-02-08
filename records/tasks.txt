@@ -40,10 +40,6 @@ Check help thing is incomplete (columnal2.mov, 23:37).  Also Check type should h
 
 There should be better text at the top of table selection when you edit an existing table-source by clicking the hyperlink.
 
-The table name was not editable for check (columnal2.mov, 30:43)
-
-
-
 Arising from beta testing
 ===
 - Zoomed out view of all transformations?  Or list view?
@@ -434,3 +430,4 @@ Changelog since 0.6.0 for ???
 - Improved hint for creating new transformation
 - Fixed a bug where resizing some windows could glitch out if the mouse moved too fast.
 - Added support for dragging around windows that do not have a title bar
+- Fixed a bug where the name of Check transformations could not be edited.
