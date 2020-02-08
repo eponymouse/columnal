@@ -8,8 +8,6 @@ Import interface seems to be a bit confusing
   - preview didn't update after reset area (columnal1 4:35), thought I fixed that?
   - expected to select whole section *including* column names, which messes things up
 
-Message about creating new transformation table should mention how: clicking on a new cell
-
 Add a first-time use wizard explaining basic columnal concepts?
 
 Need to explain Is/None when you hover over them.
@@ -435,3 +433,4 @@ Changelog since 0.5.1 for 0.6.0
 
 Changelog since 0.6.0 for ???
 ===
+- Improved hint for creating new transformation

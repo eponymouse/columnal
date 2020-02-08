@@ -28,10 +28,14 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import log.Log;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -1345,7 +1349,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     }
     
     @OnThread(Tag.FXPlatform)
-    private class HintMessage extends FloatingItem<Label>
+    private final class HintMessage extends FloatingItem<VBox>
     {
         /*
         public static enum ContentState
@@ -1358,7 +1362,9 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         
         private ContentState state;
         */
+        private final VBox container;
         private final Label label;
+        private final Label label2; // smaller, beneath, not always present
         private boolean newButtonVisible;
         
         public HintMessage()
@@ -1369,6 +1375,13 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             label.setWrapText(true);
             label.setMaxWidth(400.0);
             label.setMouseTransparent(true);
+            label2 = new Label();
+            label2.getStyleClass().add("main-sub-hint");
+            label2.setWrapText(true);
+            label2.setMaxWidth(400.0);
+            label2.setMouseTransparent(true);
+            container = new VBox(label);
+            container.getStyleClass().add("main-hint-container");
         }
         
         public void updateState()
@@ -1378,27 +1391,39 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             {
                 if (newButtonVisible)
                 {
-                    label.setText(TranslationUtility.getString("main.selHint"));
-                    label.setVisible(true);
+                    show(TranslationUtility.getString("main.selHint"));
                 }
                 else
                 {
-                    label.setText(TranslationUtility.getString("main.emptyHint"));
-                    label.setVisible(true);
+                    show(TranslationUtility.getString("main.emptyHint"));
                 }
             }
             else if (allTables.stream().allMatch(t -> t instanceof DataSource))
             {
-                label.setText(TranslationUtility.getString("main.transHint"));
-                label.setVisible(true);
+                show(TranslationUtility.getString("main.transHint"), TranslationUtility.getString("main.transHint2"));
             }
             else
             {
-                label.setText(Utility.universal(""));
-                label.setVisible(false);
+                container.getChildren().clear();
+                container.setVisible(false);
             }
         }
-        
+
+        private void show(@Localized String main)
+        {
+            label.setText(main);
+            container.getChildren().setAll(label);
+            container.setVisible(true);
+        }
+
+        private void show(@Localized String main, @Localized String sub)
+        {
+            label.setText(main);
+            label2.setText(sub);
+            container.getChildren().setAll(label, label2);
+            container.setVisible(true);
+        }
+
         @Override
         protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
         {            
@@ -1410,15 +1435,15 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             double x = visibleBounds.getXCoord(target.columnIndex) + 20;
             double y = visibleBounds.getYCoord(target.rowIndex) + 10;
 
-            double width = Math.min(400, label.prefWidth(-1));
-            double height = label.prefHeight(width);
+            double width = Math.min(400, container.prefWidth(-1));
+            double height = container.prefHeight(width);
             return Optional.of(new BoundingBox(x, y, width, height));
         }
 
         @Override
-        protected Label makeCell(VisibleBounds visibleBounds)
+        protected VBox makeCell(VisibleBounds visibleBounds)
         {
-            return label;
+            return container;
         }
 
         @Override
