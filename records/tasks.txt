@@ -1,3 +1,53 @@
+Arising from CH usability testing
+===
+The prompt to click new cell should prompt for top left cell.  Who would want anything else?
+
+Import interface seems to be a bit confusing
+  - see e.g. columnal1.mov 04:00ish
+  - need to allow direct editing of row and column numbers as previously planned
+  - preview didn't update after reset area (columnal1 4:35), thought I fixed that?
+  - expected to select whole section *including* column names, which messes things up
+
+Message about creating new transformation table should mention how: clicking on a new cell
+
+Add a first-time use wizard explaining basic columnal concepts?
+
+Need to explain Is/None when you hover over them.
+
+The import seems editable on the right, but I don't think it should be.  (Is it just focusable, not editable?)
+
+Import/preview lag is serious issue.  Re-engineer?
+
+Import same file twice named the table the same way twice, and then delete deleted the wrong table.  Multiple bugs here.
+
+Maybe do add suggested feature to move the top row (or any selected row) to be the names of the columns, as likely to want this after messing up an import.
+
+When renaming column in large table, annoying that it blinks out of existence then back again.
+
+Expects single-click to work in table selection dialog.  Seems reasonable; re-work?
+
+Expression for filter is "true" by default, but that has the effect of hiding the auto-complete of all the column names.  Would be much better to start blank, even if it is an error.  Also, ensure column names are top in auto-complete once it is blank.
+
+"Matches pattern" should maybe be reworded to "Fuzzy matching"?  But then pattern is precise jargon, though it seems to be misleading jargon.
+
+Need more obvious way to collapse view of tables, or otherwise shrink down or skip between tables.  (Zoom out and in again like the Mac view of all open applications?)
+
+Auto-named tables are confusing.  Is there a better way?
+
+Selecting table name on calculate didn't work (columnal2.mov, 18:39).  Why not?
+
+I thought I made a quick fix for people prefixing "=" to their Calculate formulas?  But apparently not, columnal2.mov 19:20.
+
+Check help thing is incomplete (columnal2.mov, 23:37).  Also Check type should have a custom option (Is that what "Once" is?)
+
+Looks like Check edit dialog is not movable (columnal2.mov, 25:00) but I think it should be.
+
+There should be better text at the top of table selection when you edit an existing table-source by clicking the hyperlink.
+
+The table name was not editable for check (columnal2.mov, 30:43)
+
+
+
 Arising from beta testing
 ===
 - Zoomed out view of all transformations?  Or list view?
@@ -383,3 +433,5 @@ Changelog since 0.5.1 for 0.6.0
 - Unified the syntax for column, tag, table and function references. 
 - Changed the file format (any files in the old format can still be loaded).
 
+Changelog since 0.6.0 for ???
+===
