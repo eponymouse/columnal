@@ -115,12 +115,12 @@
                                     <dependency>
                                         <groupId>org.checkerframework</groupId>
                                         <artifactId>checker-qual</artifactId>
-                                        <version>3.0.1</version>
+                                        <version>3.1.1</version>
                                     </dependency>
                                     <dependency>
                                         <groupId>org.checkerframework</groupId>
                                         <artifactId>checker</artifactId>
-                                        <version>3.0.1</version>
+                                        <version>3.1.1</version>
                                     </dependency>
                                     <dependency>
                                         <groupId>org.bluej</groupId>
@@ -198,12 +198,12 @@
                                     <dependency>
                                         <groupId>org.checkerframework</groupId>
                                         <artifactId>checker-qual</artifactId>
-                                        <version>3.0.1</version>
+                                        <version>3.1.1</version>
                                     </dependency>
                                     <dependency>
                                         <groupId>org.checkerframework</groupId>
                                         <artifactId>checker</artifactId>
-                                        <version>3.0.1</version>
+                                        <version>3.1.1</version>
                                     </dependency>
                                     <dependency>
                                         <groupId>org.bluej</groupId>

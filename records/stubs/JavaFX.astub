@@ -238,6 +238,7 @@ class MenuItem
     <T extends Event> void addEventHandler(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this,EventType t, EventHandler e);
     StringProperty textProperty(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this);
     ReadOnlyObjectProperty parentMenuProperty(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this);
+    List<String> getStyleClass(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this);
 }
 class Tooltip
 {

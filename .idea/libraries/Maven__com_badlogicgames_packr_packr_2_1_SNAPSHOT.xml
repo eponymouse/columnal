@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="Maven: com.badlogicgames.packr:packr:2.1-SNAPSHOT">
     <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/com/badlogicgames/packr/packr/2.1-SNAPSHOT/packr-2.1-20190319.150312-13.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/badlogicgames/packr/packr/2.1-SNAPSHOT/packr-2.1-20190930.140722-14.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$MAVEN_REPOSITORY$/com/badlogicgames/packr/packr/2.1-SNAPSHOT/packr-2.1-20190319.150312-13-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/badlogicgames/packr/packr/2.1-SNAPSHOT/packr-2.1-20190930.140722-14-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$MAVEN_REPOSITORY$/com/badlogicgames/packr/packr/2.1-SNAPSHOT/packr-2.1-20190319.150312-13-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/badlogicgames/packr/packr/2.1-SNAPSHOT/packr-2.1-20190930.140722-14-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

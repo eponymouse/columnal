@@ -260,7 +260,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
         }
 
         @OnThread(Tag.FXPlatform)
-        private class DirectionButton extends Button
+        private final class DirectionButton extends Button
         {
             private final Label topLabel;
             private final Label bottomLabel;

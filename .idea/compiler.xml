@@ -29,7 +29,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\utility/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
@@ -39,9 +39,9 @@
           <entry name="$PROJECT_DIR$/records/anns-threadchecker/target/classes" />
           <entry name="$PROJECT_DIR$/records/threadchecker/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-mac.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-mac.jar" />
         </processorPath>
         <module name="utility" />
       </profile>
@@ -57,7 +57,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\gui-utility/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/gui-utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
@@ -67,9 +67,9 @@
           <entry name="$PROJECT_DIR$/records/anns-threadchecker/target/classes" />
           <entry name="$PROJECT_DIR$/records/threadchecker/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-mac.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-mac.jar" />
         </processorPath>
         <module name="gui-utility" />
       </profile>
@@ -78,7 +78,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\data/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/data/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
@@ -88,9 +88,9 @@
           <entry name="$PROJECT_DIR$/records/anns-threadchecker/target/classes" />
           <entry name="$PROJECT_DIR$/records/threadchecker/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-mac.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-mac.jar" />
         </processorPath>
         <module name="data" />
       </profile>
@@ -99,7 +99,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\stf/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/stf/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
@@ -109,9 +109,9 @@
           <entry name="$PROJECT_DIR$/records/anns-threadchecker/target/classes" />
           <entry name="$PROJECT_DIR$/records/threadchecker/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-mac.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-mac.jar" />
         </processorPath>
         <module name="stf" />
       </profile>
@@ -120,7 +120,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\functions/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/functions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
@@ -130,9 +130,9 @@
           <entry name="$PROJECT_DIR$/records/anns-threadchecker/target/classes" />
           <entry name="$PROJECT_DIR$/records/threadchecker/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-mac.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-mac.jar" />
         </processorPath>
         <module name="functions" />
       </profile>
@@ -141,7 +141,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\expressions/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/expressions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
@@ -151,9 +151,9 @@
           <entry name="$PROJECT_DIR$/records/anns-threadchecker/target/classes" />
           <entry name="$PROJECT_DIR$/records/threadchecker/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-mac.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-mac.jar" />
         </processorPath>
         <module name="expressions" />
       </profile>
@@ -162,7 +162,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\tests/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/tests/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
@@ -171,9 +171,9 @@
           <entry name="$PROJECT_DIR$/records/anns-threadchecker/target/classes" />
           <entry name="$PROJECT_DIR$/records/threadchecker/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-mac.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-mac.jar" />
         </processorPath>
         <module name="tests" />
       </profile>
@@ -182,7 +182,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\lex-editor/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/lex-editor/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
@@ -192,9 +192,9 @@
           <entry name="$PROJECT_DIR$/records/anns-threadchecker/target/classes" />
           <entry name="$PROJECT_DIR$/records/threadchecker/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-mac.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-mac.jar" />
         </processorPath>
         <module name="lex-editor" />
       </profile>
@@ -203,7 +203,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\transformations/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/transformations/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
@@ -213,9 +213,9 @@
           <entry name="$PROJECT_DIR$/records/anns-threadchecker/target/classes" />
           <entry name="$PROJECT_DIR$/records/threadchecker/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-mac.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-mac.jar" />
         </processorPath>
         <module name="transformations" />
       </profile>
@@ -224,7 +224,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\book/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/book/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
@@ -234,9 +234,9 @@
           <entry name="$PROJECT_DIR$/records/anns-threadchecker/target/classes" />
           <entry name="$PROJECT_DIR$/records/threadchecker/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-mac.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-mac.jar" />
         </processorPath>
         <module name="book" />
       </profile>
@@ -271,7 +271,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\r-interop/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/r-interop/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
@@ -281,9 +281,9 @@
           <entry name="$PROJECT_DIR$/records/anns-threadchecker/target/classes" />
           <entry name="$PROJECT_DIR$/records/threadchecker/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-mac.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-mac.jar" />
         </processorPath>
         <module name="r-interop" />
       </profile>
@@ -292,7 +292,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\app/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/app/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
@@ -302,9 +302,9 @@
           <entry name="$PROJECT_DIR$/records/anns-threadchecker/target/classes" />
           <entry name="$PROJECT_DIR$/records/threadchecker/target/classes" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/11.0.2/javafx-base-11.0.2-mac.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-win.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/11.0.2/javafx-graphics-11.0.2-mac.jar" />
         </processorPath>
         <module name="app" />
       </profile>
@@ -334,20 +334,20 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="anns" options="" />
       <module name="annsthreadchecker" options="" />
-      <module name="app" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\app/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="book" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\book/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="data" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\data/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="expressions" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\expressions/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="functions" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\functions/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="gui-utility" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\gui-utility/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="lex-editor" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\lex-editor/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="app" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/app/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="book" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/book/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="data" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/data/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="expressions" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/expressions/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="functions" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/functions/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="gui-utility" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/gui-utility/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="lex-editor" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/lex-editor/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
       <module name="parsers" options="" />
-      <module name="r-interop" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\r-interop/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="stf" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\stf/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="tests" options="&quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\tests/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="r-interop" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/r-interop/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="stf" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/stf/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="tests" options="&quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/tests/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
       <module name="threadchecker" options="" />
-      <module name="transformations" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\transformations/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="utility" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\utility/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="transformations" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/transformations/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
+      <module name="utility" options="-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=$PROJECT_DIR$/records/utility/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels -Xplugin:threadchecker.TCPlugin -Werror" />
     </option>
   </component>
 </project>

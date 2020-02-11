@@ -660,7 +660,8 @@ final class LexCompletionList extends Region
             mainText.resizeRelocate(getInsets().getLeft(), 0, getWidth() - getInsets().getLeft() - getInsets().getRight(), getHeight());
             try
             {
-                mainText.getInternalTextLayout().setWrapWidth(0);
+                // TODO figure out equivalent
+                //mainText.getInternalTextLayout().setWrapWidth(0);
             }
             catch (Exception e)
             {

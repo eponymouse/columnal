@@ -4,7 +4,6 @@ import annotation.units.CanonicalLocation;
 import annotation.units.DisplayLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.sun.javafx.scene.text.HitInfo;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
@@ -18,6 +17,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.shape.Path;
+import javafx.scene.text.HitInfo;
 import javafx.scene.text.Text;
 import log.Log;
 import org.apache.commons.lang3.SystemUtils;
@@ -559,7 +559,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     {
         try
         {
-            return textFlow.localToScreen(new Path(textFlow.getInternalTextLayout().getCaretShape(content.mapContentToDisplay(pos), true, 0, 0)).getBoundsInParent());
+            return textFlow.localToScreen(new Path(textFlow.caretShape(content.mapContentToDisplay(pos), true)).getBoundsInParent());
         }
         catch (Exception e)
         {

@@ -341,7 +341,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP ext
          * to join two NaryOpExpressions while bracketing an item in the middle.
          */
 
-        public <R extends StyledShowable> @Nullable @Recorded R makeExpressionMiddleMerge(@Recorded EXPRESSION middle, NaryOperatorSection rhs, List<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets)
+        public <R extends @NonNull StyledShowable> @Nullable @Recorded R makeExpressionMiddleMerge(@Recorded EXPRESSION middle, NaryOperatorSection rhs, List<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> brackets)
         {
             List<@Recorded EXPRESSION> args = new ArrayList<>();
             // Add our args, minus the end one:
@@ -350,7 +350,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP ext
             args.add(middle);
             // Add RHS, minus the start one:
             args.addAll(expressions.subList(rhs.startingOperatorIndexIncl + 1, rhs.endingOperatorIndexIncl + 2));
-            @Nullable @Recorded R expression = makeExpression.makeNary(ImmutableList.copyOf(args), Utility.concatI(actualOperators, rhs.actualOperators), brackets, locationRecorder);
+            @Nullable @Recorded @Initialized R expression = makeExpression.makeNary(ImmutableList.copyOf(args), Utility.concatI(actualOperators, rhs.actualOperators), brackets, locationRecorder);
             return expression;
         }
 
@@ -639,7 +639,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP ext
 
                     if (lastWasOperand.get() && iFinal > 0)
                     {
-                        CanonicalSpan start = lastNodeSpan.get() != null ? lastNodeSpan.get() : recorderFor(expression).lhs();
+                        CanonicalSpan last = lastNodeSpan.get();
+                        CanonicalSpan start = last != null ? last : recorderFor(expression).lhs();
                         invalidReasons.add(new InvalidReason(CanonicalSpan.fromTo(start.rhs(), recorderFor(expression).lhs()), StyledString.s("Missing operator"), fixesForAdjacentOperands(validOperands.get(validOperands.size() - 2), expression)));
                     }
                     lastWasOperand.set(true);
@@ -666,7 +667,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP ext
                         }
                         else
                         {
-                            CanonicalSpan start = lastNodeSpan.get() != null ? lastNodeSpan.get() : op.sourceNode;
+                            CanonicalSpan last = lastNodeSpan.get();
+                            CanonicalSpan start = last != null ? last : op.sourceNode;
                             invalidReasons.add(new InvalidReason(CanonicalSpan.fromTo(start.rhs(),op.sourceNode.lhs()), StyledString.s("Missing item between operators"), ImmutableList.of()));
                         }
                     }
@@ -676,9 +678,10 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP ext
             }
             
             // Must end with operand:
-            if (!lastWasOperand.get() && lastNodeSpan.get() != null)
+            CanonicalSpan last = lastNodeSpan.get();
+            if (!lastWasOperand.get() && last != null)
             {
-                invalidReasons.add(new InvalidReason(lastNodeSpan.get().rhs(), StyledString.s("Missing item after operator."), ImmutableList.of()));
+                invalidReasons.add(new InvalidReason(last.rhs(), StyledString.s("Missing item after operator."), ImmutableList.of()));
             }
         }
     }

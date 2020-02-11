@@ -27,7 +27,7 @@ import java.net.URL;
  * A button with a title, an explanation, and optionally an image.
  */
 @OnThread(Tag.FXPlatform)
-class ExplainedButton extends Button
+final class ExplainedButton extends Button
 {
     private @Nullable Point2D lastMouseScreenPos;
     

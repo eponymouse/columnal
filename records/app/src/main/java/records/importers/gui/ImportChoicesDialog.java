@@ -164,7 +164,8 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                         SrcDetails loadedSrc = this.importer.loadSource(formatNonNull);
                     
                         Platform.runLater(() -> {
-                            int oldColumns = srcRecordSet.get() == null ? 0 : srcRecordSet.get().getColumns().size();
+                            RecordSet curSrcRecordSet = srcRecordSet.get();
+                            int oldColumns = curSrcRecordSet == null ? 0 : curSrcRecordSet.getColumns().size();
                             curGuessTrim = loadedSrc.trimChoice;
                             resetSelectionButton.setDisable(false);
                             srcRecordSet.set(loadedSrc.recordSet);
