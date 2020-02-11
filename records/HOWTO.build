@@ -1,0 +1,25 @@
+Make sure changelog.txt has a new entry, and that package.properties has a new version number and new GUID.
+
+Windows:
+ - Use desktop PC
+ - Directory S:\rc\columnal
+ - Go into subdirectory records, run package.bat
+
+Ubuntu:
+ - Use UbuntuLTS18 Virtual Machine on Mac
+ - Directory ~/records
+ - Go into subdirectory records, run package-linux.sh
+
+Mac:
+ - Use account C
+ - Directory ~/records
+ - Go into subdirectory records, run package-mac.sh
+ - IMPORTANT: notarize and staple
+ 
+On Mac main account, run package in maven to copy changelog to recweb.  Then commit and push recweb.
+
+On main PC, run the Creed Virtual Machine (needs unmaximise/remaximise once booted, for some reason), and in ~/recweb, do git pull then ./make-keter.sh 
+
+Tag and push records.
+
+Tweet about the new release.

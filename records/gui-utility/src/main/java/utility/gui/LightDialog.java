@@ -91,7 +91,7 @@ public abstract class LightDialog<R> extends Dialog<R>
         {
             //org.scenicview.ScenicView.show(scene);
             scene.setFill(null);
-            // Roughly taken from https://stackoverflow.com/questions/19455059/allow-user-to-resize-an-undecorated-stage
+            // Roughly taken from https://stackoverflow.com/questions/19455059/allow-user-to-resize-an-undecorated-stage and https://stackoverflow.com/questions/13206193/how-to-make-an-undecorated-window-movable-draggable-in-javafx
             double xOffset[] = new double[] {0};
             double yOffset[] = new double[] {0};
             scene.addEventHandler(MouseEvent.ANY, e -> {
@@ -156,48 +156,69 @@ public abstract class LightDialog<R> extends Dialog<R>
                 }
                 else if (e.getEventType().equals(MouseEvent.MOUSE_EXITED))
                 {
-                    dialogPane.setCursor(null);
+                    // NOTE: do not blank the cursor!  This caused the bug about resizing too fast cancelling the resize.
+                    //dialogPane.setCursor(null);
                 }
-                else if (e.getEventType().equals(MouseEvent.MOUSE_PRESSED))
+                else
                 {
-                    if (FXUtility.isResizingTop(dialogPane.getCursor()))
-                        yOffset[0] = localBounds.getMinY() - p.getY();
-                    else if (FXUtility.isResizingBottom(dialogPane.getCursor()))
-                        yOffset[0] = localBounds.getMaxY() - p.getY();
-                    
-                    // Not an else; can resize vertical and horizontal:
-                    if (FXUtility.isResizingLeft(dialogPane.getCursor()))
-                        xOffset[0] = localBounds.getMinX() - p.getX();
-                    else if (FXUtility.isResizingRight(dialogPane.getCursor()))
-                        xOffset[0] = localBounds.getMaxX() - p.getX();
-                }
-                else if (e.getEventType().equals(MouseEvent.MOUSE_DRAGGED))
-                {
-                    double minWidth = dialogPane.minWidth(-1) + insets.getLeft() + insets.getRight();
-                    double minHeight = dialogPane.minHeight(-1) + insets.getTop() + insets.getBottom();
-                    
-                    if (FXUtility.isResizingTop(dialogPane.getCursor()))
+                    boolean resizingTop = FXUtility.isResizingTop(dialogPane.getCursor());
+                    boolean resizingBottom = FXUtility.isResizingBottom(dialogPane.getCursor());
+                    boolean resizingLeft = FXUtility.isResizingLeft(dialogPane.getCursor());
+                    boolean resizingRight = FXUtility.isResizingRight(dialogPane.getCursor());
+                    if (e.getEventType().equals(MouseEvent.MOUSE_PRESSED))
                     {
-                        double newY = e.getScreenY() + yOffset[0] - insets.getTop();
-                        double oldHeight = getHeight();
-                        setHeight(Math.max(minHeight, oldHeight + getY() - newY));
-                        setY(getY() + oldHeight - getHeight());
+                        if (resizingTop)
+                            yOffset[0] = localBounds.getMinY() - p.getY();
+                        else if (resizingBottom)
+                            yOffset[0] = localBounds.getMaxY() - p.getY();
+
+                        // Not an else; can resize vertical and horizontal:
+                        if (resizingLeft)
+                            xOffset[0] = localBounds.getMinX() - p.getX();
+                        else if (resizingRight)
+                            xOffset[0] = localBounds.getMaxX() - p.getX();
+
+                        if (!resizingTop && !resizingBottom && !resizingLeft && !resizingRight)
+                        {
+                            xOffset[0] = e.getSceneX();
+                            yOffset[0] = e.getSceneY();
+                        }
                     }
-                    else if (FXUtility.isResizingBottom(dialogPane.getCursor()))
+
+                    if (e.getEventType().equals(MouseEvent.MOUSE_DRAGGED))
                     {
-                        setHeight(Math.max(minHeight, e.getScreenY() + yOffset[0] - getY() + insets.getBottom()));
-                    }
-                    // Not else, can resize both at same time:
-                    if (FXUtility.isResizingLeft(dialogPane.getCursor()))
-                    {
-                        double newX = e.getScreenX() + xOffset[0] - insets.getLeft();
-                        double oldWidth = getWidth();
-                        setWidth(Math.max(minWidth, oldWidth + getX() - newX));
-                        setX(getX() + oldWidth - getWidth());
-                    }
-                    else if (FXUtility.isResizingRight(dialogPane.getCursor()))
-                    {
-                        setWidth(Math.max(minWidth, e.getScreenX() + xOffset[0] - getX() + insets.getRight()));
+                        double minWidth = dialogPane.minWidth(-1) + insets.getLeft() + insets.getRight();
+                        double minHeight = dialogPane.minHeight(-1) + insets.getTop() + insets.getBottom();
+
+                        if (resizingTop)
+                        {
+                            double newY = e.getScreenY() + yOffset[0] - insets.getTop();
+                            double oldHeight = getHeight();
+                            setHeight(Math.max(minHeight, oldHeight + getY() - newY));
+                            setY(getY() + oldHeight - getHeight());
+                        }
+                        else if (resizingBottom)
+                        {
+                            setHeight(Math.max(minHeight, e.getScreenY() + yOffset[0] - getY() + insets.getBottom()));
+                        }
+                        // Not else, can resize both at same time:
+                        if (resizingLeft)
+                        {
+                            double newX = e.getScreenX() + xOffset[0] - insets.getLeft();
+                            double oldWidth = getWidth();
+                            setWidth(Math.max(minWidth, oldWidth + getX() - newX));
+                            setX(getX() + oldWidth - getWidth());
+                        }
+                        else if (resizingRight)
+                        {
+                            setWidth(Math.max(minWidth, e.getScreenX() + xOffset[0] - getX() + insets.getRight()));
+                        }
+
+                        if (!resizingTop && !resizingBottom && !resizingLeft && !resizingRight)
+                        {
+                            LightDialog.this.setX(e.getScreenX() - xOffset[0]);
+                            LightDialog.this.setY(e.getScreenY() - yOffset[0]);
+                        }
                     }
                 }
             });

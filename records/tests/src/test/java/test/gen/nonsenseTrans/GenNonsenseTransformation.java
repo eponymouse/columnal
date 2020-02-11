@@ -1,4 +1,4 @@
-package test.gen;
+package test.gen.nonsenseTrans;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -23,7 +23,8 @@ public class GenNonsenseTransformation extends Generator<Transformation_Mgr>
         new GenNonsenseManualEdit(),
         new GenNonsenseSort(),
         new GenNonsenseSummaryStats(),
-        new GenNonsenseTransform()
+        new GenNonsenseTransform(),
+        new GenNonsenseRTransform()
     );
 
     public GenNonsenseTransformation()

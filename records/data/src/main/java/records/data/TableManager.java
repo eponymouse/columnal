@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import log.ErrorHandler;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.KeyFor;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
@@ -60,6 +61,8 @@ import java.util.stream.Stream;
 public class TableManager
 {
     private static final Random RANDOM = new Random();
+    @OnThread(value = Tag.Any, requireSynchronized = true)
+    private static @MonotonicNonNull Settings settings;
     
     // We use a TreeMap here to have reliable ordering for tables, especially when saving:
     @OnThread(value = Tag.Any,requireSynchronized = true)
@@ -74,6 +77,15 @@ public class TableManager
     private final ArrayList<TableManagerListener> listeners = new ArrayList<>();
     private final TransformationLoader transformationLoader;
     private final PluggedContentHandler pluginManager;
+    
+    // R expressions are automatically run, which is dangerous as they could be modified by an external program, or especially
+    // could be sent from an untrusted source then opened.  So we keep track of files we made and their hashes, and those files
+    // are trusted.  Everything else is untrusted, which is done by banning R expressions during load, and keeping track of all
+    // the banned ones.  They remain banned for the whole session until manually re-run or modified.
+    @OnThread(Tag.Simulation)
+    private boolean banningAllRExpressions = false;
+    @OnThread(Tag.Simulation)
+    private final HashSet<String> bannedRExpressions = new HashSet<>();
 
     public TableManager(TransformationLoader transformationLoader, PluggedContentHandler pluggedContentHandler) throws UserException, InternalException
     {
@@ -81,6 +93,29 @@ public class TableManager
         this.unitManager = new UnitManager();
         this.typeManager = new TypeManager(unitManager);
         this.pluginManager = pluggedContentHandler;
+    }
+    
+    private static final String SETTINGS_FILE_NAME = "settings.txt";
+
+    public static synchronized Settings getSettings()
+    {
+        if (settings == null)
+        {
+            String pathToRExecutable = Utility.getProperty(SETTINGS_FILE_NAME, "pathToRExecutable");
+            String useColumnalRLibs = Utility.getProperty(SETTINGS_FILE_NAME, "useColumnalRLibs");
+            settings = new Settings(pathToRExecutable == null || pathToRExecutable.trim().isEmpty() ? null : new File(pathToRExecutable),
+                // Default is true:
+                useColumnalRLibs == null || "true".equals(useColumnalRLibs));
+        }
+        return settings;
+    }
+
+    public static synchronized void setSettings(Settings settings)
+    {
+        TableManager.settings = settings;
+        // If we have a lot more properties, we may want to batch-set:
+        Utility.setProperty(SETTINGS_FILE_NAME, "pathToRExecutable", settings.pathToRExecutable == null ? "" : settings.pathToRExecutable.getAbsolutePath());
+        Utility.setProperty(SETTINGS_FILE_NAME, "useColumnalRLibs", Boolean.toString(settings.useColumnalRLibs));
     }
 
     @Pure
@@ -186,7 +221,42 @@ public class TableManager
         }
         throw new UserException("Cannot locate file version; corrupt file or not a Columnal file?");
     }
-    
+
+    // Throws exception if not OK
+    @OnThread(Tag.Simulation)
+    public void checkROKToRun(String rExpression) throws UserException
+    {
+        // This is called while loading the R transformation, so if we're in banning mode, ban this one too:
+        if (banningAllRExpressions)
+        {
+            bannedRExpressions.add(rExpression);
+        }
+        
+        // It's ok if it's not explicitly banned
+        if (bannedRExpressions.contains(rExpression))
+        {
+            throw new UserException("R expression in untrusted file; click the circular arrow above to run");
+        }
+    }
+
+    @OnThread(Tag.Simulation)
+    public void setBanAllR(boolean banAllR)
+    {
+        this.banningAllRExpressions = banAllR;
+    }
+
+    @OnThread(Tag.Simulation)
+    public void unban(String rExpression)
+    {
+        bannedRExpressions.remove(rExpression);
+    }
+
+    @OnThread(Tag.Simulation)
+    public boolean isBannedRExpression(String rExpression)
+    {
+        return bannedRExpressions.contains(rExpression);
+    }
+
     public static class Loaded
     {
         public final ImmutableList<StyledString> errors;
@@ -543,9 +613,17 @@ public class TableManager
         else
         {
             // We usually leave a blank space to the right
-            // of the table, unless there's another table beginning in that row:
-            boolean anyImmediatelyToRight = getAllTables().stream().filter(t -> t.getDisplay() != null && t.getDisplay().getMostRecentPosition().columnIndex == toRightOfDisplay.getBottomRightIncl().offsetByRowCols(0, 1).columnIndex).findFirst().isPresent();
-            return getTopRight(toRightOfDisplay).offsetByRowCols(0, anyImmediatelyToRight ? 1 : 2);
+            // of the table, unless there's another table beginning in that column:
+            @Nullable TableDisplayBase tableToRight = toRightOfDisplay;
+            do
+            {
+                toRightOfDisplay = tableToRight;
+                @AbsColIndex int nextCol = toRightOfDisplay.getBottomRightIncl().offsetByRowCols(0, 1).columnIndex;
+                tableToRight = getAllTables().stream().<@Nullable TableDisplayBase>map(t -> t.getDisplay()).filter(d -> d != null && d.getMostRecentPosition().columnIndex == nextCol).findFirst().orElse(null);
+            }
+            while (tableToRight != null);
+            
+            return getTopRight(toRightOfDisplay).offsetByRowCols(0, 1);
         }
     }
 

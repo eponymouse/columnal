@@ -2,7 +2,7 @@
   <configuration default="false" name="Main Blank" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="records.gui.Main" />
     <module name="app" />
-    <option name="VM_PARAMETERS" value="-Xmx4096M" />
+    <option name="VM_PARAMETERS" value="-Xmx4096M -Dlog4j.configurationFile=dev-log4j2.xml" />
     <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
     <method v="2">
       <option name="Make" enabled="true" />

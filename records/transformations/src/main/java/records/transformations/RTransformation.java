@@ -92,13 +92,16 @@ public class RTransformation extends VisitableTransformation
     @Override
     protected List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
-        return Arrays.stream(Utility.splitLines(rExpression)).map(l -> "@R " + l).collect(ImmutableList.<String>toImmutableList());
+        return Stream.<String>concat(
+            packagesToLoad.stream().<String>map(pkg -> "@PACKAGE " + pkg),
+            Arrays.stream(Utility.splitLines(rExpression)).<String>map(l -> "@R " + l))
+            .collect(ImmutableList.<String>toImmutableList());
     }
 
     @Override
     protected int transformationHashCode()
     {
-        return Objects.hash(srcTableIds, rExpression);
+        return Objects.hash(packagesToLoad, srcTableIds, rExpression);
     }
 
     @Override
@@ -108,7 +111,7 @@ public class RTransformation extends VisitableTransformation
             return false;
         RTransformation that = (RTransformation)obj;
         
-        return srcTableIds.equals(that.srcTableIds) && rExpression.equals(that.rExpression);
+        return srcTableIds.equals(that.srcTableIds) && packagesToLoad.equals(that.packagesToLoad) && rExpression.equals(that.rExpression);
     }
 
     @Override
@@ -124,6 +127,9 @@ public class RTransformation extends VisitableTransformation
     {
         try
         {
+            // Throws an exception if not OK:
+            getManager().checkROKToRun(rExpression);
+            
             HashMap<String, RecordSet> tablesToPass = new HashMap<>();
 
             for (TableId srcTableId : srcTableIds)
@@ -134,7 +140,7 @@ public class RTransformation extends VisitableTransformation
 
             RValue rResult = RExecution.runRExpression(rExpression, packagesToLoad, ImmutableMap.copyOf(tablesToPass));
 
-            ImmutableList<Pair<String, EditableRecordSet>> tables = ConvertFromR.convertRToTable(getManager().getTypeManager(), rResult);
+            ImmutableList<Pair<String, EditableRecordSet>> tables = ConvertFromR.convertRToTable(getManager().getTypeManager(), rResult, false);
 
             if (tables.isEmpty())
                 return Either.left(StyledString.s("R result empty"));
@@ -161,6 +167,7 @@ public class RTransformation extends VisitableTransformation
     public @Nullable SimulationRunnable getReevaluateOperation()
     {
         return () -> {
+            getManager().unban(rExpression);
             getManager().edit(getId(), new TableMaker<RTransformation>()
             {
                 @Override

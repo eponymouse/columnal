@@ -99,8 +99,9 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
         String theError = "Unknown error";
         try
         {
+            ColumnId result = new ColumnId("result");
             theRecordSet = new KnownLengthRecordSet(
-                    ImmutableList.<SimulationFunction<RecordSet, Column>>of(rs -> DataType.BOOLEAN.makeCalculatedColumn(rs, new ColumnId("result"), n -> Utility.later(this).getResult()))
+                    ImmutableList.<SimulationFunction<RecordSet, Column>>of(rs -> DataType.BOOLEAN.makeCalculatedColumn(rs, result, n -> Utility.later(this).getResult(), t -> addManualEditSet(result, t)))
                     , 1
             );
         }

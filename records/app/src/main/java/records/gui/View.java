@@ -3,6 +3,8 @@ package records.gui;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -26,10 +28,14 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import log.Log;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -63,9 +69,10 @@ import records.gui.highlights.TableHighlights.HighlightType;
 import records.gui.highlights.TableHighlights.PickResult;
 import records.gui.highlights.TableHighlights.Picker;
 import records.gui.lexeditor.ExpressionEditor;
+import records.gui.settings.EditSettingsDialog;
+import records.data.Settings;
 import records.gui.table.CheckDisplay;
 import records.gui.table.ExplanationDisplay;
-import records.gui.table.HeadedDisplay;
 import records.gui.table.TableDisplay;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.LoadedColumnInfo;
@@ -74,6 +81,7 @@ import records.importers.manager.ImporterManager;
 import records.plugins.PluginManager;
 import records.transformations.Check;
 import records.transformations.Check.CheckType;
+import records.transformations.RTransformation;
 import records.transformations.TransformationManager;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.explanation.Explanation;
@@ -176,6 +184,9 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             {
                 Utility.saveLock.unlock();
             }
+            boolean hasBannedR = tableManager.getAllTables().stream().anyMatch(t -> t instanceof RTransformation && tableManager.isBannedRExpression(((RTransformation)t).getRExpression()));
+            if (!hasBannedR)
+                recordFileHash(dest, Hashing.sha256().hashString(completeFile, StandardCharsets.UTF_8));
             Platform.runLater(() -> lastSaveTime.setValue(now));
         });
     }
@@ -379,6 +390,43 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         // Highlight immediately:
         if (screenPos != null)
             tableHighlights.highlightAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
+    }
+
+    public void editSettings()
+    {
+        Settings prevSettings = TableManager.getSettings();
+        Settings newSettings = new EditSettingsDialog(getWindow(), prevSettings).showAndWait().orElse(prevSettings);
+        if (!newSettings.equals(prevSettings))
+        {
+            TableManager.setSettings(newSettings);
+            // TODO should really re-run for all other open windows, too.
+            
+            // We need to re-run R transformations:
+            Workers.onWorkerThread("Re-run R transformations", Priority.LOAD_FROM_DISK, () -> {
+                for (Table t : getManager().getAllTablesAvailableTo(null, true))
+                {
+                    // This may involve running a few twice, but I'll live:
+
+                    // We use ID because re-running may have regenerated table, but ID should be the same:
+                    t = getManager().getSingleTableOrNull(t.getId());
+                    if (t == null)
+                        continue; // Shouldn't happen, but just ignore
+
+                    SimulationRunnable reRun = t.getReevaluateOperation();
+                    if (t instanceof RTransformation && reRun != null)
+                    {
+                        try
+                        {
+                            reRun.run();
+                        }
+                        catch (InternalException e)
+                        {
+                            Log.log(e);
+                        }
+                    }
+                }
+            });
+        }
     }
 
     public static enum Pick {
@@ -1153,6 +1201,76 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         getGrid().positionOrAreaChanged();
     }
 
+    private static final String HASH_FILE_NAME = "hashes.txt";
+
+    // Checks if we have seen that file with that content last time we saved the file.
+    @OnThread(Tag.Simulation)
+    public static boolean checkHashMatch(File file, HashCode contentHash)
+    {
+        try
+        {
+            // Each line in the file is shasha <space> sha256hash <space> sha256hash.  The first hash is the hash of the path to the file, the second is the hash of the content.
+            ImmutableMap<HashCode, HashCode> filesToContent = loadFileHashes();
+            // Missing is the same as untrusted:
+            return contentHash.equals(filesToContent.get(hashFilePath(file)));
+        }
+        catch (IOException e)
+        {
+            // Two choices; assume bad or assume fine.  Too irritating for users if permanent file issue and we assume bad, so I think have to assume fine:
+            Log.log(e);
+            return true;
+        }
+    }
+
+    @OnThread(Tag.Any)
+    private static HashCode hashFilePath(File file)
+    {
+        return Hashing.sha256().hashString(file.getAbsolutePath(), StandardCharsets.UTF_8);
+    }
+
+    @OnThread(Tag.Simulation)
+    private static ImmutableMap<HashCode, HashCode> loadFileHashes() throws IOException
+    {
+        File hashesFile = new File(Utility.getStorageDirectory(), HASH_FILE_NAME);
+        // It's not an error to simply not exist yet:
+        if (!hashesFile.exists())
+            return ImmutableMap.of();
+        return FileUtils.readLines(hashesFile, StandardCharsets.UTF_8)
+            .stream()
+            .flatMap(l -> {
+                String[] parts = l.trim().split(" ");
+                if (parts.length == 3 && parts[0].equals("shasha"))
+                {
+                    try
+                    {
+                        return Stream.of(new Pair<>(HashCode.fromString(parts[1]), HashCode.fromString(parts[2])));
+                    }
+                    catch (Throwable t)
+                    {
+                        Log.log(t);
+                    }
+                }
+                return Stream.of();
+            }).collect(ImmutableMap.<Pair<HashCode, HashCode>, HashCode, HashCode>toImmutableMap(p -> p.getFirst(), p -> p.getSecond()));
+    }
+
+    @OnThread(Tag.Simulation)
+    private static void recordFileHash(File file, HashCode contentHash)
+    {
+        try
+        {
+            ImmutableMap<HashCode, HashCode> updated = Utility.appendToMap(loadFileHashes(), hashFilePath(file), contentHash, null);
+            FileUtils.writeLines(new File(Utility.getStorageDirectory(), HASH_FILE_NAME), "UTF-8",
+                updated.entrySet().stream().map(e -> "shasha " + e.getKey().toString() + " " + e.getValue().toString()).collect(ImmutableList.<String>toImmutableList())
+            );
+        }
+        catch (IOException e)
+        {
+            // Not much we can really do:
+            Log.log(e);
+        }
+    }
+
     @OnThread(Tag.FXPlatform)
     public class FindEverywhereDialog extends Dialog<Void>
     {
@@ -1231,7 +1349,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     }
     
     @OnThread(Tag.FXPlatform)
-    private class HintMessage extends FloatingItem<Label>
+    private final class HintMessage extends FloatingItem<VBox>
     {
         /*
         public static enum ContentState
@@ -1244,7 +1362,9 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         
         private ContentState state;
         */
+        private final VBox container;
         private final Label label;
+        private final Label label2; // smaller, beneath, not always present
         private boolean newButtonVisible;
         
         public HintMessage()
@@ -1255,6 +1375,13 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             label.setWrapText(true);
             label.setMaxWidth(400.0);
             label.setMouseTransparent(true);
+            label2 = new Label();
+            label2.getStyleClass().add("main-sub-hint");
+            label2.setWrapText(true);
+            label2.setMaxWidth(400.0);
+            label2.setMouseTransparent(true);
+            container = new VBox(label);
+            container.getStyleClass().add("main-hint-container");
         }
         
         public void updateState()
@@ -1264,27 +1391,39 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             {
                 if (newButtonVisible)
                 {
-                    label.setText(TranslationUtility.getString("main.selHint"));
-                    label.setVisible(true);
+                    show(TranslationUtility.getString("main.selHint"));
                 }
                 else
                 {
-                    label.setText(TranslationUtility.getString("main.emptyHint"));
-                    label.setVisible(true);
+                    show(TranslationUtility.getString("main.emptyHint"));
                 }
             }
             else if (allTables.stream().allMatch(t -> t instanceof DataSource))
             {
-                label.setText(TranslationUtility.getString("main.transHint"));
-                label.setVisible(true);
+                show(TranslationUtility.getString("main.transHint"), TranslationUtility.getString("main.transHint2"));
             }
             else
             {
-                label.setText(Utility.universal(""));
-                label.setVisible(false);
+                container.getChildren().clear();
+                container.setVisible(false);
             }
         }
-        
+
+        private void show(@Localized String main)
+        {
+            label.setText(main);
+            container.getChildren().setAll(label);
+            container.setVisible(true);
+        }
+
+        private void show(@Localized String main, @Localized String sub)
+        {
+            label.setText(main);
+            label2.setText(sub);
+            container.getChildren().setAll(label, label2);
+            container.setVisible(true);
+        }
+
         @Override
         protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
         {            
@@ -1296,15 +1435,15 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             double x = visibleBounds.getXCoord(target.columnIndex) + 20;
             double y = visibleBounds.getYCoord(target.rowIndex) + 10;
 
-            double width = Math.min(400, label.prefWidth(-1));
-            double height = label.prefHeight(width);
+            double width = Math.min(400, container.prefWidth(-1));
+            double height = container.prefHeight(width);
             return Optional.of(new BoundingBox(x, y, width, height));
         }
 
         @Override
-        protected Label makeCell(VisibleBounds visibleBounds)
+        protected VBox makeCell(VisibleBounds visibleBounds)
         {
-            return label;
+            return container;
         }
 
         @Override

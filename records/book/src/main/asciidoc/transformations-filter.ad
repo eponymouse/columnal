@@ -1,0 +1,39 @@
+When processing data, you often need to process a table by keeping some of the rows and dropping the others.  This is known as a filtering operation.  For example, imagine that you had the following table of people and their ages, and you wanted only those aged 40 and over:
+
+|===
+|Name |Age
+
+|Lily
+|43
+
+|Mo
+|26
+
+|Violeta
+|35
+
+|Adam
+|78
+
+|===
+
+This can be done using a filter transformation.  Every filter transformation has a condition, which describes which rows to keep.  In this case, the condition would be `Age >= 40`, and the result would be:
+
+|===
+|Name |Age
+
+|Lily
+|43
+
+|Adam
+|78
+
+|===
+
+A filter processes all the rows to test if they should be kept (it doesn't stop at the first dropped row, for example), and all the kept rows are in the same relative order as in the original table (so Lily is before Adam above, because Lily was before Adam in the original table).
+
+Conditions can be as complicated as you need them to be.  If you need to have multiple criteria then you can join them together with operators like `&` or `|` or statements like `@if`.
+
+TODO examples
+
+One final common use case of filter is if you need to keep only say, the first ten rows of a table (especially if you just sorted it and want the top ten).  This can be achieved by using the in-built variable `row` in the condition, where the first row is number 1.  For example, the condition `row <= 10` will keep the top-ten rows.  You can join this with other conditions, for example, `(row <= 100) & (Age > 40)` will keep all the rows that are in the first hundred rows and have Age of 40 and over.

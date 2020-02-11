@@ -5,6 +5,7 @@ import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.common.primitives.Booleans;
@@ -52,8 +53,7 @@ public class ConvertFromR
 {
     private static ColumnId getColumnName(@Nullable RValue listColumnNames, int index) throws UserException, InternalException
     {
-        @SuppressWarnings("identifier")
-        @ExpressionIdentifier String def = "Column " + index;
+        @ExpressionIdentifier String def = IdentifierUtility.identNum("Column", index);
         if (listColumnNames != null)
         {
             @Value String s = RUtility.getString(RUtility.getListItem(listColumnNames, index));
@@ -186,18 +186,15 @@ public class ConvertFromR
                         {
                             throw new UserException("List has named values, but names not same length as items");
                         }
-                        HashMap<@ExpressionIdentifier String, DataType> fieldTypes = new HashMap<>();
-                        HashMap<@ExpressionIdentifier String, @Value Object> fieldValues = new HashMap<>();
+
+                        ImmutableList.Builder<Pair<String, RValue>> paired = ImmutableList.builder();
                         for (int i = 0; i < names.size(); i++)
                         {
-                            @ExpressionIdentifier String name = IdentifierUtility.fixExpressionIdentifier(names.get(i).orElse(DataTypeUtility.value("")), IdentifierUtility.identNum("Field", i));
-                            Pair<DataType, ImmutableList<@Value Object>> val = convertRToTypedValueList(typeManager, values.get(i));
-                            // TODO check duplicate names
-                            fieldTypes.put(name, val.getSecond().size() == 1 ? val.getFirst() : DataType.array(val.getFirst()));
-                            fieldValues.put(name, val.getSecond().size() == 1 ? val.getSecond().get(0) : DataTypeUtility.value(val.getSecond()));
-                            
+                            paired.add(new Pair<String, RValue>(names.get(i).orElse(DataTypeUtility.value("Unnamed field " + i)), values.get(i)));
                         }
-                        return new Pair<>(DataType.record(fieldTypes), ImmutableList.<@Value Object>of(DataTypeUtility.value(new RecordMap(fieldValues))));
+
+                        Pair<DataType, @Value Object> fieldTypesAndValue = record(typeManager, paired.build());
+                        return new Pair<>(fieldTypesAndValue.getFirst(), ImmutableList.<@Value Object>of(fieldTypesAndValue.getSecond()));
                     }
                 }
                 return rListToValueList(typeManager, values);
@@ -222,7 +219,19 @@ public class ConvertFromR
                         return asFactors;
                 }
 
-                throw new UserException("Pair list found when column expected: " + RPrettyPrint.prettyPrint(rValue));
+                ImmutableList<Pair<String, RValue>> pairs = Utility.mapListExI(items, e -> {
+                    @Value String name = null;
+                    if (e.tag != null)
+                    {
+                        name = RUtility.getString(e.tag);
+                    }
+                    if (name == null)
+                        name = DataTypeUtility.value("");
+                    return new Pair<>(name, e.item);
+                });
+
+                Pair<DataType, @Value Object> record = record(typeManager, pairs);
+                return new Pair<DataType, ImmutableList<@Value Object>>(record.getFirst(), ImmutableList.<@Value Object>of(record.getSecond()));
             }
 
             @Override
@@ -567,7 +576,7 @@ public class ConvertFromR
         }
     }
 
-    public static ImmutableList<Pair<String, EditableRecordSet>> convertRToTable(TypeManager typeManager, RValue rValue) throws UserException, InternalException
+    public static ImmutableList<Pair<String, EditableRecordSet>> convertRToTable(TypeManager typeManager, RValue rValue, boolean allowMultipleTables) throws UserException, InternalException
     {
         // R tables are usually a list of columns, which suits us:
         return rValue.visit(new RVisitor<ImmutableList<Pair<String, EditableRecordSet>>>()
@@ -576,6 +585,30 @@ public class ConvertFromR
             {
                 Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> p = convertRToColumn(typeManager, rValue, new ColumnId("Result"));
                 return ImmutableList.<Pair<String, EditableRecordSet>>of(new Pair<>("Value", new <EditableColumn>EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(p.getFirst()), () -> p.getSecond())));
+            }
+            
+            private ImmutableList<Pair<String, EditableRecordSet>> recordOrTable(ImmutableList<Pair<String, RValue>> fields) throws UserException, InternalException
+            {
+                int rowCount = -1;
+
+                ImmutableList.Builder<SimulationFunction<RecordSet, EditableColumn>> columns = ImmutableList.builderWithExpectedSize(fields.size());
+                for (int i = 0; i < fields.size(); i++)
+                {
+                    Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> col = convertRToColumn(typeManager, fields.get(i).getSecond(), new ColumnId(IdentifierUtility.fixExpressionIdentifier(fields.get(i).getFirst(), IdentifierUtility.identNum("Column", i))));
+                    if (rowCount != -1 && col.getSecond() != rowCount)
+                    {
+                        // Not all the same size, treat as record:
+                        Pair<DataType, @Value Object> recTypeVal = record(typeManager, fields);
+                        
+                        return ImmutableList.of(new Pair<String, EditableRecordSet>("Value", new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(recTypeVal.getFirst().makeImmediateColumn(new ColumnId("Object"), ImmutableList.<Either<String, @Value Object>>of(Either.<String, @Value Object>right(recTypeVal.getSecond())), DataTypeUtility.makeDefaultValue(recTypeVal.getFirst()))), () -> 1)));
+                    }
+                    
+                    rowCount = col.getSecond();
+                    columns.add(col.getFirst());
+                }
+                
+                int rowCountFinal = rowCount;
+                return ImmutableList.of(new Pair<>("Value", new EditableRecordSet(columns.build(), () -> rowCountFinal)));
             }
 
             @Override
@@ -632,7 +665,7 @@ public class ConvertFromR
                 ImmutableList.Builder<Pair<String, EditableRecordSet>> r = ImmutableList.builder();
                 for (PairListEntry item : items)
                 {
-                    ImmutableList<Pair<String, EditableRecordSet>> found = convertRToTable(typeManager, item.item);
+                    ImmutableList<Pair<String, EditableRecordSet>> found = convertRToTable(typeManager, item.item, allowMultipleTables);
                     if (item.tag != null && found.size() == 1)
                     {
                         String name = RUtility.getString(item.tag);
@@ -646,6 +679,8 @@ public class ConvertFromR
                         }
                     }
                     r.addAll(found);
+                    if (!allowMultipleTables)
+                        break;
                 }
                 return r.build();
             }
@@ -671,33 +706,60 @@ public class ConvertFromR
                 else
                 {
                     boolean hasDataFrames = false;
-                    for (RValue value : values)
+                    if (allowMultipleTables)
                     {
-                        boolean valueIsDataFrame = value.visit(new DefaultRVisitor<Boolean>(false)
+                        for (RValue value : values)
                         {
-                            @Override
-                            public Boolean visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
+                            boolean valueIsDataFrame = value.visit(new DefaultRVisitor<Boolean>(false)
                             {
-                                final ImmutableMap<String, RValue> valueAttrMap = RUtility.pairListToMap(attributes);
-                                return isObject && isDataFrameOrTibble(valueAttrMap);
+                                @Override
+                                public Boolean visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
+                                {
+                                    final ImmutableMap<String, RValue> valueAttrMap = RUtility.pairListToMap(attributes);
+                                    return isObject && isDataFrameOrTibble(valueAttrMap);
+                                }
+                            });
+    
+                            if (valueIsDataFrame)
+                            {
+                                hasDataFrames = true;
+                                break;
                             }
-                        });
-                        
-                        if (valueIsDataFrame)
-                        {
-                            hasDataFrames = true;
-                            break;
                         }
                     }
                     if (!hasDataFrames)
-                        return singleColumn();
-                    
-                    ImmutableList.Builder<Pair<String, EditableRecordSet>> r = ImmutableList.builder();
-                    for (RValue value : values)
                     {
-                        r.addAll(convertRToTable(typeManager, value));
+                        // Is it an object?
+                        if (isObject && values.size() > 1)
+                        {
+                            // Does it have names for class fields?
+                            RValue names = attrMap.get("names");
+                            ImmutableList.Builder<Pair<String, RValue>> named = ImmutableList.builder();
+                            for (int i = 0; i < values.size(); i++)
+                            {
+                                String name = names == null ? null : RUtility.getString(RUtility.getListItem(names, i));
+                                named.add(new Pair<>(name == null ? "" : name, values.get(i)));
+                            }
+                            
+                            return recordOrTable(ImmutableList.sortedCopyOf(Pair.<String, RValue>comparatorFirst(), named.build()));
+                        }
+                        else if (isObject && values.size() == 1)
+                        {
+                            // Dig in:
+                            return convertRToTable(typeManager, values.get(0), allowMultipleTables);
+                        }
+                        
+                        return singleColumn();
                     }
-                    return r.build();
+                    else
+                    {
+                        ImmutableList.Builder<Pair<String, EditableRecordSet>> r = ImmutableList.builder();
+                        for (RValue value : values)
+                        {
+                            r.addAll(convertRToTable(typeManager, value, allowMultipleTables));
+                        }
+                        return r.build();
+                    }
                 }
             }
         });
@@ -716,4 +778,24 @@ public class ConvertFromR
         return tableId.getRaw().replace(" ", ".");
     }
 
+    private static Pair<DataType, @Value Object> record(TypeManager typeManager, ImmutableList<Pair<String, RValue>> fields) throws UserException, InternalException
+    {
+        Builder<@ExpressionIdentifier String, Pair<DataType, @Value Object>> r = ImmutableMap.builder();
+
+        for (int j = 0; j < fields.size(); j++)
+        {
+            Pair<String, RValue> recField = fields.get(j);
+            Pair<DataType, ImmutableList<@Value Object>> asList = convertRToTypedValueList(typeManager, recField.getSecond());
+            @ExpressionIdentifier String name = IdentifierUtility.fixExpressionIdentifier(recField.getFirst(), IdentifierUtility.identNum("Field", j));
+            r.put(name, new Pair<DataType, @Value Object>(asList.getSecond().size() == 1 ? asList.getFirst() : DataType.array(asList.getFirst()), asList.getSecond().size() == 1 ? asList.getSecond().get(0) : DataTypeUtility.value(asList.getSecond())));
+        }
+
+        ImmutableMap<@ExpressionIdentifier String, Pair<DataType, @Value Object>> typedFields = r.build();
+
+        DataType recordType = DataType.record(Utility.mapValues(typedFields, p -> p.getFirst()));
+
+        @Value Record recordValue = DataTypeUtility.value(new RecordMap(Utility.<@ExpressionIdentifier String, Pair<DataType, @Value Object>, @Value Object>mapValues(typedFields, p -> p.getSecond())));
+
+        return new Pair<>(recordType, recordValue);
+    }
 }

@@ -722,14 +722,14 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
             {
                 // Return whole column:
                 List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(listInnerType));
-                columns.add(rs -> listInnerType.makeCalculatedColumn(rs, name, i -> value.get(i)));
+                columns.add(rs -> listInnerType.makeCalculatedColumn(rs, name, i -> value.get(i), t -> t));
                 // Each row gets the same full list:
                 return new Pair<List<@Value Object>, Expression>(GenExpressionValueForwards.this.<@Value Object>replicateM(() -> new ListExList(value)), IdentExpression.makeEntireColumnReference(tableId, name));
             }
             else
             {
                 List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(type));
-                columns.add(rs -> type.makeCalculatedColumn(rs, name, i -> value.get(i)));
+                columns.add(rs -> type.makeCalculatedColumn(rs, name, i -> value.get(i), t -> t));
 
                 FunctionLookup functionLookup = FunctionList.getFunctionLookup(dummyManager.getUnitManager());
                 // Index into a whole column:

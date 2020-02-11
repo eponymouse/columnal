@@ -1,7 +1,7 @@
 package records.gui;
 
-import annotation.units.AbsColIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.hash.Hashing;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -12,7 +12,6 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.TitledPane;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
@@ -50,6 +49,7 @@ import utility.gui.SmallDeleteButton;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -145,6 +145,10 @@ public class MainWindow
                 GUI.menu("menu.edit",
                         GUI.menuItem("menu.edit.undo", () -> {
                             v.undo();
+                        }),
+                        new SeparatorMenuItem(),
+                        GUI.menuItem("menu.edit.settings", () -> {
+                            v.editSettings();
                         })
                 ),
                 GUI.menu("menu.view",
@@ -250,7 +254,9 @@ public class MainWindow
                 Platform.runLater(() -> updateBanner(v, banner, false));
                 return TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err);
             }, () -> {
+                v.getManager().setBanAllR(!View.checkHashMatch(srcFinal.getFirst(), Hashing.sha256().hashString(srcFinal.getSecond(), StandardCharsets.UTF_8)));
                 v.getManager().loadAll(srcFinal.getSecond(), v::loadColumnWidths);
+                v.getManager().setBanAllR(false);
                 Platform.runLater(() -> {
                     v.enableWriting();
                     updateBanner(v, banner, false);

@@ -1,0 +1,16 @@
+<dialog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="help.xsd"
+        id="edit-settings" title="Settings" >
+    <help id="rexe" title="R executable">
+        <short>The location of the R (or R.exe) executable to run for R transformations</short>
+        <full>
+            <p>If you leave this setting blank, R will be picked up from your PATH variable, which will work for many users.  However, not all users have R on their PATH, or they may want to use a different version of R, so you can specify the R path here.</p>
+        </full>
+    </help>
+    <help id="rlocallibs" title="R library installation">
+        <short>Selects whether to use a directory in the user profile for installing R libraries</short>
+        <full>
+            <p>Some of the R transformations you run may require installing an R library.  Not all users have access to install R libraries in a central location, so the default setting is to leave this ticked and install R libraries into a per-user directory inside the Columnal settings.  Untick if you want the default R installation behaviour (see the install.packages and .libPaths R functions for more documentation of the default behaviour).</p>
+        </full>
+    </help>
+</dialog>

@@ -81,6 +81,7 @@ public class RRead
         switch (objHeader.getType())
         {
             case 242: // Empty environment; not sure how to handle:
+            case 253: // GLOBALENV_SXP; not sure how to handle:
             case RUtility.NIL: // Nil
                 return new RValue() {
 
@@ -354,6 +355,13 @@ public class RRead
                         }
                     });
                 };
+            case "base#deferred_string":
+                return (state, attr) -> {
+                    return RUtility.string("Unsupported base#deferred_string", false);
+                };
+            case "base#wrap_real":
+                return (state, attr) -> RUtility.getListItem(state, 0);
+            
         }
         throw new UserException("Unsupported R class: " + p + " " + c);
     }

@@ -257,7 +257,11 @@ public class DataTestUtil
         if (sourceOfRandomness.nextBoolean())
         {
             List<String> keywords = getKeywords();
-            return keywords.get(sourceOfRandomness.nextInt(0, keywords.size() - 1)).replaceAll("[^A-Za-z0-9]", "");
+            String mangled = keywords.get(sourceOfRandomness.nextInt(0, keywords.size() - 1)).replaceAll("[^A-Za-z0-9]", "").trim();
+            if (mangled.isEmpty())
+                return "a";
+            else
+                return mangled;
         }
         else
         {

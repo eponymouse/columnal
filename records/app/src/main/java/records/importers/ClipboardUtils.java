@@ -226,7 +226,7 @@ public class ClipboardUtils
                     Map<DataFormat, Object> copyData = new HashMap<>();
                     copyData.put(DATA_FORMAT, str);
                     copyData.put(DataFormat.PLAIN_TEXT, plainText.toString());
-                    System.out.println("Copying: {{{\n" + str + "\n}}}");
+                    //System.out.println("Copying: {{{\n" + str + "\n}}}");
                     Clipboard.getSystemClipboard().setContent(copyData);
                     if (onCompletion != null)
                         onCompletion.complete(true);

@@ -254,9 +254,9 @@ public class TestUtil
         }.stream();
     }
 
-    public static <T> List<T> makeList(int len, Generator<? extends T> gen, SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+    public static <T> ImmutableList<T> makeList(int len, Generator<? extends T> gen, SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        return Stream.generate(() -> gen.generate(sourceOfRandomness, generationStatus)).limit(len).collect(Collectors.toList());
+        return Stream.generate(() -> gen.generate(sourceOfRandomness, generationStatus)).limit(len).collect(ImmutableList.toImmutableList());
     }
 
     @OnThread(Tag.Simulation)
@@ -700,7 +700,7 @@ public class TestUtil
         File temp = File.createTempFile("srcdata", "tables");
         temp.deleteOnExit();
         String saved = save(mgr);
-        System.out.println("Saving: {{{" + saved + "}}}");
+        //System.out.println("Saving: {{{" + saved + "}}}");
         AtomicReference<MainWindowActions> tableManagerAtomicReference = new AtomicReference<>();
         FXUtility.runFX(() -> checkedToRuntime_(() -> {
             MainWindowActions mainWindowActions = MainWindow.show(windowToUse, temp, new Pair<>(temp, saved), null);

@@ -92,7 +92,7 @@ public class TestRLoadSave
                 return new UnitManager(null);
             else */
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet rs = ConvertFromR.convertRToTable(typeManager, loaded).get(0).getSecond();
+        RecordSet rs = ConvertFromR.convertRToTable(typeManager, loaded, false).get(0).getSecond();
                 
         assertEquals(ImmutableList.of(new ColumnId("Sepal Length"), new ColumnId("Sepal Width"), new ColumnId("Petal Length"), new ColumnId("Petal Width"), new ColumnId("Species")), rs.getColumnIds());
         
@@ -114,7 +114,7 @@ public class TestRLoadSave
                 return new UnitManager(null);
             else */
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet rs = ConvertFromR.convertRToTable(typeManager, loaded).get(0).getSecond();
+        RecordSet rs = ConvertFromR.convertRToTable(typeManager, loaded, false).get(0).getSecond();
 
         assertEquals(ImmutableList.of(new ColumnId("mpg"), new ColumnId("cyl"), new ColumnId("disp"), new ColumnId("hp"), new ColumnId("drat"), new ColumnId("wt"), new ColumnId("qsec"), new ColumnId("vs"), new ColumnId("am"), new ColumnId("gear"), new ColumnId("carb")), rs.getColumnIds());
 
@@ -137,7 +137,7 @@ public class TestRLoadSave
                 return new UnitManager(null);
             else */
         TypeManager typeManager = new TypeManager(new UnitManager());
-        ConvertFromR.convertRToTable(typeManager, loaded);
+        ConvertFromR.convertRToTable(typeManager, loaded, false);
     }
 
     @Test
@@ -176,7 +176,7 @@ public class TestRLoadSave
         RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet r = ConvertFromR.convertRToTable(typeManager, loaded).get(0).getSecond();
+        RecordSet r = ConvertFromR.convertRToTable(typeManager, loaded, false).get(0).getSecond();
         // df <- data.frame(c(TRUE, NA, FALSE), c(36, NA, -35.2), c(1, NA, 2), factor(c("A", NA, "B")), as.character(c("Hello", NA, "Bye")), c(ISOdate(2005,10,21,18,47,22,tz="America/New_York"), NA, NA), stringsAsFactors=FALSE)
         
         assertEquals(maybeType(typeManager, DataType.BOOLEAN), r.getColumns().get(0).getType().getType());
@@ -205,7 +205,7 @@ public class TestRLoadSave
         RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(new UnitManager());
-        ImmutableList<Pair<String, EditableRecordSet>> rs = ConvertFromR.convertRToTable(typeManager, loaded);
+        ImmutableList<Pair<String, EditableRecordSet>> rs = ConvertFromR.convertRToTable(typeManager, loaded, true);
         assertEquals(ImmutableSet.of("df", "df2", "datetimeZoned2"), rs.stream().map(p -> p.getFirst()).collect(ImmutableSet.<String>toImmutableSet()));
     }
 
@@ -217,7 +217,7 @@ public class TestRLoadSave
         RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet rs = ConvertFromR.convertRToTable(typeManager, loaded).get(0).getSecond();
+        RecordSet rs = ConvertFromR.convertRToTable(typeManager, loaded, false).get(0).getSecond();
 
         assertEquals(ImmutableList.of(new ColumnId("bar")), rs.getColumnIds());
 
@@ -232,7 +232,7 @@ public class TestRLoadSave
         RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
         TypeManager typeManager = new TypeManager(new UnitManager());
-        RecordSet rs = ConvertFromR.convertRToTable(typeManager, loaded).get(0).getSecond();
+        RecordSet rs = ConvertFromR.convertRToTable(typeManager, loaded, false).get(0).getSecond();
 
         assertEquals(ImmutableList.of(new ColumnId("x"), new ColumnId("nested lists")), rs.getColumnIds());
 
@@ -308,7 +308,7 @@ public class TestRLoadSave
                 }
                 TypeManager typeManager = original.typeManager;
                 System.out.println(RPrettyPrint.prettyPrint(roundTripped));
-                RecordSet reloaded = ConvertFromR.convertRToTable(typeManager, roundTripped).get(0).getSecond();
+                RecordSet reloaded = ConvertFromR.convertRToTable(typeManager, roundTripped, false).get(0).getSecond();
                 assertEquals(original.recordSet.getColumnIds(), reloaded.getColumnIds());
                 assertEquals(original.recordSet.getLength(), reloaded.getLength());
                 for (Column column : original.recordSet.getColumns())

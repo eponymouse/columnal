@@ -118,7 +118,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
     default void keyboardMoveTo(VirtualGrid virtualGrid, CellPosition target)
     {
         Random r = new Random(target.rowIndex * 100 + target.columnIndex);
-        Log.debug("Moving to position " + target);
+        System.out.println("Moving to position " + target);
         // Lots of tests use this method, so to speed things up,
         // we usually skip the GUI step and call a direct method:
         boolean bypassGUI = r.nextInt(10) != 1;

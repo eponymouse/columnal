@@ -2,10 +2,13 @@ package records.rinterop;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import log.Log;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.data.RecordSet;
+import records.data.Settings;
+import records.data.TableManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.rinterop.ConvertFromR.TableType;
@@ -15,18 +18,18 @@ import utility.Utility;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 public class RExecution
 {
-    // null means not checked yet
-    private static @MonotonicNonNull Boolean isRAvailable;
     // Uses $PATH by default:
-    private static String rExec = "R";
+    private static String rExecFromPath = "R";
     
     public static RValue runRExpression(String rExpression) throws UserException, InternalException
     {
@@ -35,12 +38,14 @@ public class RExecution
     
     public static RValue runRExpression(String rExpression, ImmutableList<String> packages, ImmutableMap<String, RecordSet> tablesToPass) throws UserException, InternalException
     {
-        if (isRAvailable == null)
+        Settings settings = TableManager.getSettings();
+        String rExec = Utility.onNullable(settings.pathToRExecutable, f -> f.getAbsolutePath());
+        if (rExec == null)
         {            
             try
             {
                 Runtime.getRuntime().exec(new String[]{"R", "--version"}).waitFor();
-                isRAvailable = true;
+                rExec = "R";
             }
             catch (IOException e)
             {
@@ -51,12 +56,11 @@ public class RExecution
                     {
                         String local = "/usr/local/bin/R";
                         Runtime.getRuntime().exec(new String[]{local, "--version"}).waitFor();
-                        isRAvailable = true;
                         rExec = local;
                     }
                     catch (IOException e2)
                     {
-                        isRAvailable = false;
+                        rExec = null;
                     }
                     catch (InterruptedException e2)
                     {
@@ -64,7 +68,7 @@ public class RExecution
                     }
                 }
                 else
-                    isRAvailable = false;
+                    rExec = null;
             }
             catch (InterruptedException e)
             {
@@ -72,19 +76,45 @@ public class RExecution
             }
         }
         
-        if (isRAvailable != null && isRAvailable == false)
+        if (rExec == null)
         {
-            throw new UserException("R not found on your system; R must be installed and in your PATH");
+            throw new UserException("R not found on your system; set the R path in the settings");
         }
         
         try (TemporaryFileHandler rdsFile = new TemporaryFileHandler())
         {
+            File rLibsDir = null;
+            if (settings.useColumnalRLibs)
+            {
+                rLibsDir = new File(Utility.getStorageDirectory(), "Rlibs");
+                if (!rLibsDir.exists() && !rLibsDir.mkdir())
+                {
+                    throw new IOException("Could not create local R libs directory: " + rLibsDir.getAbsolutePath());
+                }
+            }
+            
             Process p = Runtime.getRuntime().exec(new String[]{rExec, "--vanilla", "--slave"});
             PrintStream cmdStream = new PrintStream(p.getOutputStream());
             
             for (String pkg : Utility.prependToList("tibble", packages))
             {
-                cmdStream.println("require(\"" + pkg + "\") || install.packages(\"" + pkg + "\", repos=\"https://cloud.r-project.org/\")");
+                StringBuilder require = new StringBuilder();
+                require.append("require(").append(RUtility.escapeString(pkg, true));
+                if (rLibsDir != null)
+                {
+                    require.append(", lib.loc=c(").append(RUtility.escapeString(rLibsDir.getAbsolutePath(), true)).append(", .libPaths())");
+                }
+                require.append(")");
+                StringBuilder reqOrInstall = new StringBuilder();
+                reqOrInstall.append("if (!").append(require).append(") { install.packages(").append(RUtility.escapeString(pkg, true)).append(", repos=\"https://cloud.r-project.org/\"");
+                if (rLibsDir != null)
+                {
+                    reqOrInstall.append(", lib=c(").append(RUtility.escapeString(rLibsDir.getAbsolutePath(), true)).append(")");
+                }
+                reqOrInstall.append(");").append(require).append(";}");
+
+                Log.debug("Sending:\n" + reqOrInstall.toString());
+                cmdStream.println(reqOrInstall.toString());
             }
 
             for (Entry<String, RecordSet> entry : tablesToPass.entrySet())
@@ -93,39 +123,74 @@ public class RExecution
                 RValue rTable = ConvertToR.convertTableToR(entry.getValue(), TableType.TIBBLE);
                 //System.out.println(RData.prettyPrint(rTable));
                 RWrite.writeRData(tableFile, rTable);
-                String read = entry.getKey() + " <- readRDS(\"" + escape(tableFile.getAbsolutePath()) + "\")";
+                String read = entry.getKey() + " <- readRDS(" + RUtility.escapeString(tableFile.getAbsolutePath(), true) + ")";
                 cmdStream.println(read);
             }
             
             String[] lines = Utility.splitLines(rExpression);
             File outputFile = rdsFile.addRDSFile("output");
-            lines[lines.length - 1] = "saveRDS(" + lines[lines.length - 1] + ", file=\"" + escape(outputFile.getAbsolutePath()) + "\")";
+            lines[lines.length - 1] = "saveRDS(" + lines[lines.length - 1] + ", file=" + RUtility.escapeString(outputFile.getAbsolutePath(), true) + ")";
             
             for (String line : lines)
             {
-                //System.out.println(line);
+                System.out.println(line);
                 cmdStream.println(line);
             }
             cmdStream.println("quit();");
             cmdStream.flush();
-            StringWriter stdout = new StringWriter();
-            IOUtils.copy(p.getInputStream(), stdout, StandardCharsets.UTF_8);
-            StringWriter stderr = new StringWriter();
-            IOUtils.copy(p.getErrorStream(), stderr, StandardCharsets.UTF_8);
-            int exitCode = p.waitFor();
-            if (exitCode != 0)
-                throw new UserException("Exit code from running R (" + exitCode + ") indicates error.  Output was:\n" + stdout.toString() + "\nError was:\n" + stderr.toString());
-            return RRead.readRData(outputFile);
+            CopyStreamThread copyOut = new CopyStreamThread(p.getInputStream());
+            CopyStreamThread copyErr = new CopyStreamThread(p.getErrorStream());
+            try
+            {
+                copyOut.start();
+                copyErr.start();
+                if (!p.waitFor(15, TimeUnit.SECONDS))
+                    throw new UserException("R process took too long to complete, giving up.");
+                if (p.exitValue() != 0)
+                    throw new UserException("Exit code from running R (" + p.exitValue() + ") indicates error.  Output was:\n" + copyOut.destination.toString() + "\nError was:\n" + copyErr.destination.toString());
+                return RRead.readRData(outputFile);
+            }
+            finally
+            {
+                p.destroyForcibly();
+                copyOut.interrupt();
+                copyErr.interrupt();
+            }
         }
-        catch (IOException | InterruptedException e)
+        catch (IOException | InterruptedException | IllegalThreadStateException e)
         {
             throw new UserException("Problem running R", e);
         }
     }
     
-    private static String escape(String original)
+    private static class CopyStreamThread extends Thread
     {
-        return original.replace("\\", "\\\\");
+        private final StringWriter destination = new StringWriter();
+        private final InputStream source;
+
+        private CopyStreamThread(InputStream source)
+        {
+            this.source = source;
+        }
+
+        @Override
+        public void run()
+        {
+            try
+            {
+                IOUtils.copy(source, destination, StandardCharsets.UTF_8);
+            }
+            catch (IOException e)
+            {
+                Log.log(e);
+            }
+            /*
+            catch (InterruptedException e)
+            {
+                // Just finish...
+            }
+             */
+        }
     }
 
     private static class TemporaryFileHandler implements AutoCloseable

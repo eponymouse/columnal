@@ -370,4 +370,16 @@ class RUtility
         // Go through Double.toString which zeroes out the boring end part:
         return DataTypeUtility.value(new BigDecimal(Double.toString(value)));
     }
+
+    public static String escapeString(String original, boolean addQuotes)
+    {
+        // Must replace backslashes first
+        String content = original
+            .replace("\\", "\\\\")
+            .replace("\'", "\\'")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r");
+        return addQuotes ? "\"" + content + "\"" : content;
+    }
 }

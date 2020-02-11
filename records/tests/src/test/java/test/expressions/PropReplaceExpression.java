@@ -2,7 +2,6 @@ package test.expressions;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.transformations.expression.Expression;
@@ -11,12 +10,10 @@ import records.transformations.expression.NumericLiteral;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
-import test.gen.GenNonsenseExpression;
-import test.gen.GenRandom;
+import test.gen.nonsenseTrans.GenNonsenseExpression;
 import utility.Pair;
 
 import java.util.List;
-import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 

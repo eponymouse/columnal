@@ -408,6 +408,7 @@ public final class VirtualGrid implements ScrollBindable
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public void changed(ObservableValue<? extends @Nullable CellSelection> prop, @Nullable CellSelection oldVal, @Nullable CellSelection s)
             {
+                //System.out.println("Selection now: " + s);
                 if (suppressSelectionUpdate)
                     return;
                 if (s != null)
@@ -1838,6 +1839,11 @@ public final class VirtualGrid implements ScrollBindable
         double minX = sumColumnWidths(CellPosition.col(0), target.columnIndex);
         double minY = rowHeight * target.rowIndex;
         return new BoundingBox(minX, minY, getColumnWidth(target.columnIndex), rowHeight);
+    }
+    
+    public void _test_ensureVisible(CellPosition position)
+    {
+        smoothScrollToEnsureVisible(position);
     }
 
     private void smoothScrollToEnsureVisible(CellPosition target)

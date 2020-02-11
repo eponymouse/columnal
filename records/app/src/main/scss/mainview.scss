@@ -83,11 +83,16 @@
 .main-hint {
     -fx-text-fill: grey(40%);
     -fx-font-size: 20pt;
+}
+.main-sub-hint {
+    -fx-text-fill: grey(40%);
+    -fx-font-size: 11pt;
+}
+.main-hint-container {
+    -fx-padding: 6pt 10pt 6pt 10pt;
     -fx-background-color: derive($table-empty-background, 5%), $table-empty-background;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 20px;
-    -fx-label-padding: 6pt 10pt 6pt 10pt;
-    /*-fx-effect: dropshadow(gaussian, grey(70%), 6, 0.2, 1, 1);*/
 }
 
 .view {
