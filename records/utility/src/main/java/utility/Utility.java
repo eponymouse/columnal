@@ -1999,7 +1999,7 @@ public class Utility
         }
 
         @SuppressWarnings({"valuetype", "nullness"})
-        public static @ImmediateValue <@ImmediateValue T> ListExList immediate(List<T> items)
+        public static @ImmediateValue <T extends @ImmediateValue Object> ListExList immediate(List<T> items)
         {
             return new ListExList(items);
         }

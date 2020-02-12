@@ -142,7 +142,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
      * @param <T>
      */
     @OnThread(Tag.FXPlatform)
-    public static abstract class FloatingItem<T extends Node>
+    public static abstract class FloatingItem<T extends @NonNull Node>
     {
         // null if not created, or has been removed.
         private @Nullable T node;
