@@ -11,6 +11,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.data.CellPosition;
 import records.data.EditableRecordSet;
 import records.data.RecordSet;
+import records.data.RenameOnEdit;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
@@ -28,7 +29,9 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformSupplier;
+import utility.IdentifierUtility;
 import utility.Pair;
+import utility.SimulationFunctionInt;
 import utility.SimulationRunnable;
 import utility.SimulationSupplier;
 import utility.Utility;
@@ -168,14 +171,14 @@ public class RTransformation extends VisitableTransformation
     {
         return () -> {
             getManager().unban(rExpression);
-            getManager().edit(getId(), new TableMaker<RTransformation>()
+            getManager().edit(RTransformation.this, new SimulationFunctionInt<TableId, RTransformation>()
             {
                 @Override
-                public @NonNull RTransformation make() throws InternalException
+                public RTransformation apply(TableId id) throws InternalException
                 {
-                    return new RTransformation(RTransformation.this.getManager(), RTransformation.this.getDetailsForCopy(), srcTableIds, packagesToLoad, rExpression);
+                    return new RTransformation(RTransformation.this.getManager(), RTransformation.this.getDetailsForCopy(id), srcTableIds, packagesToLoad, rExpression);
                 }
-            }, null);
+            }, RenameOnEdit.UNNEEDED /* Name is unchanged so don't need to worry about that */);
         };
     }
 
@@ -223,5 +226,16 @@ public class RTransformation extends VisitableTransformation
         {
             return () -> new RTransformation(mgr, new InitialLoadDetails(destination), ImmutableList.of(), ImmutableList.of(), "1+2");
         }
+    }
+
+    @Override
+    public TableId getSuggestedName()
+    {
+        return suggestedName(rExpression);
+    }
+
+    public static TableId suggestedName(String rExpression)
+    {
+        return new TableId(IdentifierUtility.spaceSeparated("R", IdentifierUtility.shorten(IdentifierUtility.fixExpressionIdentifier(rExpression, "expr"))));
     }
 }

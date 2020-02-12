@@ -129,4 +129,10 @@ public class ImmediateDataSource extends DataSource
     {
         return data.hashCode();
     }
+
+    @Override
+    public TableId getSuggestedName()
+    {
+        return new TableId("Data");
+    }
 }

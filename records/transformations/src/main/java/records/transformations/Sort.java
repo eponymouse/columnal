@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
@@ -25,6 +26,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -45,7 +47,6 @@ import java.util.stream.Stream;
 @OnThread(Tag.Simulation)
 public class Sort extends VisitableTransformation implements SingleSourceTransformation
 {
-
     public static final String NAME = "sort";
 
     public static enum Direction implements StyledShowable
@@ -324,7 +325,7 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
     @Override
     public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
-        return new Sort(getManager(), getDetailsForCopy(), newSrcTableId, originalSortBy);
+        return new Sort(getManager(), getDetailsForCopy(getId()), newSrcTableId, originalSortBy);
     }
 
     @Override
@@ -406,5 +407,16 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.sort(this);
+    }
+
+    @Override
+    public TableId getSuggestedName()
+    {
+        return suggestedName(originalSortBy);
+    }
+
+    public static TableId suggestedName(ImmutableList<Pair<ColumnId, Direction>> sortBy)
+    {
+        return new TableId(IdentifierUtility.spaceSeparated("Sort by", sortBy.stream().<@ExpressionIdentifier String>map(p -> IdentifierUtility.shorten(p.getFirst().getRaw())).findFirst().orElse("none")));
     }
 }

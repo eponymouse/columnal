@@ -1,5 +1,7 @@
 package records.transformations;
 
+import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.recorded.qual.Recorded;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -24,12 +26,15 @@ import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.ExpressionUtil;
+import records.transformations.expression.IdentExpression;
 import records.transformations.expression.TypeState;
+import records.transformations.expression.visitor.ExpressionVisitorStream;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -40,6 +45,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Stream;
 
@@ -155,7 +161,7 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
                         @OnThread(Tag.Simulation)
                         public Table replaceExpression(Expression changed) throws InternalException
                         {
-                            return new Filter(getManager(), getDetailsForCopy(), Filter.this.srcTableId, changed);
+                            return new Filter(getManager(), getDetailsForCopy(getId()), Filter.this.srcTableId, changed);
                         }
                     });
                 
@@ -258,7 +264,7 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
     @Override
     public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
-        return new Filter(getManager(), getDetailsForCopy(), newSrcTableId, filterExpression);
+        return new Filter(getManager(), getDetailsForCopy(getId()), newSrcTableId, filterExpression);
     }
 
     public static class Info extends SingleSourceTransformationInfo
@@ -304,5 +310,30 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.filter(this);
+    }
+
+    @Override
+    public TableId getSuggestedName()
+    {
+        return suggestedName(filterExpression);
+    }
+
+    public static TableId suggestedName(Expression filterExpression)
+    {
+        return new TableId(IdentifierUtility.spaceSeparated("Filt", guessFirstColumnReference(filterExpression).orElse("custom")));
+    }
+
+    public static Optional<@ExpressionIdentifier String> guessFirstColumnReference(Expression expression)
+    {
+        return expression.visit(new ExpressionVisitorStream<@ExpressionIdentifier String>() {
+            @Override
+            public Stream<@ExpressionIdentifier String> ident(@Recorded IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            {
+                // Bit of a hacky guess, but we'll assume any non-variable single ident is a column:
+                if (idents.size() == 1 && !isVariable && (namespace == null || namespace.equals(IdentExpression.NAMESPACE_COLUMN)))
+                    return Stream.<@ExpressionIdentifier String>of(idents.get(0));
+                return super.ident(self, namespace, idents, isVariable);
+            }
+        }).findFirst();
     }
 }

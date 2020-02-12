@@ -14,6 +14,7 @@ import records.grammar.Versions.ExpressionVersion;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.IdentifierUtility;
 import utility.SimulationFunction;
 import utility.Utility;
 
@@ -160,7 +161,7 @@ public class HideColumns extends VisitableTransformation implements SingleSource
     @Override
     public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
-        return new HideColumns(getManager(), getDetailsForCopy(), newSrcTableId, hideIds);
+        return new HideColumns(getManager(), getDetailsForCopy(getId()), newSrcTableId, hideIds);
     }
 
     @OnThread(Tag.Any)
@@ -214,5 +215,21 @@ public class HideColumns extends VisitableTransformation implements SingleSource
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.hideColumns(this);
+    }
+
+    @Override
+    public TableId getSuggestedName()
+    {
+        return suggestedName(hideIds);
+    }
+
+    public static TableId suggestedName(ImmutableList<ColumnId> newHidden)
+    {
+        if (newHidden.isEmpty())
+            return new TableId(IdentifierUtility.spaceSeparated("Hiding none"));
+        else if (newHidden.size() == 1)
+            return new TableId(IdentifierUtility.spaceSeparated("Hiding", newHidden.get(0).getRaw()));
+        else
+            return new TableId(IdentifierUtility.spaceSeparated("Hiding", newHidden.get(0).getRaw(), "and", newHidden.get(1).getRaw()));
     }
 }

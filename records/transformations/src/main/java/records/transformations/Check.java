@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
@@ -33,11 +34,13 @@ import records.transformations.expression.ExpressionUtil;
 import records.transformations.expression.IdentExpression;
 import records.transformations.expression.TypeState;
 import records.transformations.expression.explanation.Explanation;
+import records.transformations.expression.visitor.ExpressionVisitorStream;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.TranslationUtility;
@@ -46,6 +49,7 @@ import utility.Utility;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -133,7 +137,7 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
                     @OnThread(Tag.Simulation)
                     public Table replaceExpression(Expression changed) throws InternalException
                     {
-                        return new Check(getManager(), getDetailsForCopy(), Check.this.srcTableId, checkType, changed);
+                        return new Check(getManager(), getDetailsForCopy(getId()), Check.this.srcTableId, checkType, changed);
                     }
                 });
 
@@ -344,7 +348,7 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
     @Override
     public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
-        return new Check(getManager(), getDetailsForCopy(), newSrcTableId, checkType, checkExpression);
+        return new Check(getManager(), getDetailsForCopy(getId()), newSrcTableId, checkType, checkExpression);
     }
 
     @OnThread(Tag.Any)
@@ -455,4 +459,16 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
     {
         return visitor.check(this);
     }
+
+    @Override
+    public TableId getSuggestedName()
+    {
+        return suggestedName(checkExpression);
+    }
+
+    public static TableId suggestedName(Expression checkExpression)
+    {
+        return new TableId(IdentifierUtility.spaceSeparated("Chk", Filter.guessFirstColumnReference(checkExpression).orElse("custom")));
+    }
+
 }

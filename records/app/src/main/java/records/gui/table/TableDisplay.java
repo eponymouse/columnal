@@ -85,7 +85,6 @@ import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
-import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnOperation;
 import records.gui.stable.SimpleColumnOperation;
 import records.gui.table.PickTypeTransformDialog.TypeTransform;
@@ -129,6 +128,7 @@ import utility.gui.ScrollPaneFill;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -732,7 +732,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         // Crucial to set onModify before calling setupWithRecordSet:
         this.onModify = () -> {
             parent.modified();
-            Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_("Error updating dependent transformations", () -> parent.getManager().<Table>edit(table.getId(), null, null)));
+            Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_("Error updating dependent transformations", () -> parent.getManager().reRun(table)));
         };
         
         this.recordSet = recordSet;
@@ -957,8 +957,8 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         {
             CellPosition insertPos = parent.getManager().getNextInsertPosition(getTable().getId());
             Workers.onWorkerThread("Creating edit transformation", Priority.SAVE, () -> FXUtility.alertOnError_("Creating edit", () -> {
-                @NonNull ManualEdit manualEdit = (ManualEdit)parent.getManager().edit(null, () -> new ManualEdit(parent.getManager(), new InitialLoadDetails(null, null, insertPos, null), getTable().getId(), null, ImmutableMap.of(column.getFirst(), new ColumnReplacementValues(column.getSecond(), ImmutableList.<Pair<@Value Object, Either<String, @Value Object>>>of(new Pair<@Value Object, Either<String, @Value Object>>(DataTypeUtility.value(index), value))))), null);
-                Platform.runLater(() -> TableHat.editManualEdit(parent, manualEdit, true));
+                @NonNull ManualEdit manualEdit = (ManualEdit)parent.getManager().record(new ManualEdit(parent.getManager(), new InitialLoadDetails(null, null, insertPos, null), getTable().getId(), null, ImmutableMap.of(column.getFirst(), new ColumnReplacementValues(column.getSecond(), ImmutableList.<Pair<@Value Object, Either<String, @Value Object>>>of(new Pair<@Value Object, Either<String, @Value Object>>(DataTypeUtility.value(index), value))))));
+                Platform.runLater(() -> TableHat.editManualEdit(parent, manualEdit, true, RenameOnEdit::renameToSuggested));
             }));
         }
     }
@@ -1391,7 +1391,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         {
             Calculate calc = (Calculate) table;
             return beforeColumn -> {
-                addColumnBefore_Calc(FXUtility.mouse(this).parent, calc, beforeColumn, null);
+                addColumnBefore_Calc(FXUtility.mouse(this).parent, calc, beforeColumn, RenameOnEdit::ifOldAuto, null);
             };
         }
         else if (table instanceof Aggregate)
@@ -1404,7 +1404,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         return null;
     }
     
-    void addColumnBefore_Calc(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Calculate calc, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
+    void addColumnBefore_Calc(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Calculate calc, @Nullable ColumnId beforeColumn, Function<TableId, RenameOnEdit> renameOnEdit, @Nullable @LocalizableKey String topMessageKey)
     {
         EditColumnExpressionDialog<?> dialog = EditColumnExpressionDialog.withoutSidePane(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), null, null, ed -> new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId(), ed == null ? null : calc.makeEditor(ed)), () -> Calculate.makeTypeState(parent.getManager()), null);
         
@@ -1414,8 +1414,9 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         dialog.showAndWait().ifPresent(p -> {
             Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
                 FXUtility.alertOnError_("Error adding column", () -> {
-                    parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(),
-                        calc.getSrcTableId(), Utility.appendToMap(calc.getCalculatedColumns(), p.columnId, p.expression, null)), null);
+                    ImmutableMap<ColumnId, Expression> newCols = Utility.appendToMap(calc.getCalculatedColumns(), p.columnId, p.expression, null);
+                    parent.getManager().edit(calc, id -> new Calculate(parent.getManager(), calc.getDetailsForCopy(id),
+                        calc.getSrcTableId(), newCols), renameOnEdit.apply(Calculate.suggestedName(newCols)));
                 })
             );
         });
@@ -1428,8 +1429,9 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         dialog.showAndWait().ifPresent(p -> {
             Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
                     FXUtility.alertOnError_("Error adding column", () -> {
-                        parent.getManager().edit(agg.getId(), () -> new Aggregate(parent.getManager(), agg.getDetailsForCopy(),
-                                agg.getSrcTableId(), Utility.appendToList(agg.getColumnExpressions(), new Pair<>(p.columnId, p.expression)), p.extra), null);
+                        ImmutableList<Pair<ColumnId, Expression>> newCols = Utility.appendToList(agg.getColumnExpressions(), new Pair<>(p.columnId, p.expression));
+                        parent.getManager().edit(agg, id -> new Aggregate(parent.getManager(), agg.getDetailsForCopy(id),
+                                agg.getSrcTableId(), newCols, p.extra), RenameOnEdit.ifOldAuto(Aggregate.suggestedName(agg.getSplitBy(), newCols)));
                     })
             );
         });
@@ -1560,7 +1562,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 @OnThread(Tag.FXPlatform)
                 public @Nullable Void runR(RTransformation rTransformation)
                 {
-                    TableHat.editR(parent, rTransformation, true);
+                    TableHat.editR(parent, rTransformation, true, RenameOnEdit::renameToSuggested);
                     return null;
                 }
                 
@@ -1568,7 +1570,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 @OnThread(Tag.FXPlatform)
                 public @Nullable Void calculate(Calculate calculate)
                 {
-                    addColumnBefore_Calc(parent, calculate, null, "transform.calculate.addInitial");
+                    addColumnBefore_Calc(parent, calculate, null, RenameOnEdit::renameToSuggested, "transform.calculate.addInitial");
                     return null;
                 }
 
@@ -1584,8 +1586,8 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                             DataType.BOOLEAN, "filter.header").showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_("Error editing filter", () ->
                     {
 
-                        parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
-                                table.getDetailsForCopy(), filter.getSrcTableId(), newExp), null);
+                        parent.getManager().edit(table, id -> new Filter(parent.getManager(),
+                                table.getDetailsForCopy(id), filter.getSrcTableId(), newExp), RenameOnEdit.renameToSuggested(Filter.suggestedName(newExp)));
                     })));
                     return null;
                 }
@@ -1600,9 +1602,10 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                         Workers.onWorkerThread("Adding column", Priority.SAVE, () -> {
                             try
                             {
-                                parent.getManager().<Aggregate>edit(aggregate.getId(), () -> {
-                                    return new Aggregate(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), Utility.appendToList(aggregate.getColumnExpressions(), new Pair<>(result.get().columnId, result.get().expression)), result.get().extra);
-                                }, null);
+                                ImmutableList<Pair<ColumnId, Expression>> newCols = Utility.appendToList(aggregate.getColumnExpressions(), new Pair<>(result.get().columnId, result.get().expression));
+                                parent.getManager().<Aggregate>edit(aggregate, id -> {
+                                    return new Aggregate(parent.getManager(), aggregate.getDetailsForCopy(id), aggregate.getSrcTableId(), newCols, result.get().extra);
+                                }, RenameOnEdit.renameToSuggested(Aggregate.suggestedName(result.get().extra, newCols)));
                             }
                             catch (InternalException e)
                             {
@@ -1623,7 +1626,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 @OnThread(Tag.FXPlatform)
                 public @Nullable Void sort(Sort sort)
                 {
-                    TableHat.editSort(null, parent, sort);
+                    TableHat.editSort(null, parent, sort, RenameOnEdit::renameToSuggested);
                     return null;
                 }
 
@@ -1631,7 +1634,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 @OnThread(Tag.FXPlatform)
                 public @Nullable Void manualEdit(ManualEdit manualEdit)
                 {
-                    TableHat.editManualEdit(parent, manualEdit, true);
+                    TableHat.editManualEdit(parent, manualEdit, true, RenameOnEdit::renameToSuggested);
                     return null;
                 }
 
@@ -1639,7 +1642,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 @OnThread(Tag.FXPlatform)
                 public @Nullable Void concatenate(Concatenate concatenate)
                 {
-                    TableHat.editConcatenate(new Point2D(0, 0), parent, concatenate);
+                    TableHat.editConcatenate(new Point2D(0, 0), parent, concatenate, RenameOnEdit::renameToSuggested);
                     return null;
                 }
 
@@ -1647,7 +1650,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 @OnThread(Tag.FXPlatform)
                 public @Nullable Void join(Join join)
                 {
-                    TableHat.editJoin(parent, join);
+                    TableHat.editJoin(parent, join, RenameOnEdit::renameToSuggested);
                     return null;
                 }
 
@@ -1655,7 +1658,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 @OnThread(Tag.FXPlatform)
                 public @Nullable Void hideColumns(HideColumns hideColumns)
                 {
-                    TableHat.editHideColumns(parent, hideColumns);
+                    TableHat.editHideColumns(parent, hideColumns, RenameOnEdit::renameToSuggested);
                     return null;
                 }
 
@@ -1693,7 +1696,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                             .showAndWait().ifPresent(newExp -> {
                         Workers.onWorkerThread("Editing table", Priority.SAVE, () ->
                                 FXUtility.alertOnError_("Error applying fix", () ->
-                                        parent.getManager().edit(table.getId(), () -> fixer.replaceExpression(newExp), null)
+                                        parent.getManager().edit(table, _id -> fixer.replaceExpression(newExp), RenameOnEdit.UNNEEDED /* we'll live without rename on fix */)
                                 )
                         );
                     });

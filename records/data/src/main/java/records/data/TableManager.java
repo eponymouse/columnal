@@ -43,6 +43,8 @@ import utility.GraphUtility;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationConsumer;
+import utility.SimulationFunction;
+import utility.SimulationFunctionInt;
 import utility.Utility;
 
 import java.io.File;
@@ -51,6 +53,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -154,7 +157,7 @@ public class TableManager
     }
 
     @OnThread(Tag.Simulation)
-    public synchronized void record(Table table)
+    public synchronized <T extends Table> T record(T table)
     {
         Set<Table> tablesForId = usedIds.computeIfAbsent(table.getId(), x -> Sets.<Table>newIdentityHashSet());
         if (!tablesForId.isEmpty())
@@ -173,14 +176,16 @@ public class TableManager
                 listeners.forEach(l -> l.addTransformation((Transformation) table));
         }
 
+        // Re-run any dependents which might have been missing this table:
         try
         {
-            this.<Table>edit(table.getId(), null, null);
+            this.<Table>editImpl(table.getId(), null, TableAndColumnRenames.EMPTY);
         }
         catch (InternalException e)
         {
             Log.log(e);
         }
+        return table;
     }
 
     public UnitManager getUnitManager()
@@ -652,6 +657,24 @@ public class TableManager
         @OnThread(Tag.Simulation)
         @NonNull T make() throws InternalException;
     }
+
+    @OnThread(Tag.Simulation)
+    public <@NonNull T extends Table> T edit(Table oldTable, SimulationFunctionInt<TableId, T> makeReplacement, RenameOnEdit renameOnEdit) throws InternalException
+    {
+        TableId newTableId = renameOnEdit.rename(oldTable);
+        return editImpl(oldTable.getId(), () -> makeReplacement.apply(newTableId), oldTable.getId().equals(newTableId) ? TableAndColumnRenames.EMPTY : new TableAndColumnRenames(ImmutableMap.of(oldTable.getId(), new Pair<>(newTableId, ImmutableMap.of()))));
+    }
+    
+    public void reRun(Table table) throws InternalException
+    {
+        this.<Table>editImpl(table.getId(), null, TableAndColumnRenames.EMPTY);
+    }
+
+    @OnThread(Tag.Simulation)
+    public <@NonNull T extends Table> @PolyNull T editData(@Nullable TableId affectedTableId, @PolyNull TableMaker<T> makeReplacement, TableAndColumnRenames renames) throws InternalException
+    {
+        return editImpl(affectedTableId, makeReplacement, renames);
+    }
     
     /**
      * When you edit a table, we must update all dependent tables.  The way we do this
@@ -660,7 +683,8 @@ public class TableManager
      * The saved scripts are then re-run with the new data (which may mean they
      * contain errors where they did not before)
      *
-     * @param affectedTableId The TableId which is affected, i.e. the table for which all dependents will need to be re-run
+     * @param affectedTableId The TableId which is affected, i.e. the table for which all dependents will need to be re-run/
+     *                        If makeReplacement is non-null, this table will be removed
      * @param makeReplacement If null, existing table will be
      *                        left untouched (apart from renames) and only its dependents re-run.  If non-null,
      *                        the table will be replaced by output
@@ -671,11 +695,8 @@ public class TableManager
      * @throws UserException
      */
     @OnThread(Tag.Simulation)
-    public <@NonNull T extends Table> @PolyNull T edit(@Nullable TableId affectedTableId, @PolyNull TableMaker<T> makeReplacement, @Nullable TableAndColumnRenames renames) throws InternalException
+    private <@NonNull T extends Table> @PolyNull T editImpl(@Nullable TableId affectedTableId, @PolyNull TableMaker<T> makeReplacement, TableAndColumnRenames renames) throws InternalException
     {
-        if (renames == null)
-            renames = TableAndColumnRenames.EMPTY;
-        
         HashSet<TableId> affected = new HashSet<>();
         // If it is null, new table, so nothing should be affected:
         if (affectedTableId != null)
@@ -830,7 +851,7 @@ public class TableManager
                 // Re-run dependents:
                 try
                 {
-                    TableManager.this.<Table>edit(tableId, null, TableAndColumnRenames.EMPTY);
+                    TableManager.this.<Table>editImpl(tableId, null, TableAndColumnRenames.EMPTY /* no rename when removing */);
                 }
                 catch (InternalException e)
                 {
@@ -886,7 +907,7 @@ public class TableManager
     {
         return newName -> {
             ErrorHandler.getErrorHandler().alertOnError_("Error renaming table", () -> {
-                this.<Table>edit(table.getId(), null, new TableAndColumnRenames(ImmutableMap.of(table.getId(), new Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>>(newName, ImmutableMap.of()))));
+                this.<Table>editImpl(table.getId(), null, new TableAndColumnRenames(ImmutableMap.of(table.getId(), new Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>>(newName, ImmutableMap.of()))));
             });
         };
     }

@@ -18,9 +18,11 @@ import records.grammar.UnitParser.SingleUnitContext;
 import utility.Utility.DescriptiveErrorListener;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class IdentifierUtility
@@ -82,7 +84,29 @@ public class IdentifierUtility
     {
         return parsedIdent.IDENT().getText();
     }
-    
+
+    // If all parts are valid, joining them spaces is also valid
+    @SuppressWarnings("identifier")
+    public static @ExpressionIdentifier String spaceSeparated(@ExpressionIdentifier String... parts)
+    {
+        return Arrays.stream(parts).collect(Collectors.joining(" "));
+    }
+
+    // If all parts are valid, joining them spaces is also valid
+    @SuppressWarnings("identifier")
+    public static @ExpressionIdentifier String spaceSeparated(ImmutableList<@ExpressionIdentifier String> parts)
+    {
+        return parts.stream().collect(Collectors.joining(" "));
+    }
+
+    public static @ExpressionIdentifier String shorten(@ExpressionIdentifier String raw)
+    {
+        final int THRESHOLD = 8;
+        if (raw.length() <= THRESHOLD)
+            return raw;
+        return IdentifierUtility.fixExpressionIdentifier(raw.substring(0, THRESHOLD).trim(), raw);
+    }
+
     public static class Consumed<T>
     {
         public final T item;

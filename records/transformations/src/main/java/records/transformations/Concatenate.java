@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
@@ -21,6 +22,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformSupplier;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.SimulationSupplier;
@@ -372,4 +374,25 @@ public class Concatenate extends VisitableTransformation
     {
         return visitor.concatenate(this);
     }
+
+    @Override
+    public TableId getSuggestedName()
+    {
+        return suggestedName(sources);
+    }
+
+    public static TableId suggestedName(ImmutableList<TableId> sources)
+    {
+        ImmutableList.Builder<@ExpressionIdentifier String> parts = ImmutableList.builder();
+        parts.add("Conc");
+        if (sources.isEmpty())
+            parts.add("none");
+        else
+            parts.add(IdentifierUtility.shorten(sources.get(0).getRaw()));
+        if (sources.size() > 1)
+            parts.add("and").add(IdentifierUtility.shorten(sources.get(1).getRaw()));
+        return new TableId(IdentifierUtility.spaceSeparated(parts.build()));
+    }
+
+
 }
