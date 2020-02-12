@@ -350,8 +350,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP ext
             args.add(middle);
             // Add RHS, minus the start one:
             args.addAll(expressions.subList(rhs.startingOperatorIndexIncl + 1, rhs.endingOperatorIndexIncl + 2));
-            @Nullable @Recorded @Initialized R expression = makeExpression.makeNary(ImmutableList.copyOf(args), Utility.concatI(actualOperators, rhs.actualOperators), brackets, locationRecorder);
-            return expression;
+            return makeExpression.makeNary(ImmutableList.copyOf(args), Utility.concatI(actualOperators, rhs.actualOperators), brackets, locationRecorder);
         }
 
         protected <R extends StyledShowable> @Nullable @Recorded R makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, CanonicalSpan>> operators, BracketAndNodes<EXPRESSION, SAVER, BRACKET_CONTENT, R> bracketedStatus)
