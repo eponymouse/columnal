@@ -169,9 +169,10 @@ public final class GuidanceWindow extends Stage
                 runOnClick.set(onAdvance);
             };
             this.extraButton = GUI.button(buttonKey, () -> {
-                if (runOnClick.get() != null)
+                FXPlatformRunnable onClick = runOnClick.get();
+                if (onClick != null)
                 {
-                    runOnClick.get().run();
+                    onClick.run();
                 }
             });
             this.next = next;
