@@ -328,8 +328,7 @@ public final class GuidanceWindow extends Stage
 
     private static @Nullable Node findNode(String nodeLookup)
     {
-        @SuppressWarnings("deprecation")
-        Iterator<Window> it = Window.impl_getWindows();
+        Iterator<Window> it = Window.getWindows().iterator();
         while (it.hasNext())
         {
             Window window = it.next();
@@ -359,8 +358,7 @@ public final class GuidanceWindow extends Stage
 
     private static @Nullable Window findWindow(Class<? extends Window> windowClass)
     {
-        @SuppressWarnings("deprecation")
-        Iterator<Window> it = Window.impl_getWindows();
+        Iterator<Window> it = Window.getWindows().iterator();
         while (it.hasNext())
         {
             Window window = it.next();

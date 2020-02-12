@@ -1,7 +1,6 @@
 package records.gui;
 
 import com.google.common.collect.ImmutableList;
-import com.sun.javafx.scene.control.skin.TextFieldSkin;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -18,6 +17,7 @@ import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
+import javafx.scene.control.skin.TextFieldSkin;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
