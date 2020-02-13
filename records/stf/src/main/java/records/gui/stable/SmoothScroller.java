@@ -26,7 +26,7 @@ import java.util.Optional;
  *           calls to redo the layout into one)
  */
 @OnThread(Tag.FXPlatform)
-public class SmoothScroller<@NonNull R>
+public class SmoothScroller<R extends @NonNull Object>
 {
     // AnimationTimer is run every frame, and so lets us do smooth scrolling:
     private @MonotonicNonNull AnimationTimer scrollTimer;

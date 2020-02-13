@@ -240,14 +240,14 @@ public class ErrorableTextField<T> implements TimedFocusable
         return field.focusedProperty();
     }
 
-    public static class ConversionResult<@NonNull T>
+    public static class ConversionResult<T>
     {
         private final @Nullable T value;
         private final @Nullable StyledString error;
         private final ImmutableList<QuickFix> fixes;
         private final List<@Localized String> warnings;
 
-        private ConversionResult(T value, @Localized String... warnings)
+        private ConversionResult(@NonNull T value, @Localized String... warnings)
         {
             this.value = value;
             this.error = null;
@@ -279,7 +279,7 @@ public class ErrorableTextField<T> implements TimedFocusable
             return warnings;
         }
 
-        public static <T> ConversionResult<T> success(T value, @Localized String... warnings)
+        public static <T> ConversionResult<T> success(@NonNull T value, @Localized String... warnings)
         {
             return new ConversionResult<T>(value, warnings);
         }
@@ -308,7 +308,7 @@ public class ErrorableTextField<T> implements TimedFocusable
     }
 
     @SuppressWarnings("i18n")
-    public static <T> ConversionResult<T> validate(ExSupplier<T> getValue)
+    public static <T> ConversionResult<T> validate(ExSupplier<@NonNull T> getValue)
     {
         try
         {
@@ -331,7 +331,7 @@ public class ErrorableTextField<T> implements TimedFocusable
      * @param makeResult If successful, turn the string into a result
      * @param <T> Type of result
      */
-    protected static <T> ConversionResult<T> checkAlphabet(String src, BiPredicate<Integer, Boolean> validCodepoint, FXPlatformFunction<String, T> makeResult)
+    protected static <T> ConversionResult<T> checkAlphabet(String src, BiPredicate<Integer, Boolean> validCodepoint, FXPlatformFunction<String, @NonNull T> makeResult)
     {
         int[] codePoints = src.codePoints().toArray();
         for (int i = 0; i < codePoints.length; i++)

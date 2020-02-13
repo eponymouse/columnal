@@ -33,7 +33,7 @@ public class TableAndColumnRenames
     private final HashMap<TableId, Pair<@Nullable TableId, HashMap<ColumnId, ColumnId>>> renames;
     private final @Nullable TableId defaultTableId;
 
-    private <@NonNull COLMAP extends @NonNull Map<ColumnId, ColumnId>> TableAndColumnRenames(@Nullable TableId defaultTableId, Map<TableId, Pair<@Nullable TableId, @NonNull COLMAP>> renames)
+    private <COLMAP extends @NonNull Map<ColumnId, ColumnId>> TableAndColumnRenames(@Nullable TableId defaultTableId, Map<TableId, Pair<@Nullable TableId, @NonNull COLMAP>> renames)
     {
         this.defaultTableId = defaultTableId;
         this.renames = new HashMap<>();

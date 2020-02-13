@@ -151,7 +151,7 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
         };
     }
     
-    protected abstract class GetValueOrError<@Value V extends @NonNull Object> implements GetValue<@Value V>
+    protected abstract class GetValueOrError<V extends @Value @NonNull Object> implements GetValue<@Value V>
     {
         @OnThread(Tag.Any)
         public GetValueOrError()

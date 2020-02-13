@@ -671,7 +671,7 @@ public class TableManager
      * @throws UserException
      */
     @OnThread(Tag.Simulation)
-    public <@NonNull T extends Table> @PolyNull T edit(@Nullable TableId affectedTableId, @PolyNull TableMaker<T> makeReplacement, @Nullable TableAndColumnRenames renames) throws InternalException
+    public <T extends @NonNull Table> @PolyNull T edit(@Nullable TableId affectedTableId, @PolyNull TableMaker<T> makeReplacement, @Nullable TableAndColumnRenames renames) throws InternalException
     {
         if (renames == null)
             renames = TableAndColumnRenames.EMPTY;

@@ -77,7 +77,7 @@ public final class TextQuickFix
         this.actionOrMakeReplacement = actionOrMakeReplacement;
     }
     
-    public <@NonNull EXPRESSION extends StyledShowable> TextQuickFix(CanonicalSpan location, Function<@UnknownIfRecorded EXPRESSION, String> toText, QuickFix<EXPRESSION> treeFix)
+    public <EXPRESSION extends @NonNull StyledShowable> TextQuickFix(CanonicalSpan location, Function<@UnknownIfRecorded EXPRESSION, String> toText, QuickFix<EXPRESSION> treeFix)
     {
         this(treeFix.getTitle(), treeFix.getCssClasses(), location, treeFix.getActionOrReplacement().map((QuickFixReplace<@UnknownIfRecorded EXPRESSION> m) -> () -> {
             @UnknownIfRecorded EXPRESSION s = m.makeReplacement();

@@ -23,11 +23,11 @@ import utility.gui.FXUtility;
 import utility.gui.GUI;
 
 @OnThread(Tag.FXPlatform)
-public class EnterValueDialog<@NonNull V> extends ErrorableLightDialog<V>
+public class EnterValueDialog<V extends @NonNull Object> extends ErrorableLightDialog<V>
 {
     private final RecogniserDocument<@NonNull V> document;
 
-    public EnterValueDialog(DimmableParent parent, DataType dataType, RecogniserAndType<@NonNull V> recogniserAndType) throws InternalException
+    public EnterValueDialog(DimmableParent parent, DataType dataType, RecogniserAndType<V> recogniserAndType) throws InternalException
     {
         super(parent, true);
         initModality(Modality.APPLICATION_MODAL);

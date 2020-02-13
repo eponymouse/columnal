@@ -48,7 +48,7 @@ import java.util.stream.Stream;
  * A ListView which allows deletion of selected items using a little cross to the right (or pressing backspace/delete), which is
  * animated by sliding out the items.
  */
-public abstract class FancyList<@NonNull T, CELL_CONTENT extends Node>
+public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends Node>
 {
     private final VBox children = GUI.vbox("fancy-list-children");
     private final ObservableList<Cell> cells = FXCollections.observableArrayList();
