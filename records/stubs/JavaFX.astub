@@ -154,7 +154,7 @@ class Labeled
     void setContentDisplay(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, ContentDisplay contentDisplay);
     void setText(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, String s);
     StringProperty textProperty(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this);
-    void setGraphic(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, Node graphic);
+    void setGraphic(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, @Nullable Node graphic);
     void setAlignment(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, Pos value);
 }
 class Button
