@@ -82,14 +82,7 @@ public class TableHighlights
             @NonNull CellPosition pos = cellAtScreenPos.getFirst();
             result = grid.getGridAreas().stream().filter(g -> g.contains(pos))
                     .flatMap(g -> Utility.streamNullable(picker.pick(new Pair<>(g, pos))))
-                    .findFirst().<@Nullable Pair<RectangleBounds, T>>orElseGet(new Supplier<@Nullable PickResult<T>>()
-                    {
-                        @Override
-                        public @Nullable PickResult<T> get()
-                        {
-                            return picker.pick(null);
-                        }
-                    });
+                    .findFirst().<@Nullable Pair<RectangleBounds, T>>orElseGet((Supplier<@Nullable PickResult<T>>) () -> picker.pick(null));
         }
         picked = result;
         if (!Objects.equals(picked, oldPicked))

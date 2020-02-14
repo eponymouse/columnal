@@ -129,6 +129,7 @@ import utility.gui.ScrollPaneFill;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -1287,7 +1288,11 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                                     @OnThread(Tag.FXPlatform)
                                     public Optional<Expression> get()
                                     {
-                                        return unwrapOptionalType(inner, columnReference, () -> TableDisplayUtility.recogniser(inner, false));
+                                        Optional<Expression> r = FXUtility.alertOnErrorFX("Recognising tagged", () -> unwrapOptionalType(inner, columnReference, TableDisplayUtility.recogniser(inner, false)));
+                                        if (r != null)
+                                            return r;
+                                        else
+                                            return Optional.empty();
                                     }
                                 }, inner);
                                 
@@ -1315,7 +1320,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                         }
                         
                         @OnThread(Tag.Simulation)
-                        private <@NonNull @Value T> ImmutableList<@Value T> sample(GetValue<@NonNull @Value T> getValue) throws InternalException, UserException
+                        private <T extends @NonNull @Value Object> ImmutableList<@Value T> sample(GetValue<@NonNull @Value T> getValue) throws InternalException, UserException
                         {
                             ImmutableList.Builder<@Value T> r = ImmutableList.builder();
                             long startMillis = System.currentTimeMillis();
@@ -1357,12 +1362,20 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
 
             @SuppressWarnings("cast.unsafe")
             @OnThread(Tag.FXPlatform)
-            private <@NonNull T> Optional<Expression> unwrapOptionalType(DataType inner, Expression columnReference, FXPlatformSupplierInt<RecogniserAndType<@NonNull @ImmediateValue T>> recogniser)
+            private <T extends @NonNull @ImmediateValue Object> Optional<Expression> unwrapOptionalType(DataType inner, Expression columnReference, RecogniserAndType<T> recogniser)
             {
-                @Nullable Optional<Expression> optionalExpression = FXUtility.<Optional<Expression>>alertOnErrorFX("Asking for default value", () -> new EnterValueDialog<@ImmediateValue T>(parent, inner, recogniser.get()).showAndWait().flatMap((@NonNull @ImmediateValue T v) -> Optional.<Expression>ofNullable(FXUtility.<Expression>alertOnErrorFX("Converting value to expression", () -> {
-                    Expression defaultValueExpression = AppUtility.valueToExpressionFX(tableManager.getTypeManager(), functionLookup, inner, (@NonNull @ImmediateValue T) v);
-                    return new CallExpression(functionLookup, GetOptionalOrDefault.NAME, columnReference, defaultValueExpression);
-                }))));
+                @Nullable Optional<Expression> optionalExpression = FXUtility.<Optional<Expression>>alertOnErrorFX("Asking for default value", () -> {
+                    EnterValueDialog<T> dialog = new EnterValueDialog<T>(parent, inner, recogniser);
+                    return dialog.showAndWait().<Expression>flatMap(new Function<T, Optional<? extends Expression>>() {
+                        @Override
+                        public Optional<? extends Expression> apply(T v) {
+                            return Optional.<Expression>ofNullable(FXUtility.<Expression>alertOnErrorFX("Converting value to expression", () -> {
+                                Expression defaultValueExpression = AppUtility.valueToExpressionFX(tableManager.getTypeManager(), functionLookup, inner, (@ImmediateValue T) v);
+                                return new CallExpression(functionLookup, GetOptionalOrDefault.NAME, columnReference, defaultValueExpression);
+                            }));
+                        }
+                    });
+                });
                 if (optionalExpression == null)
                     return Optional.empty();
                 else

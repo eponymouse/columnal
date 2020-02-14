@@ -454,30 +454,30 @@ public class TableDisplayUtility
     }
 
     @OnThread(Tag.FXPlatform)
-    private static GetValueAndComponent<?> valueAndComponent(DataTypeValue dataTypeValue, boolean topLevel) throws InternalException
+    private static GetValueAndComponent<? extends @NonNull Object> valueAndComponent(DataTypeValue dataTypeValue, boolean topLevel) throws InternalException
     {
-        return dataTypeValue.applyGet(new DataTypeVisitorGetEx<GetValueAndComponent<?>, InternalException>()
+        return dataTypeValue.applyGet(new DataTypeVisitorGetEx<GetValueAndComponent<? extends @NonNull Object>, InternalException>()
         {
             @Override
-            public GetValueAndComponent<?> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException
+            public GetValueAndComponent<? extends @NonNull Object> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException
             {
                 return new GetValueAndComponent<@ImmediateValue Number>(dataTypeValue.getType(), Number.class, g, new NumberRecogniser(), new NumberColumnFormatter());
             }
 
             @Override
-            public GetValueAndComponent<?> text(GetValue<@Value String> g) throws InternalException
+            public GetValueAndComponent<? extends @NonNull Object> text(GetValue<@Value String> g) throws InternalException
             {
                 return new GetValueAndComponent<@ImmediateValue String>(dataTypeValue.getType(), String.class, g, new StringRecogniser(topLevel));
             }
 
             @Override
-            public GetValueAndComponent<?> bool(GetValue<@Value Boolean> g) throws InternalException
+            public GetValueAndComponent<? extends @NonNull Object> bool(GetValue<@Value Boolean> g) throws InternalException
             {
                 return new GetValueAndComponent<@Value Boolean>(dataTypeValue.getType(), Boolean.class, g, new BooleanRecogniser());
             }
 
             @Override
-            public GetValueAndComponent<?> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException
+            public GetValueAndComponent<? extends @NonNull Object> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException
             {
                 return new GetValueAndComponent<@Value TemporalAccessor>(dataTypeValue.getType(), TemporalAccessor.class, g, new TemporalRecogniser(dateTimeInfo.getType()));
                 
@@ -508,24 +508,24 @@ public class TableDisplayUtility
             }
 
             @Override
-            public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<TaggedValue> getTagged) throws InternalException
+            public GetValueAndComponent<? extends @NonNull Object> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<TaggedValue> getTagged) throws InternalException
             {
-                return new GetValueAndComponent<TaggedValue>(dataTypeValue.getType(), TaggedValue.class, getTagged, new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<@ImmediateValue ?>>>mapListInt(tagTypes, tt -> tt.<Recogniser<@ImmediateValue ?>>mapInt(t -> recogniser(t, false).recogniser)))); 
+                return new GetValueAndComponent<TaggedValue>(dataTypeValue.getType(), TaggedValue.class, getTagged, new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<? extends @NonNull @ImmediateValue Object>>>mapListInt(tagTypes, tt -> tt.<Recogniser<? extends @NonNull @ImmediateValue Object>>mapInt(t -> recogniser(t, false).recogniser))));
                     //(parents, v) -> (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, v));
             }
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public GetValueAndComponent<?> record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, InternalException
+            public GetValueAndComponent<? extends @NonNull Object> record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, InternalException
             {
-                ImmutableMap<@ExpressionIdentifier String, Recogniser<@ImmediateValue ?>> recognisers = Utility.<@ExpressionIdentifier String, DataType, Recogniser<@ImmediateValue ?>>mapValuesInt(types, t -> recogniser(t, false).recogniser);
+                ImmutableMap<@ExpressionIdentifier String, Recogniser<? extends @NonNull @ImmediateValue Object>> recognisers = Utility.<@ExpressionIdentifier String, DataType, Recogniser<? extends @NonNull @ImmediateValue Object>>mapValuesInt(types, t -> recogniser(t, false).recogniser);
 
                 return new GetValueAndComponent<@Value Record>(dataTypeValue.getType(), (Class<@Value Record>)Record.class, g, new RecordRecogniser(recognisers));
             }
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public GetValueAndComponent<?> array(DataType inner, GetValue<@Value ListEx> g) throws InternalException
+            public GetValueAndComponent<? extends @NonNull Object> array(DataType inner, GetValue<@Value ListEx> g) throws InternalException
             {
                 return new GetValueAndComponent<@ImmediateValue ListEx>(dataTypeValue.getType(), ListEx.class, g, new ListRecogniser(recogniser(inner, false).recogniser));
                     /*
@@ -632,53 +632,53 @@ public class TableDisplayUtility
     }
     
     
-    public static RecogniserAndType<@NonNull @ImmediateValue ?> recogniser(DataType dataType, boolean topLevel) throws InternalException
+    public static RecogniserAndType<? extends @NonNull @ImmediateValue Object> recogniser(DataType dataType, boolean topLevel) throws InternalException
     {   
-        return dataType.apply(new DataTypeVisitorEx<RecogniserAndType<@NonNull @ImmediateValue ?>, InternalException>()
+        return dataType.apply(new DataTypeVisitorEx<RecogniserAndType<? extends @ImmediateValue @NonNull Object>, InternalException>()
         {
-            private <T> RecogniserAndType<@NonNull @ImmediateValue T> r(Recogniser<@NonNull @ImmediateValue T> recogniser, Class<@UnknownIfValue T> itemClass)
+            private <T> RecogniserAndType<? extends @ImmediateValue @NonNull Object> r(Recogniser<@NonNull @ImmediateValue T> recogniser, Class<@UnknownIfValue T> itemClass)
             {
                 return new RecogniserAndType<@NonNull @ImmediateValue T>(recogniser, (Class<@NonNull @ImmediateValue T>)itemClass);
             }
             
             @Override
-            public RecogniserAndType<@NonNull @ImmediateValue ?> number(NumberInfo numberInfo) throws InternalException
+            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> number(NumberInfo numberInfo) throws InternalException
             {
                 return r(new NumberRecogniser(), Number.class);
             }
 
             @Override
-            public RecogniserAndType<@NonNull @ImmediateValue ?> text() throws InternalException
+            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> text() throws InternalException
             {
                 return r(new StringRecogniser(topLevel), String.class);
             }
 
             @Override
-            public RecogniserAndType<@NonNull @ImmediateValue ?> date(DateTimeInfo dateTimeInfo) throws InternalException
+            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> date(DateTimeInfo dateTimeInfo) throws InternalException
             {
                 return r(new TemporalRecogniser(dateTimeInfo.getType()), TemporalAccessor.class);
             }
 
             @Override
-            public RecogniserAndType<@NonNull @ImmediateValue ?> bool() throws InternalException
+            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> bool() throws InternalException
             {
                 return r(new BooleanRecogniser(), Boolean.class);
             }
 
             @Override
-            public RecogniserAndType<@NonNull @ImmediateValue ?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
+            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
-                return r(new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<@ImmediateValue ?>>>mapListInt(tags, tt -> tt.<Recogniser<@ImmediateValue ?>>mapInt(t -> recogniser(t, false).recogniser))), TaggedValue.class);
+                return r(new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<? extends @NonNull @ImmediateValue Object>>>mapListInt(tags, tt -> tt.<Recogniser<? extends @NonNull @ImmediateValue Object>>mapInt(t -> recogniser(t, false).recogniser))), TaggedValue.class);
             }
 
             @Override
-            public RecogniserAndType<@NonNull @ImmediateValue ?> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
             {
-                return r(new RecordRecogniser(Utility.<@ExpressionIdentifier String, DataType, Recogniser<@ImmediateValue ?>>mapValuesInt(fields, t -> recogniser(t, false).recogniser)), (Class<@ImmediateValue Record>)Record.class);
+                return r(new RecordRecogniser(Utility.<@ExpressionIdentifier String, DataType, Recogniser<? extends @NonNull @ImmediateValue Object>>mapValuesInt(fields, t -> recogniser(t, false).recogniser)), (Class<@ImmediateValue Record>)Record.class);
             }
 
             @Override
-            public RecogniserAndType<@NonNull @ImmediateValue ?> array(DataType inner) throws InternalException
+            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> array(DataType inner) throws InternalException
             {
                 return r(new ListRecogniser(recogniser(inner, false).recogniser), ListEx.class);
             }

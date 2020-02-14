@@ -172,7 +172,7 @@ public class AutoComplete<C extends Completion>
             
             {
                 // Set up initial state:
-                changed(textField.sceneProperty(), null, textField.getScene());
+                Utility.later(this).changed(textField.sceneProperty(), null, textField.getScene());
             }
             
             @Override

@@ -3,6 +3,7 @@ package records.gui.dtf.recognisers;
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.gui.dtf.Recogniser;
 import utility.Either;
 import utility.ParseProgress;
@@ -11,9 +12,9 @@ import utility.Utility.ListExList;
 
 public class ListRecogniser extends Recogniser<@ImmediateValue ListEx>
 {
-    private final Recogniser<@ImmediateValue ?> inner;
+    private final Recogniser<? extends @ImmediateValue @NonNull Object> inner;
 
-    public ListRecogniser(Recogniser<@ImmediateValue ?> inner)
+    public ListRecogniser(Recogniser<? extends @ImmediateValue @NonNull Object> inner)
     {
         this.inner = inner;
     }
@@ -68,7 +69,7 @@ public class ListRecogniser extends Recogniser<@ImmediateValue ListEx>
         }
     }
 
-    private <T> ParseProgress addToList(ImmutableList.Builder<@ImmediateValue Object> list, Either<ErrorDetails, SuccessDetails<@ImmediateValue T>> process) throws ListException
+    private <T extends @ImmediateValue Object> ParseProgress addToList(ImmutableList.Builder<@ImmediateValue Object> list, Either<ErrorDetails, SuccessDetails<T>> process) throws ListException
     {
         return process.either(err -> {throw new ListException(err);}, 
             succ -> { list.add(succ.value); return succ.parseProgress; });

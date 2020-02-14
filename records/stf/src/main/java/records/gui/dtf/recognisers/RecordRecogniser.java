@@ -5,6 +5,7 @@ import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.gui.dtf.Recogniser;
@@ -20,9 +21,9 @@ import java.util.HashMap;
 
 public class RecordRecogniser extends Recogniser<@ImmediateValue Record>
 {
-    private final ImmutableMap<@ExpressionIdentifier String, Recogniser<@ImmediateValue ?>> members;
+    private final ImmutableMap<@ExpressionIdentifier String, Recogniser<? extends @ImmediateValue @NonNull Object>> members;
 
-    public RecordRecogniser(ImmutableMap<@ExpressionIdentifier String, Recogniser<@ImmediateValue ?>> members)
+    public RecordRecogniser(ImmutableMap<@ExpressionIdentifier String, Recogniser<? extends @ImmediateValue @NonNull Object>> members)
     {
         this.members = members;
     }
@@ -36,13 +37,13 @@ public class RecordRecogniser extends Recogniser<@ImmediateValue Record>
         if (pp == null)
             return error("Expected '(' to begin a record", orig.curCharIndex);
 
-        HashMap<@ExpressionIdentifier String, Recogniser<@ImmediateValue ?>> remainingFields = new HashMap<@ExpressionIdentifier String, Recogniser<@ImmediateValue ?>>(members);
+        HashMap<@ExpressionIdentifier String, Recogniser<? extends @ImmediateValue @NonNull Object>> remainingFields = new HashMap<@ExpressionIdentifier String, Recogniser<? extends @ImmediateValue @NonNull Object>>(members);
         
         return next(false, !immediatelySurroundedByRoundBrackets, remainingFields, pp, ImmutableMap.builderWithExpectedSize(members.size()));
     }
 
     // Recurse down the list of members, processing one and if no error, process next, until no more members and then look for closing bracket:
-    private Either<ErrorDetails, SuccessDetails<@ImmediateValue Record>> next(boolean expectComma, boolean expectClosingBracket, HashMap<@ExpressionIdentifier String, Recogniser<@ImmediateValue ?>> remainingMembers, ParseProgress orig, ImmutableMap.Builder<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>> soFar)
+    private Either<ErrorDetails, SuccessDetails<@ImmediateValue Record>> next(boolean expectComma, boolean expectClosingBracket, HashMap<@ExpressionIdentifier String, Recogniser<? extends @ImmediateValue @NonNull Object>> remainingMembers, ParseProgress orig, ImmutableMap.Builder<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>> soFar)
     {
         ParseProgress pp = orig;
         // If no more members, look for closing bracket:

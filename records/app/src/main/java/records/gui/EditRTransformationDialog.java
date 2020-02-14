@@ -8,6 +8,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.TextArea;
@@ -20,6 +21,7 @@ import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -37,11 +39,7 @@ import styled.StyledCSS;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.FXPlatformSupplier;
-import utility.IdentifierUtility;
-import utility.Pair;
-import utility.Utility;
+import utility.*;
 import utility.gui.Clickable;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
@@ -252,22 +250,22 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
 
 
     @OnThread(Tag.FXPlatform)
-    private class TableList extends FancyList<String, PickTablePane>
+    private class TableList extends FancyList<@NonNull String, PickTablePane>
     {
         public TableList(ImmutableList<TableId> originalItems)
         {
             super(Utility.mapListI(originalItems, t -> t.getRaw()), true, true, true);
             getStyleClass().add("table-list");
-            listenForCellChange(c -> {
-                while (c.next())
-                {
-                    for (Cell cell : c.getAddedSubList())
-                    {
-                        focusTracker.addNode(cell.getContent());
-                    }
-                    for (Cell cell : c.getRemoved())
-                    {
-                        focusTracker.removeNode(cell.getContent());
+            listenForCellChange(new FXPlatformConsumer<ListChangeListener.Change<? extends FancyList<@NonNull String, PickTablePane>.Cell>>() {
+                @Override
+                public void consume(ListChangeListener.Change<? extends FancyList<@NonNull String, PickTablePane>.Cell> c) {
+                    while (c.next()) {
+                        for (FancyList<@NonNull String, PickTablePane>.Cell cell : c.getAddedSubList()) {
+                            focusTracker.addNode(cell.getContent());
+                        }
+                        for (FancyList<@NonNull String, PickTablePane>.Cell cell : c.getRemoved()) {
+                            focusTracker.removeNode(cell.getContent());
+                        }
                     }
                 }
             });

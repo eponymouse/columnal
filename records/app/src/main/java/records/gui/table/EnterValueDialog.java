@@ -23,9 +23,9 @@ import utility.gui.FXUtility;
 import utility.gui.GUI;
 
 @OnThread(Tag.FXPlatform)
-public class EnterValueDialog<V extends @NonNull Object> extends ErrorableLightDialog<V>
+public class EnterValueDialog<V extends @NonNull @ImmediateValue Object> extends ErrorableLightDialog<V>
 {
-    private final RecogniserDocument<@NonNull V> document;
+    private final RecogniserDocument<V> document;
 
     public EnterValueDialog(DimmableParent parent, DataType dataType, RecogniserAndType<V> recogniserAndType) throws InternalException
     {
@@ -41,7 +41,7 @@ public class EnterValueDialog<V extends @NonNull Object> extends ErrorableLightD
             // Shouldn't happen when converting default value
             initialContent = "";
         }
-        document = new RecogniserDocument<@NonNull V>(initialContent, recogniserAndType.itemClass, recogniserAndType.recogniser, null, (a, b, c) -> {}, k -> getDialogPane().lookupButton(ButtonType.OK).requestFocus(), null);
+        document = new RecogniserDocument<V>(initialContent, recogniserAndType.itemClass, recogniserAndType.recogniser, null, (a, b, c) -> {}, k -> getDialogPane().lookupButton(ButtonType.OK).requestFocus(), null);
         DocumentTextField textField = new DocumentTextField(null);
         textField.setDocument(document);
         getDialogPane().setContent(GUI.borderTopCenterBottom(null, textField, getErrorLabel()));
