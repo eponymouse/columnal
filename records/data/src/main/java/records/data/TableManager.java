@@ -665,6 +665,7 @@ public class TableManager
         return editImpl(oldTable.getId(), () -> makeReplacement.apply(newTableId), oldTable.getId().equals(newTableId) ? TableAndColumnRenames.EMPTY : new TableAndColumnRenames(ImmutableMap.of(oldTable.getId(), new Pair<>(newTableId, ImmutableMap.of()))));
     }
 
+    @OnThread(Tag.Simulation)
     public void reRun(Table table) throws InternalException
     {
         this.<Table>editImpl(table.getId(), null, TableAndColumnRenames.EMPTY);
