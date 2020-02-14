@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
@@ -37,8 +38,10 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ComparableEither;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationFunction;
+import utility.SimulationFunctionInt;
 import utility.SimulationRunnableNoError;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -48,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -280,9 +284,9 @@ edit : editHeader editColumn*;
     }
     
     @OnThread(Tag.Simulation)
-    public synchronized ManualEdit swapReplacementsTo(ImmutableMap<ColumnId, ColumnReplacementValues> newReplacements) throws InternalException
+    public synchronized SimulationFunctionInt<TableId, ManualEdit> swapReplacementsTo(ImmutableMap<ColumnId, ColumnReplacementValues> newReplacements) throws InternalException
     {
-        return new ManualEdit(getManager(), getDetailsForCopy(), getSrcTableId(), keyColumn == null ? null : keyColumn.mapFirst(c -> c.getName()), newReplacements);
+        return id -> new ManualEdit(getManager(), getDetailsForCopy(id), getSrcTableId(), keyColumn == null ? null : keyColumn.mapFirst(c -> c.getName()), newReplacements);
     }
 
     /**
@@ -296,7 +300,7 @@ edit : editHeader editColumn*;
      * @throws UserException
      */
     @OnThread(Tag.Simulation)
-    public synchronized TableMaker<ManualEdit> swapReplacementIdentifierTo(@Nullable ColumnId newReplacementKey) throws InternalException, UserException
+    public synchronized SimulationFunctionInt<TableId, ManualEdit> swapReplacementIdentifierTo(@Nullable ColumnId newReplacementKey) throws InternalException, UserException
     {
         if (src == null)
             throw new UserException("Cannot modify manual edit when original table is missing.");
@@ -337,7 +341,7 @@ edit : editHeader editColumn*;
 
         Pair<ColumnId, DataType> replacementKeyPair = newKeyColumn == null ? null : new Pair<>(newKeyColumn.getName(), newKeyColumn.getType().getType());
         
-        return () -> new ManualEdit(getManager(), getDetailsForCopy(), srcTableId, replacementKeyPair, ImmutableMap.copyOf(newReplacements));
+        return id -> new ManualEdit(getManager(), getDetailsForCopy(id), srcTableId, replacementKeyPair, ImmutableMap.copyOf(newReplacements));
     }
     
     @Pure
@@ -559,7 +563,7 @@ edit : editHeader editColumn*;
     @OnThread(Tag.Simulation)
     public synchronized Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
-        return new ManualEdit(getManager(), getDetailsForCopy(), newSrcTableId, keyColumn == null ? null : keyColumn.mapFirst(c -> c.getName()), ImmutableMap.copyOf(replacements));
+        return new ManualEdit(getManager(), getDetailsForCopy(getId()), newSrcTableId, keyColumn == null ? null : keyColumn.mapFirst(c -> c.getName()), ImmutableMap.copyOf(replacements));
     }
 
     @OnThread(Tag.Simulation)
@@ -669,5 +673,21 @@ edit : editHeader editColumn*;
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.manualEdit(this);
+    }
+
+    @Override
+    public TableId getSuggestedName()
+    {
+        return suggestedName(originalKeyColumn == null ? null : originalKeyColumn.getFirst(), replacements);
+    }
+
+    public static TableId suggestedName(@Nullable ColumnId keyColumn, Map<ColumnId, ColumnReplacementValues> replacements)
+    {
+        ImmutableList.Builder<@ExpressionIdentifier String> parts = ImmutableList.builder();
+        parts.add("Edit");
+        parts.add(replacements.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).<@ExpressionIdentifier String>map(e -> IdentifierUtility.shorten(e.getKey().getRaw())).findFirst().orElse("none"));
+        parts.add("by");
+        parts.add(keyColumn == null ? "row" : IdentifierUtility.shorten(keyColumn.getRaw()));
+        return new TableId(IdentifierUtility.spaceSeparated(parts.build()));
     }
 }

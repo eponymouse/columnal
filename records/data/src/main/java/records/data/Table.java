@@ -131,6 +131,7 @@ public abstract class Table
     }
 
     @OnThread(Tag.Any)
+    @Pure
     public final TableId getId(@UnknownInitialization(Table.class) Table this)
     {
         return id;
@@ -389,9 +390,9 @@ public abstract class Table
         return prevPosition;
     }
 
-    public synchronized InitialLoadDetails getDetailsForCopy(@UnknownInitialization(Table.class) Table this)
+    public synchronized InitialLoadDetails getDetailsForCopy(@UnknownInitialization(Table.class) Table this, TableId overrideId)
     {
-        return new InitialLoadDetails(id, saveTag, prevPosition, showColumns);
+        return new InitialLoadDetails(overrideId, saveTag, prevPosition, showColumns);
     }
     
     /**
@@ -453,4 +454,7 @@ public abstract class Table
     {
         return null;
     }
+    
+    // Gets the suggested name for this table
+    public abstract TableId getSuggestedName();
 }

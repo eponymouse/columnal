@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.scene.control.ButtonType;
 import records.data.ColumnId;
 import records.data.TableManager;
-import records.data.TableManager.TableMaker;
+import records.data.RenameOnEdit;
 import records.transformations.HideColumns;
 import records.transformations.HideColumnsPanel;
 import threadchecker.OnThread;
@@ -16,7 +16,7 @@ import utility.gui.LightDialog;
  * A dialog for editing a HideColumns transformation.
  */
 @OnThread(Tag.FXPlatform)
-public class HideColumnsDialog extends LightDialog<TableMaker<HideColumns>>
+public class HideColumnsDialog extends LightDialog<ImmutableList<ColumnId>>
 {
     public HideColumnsDialog(DimmableParent parent, TableManager tableManager, HideColumns hideColumns)
     {
@@ -30,9 +30,7 @@ public class HideColumnsDialog extends LightDialog<TableMaker<HideColumns>>
         setResultConverter(bt -> {
             if (bt == ButtonType.OK)
             {
-                ImmutableList<ColumnId> newHidden = hideColumnsPanel.getHiddenColumns();
-                TableMaker<HideColumns> tableMaker = () -> new HideColumns(tableManager, hideColumns.getDetailsForCopy(), hideColumns.getSrcTableId(), newHidden);
-                return tableMaker;
+                return hideColumnsPanel.getHiddenColumns();
             }
             return null;
         });

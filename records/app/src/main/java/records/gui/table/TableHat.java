@@ -22,6 +22,7 @@ import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.DataItemPosition;
 import records.data.RecordSet;
+import records.data.RenameOnEdit;
 import records.data.SingleSourceTransformation;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
@@ -43,7 +44,6 @@ import records.gui.highlights.TableHighlights.HighlightType;
 import records.gui.highlights.TableHighlights.PickResult;
 import records.gui.table.TableHat.TableHatDisplay;
 import records.transformations.*;
-import records.transformations.Check.CheckType;
 import records.transformations.ManualEdit.ColumnReplacementValues;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
@@ -61,6 +61,7 @@ import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
 import utility.SimulationConsumer;
+import utility.SimulationFunctionInt;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -85,7 +86,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
     private StyledString content;
     private StyledString collapsedContent = StyledString.s("Transformation");
     private boolean collapsed = false;
-    
+
     public TableHat(@UnknownInitialization(HeadedDisplay.class) HeadedDisplay tableDisplay, View parent, VisitableTransformation table)
     {
         super(ViewOrder.TABLE_HAT);
@@ -101,8 +102,8 @@ class TableHat extends FloatingItem<TableHatDisplay>
                         editSourceLink(parent, filter),
                         StyledString.s(", keeping rows where: "),
                         editExpressionLink(parent, filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSrcTableId()), new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId(), null), () -> Filter.makeTypeState(parent.getManager().getTypeManager()), DataType.BOOLEAN, "filter.header", newExp ->
-                                parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
-                                        table.getDetailsForCopy(), filter.getSrcTableId(), newExp), null))
+                                parent.getManager().edit(table, id -> new Filter(parent.getManager(),
+                                        table.getDetailsForCopy(id), filter.getSrcTableId(), newExp), RenameOnEdit.ifOldAuto(Filter.suggestedName(newExp))))
                 );
             }
 
@@ -119,7 +120,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                         @Override
                         protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                         {
-                        editR(parent, rTransformation, false);
+                        editR(parent, rTransformation, false, RenameOnEdit::ifOldAuto);
                         }
                     })
                 );
@@ -140,7 +141,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     {
                         if (mouseButton == MouseButton.PRIMARY)
                         {
-                            editSort(screenPoint, parent, sort);
+                            editSort(screenPoint, parent, sort, RenameOnEdit::ifOldAuto);
                         }
                     }
                 }).withStyle(new StyledCSS("edit-sort-by"));
@@ -206,7 +207,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                     {
                                         if (mouseButton == MouseButton.PRIMARY)
                                         {
-                                            editConcatenate(screenPoint, parent, concatenate);
+                                            editConcatenate(screenPoint, parent, concatenate, RenameOnEdit::ifOldAuto);
                                         }
                                     }
 
@@ -239,7 +240,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                 if (mouseButton == MouseButton.PRIMARY)
                                 {
                                     Workers.onWorkerThread("Editing concatenate", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing concatenate", () -> {
-                                        parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), concatenate.getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()), concatenate.getIncompleteColumnHandling(), !concatenate.isIncludeMarkerColumn()), null);
+                                        parent.getManager().edit(table, id -> new Concatenate(parent.getManager(), table.getDetailsForCopy(id), concatenate.getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()), concatenate.getIncompleteColumnHandling(), !concatenate.isIncludeMarkerColumn()), RenameOnEdit.UNNEEDED /* no rename when toggling source column */);
                                     }));
                                 }
                             }
@@ -270,7 +271,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                         editSourceLink(parent, check),
                         StyledString.s(" that "),
                         StyledString.s(type),
-                        editCheckLink(parent, check, parent.getManager().getSingleTableOrNull(check.getSrcTableId()))
+                        editCheckLink(parent, check, parent.getManager().getSingleTableOrNull(check.getSrcTableId()), RenameOnEdit::ifOldAuto)
                 );
             }
             
@@ -328,7 +329,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     @Override
                     protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
-                        editHideColumns(parent, hide);
+                        editHideColumns(parent, hide, RenameOnEdit::ifOldAuto);
                     }
                 };
 
@@ -367,8 +368,8 @@ class TableHat extends FloatingItem<TableHatDisplay>
                         }
                         new PickManualEditIdentifierDialog(parent, Optional.of(manualEdit.getReplacementIdentifier()), columnIds).showAndWait().ifPresent(newEditBy -> {
                             Workers.onWorkerThread("Changing edit transformation", Priority.SAVE, () -> FXUtility.alertOnError_("Changing edit transformation", () -> {
-                                TableMaker<ManualEdit> maker = manualEdit.swapReplacementIdentifierTo(newEditBy.orElse(null));
-                                parent.getManager().edit(manualEdit.getId(), maker, null);
+                                SimulationFunctionInt<TableId, ManualEdit> maker = manualEdit.swapReplacementIdentifierTo(newEditBy.orElse(null));
+                                parent.getManager().edit(manualEdit, maker, RenameOnEdit.ifOldAuto(ManualEdit.suggestedName(newEditBy.orElse(null), manualEdit.getReplacements())));
                             }));
                         });
                     }
@@ -393,7 +394,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                         ImmutableMap<ColumnId, ColumnReplacementValues> newValues = p.getSecond().get();
                                         if (!newValues.equals(manualEdit.getReplacements()))
                                         {
-                                            parent.getManager().edit(manualEdit.getId(), () -> manualEdit.swapReplacementsTo(newValues), null);
+                                            parent.getManager().edit(manualEdit, manualEdit.swapReplacementsTo(newValues), RenameOnEdit.ifOldAuto(ManualEdit.suggestedName(manualEdit.getReplacementIdentifier().orElse(null), newValues)));
                                         }
                                     }));
 
@@ -492,7 +493,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     @Override
                     protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
-                        editJoin(parent, join);
+                        editJoin(parent, join, RenameOnEdit::ifOldAuto);
                     }
                 };
                 return StyledString.concat(
@@ -511,38 +512,38 @@ class TableHat extends FloatingItem<TableHatDisplay>
         this.tableDisplay = Utility.later(tableDisplay);
     }
 
-    public static void editHideColumns(View parent, HideColumns hide)
+    public static void editHideColumns(View parent, HideColumns hide, Function<TableId, RenameOnEdit> renameOnEdit)
     {
-        new HideColumnsDialog(parent, parent.getManager(), hide).showAndWait().ifPresent(makeTrans -> {
+        new HideColumnsDialog(parent, parent.getManager(), hide).showAndWait().ifPresent(newHidden -> {
             Workers.onWorkerThread("Changing hidden columns", Priority.SAVE, () ->
                     FXUtility.alertOnError_("Error hiding column", () -> {
-                        parent.getManager().<HideColumns>edit(hide.getId(), makeTrans, null);
+                        parent.getManager().<HideColumns>edit(hide, id -> new HideColumns(parent.getManager(), hide.getDetailsForCopy(id), hide.getSrcTableId(), newHidden), renameOnEdit.apply(HideColumns.suggestedName(newHidden)));
                     })
             );
         });
     }
 
-    public static void editConcatenate(Point2D screenPoint, View parent, Concatenate concatenate)
+    public static void editConcatenate(Point2D screenPoint, View parent, Concatenate concatenate, Function<TableId, RenameOnEdit> renameOnEdit)
     {
         new TableListDialog(parent, concatenate, concatenate.getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()), screenPoint).showAndWait().ifPresent(newList -> 
             Workers.onWorkerThread("Editing concatenate", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing concatenate", () -> {
-                parent.getManager().edit(concatenate.getId(), () -> new Concatenate(parent.getManager(), concatenate.getDetailsForCopy(), newList, concatenate.getIncompleteColumnHandling(), concatenate.isIncludeMarkerColumn()), null);
+                parent.getManager().edit(concatenate, id -> new Concatenate(parent.getManager(), concatenate.getDetailsForCopy(id), newList, concatenate.getIncompleteColumnHandling(), concatenate.isIncludeMarkerColumn()), renameOnEdit.apply(Concatenate.suggestedName(newList)));
         })));
     }
 
-    protected static void editSort(@Nullable Point2D screenPoint, View parent, Sort sort)
+    protected static void editSort(@Nullable Point2D screenPoint, View parent, Sort sort, Function<TableId, RenameOnEdit> renameOnEdit)
     {
         new EditSortDialog(parent, screenPoint,
             parent.getManager().getSingleTableOrNull(sort.getSrcTableId()),
             sort,
             sort.getSortBy().isEmpty() ? null : sort.getSortBy()).showAndWait().ifPresent(newSort -> {
                 Workers.onWorkerThread("Editing sort", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing sort", () -> 
-                    parent.getManager().edit(sort.getId(), () -> new Sort(parent.getManager(), sort.getDetailsForCopy(), sort.getSrcTableId(), newSort), null)
+                    parent.getManager().edit(sort, id -> new Sort(parent.getManager(), sort.getDetailsForCopy(id), sort.getSrcTableId(), newSort), renameOnEdit.apply(Sort.suggestedName(newSort)))
                 ));
         });
     }
     
-    protected static void editManualEdit(View parent, ManualEdit manualEdit, boolean deleteIfCancel)
+    protected static void editManualEdit(View parent, ManualEdit manualEdit, boolean deleteIfCancel, Function<TableId, RenameOnEdit> renameOnEdit)
     {
         ImmutableList<ColumnId> columnIds = ImmutableList.of();
         try
@@ -558,8 +559,9 @@ class TableHat extends FloatingItem<TableHatDisplay>
         }
         Optional<Optional<ColumnId>> columnId = new PickManualEditIdentifierDialog(parent, deleteIfCancel ? Optional.empty() : Optional.of(manualEdit.getReplacementIdentifier()), columnIds).showAndWait();
         columnId.ifPresent(maybeCol -> Workers.onWorkerThread("Editing manual edit", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing manual edit", () -> {
-            TableMaker<ManualEdit> makeSwapped = manualEdit.swapReplacementIdentifierTo(maybeCol.orElse(null));
-            parent.getManager().edit(manualEdit.getId(), makeSwapped, TableAndColumnRenames.EMPTY);
+            ColumnId newReplacementKey = maybeCol.orElse(null);
+            SimulationFunctionInt<TableId, ManualEdit> makeSwapped = manualEdit.swapReplacementIdentifierTo(newReplacementKey);
+            parent.getManager().edit(manualEdit, makeSwapped, renameOnEdit.apply(ManualEdit.suggestedName(newReplacementKey, manualEdit.getReplacements())));
         })));
         if (!columnId.isPresent() && deleteIfCancel)
         {
@@ -588,20 +590,20 @@ class TableHat extends FloatingItem<TableHatDisplay>
         return c -> null;
     }
 
-    public static void editJoin(View parent, Join join)
+    public static void editJoin(View parent, Join join, Function<TableId, RenameOnEdit> renameOnEdit)
     {
         new EditJoinDialog(parent, join).showAndWait().ifPresent(details ->
             Workers.onWorkerThread("Editing join", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing join", () -> {
-                parent.getManager().edit(join.getId(), () -> new Join(parent.getManager(), join.getDetailsForCopy(), details.primaryTableId, details.secondaryTableId, details.isLeftJoin, details.joinOn), null);
+                parent.getManager().edit(join, id -> new Join(parent.getManager(), join.getDetailsForCopy(id), details.primaryTableId, details.secondaryTableId, details.isLeftJoin, details.joinOn), renameOnEdit.apply(Join.suggestedName(details.joinOn)));
         })));
     }
 
-    public static void editR(View parent, RTransformation rTransformation, boolean selectWholeExpression)
+    public static void editR(View parent, RTransformation rTransformation, boolean selectWholeExpression, Function<TableId, RenameOnEdit> renameOnEdit)
     {
         new EditRTransformationDialog(parent, rTransformation, selectWholeExpression).showAndWait().ifPresent(details -> {
             Workers.onWorkerThread("Editing R transformation", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing R transformation", () -> {
                 parent.getManager().unban(details.rExpression);
-                parent.getManager().edit(rTransformation.getId(), () -> new RTransformation(parent.getManager(), rTransformation.getDetailsForCopy(), details.includedTables, details.packages, details.rExpression), null);
+                parent.getManager().edit(rTransformation, id -> new RTransformation(parent.getManager(), rTransformation.getDetailsForCopy(id), details.includedTables, details.packages, details.rExpression), renameOnEdit.apply(RTransformation.suggestedName(details.rExpression)));
             }));
         });
     }
@@ -739,7 +741,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
 
     private static <T extends Transformation & SingleSourceTransformation> StyledString editSourceLink(View parent, T table)
     {
-        return editSourceLink(parent, table, table.getSrcTableId(), newSrcTableId -> parent.getManager().edit(table.getId(), () -> table.withNewSource(newSrcTableId), null));
+        return editSourceLink(parent, table, table.getSrcTableId(), newSrcTableId -> parent.getManager().edit(table, _id -> table.withNewSource(newSrcTableId), RenameOnEdit.UNNEEDED /* ideally would rename, but will live without */));
     }
 
     private static StyledString editSourceLink(View parent, Table destTable, TableId srcTableId, SimulationConsumer<TableId> changeSrcTableId)
@@ -805,7 +807,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         }).withStyle(new StyledCSS("edit-expression-link"));
     }
 
-    private static StyledString editCheckLink(View parent, Check check, @Nullable Table srcTable)
+    private static StyledString editCheckLink(View parent, Check check, @Nullable Table srcTable, Function<TableId, RenameOnEdit> renameOnEdit)
     {
         return check.getCheckExpression().toSimpleStyledString().limit(60).withStyle(new Clickable() {
             @Override
@@ -816,7 +818,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 {
                     new EditCheckExpressionDialog(parent, srcTable, check.getCheckType(), check.getCheckExpression(), false, ct -> Check.getColumnLookup(parent.getManager(), check.getSrcTableId(), check.getId(), ct)).showAndWait().ifPresent(p -> {
                         Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing column", () -> {
-                            parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), check.getDetailsForCopy(), check.getSrcTableId(), p.getFirst(), p.getSecond()), null);
+                            parent.getManager().edit(check, id -> new Check(parent.getManager(), check.getDetailsForCopy(id), check.getSrcTableId(), p.getFirst(), p.getSecond()), renameOnEdit.apply(Check.suggestedName(p.getSecond())));
                         }));
                     });
                 }

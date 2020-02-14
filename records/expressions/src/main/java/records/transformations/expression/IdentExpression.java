@@ -70,7 +70,8 @@ public class IdentExpression extends NonOperatorExpression
 {
     // The name of the field in a table reference with the list of rows
     public static final @ExpressionIdentifier String ROWS = "rows";
-    
+    public static final @ExpressionIdentifier String NAMESPACE_COLUMN = "column";
+
     // TODO add resolver listener
     private final @Nullable @ExpressionIdentifier String namespace;
     private final ImmutableList<@ExpressionIdentifier String> idents;
@@ -117,12 +118,12 @@ public class IdentExpression extends NonOperatorExpression
         if (tableName == null)
             return column(columnName);
         else
-            return new IdentExpression("column", ImmutableList.<@ExpressionIdentifier String>of(tableName.getRaw(), columnName.getRaw()));
+            return new IdentExpression(NAMESPACE_COLUMN, ImmutableList.<@ExpressionIdentifier String>of(tableName.getRaw(), columnName.getRaw()));
     }
 
     public static IdentExpression column(ColumnId columnName)
     {
-        return new IdentExpression("column", ImmutableList.<@ExpressionIdentifier String>of(columnName.getRaw()));
+        return new IdentExpression(NAMESPACE_COLUMN, ImmutableList.<@ExpressionIdentifier String>of(columnName.getRaw()));
     }
 
     @SuppressWarnings("recorded") // Only used for items which will be reloaded anyway
@@ -197,7 +198,7 @@ public class IdentExpression extends NonOperatorExpression
         // - Tag name (Scope: "tag")
         // - Standard function name (Scope: "function")
 
-        if (namespace == null || namespace.equals("column"))
+        if (namespace == null || namespace.equals(NAMESPACE_COLUMN))
         {
             Expression.ColumnLookup.@Nullable FoundColumn col;
             final ColumnId columnName;
@@ -211,7 +212,7 @@ public class IdentExpression extends NonOperatorExpression
                 columnName = new ColumnId(idents.get(1));
                 col = dataLookup.getColumn(this, new TableId(idents.get(0)), columnName);
             }
-            if (col == null && Objects.equals(namespace, "column"))
+            if (col == null && Objects.equals(namespace, NAMESPACE_COLUMN))
             {
                 //onError.recordError(this, StyledString.s("Could not find source column " + toText(namespace, idents)));
                 return null;
@@ -294,7 +295,7 @@ public class IdentExpression extends NonOperatorExpression
         }
 
 
-        if (namespace != null && !ImmutableList.of("column", "table", "tag", "function", "var").contains(namespace))
+        if (namespace != null && !ImmutableList.of(NAMESPACE_COLUMN, "table", "tag", "function", "var").contains(namespace))
         {
             // TODO give more specific error during checkType:
             //onError.recordError(this, StyledString.s("Unknown namespace or identifier: \"" + namespace + "\".  Known namespaces: column, table, tag, function."));
@@ -528,7 +529,7 @@ public class IdentExpression extends NonOperatorExpression
 
         private @ExpressionIdentifier String getFoundNamespace()
         {
-            return "column";
+            return NAMESPACE_COLUMN;
         }
 
         private ImmutableList<@ExpressionIdentifier String> getFoundFullName()

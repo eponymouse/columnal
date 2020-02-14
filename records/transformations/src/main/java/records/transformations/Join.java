@@ -335,4 +335,15 @@ public class Join extends VisitableTransformation
     {
         return visitor.join(this);
     }
+
+    @Override
+    public TableId getSuggestedName()
+    {
+        return suggestedName(this.columnsToMatch);
+    }
+
+    public static TableId suggestedName(ImmutableList<Pair<ColumnId, ColumnId>> columnsToMatch)
+    {
+        return new TableId(IdentifierUtility.spaceSeparated("Join", columnsToMatch.stream().<@ExpressionIdentifier String>map(p -> IdentifierUtility.spaceSeparated(IdentifierUtility.shorten(p.getFirst().getRaw()), "to", IdentifierUtility.shorten(p.getFirst().getRaw()))).findFirst().orElse("none")));
+    }
 }

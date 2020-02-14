@@ -24,6 +24,7 @@ import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.RecordSet;
 import records.data.Table.InitialLoadDetails;
+import records.data.TableAndColumnRenames;
 import records.data.TableManager;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
@@ -113,7 +114,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             TableManager tableManager = mainWindowActions._test_getTableManager();
 
             CellPosition position = new CellPosition(CellPosition.row(7), CellPosition.col(1));
-            tableManager.edit(null, () -> new Calculate(tableManager, new InitialLoadDetails(null, null, position, null), tableManager.getAllTables().get(0).getId(), ImmutableMap.of()), null);
+            tableManager.record(new Calculate(tableManager, new InitialLoadDetails(null, null, position, null), tableManager.getAllTables().get(0).getId(), ImmutableMap.of()));
 
             TestUtil.sleep(3000);
             NodeQuery arrowQuery = lookup(".expand-arrow").match(n -> TestUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right")));

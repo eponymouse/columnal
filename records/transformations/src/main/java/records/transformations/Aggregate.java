@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
@@ -39,6 +40,7 @@ import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationFunctionInt;
 import utility.Utility;
@@ -496,7 +498,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
     @Override
     public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
-        return new Aggregate(getManager(), getDetailsForCopy(), newSrcTableId, summaries, splitBy);
+        return new Aggregate(getManager(), getDetailsForCopy(getId()), newSrcTableId, summaries, splitBy);
     }
 
     @Override
@@ -1044,5 +1046,26 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.aggregate(this);
+    }
+    
+    public static TableId suggestedName(ImmutableList<ColumnId> splitBy, ImmutableList<Pair<ColumnId, Expression>> summaries)
+    {
+        ImmutableList.Builder<@ExpressionIdentifier String> parts = ImmutableList.builder();
+        parts.add("Agg");
+        if (summaries.isEmpty())
+            parts.add("none");
+        else
+            parts.add(IdentifierUtility.shorten(summaries.get(0).getFirst().getRaw()));
+        
+        if (!splitBy.isEmpty())
+            parts.add("by", IdentifierUtility.shorten(splitBy.get(0).getRaw()));
+        
+        return new TableId(IdentifierUtility.spaceSeparated(parts.build()));
+    }
+
+    @Override
+    public TableId getSuggestedName()
+    {
+        return suggestedName(splitBy, summaries);
     }
 }

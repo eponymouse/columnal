@@ -1,6 +1,8 @@
 package records.transformations;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.units.TableDataRowIndex;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -32,6 +34,7 @@ import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationConsumer;
 import utility.SimulationFunction;
@@ -41,6 +44,7 @@ import utility.gui.FXUtility;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -171,8 +175,10 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
                         if (!columnId.equals(entry.getKey()))
                             calcColumns.put(entry.getKey(), entry.getValue());
                     }
-                    mgr.edit(getId(), () -> new Calculate(mgr, getDetailsForCopy(), srcTableId, calcColumns.build()), null);
-                    mgr.edit(null, () -> new Calculate(mgr, new InitialLoadDetails(null, null, targetPos, null), getId(), ImmutableMap.<ColumnId, Expression>of(details.getFirst() == null ? columnId : details.getFirst(), details.getSecond())), null);
+                    ImmutableMap<ColumnId, Expression> remainingColumns = calcColumns.build();
+                    mgr.edit(Utility.later(Calculate.this), id -> new Calculate(mgr, getDetailsForCopy(id), srcTableId, remainingColumns), RenameOnEdit.ifOldAuto(suggestedName(remainingColumns)));
+                    ImmutableMap<ColumnId, Expression> movedCol = ImmutableMap.<ColumnId, Expression>of(details.getFirst() == null ? columnId : details.getFirst(), details.getSecond());
+                    mgr.record(new Calculate(mgr, new InitialLoadDetails(suggestedName(movedCol), null, targetPos, null), getId(), movedCol));
                 };
             }
         };
@@ -268,7 +274,7 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
     @Override
     public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
-        return new Calculate(getManager(), getDetailsForCopy(), newSrcTableId, newColumns);
+        return new Calculate(getManager(), getDetailsForCopy(getId()), newSrcTableId, newColumns);
     }
 
     private void deleteColumn(ColumnId columnId)
@@ -276,14 +282,15 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
         if (newColumns.containsKey(columnId))
         {
             FXUtility.alertOnError_("Error deleting column", () -> {
-                getManager().edit(getId(), () -> {
-                    ImmutableMap.Builder<ColumnId, Expression> filtered = ImmutableMap.builder();
-                    newColumns.forEach((c, e) -> {
-                        if (!c.equals(columnId))
-                            filtered.put(c, e);
-                    });
-                    return new Calculate(getManager(), getDetailsForCopy(), srcTableId, filtered.build());
-                }, null);
+                ImmutableMap.Builder<ColumnId, Expression> filtered = ImmutableMap.builder();
+                newColumns.forEach((c, e) -> {
+                    if (!c.equals(columnId))
+                        filtered.put(c, e);
+                });
+                ImmutableMap<ColumnId, Expression> filteredCols = filtered.build();
+                getManager().edit(Calculate.this, id -> {
+                    return new Calculate(getManager(), getDetailsForCopy(id), srcTableId, filteredCols);
+                }, RenameOnEdit.ifOldAuto(suggestedName(filteredCols)));
             });
         }
     }
@@ -346,5 +353,19 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.calculate(this);
+    }
+
+    @Override
+    public TableId getSuggestedName()
+    {
+        return suggestedName(newColumns);
+    }
+
+    public static TableId suggestedName(ImmutableMap<ColumnId, Expression> calcColumns)
+    {
+        ImmutableList.Builder<@ExpressionIdentifier String> parts = ImmutableList.builder();
+        parts.add("Calc");
+        parts.add(IdentifierUtility.shorten(calcColumns.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).<@ExpressionIdentifier String>map(e -> e.getKey().getRaw()).findFirst().orElse("none")));
+        return new TableId(IdentifierUtility.spaceSeparated(parts.build()));
     }
 }

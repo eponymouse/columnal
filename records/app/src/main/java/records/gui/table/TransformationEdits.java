@@ -29,6 +29,7 @@ import records.gui.EditImmediateColumnDialog.InitialFocus;
 import records.gui.View;
 import records.transformations.Aggregate;
 import records.transformations.Calculate;
+import records.data.RenameOnEdit;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.IdentExpression;
@@ -64,7 +65,7 @@ public class TransformationEdits
             ImmutableMap<ColumnId, Expression> newColumns = Utility.appendToMap(calc.getCalculatedColumns(), newDetails.columnId, newDetails.expression, columnId);
             Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                 FXUtility.alertOnError_("Error saving column", () ->
-                    parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(), calc.getSrcTableId(), newColumns), null)
+                    parent.getManager().edit(calc, id -> new Calculate(parent.getManager(), calc.getDetailsForCopy(id), calc.getSrcTableId(), newColumns), RenameOnEdit.UNNEEDED /* edit column won't affect it */)
                 );
             });
         });
@@ -102,7 +103,7 @@ public class TransformationEdits
             final @Nullable Pair<ColumnId, ImmutableList<String>> exampleFinal = example;
             FXUtility.runAfter(() -> {
                 new EditAggregateSplitByDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), exampleFinal, aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> Workers.onWorkerThread("Edit aggregate", Priority.SAVE, () -> {
-                    FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate.getId(), () -> new Aggregate(parent.getManager(), aggregate.getDetailsForCopy(), aggregate.getSrcTableId(), aggregate.getColumnExpressions(), splitBy), null));
+                    FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate, id -> new Aggregate(parent.getManager(), aggregate.getDetailsForCopy(id), aggregate.getSrcTableId(), aggregate.getColumnExpressions(), splitBy), RenameOnEdit.ifOldAuto(Aggregate.suggestedName(splitBy, aggregate.getColumnExpressions()))));
                 }));
             });
         }).start();
@@ -178,9 +179,10 @@ public class TransformationEdits
                     }
                 }
                 Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
-                    FXUtility.alertOnError_("Error saving column", () ->
-                        parent.getManager().edit(agg.getId(), () -> new Aggregate(parent.getManager(), agg.getDetailsForCopy(), agg.getSrcTableId(), newColumns.build(), newDetails.extra), null)
-                    );
+                    FXUtility.alertOnError_("Error saving column", () -> {
+                        ImmutableList<Pair<ColumnId, Expression>> newColumnsBuilt = newColumns.build();
+                        parent.getManager().edit(agg, id -> new Aggregate(parent.getManager(), agg.getDetailsForCopy(id), agg.getSrcTableId(), newColumnsBuilt, newDetails.extra), RenameOnEdit.ifOldAuto(Aggregate.suggestedName(newDetails.extra, newColumnsBuilt)));
+                    });
                 });
             });
         }
@@ -229,9 +231,9 @@ public class TransformationEdits
                                 return EditableRecordSet.copyColumn(c);
                         });
                         EditableRecordSet newRecordSet = new <EditableColumn>EditableRecordSet(columns, () -> length);
-                        makeReplacement = () -> new ImmediateDataSource(parent.getManager(), data.getDetailsForCopy(), newRecordSet);
+                        makeReplacement = () -> new ImmediateDataSource(parent.getManager(), data.getDetailsForCopy(data.getId()), newRecordSet);
                     }
-                    parent.getManager().<ImmediateDataSource>edit(data.getId(), makeReplacement, new TableAndColumnRenames(ImmutableMap.of(data.getId(), new Pair<>(data.getId(), ImmutableMap.of(columnId, columnDetails.columnId)))));
+                    parent.getManager().<ImmediateDataSource>editData(data.getId(), makeReplacement, new TableAndColumnRenames(ImmutableMap.of(data.getId(), new Pair<>(data.getId(), ImmutableMap.of(columnId, columnDetails.columnId)))));
                 });
             });
         });
