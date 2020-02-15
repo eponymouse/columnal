@@ -148,7 +148,7 @@
                 <!-- surefire is for unit tests, ours are really integration tests so we use failsafe -->
                 <!-- See https://stackoverflow.com/questions/28986005/what-is-the-difference-between-the-maven-surefire-and-maven-failsafe-plugins -->
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.20.1</version>
+                <version>3.0.0-M4</version>
                 <configuration>
                     <!-- <argLine>-Xmx1G</argLine> -->
                     <skipAfterFailureCount>0</skipAfterFailureCount>
