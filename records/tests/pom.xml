@@ -108,11 +108,10 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- jdk-9+181 for Java 9 -->
         <dependency>
             <groupId>org.testfx</groupId>
             <artifactId>openjfx-monocle</artifactId>
-            <version>8u76-b04</version>
+            <version>jdk-11+26</version>
             <scope>test</scope>
         </dependency>
 
@@ -346,12 +345,8 @@
                             <configuration>
                                 <forkCount>3</forkCount>
                                 <reuseForks>false</reuseForks>
-                                <!-- We must give system property for failsafe plugin's test search to not baulk at FX classes: -->
-                                <additionalClasspathElements>
-                                    <additionalClasspathElement>${project.basedir}/target/java-extensions/jfxrt.jar</additionalClasspathElement>
-                                </additionalClasspathElements>
                                 <!-- -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9999  -->
-                                <argLine>-Xmx2G -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dglass.platform=Monocle -Dmonocle.platform=Headless -Dheadless.geometry=1920x1200-32 -Djava.ext.dirs=${project.basedir}/target/java-extensions</argLine>
+                                <argLine>-Xmx2G -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dglass.platform=Monocle -Dmonocle.platform=Headless -Dheadless.geometry=1920x1200-32</argLine>
                             </configuration>
                         </plugin>
                     </plugins>
