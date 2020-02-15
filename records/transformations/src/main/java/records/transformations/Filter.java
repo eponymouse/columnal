@@ -323,6 +323,7 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
         return new TableId(IdentifierUtility.spaceSeparated("Filt", guessFirstColumnReference(filterExpression).orElse("custom")));
     }
 
+    @SuppressWarnings("recorded")
     public static Optional<@ExpressionIdentifier String> guessFirstColumnReference(Expression expression)
     {
         return expression.visit(new ExpressionVisitorStream<@ExpressionIdentifier String>() {

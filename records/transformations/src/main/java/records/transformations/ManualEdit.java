@@ -676,16 +676,16 @@ edit : editHeader editColumn*;
     }
 
     @Override
-    public TableId getSuggestedName()
+    public synchronized TableId getSuggestedName()
     {
         return suggestedName(originalKeyColumn == null ? null : originalKeyColumn.getFirst(), replacements);
     }
 
-    public static TableId suggestedName(@Nullable ColumnId keyColumn, Map<ColumnId, ColumnReplacementValues> replacements)
+    public static TableId suggestedName(@Nullable ColumnId keyColumn, Map<ColumnId, ColumnReplacementValues> repls)
     {
         ImmutableList.Builder<@ExpressionIdentifier String> parts = ImmutableList.builder();
         parts.add("Edit");
-        parts.add(replacements.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).<@ExpressionIdentifier String>map(e -> IdentifierUtility.shorten(e.getKey().getRaw())).findFirst().orElse("none"));
+        parts.add(repls.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).<@ExpressionIdentifier String>map(e -> IdentifierUtility.shorten(e.getKey().getRaw())).findFirst().orElse("none"));
         parts.add("by");
         parts.add(keyColumn == null ? "row" : IdentifierUtility.shorten(keyColumn.getRaw()));
         return new TableId(IdentifierUtility.spaceSeparated(parts.build()));
