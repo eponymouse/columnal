@@ -32,8 +32,6 @@
     <orderEntry type="module" module-name="gui-utility" />
     <orderEntry type="library" name="Maven: org.fxmisc.wellbehaved:wellbehavedfx:0.3" level="project" />
     <orderEntry type="library" name="Maven: net.coobird:thumbnailator:0.4.8" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:mac:11.0.2" level="project" />
     <orderEntry type="module" module-name="parsers" />
     <orderEntry type="module" module-name="data" />
     <orderEntry type="module" module-name="stf" />
@@ -41,10 +39,10 @@
     <orderEntry type="module" module-name="functions" />
     <orderEntry type="library" name="Maven: ch.obermuhlner:big-math:2.0.0" level="project" />
     <orderEntry type="module" module-name="lex-editor" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-web:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-web:mac:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-media:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-media:mac:11.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-web:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-web:mac:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-media:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-media:mac:13.0.2" level="project" />
     <orderEntry type="module" module-name="transformations" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:28.1-jre" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:failureaccess:1.0.1" level="project" />
@@ -87,10 +85,10 @@
     <orderEntry type="library" name="Maven: xalan:xalan:2.7.0" level="project" />
     <orderEntry type="module" module-name="annsthreadchecker" scope="PROVIDED" />
     <orderEntry type="module" module-name="threadchecker" scope="PROVIDED" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:mac:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:mac:11.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:mac:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:mac:13.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.hamcrest:hamcrest-library:1.3" level="project" />
     <orderEntry type="library" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
     <orderEntry type="module-library">
@@ -113,9 +111,11 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.testfx:testfx-core:4.0.15-alpha" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.assertj:assertj-core:3.11.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.testfx:testfx-junit:4.0.15-alpha" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.testfx:openjfx-monocle:8u76-b04" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-swing:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-swing:mac:11.0.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.testfx:openjfx-monocle:jdk-12.0.1+2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:12.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:mac:12.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-swing:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-swing:mac:13.0.2" level="project" />
     <orderEntry type="module" module-name="data" scope="TEST" production-on-test="" />
     <orderEntry type="module" module-name="expressions" scope="TEST" production-on-test="" />
   </component>

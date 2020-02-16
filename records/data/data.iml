@@ -41,10 +41,10 @@
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.5" level="project" />
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-api:2.10.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-core:2.10.0" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:mac:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:mac:11.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:mac:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:mac:13.0.2" level="project" />
     <orderEntry type="library" name="Maven: info.debatty:java-string-similarity:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: net.jcip:jcip-annotations:1.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:3.1.1" level="project" />
