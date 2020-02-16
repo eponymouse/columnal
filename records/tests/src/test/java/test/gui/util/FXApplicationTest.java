@@ -126,7 +126,12 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     @OnThread(Tag.FXPlatform)
     public final void dumpScreenshot()
     {
-        printBase64(capture(Screen.getPrimary().getBounds()).getImage());
+        // Seems to throw an exception under JFX 13 and Monocle 12:
+        // printBase64(capture(Screen.getPrimary().getBounds()).getImage());
+        // So capture window instead:
+        Window window = targetWindow();
+        if (window != null)
+            dumpScreenshot(window);
     }
     
     @OnThread(Tag.FXPlatform)
