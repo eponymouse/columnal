@@ -1251,7 +1251,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     }
                 }
                 return Stream.of();
-            }).collect(ImmutableMap.<Pair<HashCode, HashCode>, HashCode, HashCode>toImmutableMap(p -> p.getFirst(), p -> p.getSecond()));
+            }).distinct().collect(ImmutableMap.<Pair<HashCode, HashCode>, HashCode, HashCode>toImmutableMap(p -> p.getFirst(), p -> p.getSecond()));
     }
 
     @OnThread(Tag.Simulation)
