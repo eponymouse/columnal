@@ -85,8 +85,8 @@ public class SlidableListCell<T> extends ListCell<T>
     {
         final double x = snappedLeftInset();
         final double y = snappedTopInset();
-        final double w = snapSize(getWidth()) - x - snappedRightInset();
-        final double h = snapSize(getHeight()) - y - snappedBottomInset();
+        final double w = snapSizeX(getWidth()) - x - snappedRightInset();
+        final double h = snapSizeY(getHeight()) - y - snappedBottomInset();
         getGraphic().resizeRelocate(x + xPosition.get(), y, w - Math.max(0, xPosition.get()), h);
         //super.layoutChildren();
     }
