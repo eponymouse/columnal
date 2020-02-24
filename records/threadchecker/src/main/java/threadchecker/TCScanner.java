@@ -1067,6 +1067,9 @@ class TCScanner extends TreePathScanner<Void, Void>
     {
         if (m.getAnnotationType().asElement().getSimpleName().toString().equals(OnThread.class.getSimpleName()))
         {
+            if (m.getElementValues().isEmpty())
+                return null;
+            
             return stringToTag(m.getElementValues().entrySet().stream().map(x -> "" + x.getKey() + " = " + x.getValue()), () -> "<" + info.get());
         }
         return null;
