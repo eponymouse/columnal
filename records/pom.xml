@@ -69,6 +69,63 @@
                 </executions>
             </plugin>
             -->
+
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+                <configuration>
+                    <release>11</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>groupId</groupId>
+                            <artifactId>anns</artifactId>
+                            <version>1.0-SNAPSHOT</version>
+                        </path>
+                        <dependency>
+                            <groupId>org.checkerframework</groupId>
+                            <artifactId>checker-qual</artifactId>
+                            <version>3.1.1</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.checkerframework</groupId>
+                            <artifactId>checker</artifactId>
+                            <version>3.1.1</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.bluej</groupId>
+                            <artifactId>anns-threadchecker</artifactId>
+                            <version>1.0-SNAPSHOT</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.bluej</groupId>
+                            <artifactId>threadchecker</artifactId>
+                            <version>1.0-SNAPSHOT</version>
+                        </dependency>
+                        <path>
+                            <groupId>org.bluej</groupId>
+                            <artifactId>anns-threadchecker</artifactId>
+                            <version>1.0-SNAPSHOT</version>
+                        </path>
+                        <path>
+                            <groupId>org.bluej</groupId>
+                            <artifactId>threadchecker</artifactId>
+                            <version>1.0-SNAPSHOT</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <compilerArgs>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
+                        <arg>-AskipDefs=records.grammar.|one.util.</arg>
+                        <arg>-Astubs=${project.basedir}/../stubs</arg>
+                        <arg>-Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels</arg>
+                        <!-- <arg>-AconservativeUninferredTypeArguments</arg> -->
+                        <arg>-AsuppressWarnings=optional.parameter,optional.as.element.type,optional.collection</arg>
+                        <!-- <arg>-Xbootclasspath/p:${org.bluej:threadchecker:jar}</arg> -->
+                        <arg>-Xplugin:threadchecker.TCPlugin</arg>
+                        <arg>-Werror</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 
@@ -78,9 +135,11 @@
             <id>full</id>
 
             <activation>
+                <!--
                 <file>
                     <missing>src/test/java/test/TestUtil.java</missing>
                 </file>
+                -->
                 <property>
                     <name>check</name>
                     <value>full</value>
@@ -92,9 +151,9 @@
                     <plugins>
                         <plugin>
                             <artifactId>maven-compiler-plugin</artifactId>
-                            <version>3.7.0</version>
-                            <configuration>
-                                <annotationProcessors>
+                            <version>3.8.0</version>
+                            <configuration combine.children="append">
+                                <annotationProcessors combine.self="override">
                                     <!-- Add all the checkers you want to enable during the full-check compile here -->
                                     <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
                                     <annotationProcessor>org.checkerframework.checker.optional.OptionalChecker</annotationProcessor>
@@ -106,55 +165,10 @@
                                     <annotationProcessor>annotation.funcdoc.FuncDocChecker</annotationProcessor>
                                     <annotationProcessor>annotation.recorded.RecordedChecker</annotationProcessor>
                                 </annotationProcessors>
-                                <annotationProcessorPaths>
-                                    <path>
-                                        <groupId>groupId</groupId>
-                                        <artifactId>anns</artifactId>
-                                        <version>1.0-SNAPSHOT</version>
-                                    </path>
-                                    <dependency>
-                                        <groupId>org.checkerframework</groupId>
-                                        <artifactId>checker-qual</artifactId>
-                                        <version>3.1.1</version>
-                                    </dependency>
-                                    <dependency>
-                                        <groupId>org.checkerframework</groupId>
-                                        <artifactId>checker</artifactId>
-                                        <version>3.1.1</version>
-                                    </dependency>
-                                    <dependency>
-                                        <groupId>org.bluej</groupId>
-                                        <artifactId>anns-threadchecker</artifactId>
-                                        <version>1.0-SNAPSHOT</version>
-                                    </dependency>
-                                    <dependency>
-                                        <groupId>org.bluej</groupId>
-                                        <artifactId>threadchecker</artifactId>
-                                        <version>1.0-SNAPSHOT</version>
-                                    </dependency>
-                                    <path>
-                                        <groupId>org.bluej</groupId>
-                                        <artifactId>anns-threadchecker</artifactId>
-                                        <version>1.0-SNAPSHOT</version>
-                                    </path>
-                                    <path>
-                                        <groupId>org.bluej</groupId>
-                                        <artifactId>threadchecker</artifactId>
-                                        <version>1.0-SNAPSHOT</version>
-                                    </path>
-                                </annotationProcessorPaths>
-                                <compilerArgs>
-                                    <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
-                                    <arg>-AskipDefs=records.grammar.|one.util.</arg>
-                                    <arg>-Astubs=${project.basedir}/../stubs</arg>
-                                    <arg>-Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels</arg>
+                                <compilerArgs combine.self="append">
                                     <arg>-Apropfiles=${project.basedir}/../app/src/main/resources/transformations_en.properties:${project.basedir}/../app/src/main/resources/expression_en.properties:${project.basedir}/../app/src/main/resources/function_en.properties:${project.basedir}/../app/src/main/resources/newcolumn_en.properties:${project.basedir}/../app/src/main/resources/dataentry_en.properties:${project.basedir}/../app/src/main/resources/main_en.properties:${project.basedir}/../app/src/main/resources/import_en.properties</arg>
                                     <arg>-Ahelpfiles=${project.basedir}/../app/src/main/help/agg-recipe.xml;${project.basedir}/../app/src/main/help/edit-settings.xml;${project.basedir}/../app/src/main/help/guess-format.xml;${project.basedir}/../app/src/main/help/edit-check.xml;${project.basedir}/../app/src/main/help/edit-column.xml;${project.basedir}/../app/src/main/help/edit-join.xml;${project.basedir}/../app/src/main/help/edit-r.xml;${project.basedir}/../app/src/main/help/edit-unit.xml;${project.basedir}/../app/src/main/help/split-by.xml</arg>
                                     <arg>-Afuncdocfiles=${project.basedir}/../app/src/main/funcdoc/boolean.xml;${project.basedir}/../app/src/main/funcdoc/comparison.xml;${project.basedir}/../app/src/main/funcdoc/conversion.xml;${project.basedir}/../app/src/main/funcdoc/core.xml;${project.basedir}/../app/src/main/funcdoc/datetime.xml;${project.basedir}/../app/src/main/funcdoc/list.xml;${project.basedir}/../app/src/main/funcdoc/listprocess.xml;${project.basedir}/../app/src/main/funcdoc/literals.xml;${project.basedir}/../app/src/main/funcdoc/lookup.xml;${project.basedir}/../app/src/main/funcdoc/math.xml;${project.basedir}/../app/src/main/funcdoc/number.xml;${project.basedir}/../app/src/main/funcdoc/operators.xml;${project.basedir}/../app/src/main/funcdoc/optional.xml;${project.basedir}/../app/src/main/funcdoc/text.xml</arg>
-                                    <!-- <arg>-AconservativeUninferredTypeArguments</arg> -->
-                                    <arg>-AsuppressWarnings=optional.parameter,optional.as.element.type,optional.collection</arg>
-                                    <arg>-Xplugin:threadchecker.TCPlugin</arg>
-                                    <arg>-Werror</arg>
                                 </compilerArgs>
                             </configuration>
                         </plugin>
@@ -170,9 +184,12 @@
                     <name>check</name>
                     <value>!full</value>
                 </property>
+                <activeByDefault>true</activeByDefault>
+                <!--
                 <file>
                     <missing>src/test/java/test/TestUtil.java</missing>
                 </file>
+                -->
             </activation>
 
             <build>
@@ -180,62 +197,15 @@
                     <plugins>
                         <plugin>
                             <artifactId>maven-compiler-plugin</artifactId>
-                            <version>3.7.0</version>
-                            <configuration>
-                                <annotationProcessors>
+                            <version>3.8.0</version>
+                            <configuration combine.children="append">
+                                <annotationProcessors combine.self="override">
                                     <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
                                     <annotationProcessor>org.checkerframework.checker.units.UnitsChecker</annotationProcessor>
                                     <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor>
 
                                     <annotationProcessor>annotation.identifier.IdentifierChecker</annotationProcessor>
                                 </annotationProcessors>
-                                <annotationProcessorPaths>
-                                    <dependency>
-                                        <groupId>groupId</groupId>
-                                        <artifactId>anns</artifactId>
-                                        <version>1.0-SNAPSHOT</version>
-                                    </dependency>
-                                    <dependency>
-                                        <groupId>org.checkerframework</groupId>
-                                        <artifactId>checker-qual</artifactId>
-                                        <version>3.1.1</version>
-                                    </dependency>
-                                    <dependency>
-                                        <groupId>org.checkerframework</groupId>
-                                        <artifactId>checker</artifactId>
-                                        <version>3.1.1</version>
-                                    </dependency>
-                                    <dependency>
-                                        <groupId>org.bluej</groupId>
-                                        <artifactId>anns-threadchecker</artifactId>
-                                        <version>1.0-SNAPSHOT</version>
-                                    </dependency>
-                                    <dependency>
-                                        <groupId>org.bluej</groupId>
-                                        <artifactId>threadchecker</artifactId>
-                                        <version>1.0-SNAPSHOT</version>
-                                    </dependency>
-                                    <path>
-                                        <groupId>org.bluej</groupId>
-                                        <artifactId>anns-threadchecker</artifactId>
-                                        <version>1.0-SNAPSHOT</version>
-                                    </path>
-                                    <path>
-                                        <groupId>org.bluej</groupId>
-                                        <artifactId>threadchecker</artifactId>
-                                        <version>1.0-SNAPSHOT</version>
-                                    </path>
-                                </annotationProcessorPaths>
-                                <compilerArgs>
-                                    <!-- location of the annotated JDK, which comes from a Maven dependency -->
-                                    <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
-                                    <arg>-AskipDefs=records.grammar.|one.util.</arg>
-                                    <arg>-Astubs=${project.basedir}/../stubs</arg>
-                                    <arg>-Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels</arg>
-                                    <arg>-Xplugin:threadchecker.TCPlugin</arg>
-                                    <!-- <arg>-AconservativeUninferredTypeArguments</arg> -->
-                                    <arg>-Werror</arg>
-                                </compilerArgs>
                             </configuration>
                         </plugin>
                     </plugins>

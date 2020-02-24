@@ -38,13 +38,6 @@
             <version>3.1.1</version>
             <scope>provided</scope>
         </dependency>
-        <!-- The annotated JDK to use (change to jdk7 if using Java 7) -->
-        <dependency>
-            <groupId>org.checkerframework</groupId>
-            <artifactId>jdk8</artifactId>
-            <version>3.1.1</version>
-            <scope>provided</scope>
-        </dependency>
 
         <dependency>
             <groupId>groupId</groupId>
@@ -130,7 +123,7 @@
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0</version>
+                <version>3.8.0</version>
             </plugin>
             
             <!-- Skip surefire, just run failsafe, from https://stackoverflow.com/questions/31474560/is-isolation-of-failsafe-and-surefire-runs-from-each-other-using-a-skip-approach -->

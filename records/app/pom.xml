@@ -110,13 +110,6 @@
             <version>3.1.1</version>
             <scope>provided</scope>
         </dependency>
-        <!-- The annotated JDK to use (change to jdk7 if using Java 7) -->
-        <dependency>
-            <groupId>org.checkerframework</groupId>
-            <artifactId>jdk8</artifactId>
-            <version>3.1.1</version>
-            <scope>provided</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.controlsfx</groupId>
@@ -216,9 +209,8 @@
     </dependencies>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <annotatedJdk>${org.checkerframework:jdk8:jar}</annotatedJdk>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <packrJar>${com.badlogicgames.packr:packr:jar}</packrJar>
     </properties>
 
@@ -544,7 +536,7 @@
 
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0</version>
+                <version>3.8.0</version>
             </plugin>
 
             <plugin>
