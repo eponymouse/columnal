@@ -11,6 +11,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
+import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.effect.BlendMode;
@@ -174,7 +175,9 @@ public abstract class TextEditorBase extends Region
             
             if (!updateCaretShapeQueued)
             {
-                FXUtility.runAfterNextLayout(() -> updateCaretShape(false));
+                Scene scene = getScene();
+                if (scene != null)
+                    FXUtility.runAfterNextLayout(scene, () -> updateCaretShape(false));
                 requestLayout();
                 updateCaretShapeQueued = true;
             }

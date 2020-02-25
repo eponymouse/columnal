@@ -435,7 +435,7 @@ public final class VirtualGrid implements ScrollBindable
 
         //FXUtility.onceNotNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
         // Need this to make column bar update once it's been sized:
-        FXUtility.onceNotNull(container.sceneProperty(), s -> FXUtility.runAfterNextLayout(this::updateSizeAndPositions));
+        FXUtility.onceNotNull(container.sceneProperty(), s -> FXUtility.runAfterNextLayout(s, this::updateSizeAndPositions));
     }
 
     private double scrollClampX(double idealScrollBy)

@@ -1,8 +1,6 @@
 package utility.gui;
 
 import com.google.common.collect.ImmutableList;
-import com.sun.javafx.tk.TKPulseListener;
-import com.sun.javafx.tk.Toolkit;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
@@ -44,6 +42,7 @@ import javafx.geometry.Rectangle2D;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.TextFieldListCell;
@@ -119,7 +118,7 @@ public class FXUtility
     private static boolean testingMode = false;
     private static final Set<String> loadedFonts = new HashSet<>();
     // Need to keep strong reference until they run:
-    private static ArrayList<TKPulseListener> pulseListeners = new ArrayList<>();
+    private static ArrayList<Runnable> pulseListeners = new ArrayList<>();
     private static WeakHashMap<Stage, MyHookProc> windowsHookSetOn = new WeakHashMap<>();
 
     public static <T> void enableDragFrom(ListView<T> listView, String type, TransferMode transferMode)
@@ -805,22 +804,22 @@ public class FXUtility
         });
     }
 
-    public static void runAfterNextLayout(final FXPlatformRunnable action)
+    public static void runAfterNextLayout(Scene scene, final FXPlatformRunnable action)
     {
-        //TODO In Java 9, use public toolkit
-        TKPulseListener pulseListener = new TKPulseListener()
+        Runnable pulseListener = new Runnable()
         {
             @Override
-            public void pulse()
+            public void run()
             {
                 runAfter(action);
-                Toolkit.getToolkit().removePostSceneTkPulseListener(this);
+                scene.removePostLayoutPulseListener(this);
                 pulseListeners.remove(this);
             }
         };
-        // Need to keep strong reference, as Toolkit only keeps weak reference so it may get GCed: 
+        // Need to keep strong reference, as Toolkit only keeps weak reference so it may get GCed:
+        // Not sure if this is true in the java 9 API but keep it in case
         pulseListeners.add(pulseListener);
-        Toolkit.getToolkit().addPostSceneTkPulseListener(pulseListener);
+        scene.addPostLayoutPulseListener(pulseListener);
     }
 
     public static boolean wordSkip(KeyEvent keyEvent)

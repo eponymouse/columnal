@@ -1,20 +1,15 @@
 package utility.gui;
 
 import annotation.units.DisplayLocation;
-import com.sun.javafx.scene.text.TextLayout;
 import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.shape.Path;
 import javafx.scene.text.TextFlow;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 @OnThread(Tag.FXPlatform)
 public class HelpfulTextFlow extends TextFlow
