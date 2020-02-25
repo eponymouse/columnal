@@ -10,7 +10,6 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
-import records.gui.ErrorableTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;

@@ -42,7 +42,7 @@ public class LexAutoComplete
     public void show(ImmutableList<LexCompletionGroup> groups)
     {
         window.setCompletions(groups);
-        FXUtility.runAfterNextLayout(() -> updateWindowPosition(window.listView.getItems().collect(ImmutableList.<LexCompletion>toImmutableList())));
+        FXUtility.runAfterNextLayout(window.getScene(), () -> updateWindowPosition(window.listView.getItems().collect(ImmutableList.<LexCompletion>toImmutableList())));
         updatePosition.playFromStart();
     }
 

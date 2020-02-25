@@ -2,6 +2,7 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="MavenAnnotationProcessors">
     <modules>
+      <module name="anns" />
       <module name="annsthreadchecker" />
       <module name="threadchecker" />
     </modules>
@@ -42,16 +43,16 @@
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-api:2.10.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-core:2.10.0" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-base:13.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:mac:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:win:13.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:13.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:mac:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:win:13.0.2" level="project" />
     <orderEntry type="module" module-name="gui-utility" />
     <orderEntry type="library" name="Maven: org.fxmisc.wellbehaved:wellbehavedfx:0.3" level="project" />
     <orderEntry type="library" name="Maven: net.coobird:thumbnailator:0.4.8" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna-platform:5.4.0" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna:5.4.0" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:13.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:mac:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:win:13.0.2" level="project" />
     <orderEntry type="module" module-name="expressions" />
     <orderEntry type="module" module-name="data" />
     <orderEntry type="module-library">
@@ -65,15 +66,14 @@
     </orderEntry>
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:3.1.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:3.1.1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:3.1.1" level="project" />
     <orderEntry type="library" name="Maven: org.controlsfx:controlsfx:8.40.12" level="project" />
     <orderEntry type="module" module-name="annsthreadchecker" scope="PROVIDED" />
     <orderEntry type="module" module-name="threadchecker" scope="PROVIDED" />
     <orderEntry type="library" name="Maven: info.debatty:java-string-similarity:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: net.jcip:jcip-annotations:1.0" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-web:13.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-web:mac:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-web:win:13.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-media:13.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-media:mac:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-media:win:13.0.2" level="project" />
   </component>
 </module>

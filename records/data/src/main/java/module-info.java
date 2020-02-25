@@ -1,6 +1,7 @@
 module data
 {
     exports records.data;
+    exports records.data.columntype;
     exports records.data.datatype;
     exports records.data.unit;
     exports records.jellytype;

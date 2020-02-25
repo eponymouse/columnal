@@ -1,13 +1,11 @@
-package records.gui;
+package utility.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -15,8 +13,6 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
-import utility.Pair;
-import utility.gui.GUI;
 
 /**
  * A GUI list of quick-fix suggestions.  Like a ListView, but sizes to fit properly

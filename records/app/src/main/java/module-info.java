@@ -1,21 +1,27 @@
-module lexeditor
+module app
 {
-    exports records.gui.lexeditor;
-    exports records.gui.lexeditor.completion;
-    
     requires anns;
     requires annsthreadchecker;
     requires data;
     requires expressions;
+    requires functions;
     requires guiutility;
+    requires lexeditor;
     requires parsers;
+    requires rinterop;
+    requires stf;
+    requires transformations;
     requires utility;
-
-    requires com.google.common;
+    
     requires java.desktop;
-    requires java.xml;
+    requires javafx.base;
     requires javafx.controls;
     requires javafx.graphics;
     requires javafx.web;
+    
+    requires controlsfx;
+    requires com.google.common;
     requires org.checkerframework.checker;
+    requires org.jsoup;
+    requires poi.ooxml;
 }

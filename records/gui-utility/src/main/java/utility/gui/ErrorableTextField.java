@@ -1,4 +1,4 @@
-package records.gui;
+package utility.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.DoubleExpression;
@@ -25,7 +25,7 @@ import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.FixList.FixInfo;
+import utility.gui.FixList.FixInfo;
 import styled.StyledCSS;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -35,9 +35,6 @@ import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.Utility;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
-import utility.gui.TimedFocusable;
 import utility.TranslationUtility;
 
 import java.util.Arrays;

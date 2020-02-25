@@ -1,44 +1,22 @@
 package records.gui;
 
-import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
-import javafx.beans.binding.ObjectExpression;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
-import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Column;
 import records.data.ColumnId;
 import records.data.Table;
-import records.error.InternalException;
-import records.error.UserException;
-import records.gui.AutoComplete.CompletionListener;
-import records.gui.AutoComplete.SimpleCompletion;
-import records.gui.AutoComplete.WhitespacePolicy;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.FXPlatformSupplier;
-import utility.IdentifierUtility;
 import utility.Pair;
-import utility.Utility;
+import utility.TranslationUtility;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
-import utility.gui.FancyList;
-import utility.gui.Instruction;
-import utility.TranslationUtility;
 
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
 public class EditAggregateSplitByDialog extends ErrorableLightDialog<ImmutableList<ColumnId>>

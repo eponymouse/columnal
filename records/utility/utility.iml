@@ -3,6 +3,7 @@
   <component name="ExternalSystem" externalSystem="Maven" />
   <component name="MavenAnnotationProcessors">
     <modules>
+      <module name="anns" />
       <module name="annsthreadchecker" />
       <module name="threadchecker" />
     </modules>
@@ -47,9 +48,9 @@
     <orderEntry type="module" module-name="annsthreadchecker" scope="PROVIDED" />
     <orderEntry type="module" module-name="threadchecker" scope="PROVIDED" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-base:13.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:mac:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:win:13.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:13.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:mac:13.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:win:13.0.2" level="project" />
     <orderEntry type="library" name="Maven: info.debatty:java-string-similarity:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: net.jcip:jcip-annotations:1.0" level="project" />
   </component>
