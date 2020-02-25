@@ -1,5 +1,10 @@
 module utility
 {
+    exports log;
+    exports records.error;
+    exports styled;
+    exports utility;
+
     requires anns;
     requires annsthreadchecker;
     requires parsers;
