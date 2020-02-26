@@ -23,5 +23,6 @@ module app
     requires com.google.common;
     requires org.checkerframework.checker;
     requires org.jsoup;
+    requires poi;
     requires poi.ooxml;
 }

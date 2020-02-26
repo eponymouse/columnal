@@ -174,7 +174,7 @@ public class ErrorableTextField<T> implements TimedFocusable
     }
 
 
-    protected void setPromptText(@UnknownInitialization(ErrorableTextField.class) ErrorableTextField<T> this, @Localized String prompt)
+    public void setPromptText(@UnknownInitialization(ErrorableTextField.class) ErrorableTextField<T> this, @Localized String prompt)
     {
         field.setPromptText(prompt);
     }

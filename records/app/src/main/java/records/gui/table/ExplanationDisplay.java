@@ -11,6 +11,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
@@ -172,7 +173,7 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
     }
     
     @OnThread(Tag.FXPlatform)
-    class ExplanationPane extends StackPane
+    final class ExplanationPane extends StackPane
     {
         private final TextFlow textFlow;
         
@@ -193,7 +194,9 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
                 StyledString contentFinal = content;
                 Platform.runLater(() -> {
                     textFlow.getChildren().setAll(contentFinal.toGUI());
-                    FXUtility.runAfterNextLayout(relayout);
+                    Scene scene = getScene();
+                    if (scene != null)
+                        FXUtility.runAfterNextLayout(scene, relayout);
                 });
             });
             textFlow.getStyleClass().add("explanation-flow");
@@ -214,7 +217,7 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
             
             getChildren().addAll(textFlow, deleteButton);
             getStyleClass().add("explanation-pane");
-            FXUtility.runAfterNextLayout(relayout);
+            FXUtility.onceNotNull(sceneProperty(), s -> FXUtility.runAfterNextLayout(s, relayout));
         }
     }
     

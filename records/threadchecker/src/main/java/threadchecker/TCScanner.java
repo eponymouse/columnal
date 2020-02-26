@@ -646,8 +646,16 @@ class TCScanner extends TreePathScanner<Void, Void>
 
                         for (int i = 0; i < invokeArgTypes.size(); i++)
                         {
-                            if (!types.isAssignable(types.capture(invokeArgTypes.get(i)), el.getParameters().get(i).asType()))
+                            try
+                            {
+                                if (!types.isAssignable(types.capture(invokeArgTypes.get(i)), el.getParameters().get(i).asType()))
+                                    return false;
+                            }
+                            catch (AssertionError e)
+                            {
+                                // Don't understand why this would happen; began in Java 9
                                 return false;
+                            }
                         }
                         return true;
                     })
