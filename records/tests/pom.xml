@@ -113,25 +113,7 @@
             <artifactId>javafx-swing</artifactId>
             <version>13.0.2</version>
         </dependency>
-
-        <dependency>
-            <groupId>groupId</groupId>
-            <artifactId>data</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <classifier>tests</classifier>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>groupId</groupId>
-            <artifactId>expressions</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <classifier>tests</classifier>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-
+        
     </dependencies>
 
 
@@ -153,6 +135,12 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
+                <configuration combine.self="override" combine.childen="override">
+                    <compilerArgs combine.self="override">
+                        <arg>-Werror</arg>
+                    </compilerArgs>
+                </configuration>
+                    
             </plugin>
 
             <!-- Skip surefire, just run failsafe, from https://stackoverflow.com/questions/31474560/is-isolation-of-failsafe-and-surefire-runs-from-each-other-using-a-skip-approach -->
