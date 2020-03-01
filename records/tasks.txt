@@ -36,7 +36,7 @@ Selecting table name on calculate didn't work (columnal2.mov, 18:39).  Why not?
 
 I thought I made a quick fix for people prefixing "=" to their Calculate formulas?  But apparently not, columnal2.mov 19:20.
 
-Check help thing is incomplete (columnal2.mov, 23:37).  Also Check type should have a custom option (Is that what "Once" is?)
+Check type "Once" needs clearer name
 
 There should be better text at the top of table selection when you edit an existing table-source by clicking the hyperlink.
 
