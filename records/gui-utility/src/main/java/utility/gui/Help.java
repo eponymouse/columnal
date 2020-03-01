@@ -4,24 +4,18 @@ import annotation.help.qual.HelpKey;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import log.Log;
-import nu.xom.Builder;
-import nu.xom.Document;
-import nu.xom.Element;
-import nu.xom.Elements;
-import nu.xom.Nodes;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.grammar.GrammarUtility;
+import utility.Pair;
 import utility.ResourceUtility;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -32,57 +26,23 @@ class Help
 {
     // Maps file names (minus extension) to
     // help item names to help info
-    private static LoadingCache<String, Map<String, HelpInfo>> helpCache = CacheBuilder.newBuilder().build(
-        new CacheLoader<String, Map<String, HelpInfo>>()
+    private static LoadingCache<Pair<String, String>, HelpInfo> helpCache = CacheBuilder.newBuilder().build(
+        new CacheLoader<Pair<String, String>, HelpInfo>()
         {
             @Override
-            public Map<String, HelpInfo> load(String s) throws Exception
+            public HelpInfo load(Pair<String, String> s) throws Exception
             {
-                return loadFile(s);
+                return loadFile(s.getFirst(), s.getSecond());
             }
         }
     );
 
     @SuppressWarnings("i18n") // Because we assert that the loaded XML is localized
-    private static Map<String, HelpInfo> loadFile(String fileStem)
+    private static HelpInfo loadFile(String fileStem, String id)
     {
-        try
-        {
-            Map<String, HelpInfo> foundNodes = new HashMap<>();
-            Builder builder = new Builder();
-            // We can't pass a URL through to the XML library because it doesn't understand files in JARs.
-            // So it's important we pass an InputStream instead
-            @Nullable InputStream resource = ResourceUtility.getResourceAsStream(fileStem + ".help");
-            if (resource == null)
-                throw new FileNotFoundException(fileStem + ".help");
-            
-            Document doc = builder.build(resource);
+        ResourceBundle resourceBundle = ResourceBundle.getBundle(fileStem);
 
-            Nodes helpNodes = doc.query("//help");
-
-            // We don't do many checks here because it should have been checked by XSD
-            // already, and at worst, we just lack the tooltip by hitting the catch:
-            for (int i = 0; i < helpNodes.size(); i++)
-            {
-                Element helpNode = (Element)helpNodes.get(i);
-                String id = helpNode.getAttributeValue("id");
-                String title = helpNode.getAttributeValue("title");
-                @Localized String shortText = helpNode.getChildElements("short").get(0).getValue();
-                Elements fullParas = helpNode.getChildElements("full").get(0).getChildElements("p");
-                List<@Localized String> fullText = new ArrayList<>();
-                for (int j = 0; j < fullParas.size(); j++)
-                {
-                    fullText.add(GrammarUtility.collapseSpaces(fullParas.get(j).getValue()));
-                }
-                foundNodes.put(id, new HelpInfo(title, shortText, fullText));
-            }
-            return foundNodes;
-        }
-        catch (Exception e)
-        {
-            Log.log(e);
-            throw new RuntimeException(e);
-        }
+        return new HelpInfo(resourceBundle.getString(id + ".title"), resourceBundle.getString(id), ImmutableList.copyOf(GrammarUtility.collapseSpaces(resourceBundle.getString(id + ".full")).split("£££££")));
     }
 
     static class HelpInfo
@@ -104,7 +64,7 @@ class Help
         String[] rootAndEntry = helpKey.split("/");
         try
         {
-            return helpCache.get(rootAndEntry[0]).get(rootAndEntry[1]);
+            return helpCache.get(new Pair<>(rootAndEntry[0], rootAndEntry[1]));
         }
         catch (ExecutionException e)
         {

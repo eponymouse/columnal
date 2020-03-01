@@ -20,6 +20,8 @@
         <xsl:result-document method="text" href="file:///{$myOutputDir}/{$rootId}_en.properties">
             <xsl:for-each select="help">
                 <xsl:value-of select="@id"/>=<xsl:value-of select="short"/><xsl:text>&#xa;</xsl:text>
+                <xsl:value-of select="@id"/>.title=<xsl:value-of select="@title"/><xsl:text>&#xa;</xsl:text>
+                <xsl:value-of select="@id"/>.full=<xsl:for-each select="full/*"><xsl:value-of select="replace(text(), '\n', ' ')"/>£££££</xsl:for-each><xsl:text>&#xa;</xsl:text>
             </xsl:for-each>
         </xsl:result-document>
     </xsl:template>
