@@ -9,8 +9,8 @@ module data
     exports records.typeExp;
     exports records.typeExp.units;
 
-    requires anns;
-    requires annsthreadchecker;
+    requires static anns;
+    requires static annsthreadchecker;
     requires parsers;
     requires utility;
 
@@ -18,6 +18,6 @@ module data
     requires com.google.common;
     requires common;
     requires javafx.graphics;
-    requires org.checkerframework.checker;
+    requires static org.checkerframework.checker;
     requires smtinterpol;
 }

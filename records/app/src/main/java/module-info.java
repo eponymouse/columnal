@@ -1,7 +1,9 @@
 module app
 {
-    requires anns;
-    requires annsthreadchecker;
+    exports records.gui;
+
+    requires static anns;
+    requires static annsthreadchecker;
     requires data;
     requires expressions;
     requires functions;
@@ -21,7 +23,7 @@ module app
     
     requires controlsfx;
     requires com.google.common;
-    requires org.checkerframework.checker;
+    requires static org.checkerframework.checker;
     requires org.jsoup;
     requires poi;
     requires poi.ooxml;

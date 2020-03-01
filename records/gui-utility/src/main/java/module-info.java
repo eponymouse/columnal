@@ -2,8 +2,8 @@ module guiutility
 {
     exports utility.gui;
 
-    requires anns;
-    requires annsthreadchecker;
+    requires static anns;
+    requires static annsthreadchecker;
     requires parsers;
     requires utility;
 
@@ -14,8 +14,7 @@ module guiutility
     requires javafx.base;
     requires javafx.controls;
     requires javafx.graphics;
-    requires org.checkerframework.checker;
+    requires static org.checkerframework.checker;
     requires thumbnailator;
     requires wellbehavedfx;
-    requires xom;
 }

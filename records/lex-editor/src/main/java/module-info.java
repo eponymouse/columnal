@@ -3,8 +3,8 @@ module lexeditor
     exports records.gui.lexeditor;
     exports records.gui.lexeditor.completion;
     
-    requires anns;
-    requires annsthreadchecker;
+    requires static anns;
+    requires static annsthreadchecker;
     requires data;
     requires expressions;
     requires guiutility;
@@ -17,5 +17,5 @@ module lexeditor
     requires javafx.controls;
     requires javafx.graphics;
     requires javafx.web;
-    requires org.checkerframework.checker;
+    requires static org.checkerframework.checker;
 }

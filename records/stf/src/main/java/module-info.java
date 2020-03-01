@@ -4,8 +4,8 @@ module stf
     exports records.gui.grid;
     exports records.gui.stable;
     
-    requires anns;
-    requires annsthreadchecker;
+    requires static anns;
+    requires static annsthreadchecker;
     requires data;
     requires guiutility;
     requires parsers;
@@ -14,6 +14,6 @@ module stf
     requires com.google.common;
     requires javafx.controls;
     requires javafx.graphics;
-    requires org.checkerframework.checker;
+    requires static org.checkerframework.checker;
     requires wellbehavedfx;
 }

@@ -8,8 +8,8 @@ module functions
     exports records.transformations.function.optional;
     exports records.transformations.function.text;
     
-    requires anns;
-    requires annsthreadchecker;
+    requires static anns;
+    requires static annsthreadchecker;
     requires data;
     requires expressions;
     requires parsers;
@@ -18,5 +18,5 @@ module functions
     requires big.math;
     requires com.google.common;
     requires commons.lang3;
-    requires org.checkerframework.checker;
+    requires static org.checkerframework.checker;
 }

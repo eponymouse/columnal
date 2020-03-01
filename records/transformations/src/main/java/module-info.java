@@ -3,8 +3,8 @@ module transformations
     exports records.errors;
     exports records.transformations;
     
-    requires anns;
-    requires annsthreadchecker;
+    requires static anns;
+    requires static annsthreadchecker;
     requires data;
     requires expressions;
     requires functions;
@@ -17,5 +17,5 @@ module transformations
     requires javafx.base;
     requires javafx.controls;
     requires javafx.graphics;
-    requires org.checkerframework.checker;
+    requires static org.checkerframework.checker;
 }

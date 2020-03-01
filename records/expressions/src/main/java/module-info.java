@@ -6,8 +6,8 @@ module expressions
     exports records.transformations.expression.type;
     exports records.transformations.expression.visitor;
     
-    requires anns;
-    requires annsthreadchecker;
+    requires static anns;
+    requires static annsthreadchecker;
     requires data;
     requires parsers;
     requires utility;
@@ -15,5 +15,5 @@ module expressions
     requires common;
     requires com.google.common;
     requires javafx.graphics;
-    requires org.checkerframework.checker;
+    requires static org.checkerframework.checker;
 }

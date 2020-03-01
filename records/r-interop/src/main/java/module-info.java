@@ -2,13 +2,13 @@ module rinterop
 {
     exports records.rinterop;
     
-    requires anns;
-    requires annsthreadchecker;
+    requires static anns;
+    requires static annsthreadchecker;
     requires data;
     requires utility;
     
     requires com.google.common;
     requires commons.io;
     requires commons.lang3;
-    requires org.checkerframework.checker;
+    requires static org.checkerframework.checker;
 }

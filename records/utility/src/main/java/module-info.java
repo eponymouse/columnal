@@ -5,8 +5,8 @@ module utility
     exports styled;
     exports utility;
 
-    requires anns;
-    requires annsthreadchecker;
+    requires static anns;
+    requires static annsthreadchecker;
     requires parsers;
 
     requires antlr4.runtime;
@@ -18,6 +18,6 @@ module utility
     requires javafx.base;
     requires javafx.graphics;
     requires org.apache.logging.log4j;
-    requires org.checkerframework.checker;
+    requires static org.checkerframework.checker;
     
 }

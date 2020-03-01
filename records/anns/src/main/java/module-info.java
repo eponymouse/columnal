@@ -8,7 +8,7 @@ module anns
     exports annotation.units;
     exports annotation.userindex.qual;
 
-    requires org.checkerframework.checker;
+    requires static org.checkerframework.checker;
     requires jdk.compiler;
     requires xom;
 }
