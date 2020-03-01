@@ -60,13 +60,6 @@
             <version>0.3</version>
         </dependency>
 
-        <!-- XOM for parsing XML help files: -->
-        <dependency>
-            <groupId>com.io7m.xom</groupId>
-            <artifactId>xom</artifactId>
-            <version>1.2.10</version>
-        </dependency>
-
         <dependency>
             <groupId>org.bluej</groupId>
             <artifactId>anns-threadchecker</artifactId>
