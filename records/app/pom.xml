@@ -671,6 +671,53 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-toolchains-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <toolchains>
+                        <jdk>
+                            <version>11.0.2</version>
+                            <vendor>oracle-openjdk</vendor>
+                        </jdk>
+                    </toolchains>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>toolchain</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Must run as mvn toolchains:toolchain exec:exec -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <toolchain>jdk</toolchain>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>--module-path</argument> <!-- or -p  -->
+                        <!-- automatically creates the modulepath using all project dependencies,
+                             also adding the project build directory -->
+                        <modulepath/>
+                        <argument>-Xmx4096M</argument>
+                        <argument>-Dlog4j.configurationFile=dev-log4j2.xml</argument>
+                        <argument>--module</argument>
+                        <argument>app/records.gui.Main</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <profiles>
