@@ -6,6 +6,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import log.Log;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.grammar.GrammarUtility;
@@ -37,12 +38,21 @@ class Help
         }
     );
 
-    @SuppressWarnings("i18n") // Because we assert that the loaded XML is localized
     private static HelpInfo loadFile(String fileStem, String id)
     {
         ResourceBundle resourceBundle = ResourceBundle.getBundle(fileStem);
 
-        return new HelpInfo(resourceBundle.getString(id + ".title"), resourceBundle.getString(id), ImmutableList.copyOf(GrammarUtility.collapseSpaces(resourceBundle.getString(id + ".full")).split("£££££")));
+        // Don't understand why I need all here.  Surely i18n should be enough?
+
+        @SuppressWarnings("all") // Because we assert that the loaded XML is localized
+        @LocalizableKey String titleKey = id + ".title";
+        @SuppressWarnings("all")
+        @LocalizableKey String shortKey = id;
+        @SuppressWarnings("all")
+        @LocalizableKey String fullKey = id + ".full";
+        @SuppressWarnings("i18n")
+        ImmutableList<@Localized String> split = ImmutableList.copyOf(GrammarUtility.collapseSpaces(resourceBundle.getString(fullKey)).split("£££££"));
+        return new HelpInfo(resourceBundle.getString(titleKey), resourceBundle.getString(shortKey), split);
     }
 
     static class HelpInfo
