@@ -132,7 +132,7 @@
                         <plugin>
                             <artifactId>maven-compiler-plugin</artifactId>
                             <version>3.8.0</version>
-                            <configuration combine.children="append">
+                            <configuration>
                                 <annotationProcessors combine.self="override">
                                     <!-- Add all the checkers you want to enable during the full-check compile here -->
                                     <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
@@ -145,7 +145,7 @@
                                     <annotationProcessor>annotation.funcdoc.FuncDocChecker</annotationProcessor>
                                     <annotationProcessor>annotation.recorded.RecordedChecker</annotationProcessor>
                                 </annotationProcessors>
-                                <compilerArgs combine.self="append">
+                                <compilerArgs combine.children="append">
                                     <arg>-Apropfiles=${project.basedir}/../app/src/main/resources/transformations_en.properties:${project.basedir}/../app/src/main/resources/expression_en.properties:${project.basedir}/../app/src/main/resources/function_en.properties:${project.basedir}/../app/src/main/resources/newcolumn_en.properties:${project.basedir}/../app/src/main/resources/dataentry_en.properties:${project.basedir}/../app/src/main/resources/main_en.properties:${project.basedir}/../app/src/main/resources/import_en.properties</arg>
                                     <arg>-Ahelpfiles=${project.basedir}/../app/src/main/help/agg-recipe.xml;${project.basedir}/../app/src/main/help/edit-settings.xml;${project.basedir}/../app/src/main/help/guess-format.xml;${project.basedir}/../app/src/main/help/edit-check.xml;${project.basedir}/../app/src/main/help/edit-column.xml;${project.basedir}/../app/src/main/help/edit-join.xml;${project.basedir}/../app/src/main/help/edit-r.xml;${project.basedir}/../app/src/main/help/edit-unit.xml;${project.basedir}/../app/src/main/help/split-by.xml</arg>
                                     <arg>-Afuncdocfiles=${project.basedir}/../app/src/main/funcdoc/boolean.xml;${project.basedir}/../app/src/main/funcdoc/comparison.xml;${project.basedir}/../app/src/main/funcdoc/conversion.xml;${project.basedir}/../app/src/main/funcdoc/core.xml;${project.basedir}/../app/src/main/funcdoc/datetime.xml;${project.basedir}/../app/src/main/funcdoc/list.xml;${project.basedir}/../app/src/main/funcdoc/listprocess.xml;${project.basedir}/../app/src/main/funcdoc/literals.xml;${project.basedir}/../app/src/main/funcdoc/lookup.xml;${project.basedir}/../app/src/main/funcdoc/math.xml;${project.basedir}/../app/src/main/funcdoc/number.xml;${project.basedir}/../app/src/main/funcdoc/operators.xml;${project.basedir}/../app/src/main/funcdoc/optional.xml;${project.basedir}/../app/src/main/funcdoc/text.xml</arg>
