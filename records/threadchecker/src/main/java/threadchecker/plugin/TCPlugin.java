@@ -1,7 +1,6 @@
-package threadchecker;
+package threadchecker.plugin;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 
 import com.sun.source.util.JavacTask;

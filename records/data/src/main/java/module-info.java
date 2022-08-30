@@ -16,8 +16,7 @@ module data
 
     requires antlr4.runtime;
     requires com.google.common;
-    requires common;
+    //requires common;
     requires javafx.graphics;
-    requires static org.checkerframework.checker;
-    requires smtinterpol;
+    //requires static org.checkerframework.checker;
 }

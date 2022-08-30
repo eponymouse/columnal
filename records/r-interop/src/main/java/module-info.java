@@ -10,5 +10,5 @@ module rinterop
     requires com.google.common;
     requires commons.io;
     requires commons.lang3;
-    requires static org.checkerframework.checker;
+    //requires static org.checkerframework.checker;
 }

@@ -1,0 +1,15 @@
+dependencies {
+    implementation project(':utility')
+    implementation project(':data')
+    implementation project(':expressions')
+    implementation project(':parsers')
+    implementation libs.javaSMT
+    implementation libs.guava
+    implementation libs.commons.lang3
+    implementation 'ch.obermuhlner:big-math:2.0.0'
+    compileOnly project(':anns')
+    compileOnly project(':anns-threadchecker')
+    compileOnly project(':threadchecker')
+}
+
+description = 'functions'

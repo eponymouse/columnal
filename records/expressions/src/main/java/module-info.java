@@ -12,8 +12,8 @@ module expressions
     requires parsers;
     requires utility;
 
-    requires common;
+    //requires common;
     requires com.google.common;
     requires javafx.graphics;
-    requires static org.checkerframework.checker;
+    //requires static org.checkerframework.checker;
 }

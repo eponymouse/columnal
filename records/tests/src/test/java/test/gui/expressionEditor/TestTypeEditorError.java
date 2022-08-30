@@ -323,7 +323,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
 
         public MultiSubstringMatcher(ImmutableList<String> substrings)
         {
-            super(substrings.stream().collect(Collectors.joining("\u2026")));
+            super("contains string(s)", true, substrings.stream().collect(Collectors.joining("\u2026")));
             this.substrings = substrings;
         }
 
@@ -340,12 +340,6 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
                 }
             }
             return true;
-        }
-
-        @Override
-        protected String relationship()
-        {
-            return "contains string(s)";
         }
     }
 }

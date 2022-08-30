@@ -14,6 +14,6 @@ module stf
     requires com.google.common;
     requires javafx.controls;
     requires javafx.graphics;
-    requires static org.checkerframework.checker;
+    //requires static org.checkerframework.checker;
     requires wellbehavedfx;
 }

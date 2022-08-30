@@ -17,5 +17,5 @@ module transformations
     requires javafx.base;
     requires javafx.controls;
     requires javafx.graphics;
-    requires static org.checkerframework.checker;
+    //requires static org.checkerframework.checker;
 }

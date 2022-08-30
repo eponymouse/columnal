@@ -19,7 +19,7 @@
  This file is subject to the Classpath exception as provided in the  
  LICENSE.txt file that accompanied this code.
  */
-package threadchecker;
+package threadchecker.plugin;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,6 +83,9 @@ import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
+import threadchecker.LocatedTag;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 /**
  * A visitor class that visits the whole AST and does checks against the

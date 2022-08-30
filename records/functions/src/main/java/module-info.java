@@ -18,5 +18,5 @@ module functions
     requires big.math;
     requires com.google.common;
     requires commons.lang3;
-    requires static org.checkerframework.checker;
+    //requires static org.checkerframework.checker;
 }

@@ -211,7 +211,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         sleep(500);
         Calculate calculate = getCalculate(mainWindowActions);
         Expression expression = TestUtil.checkNonNull(calculate.getCalculatedColumns().get(new ColumnId(columnNameToReplace)));
-        MatcherAssert.assertThat(expression, Matchers.isIn(ImmutableList.of(IdentExpression.column(new TableId("Table1"), new ColumnId(columnNameToReplace)), IdentExpression.column(new ColumnId(columnNameToReplace)))));
+        MatcherAssert.assertThat(expression, Matchers.is(Matchers.in(ImmutableList.of(IdentExpression.column(new TableId("Table1"), new ColumnId(columnNameToReplace)), IdentExpression.column(new ColumnId(columnNameToReplace))))));
         
     }
 

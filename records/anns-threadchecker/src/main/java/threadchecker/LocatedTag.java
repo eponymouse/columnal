@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-class LocatedTag
+public class LocatedTag
 {
-    final Tag tag;
+    public final Tag tag;
     private final boolean ignoreParent;
     private final boolean requireSynchronized;
     private final String info;

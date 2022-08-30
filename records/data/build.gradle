@@ -1,0 +1,20 @@
+dependencies {
+    implementation project(':parsers')
+    implementation project(':utility')
+    implementation libs.guava
+    implementation libs.antlr
+    implementation libs.commons.lang3
+    implementation libs.javaSMT
+    implementation libs.commons.io
+    testImplementation libs.bundles.junitWithQuickcheck
+    compileOnly project(':anns')
+    compileOnly project(':anns-threadchecker')
+    compileOnly project(':threadchecker')
+    
+}
+
+javafx {
+    modules = [ 'javafx.graphics' ]
+}
+
+description = 'data'

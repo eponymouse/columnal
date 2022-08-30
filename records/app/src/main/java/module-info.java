@@ -23,7 +23,7 @@ module app
     
     requires controlsfx;
     requires com.google.common;
-    requires static org.checkerframework.checker;
+    //requires static org.checkerframework.checker;
     requires org.jsoup;
     requires poi;
     requires poi.ooxml;

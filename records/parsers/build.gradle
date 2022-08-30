@@ -1,0 +1,27 @@
+plugins {
+    id 'antlr'
+}
+
+apply plugin: 'antlr'
+apply plugin: 'java-library'
+
+dependencies {
+    antlr libs.antlr.exec
+    implementation libs.antlr
+}
+
+generateGrammarSource {
+    arguments += ['-visitor', '-package', 'records.grammar', '-Werror', '-no-listener']
+    outputDirectory = new File(buildDir.toString() + "/generated/sources/antlr/main/records/grammar/")
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir "${buildDir}/generated/sources/antlr/main"
+            srcDir "src/main/java"
+        }
+    }
+}
+
+description = 'parsers'

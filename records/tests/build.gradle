@@ -1,0 +1,34 @@
+dependencies {
+    implementation project(':app')
+    implementation project(':data')
+    implementation project(':expressions')
+    implementation project(':functions')
+    implementation project(':gui-utility')
+    implementation project(':lex-editor')
+    implementation project(':parsers')
+    implementation project(':r-interop')
+    implementation project(':stf')
+    implementation project(':transformations')
+    implementation project(':utility')
+    testImplementation 'org.hamcrest:hamcrest-library:2.1'
+    implementation libs.commons.io
+    implementation 'org.apache.poi:poi-ooxml:4.1.2'
+    implementation libs.guava
+    implementation 'one.util:streamex:0.6.3'
+    implementation libs.javaSMT
+    implementation libs.commons.lang3
+    implementation 'org.controlsfx:controlsfx:8.40.12'
+    testImplementation libs.bundles.junitWithQuickcheck
+    testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
+    testImplementation 'org.testfx:testfx-junit:4.0.15-alpha'
+    testImplementation 'org.testfx:openjfx-monocle:jdk-12.0.1+2'
+    testCompileOnly project(':anns')
+    testCompileOnly project(':anns-threadchecker')
+    testCompileOnly project(':threadchecker')
+}
+
+javafx {
+    modules = [ 'javafx.controls', 'javafx.swing' ]
+}
+
+description = 'tests'

@@ -260,7 +260,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
 
         public MultiSubstringMatcher(ImmutableList<String> substrings)
         {
-            super(substrings.stream().collect(Collectors.joining("\u2026")));
+            super("contains string(s)", true, substrings.stream().collect(Collectors.joining("\u2026")));
             this.substrings = substrings;
         }
 
@@ -277,12 +277,6 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                 }
             }
             return true;
-        }
-
-        @Override
-        protected String relationship()
-        {
-            return "contains string(s)";
         }
     }
 }

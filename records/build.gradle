@@ -1,0 +1,38 @@
+plugins {
+  id 'org.checkerframework' version '0.6.15' apply false
+  id 'org.openjfx.javafxplugin' version '0.0.10' apply false
+}
+
+subprojects { subproject ->
+  apply plugin: 'java-library'
+  apply plugin: 'org.checkerframework'
+  apply plugin: 'org.openjfx.javafxplugin'
+
+  checkerFramework {
+    checkers = []
+    extraJavacArgs = [
+    ]
+  }
+  javafx {
+    version = "13.0.2"
+  }
+  
+  dependencies {
+    checkerFramework 'org.checkerframework:checker:3.24.0'
+    implementation 'org.checkerframework:checker-qual:3.24.0'
+  }
+
+  repositories {
+    mavenCentral()
+    maven {
+      url "https://artifactory.nimblygames.com/artifactory/ng-public-release/"
+    }
+  }
+  tasks.withType(JavaCompile) {
+    options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:module", "-Werror", "-parameters"]
+    options.encoding = 'UTF-8'
+    options.release = 11
+  }
+  sourceCompatibility = 11
+  targetCompatibility = 11
+}
