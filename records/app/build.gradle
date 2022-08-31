@@ -1,5 +1,6 @@
 plugins {
     id 'application'
+    id 'io.miret.etienne.sass' version '1.4.1'
 }
 apply plugin: 'java'
 
@@ -28,6 +29,23 @@ dependencies {
     implementation 'net.java.dev.jna:jna-platform:5.4.0'
     implementation 'com.badlogicgames.packr:packr:3.0.3'
 }
+
+task copySCSS(type: Copy) {
+    from "${projectDir}/src/main/scss"
+    from "${projectDir}/src/main/scss/light"
+    include "*.scss"
+    into "${buildDir}/generated/sources/scss/light"
+}
+
+compileSass {
+    dependsOn copySCSS
+    outputDir = project.file("${buildDir}/resources/main")
+    sourceDir = project.file("${buildDir}/generated/sources/scss/light")
+    noErrorCss()
+}
+
+build.dependsOn(compileSass)
+jar.dependsOn(compileSass)
 
 ext {
     javaMainClass = "records.gui.Main"
