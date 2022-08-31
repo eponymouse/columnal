@@ -1020,9 +1020,9 @@ public class Utility
         return stream.filter(x -> x != null);
     }
 
-    public static <T> Stream<T> filterOptional(Stream<Optional<T>> stream)
+    public static <T extends @NonNull Object> Stream<T> filterOptional(Stream<Optional<T>> stream)
     {
-        return stream.flatMap(x -> x.isPresent() ? Stream.<T>of(x.get()) : Stream.<T>empty());
+        return stream.flatMap(Optional::stream);
     }
 
     // Having different arity versions of this prevents the varargs/generics warning
@@ -1305,7 +1305,7 @@ public class Utility
 
     // If item present in map, wrap it in optional, otherwise return empty optional
     // Added bonus: this method is type-safe in the key type, unlike Map.get.
-    public static <K, V> Optional<V> getIfPresent(Map<K, V> map, K key)
+    public static <K extends @NonNull Object, V> Optional<V> getIfPresent(Map<K, V> map, K key)
     {
         // We can't use Optional.ofNullable because the checker (wrongly IMO) rejects that:
         @Nullable V value = map.get(key);
@@ -1335,10 +1335,11 @@ public class Utility
         return (a >= b) ? a : b;
     }
 
-    @SuppressWarnings("initialization")
-    public static <T> @Initialized T later(@UnknownInitialization T t)
+    public static <T extends @NonNull Object> @Initialized T later(@UnknownInitialization T t)
     {
-        return t;
+        @SuppressWarnings("assignment")
+        @Initialized T r = t; 
+        return r;
     }
 
     public static String preprocessDate(String original)
@@ -2198,7 +2199,7 @@ public class Utility
     /**
      * Type-safe get method for Map.  Note important that it's Map[K,V] and not Map[? super K, V]
      */
-    public static <K, V> @Nullable V get(Map<K, V> map, K key)
+    public static <K extends @NonNull Object, V> @Nullable V get(Map<K, V> map, K key)
     {
         return map.get(key);
     }
@@ -2206,7 +2207,7 @@ public class Utility
     /**
      * Type-safe get method for Map.  Note important that it's Map[K,V] and not Map[? super K, V]
      */
-    public static <K, V, E extends Throwable> V getOrThrow(Map<K, V> map, K key, Supplier<E> makeException) throws E
+    public static <K extends @NonNull Object, V, E extends Throwable> V getOrThrow(Map<K, V> map, K key, Supplier<E> makeException) throws E
     {
         V v = map.get(key);
         if (v != null)
@@ -2218,7 +2219,7 @@ public class Utility
     /**
      * Type-safe contains method for Set.  Note important that it's Map[K,V] and not Map[? super K, V]
      */
-    public static <K> boolean contains(Set<K> set, K key)
+    public static <K extends @NonNull Object> boolean contains(Set<K> set, K key)
     {
         return set.contains(key);
     }

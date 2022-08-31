@@ -27,13 +27,6 @@ dependencies {
     implementation 'net.java.dev.jna:jna:5.4.0'
     implementation 'net.java.dev.jna:jna-platform:5.4.0'
     implementation 'com.badlogicgames.packr:packr:3.0.3'
-    compileOnly project(':anns')
-    compileOnly project(':anns-threadchecker')
-    compileOnly project(':threadchecker')
-}
-
-javafx {
-    modules = [ 'javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web' ]
 }
 
 ext {

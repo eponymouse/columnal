@@ -1,5 +1,6 @@
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
+/*
 package org.junit;
 
 class Assert
@@ -19,3 +20,4 @@ package org.testfx.service.query;
 interface NodeQuery {
     <T extends Node> @NonNull T query();
 }
+*/

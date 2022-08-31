@@ -3,23 +3,71 @@ plugins {
   id 'org.openjfx.javafxplugin' version '0.0.10' apply false
 }
 
-subprojects { subproject ->
-  apply plugin: 'java-library'
-  apply plugin: 'org.checkerframework'
-  apply plugin: 'org.openjfx.javafxplugin'
+// We configure this here because it determines JavaFX modules and stubs:
+def projectsToJavaFX = [
+  app: ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],
+  data: ['javafx.base', 'javafx.graphics'],
+  expressions: ['javafx.graphics'],
+  'gui-utility': ['javafx.base', 'javafx.controls', 'javafx.graphics'],
+  'lex-editor': ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],
+  stf: ['javafx.base', 'javafx.controls', 'javafx.graphics'],
+  transformations:  ['javafx.base', 'javafx.controls', 'javafx.graphics'],
+  utility:  ['javafx.base', 'javafx.graphics']
+]
 
-  checkerFramework {
-    checkers = []
-    extraJavacArgs = [
-    ]
-  }
-  javafx {
-    version = "13.0.2"
-  }
-  
-  dependencies {
-    checkerFramework 'org.checkerframework:checker:3.24.0'
-    implementation 'org.checkerframework:checker-qual:3.24.0'
+subprojects { subproject ->
+  if (!subproject.name.startsWith("ann") && !subproject.name.equals("threadchecker") && !subproject.name.equals("tests")) {
+    apply plugin: 'java-library'
+    apply plugin: 'org.checkerframework'
+    apply plugin: 'org.openjfx.javafxplugin'
+
+    def stubs = ["JavaGeneral", "Values"]
+    stubs += projectsToJavaFX.getOrDefault(subproject.name, [])
+    
+    checkerFramework {
+      checkers = [
+              'org.checkerframework.checker.nullness.NullnessChecker',
+              'org.checkerframework.checker.optional.OptionalChecker',
+              'org.checkerframework.checker.units.UnitsChecker',
+              //'org.checkerframework.checker.i18n.I18nChecker', // TODO restore on 1st September
+              'annotation.ValueTypeChecker',
+              'annotation.userindex.UserIndexChecker',
+              'annotation.help.HelpFileChecker',
+              'annotation.funcdoc.FuncDocChecker',
+              'annotation.recorded.RecordedChecker'
+      ]
+      extraJavacArgs = [
+          //'-AskipDefs=records.grammar.|one.util.',
+          "-Astubs=" + stubs.collect{s -> return "$rootDir" + File.separator + "stubs" + File.separator + s + ".astub"}.findAll {s -> return new File(s).exists()}.join(File.pathSeparator),
+          '-Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels',
+          '-AsuppressWarnings=optional.parameter,optional.as.element.type,optional.collection',
+          '-Xplugin:threadchecker.plugin.TCPlugin',
+          //"-Apropfiles=$rootDir/app/src/main/resources/transformations_en.properties:$rootDir/app/src/main/resources/expression_en.properties:$rootDir/app/src/main/resources/function_en.properties:$rootDir/app/src/main/resources/newcolumn_en.properties:$rootDir/app/src/main/resources/dataentry_en.properties:$rootDir/app/src/main/resources/main_en.properties:$rootDir/app/src/main/resources/import_en.properties",
+          "-Ahelpfiles=$rootDir/app/src/main/help/agg-recipe.xml;$rootDir/app/src/main/help/edit-settings.xml;$rootDir/app/src/main/help/guess-format.xml;$rootDir/app/src/main/help/edit-check.xml;$rootDir/app/src/main/help/edit-column.xml;$rootDir/app/src/main/help/edit-join.xml;$rootDir/app/src/main/help/edit-r.xml;$rootDir/app/src/main/help/edit-unit.xml;$rootDir/app/src/main/help/split-by.xml",
+          "-Afuncdocfiles=$rootDir/app/src/main/funcdoc/boolean.xml;$rootDir/app/src/main/funcdoc/comparison.xml;$rootDir/app/src/main/funcdoc/conversion.xml;$rootDir/app/src/main/funcdoc/core.xml;$rootDir/app/src/main/funcdoc/datetime.xml;$rootDir/app/src/main/funcdoc/list.xml;$rootDir/app/src/main/funcdoc/listprocess.xml;$rootDir/app/src/main/funcdoc/literals.xml;$rootDir/app/src/main/funcdoc/lookup.xml;$rootDir/app/src/main/funcdoc/math.xml;$rootDir/app/src/main/funcdoc/number.xml;$rootDir/app/src/main/funcdoc/operators.xml;$rootDir/app/src/main/funcdoc/optional.xml;$rootDir/app/src/main/funcdoc/text.xml",
+      ]
+    }
+    javafx {
+      version = "13.0.2"
+      // We need at least javafx.base and javafx.graphics everywhere because the threadchecker uses it:
+      // TODO fix this!
+      modules = projectsToJavaFX.getOrDefault(subproject.name, ['javafx.base', 'javafx.graphics'])
+    }
+
+    dependencies {
+      checkerFramework 'org.checkerframework:checker:3.24.0'
+      implementation 'org.checkerframework:checker-qual:3.24.0'
+
+      annotationProcessor project(':anns')
+      compileOnly project(':anns')
+      annotationProcessor project(':anns-threadchecker')
+      compileOnly project(':anns-threadchecker')
+      annotationProcessor project(':threadchecker')
+      compileOnly project(':threadchecker')
+    }
+
+    sourceCompatibility = 11
+    targetCompatibility = 11
   }
 
   repositories {
@@ -33,6 +81,5 @@ subprojects { subproject ->
     options.encoding = 'UTF-8'
     options.release = 11
   }
-  sourceCompatibility = 11
-  targetCompatibility = 11
+
 }

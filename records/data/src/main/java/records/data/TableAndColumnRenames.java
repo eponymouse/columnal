@@ -127,6 +127,6 @@ public class TableAndColumnRenames
     // Copies all renames forward from srcTableId to id
     public void useColumnsFromTo(TableId srcTableId, TableId id)
     {
-        renames.computeIfAbsent(id, t -> new Pair<>(null, new HashMap<>())).getSecond().putAll(renames.getOrDefault(srcTableId, new Pair<>(null, new HashMap<>())).getSecond());
+        renames.computeIfAbsent(id, t -> new Pair<@Nullable TableId, HashMap<ColumnId, ColumnId>>(null, new HashMap<>())).getSecond().putAll(renames.getOrDefault(srcTableId, new Pair<>(null, new HashMap<>())).getSecond());
     }
 }

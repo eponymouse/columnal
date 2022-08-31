@@ -458,7 +458,7 @@ public class FXUtility
      * until after the constructor because it requires user mouse action,
      * so it's safe to assume the item is initialized.
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings("return")
     @OnThread(Tag.FX)
     @Pure
     public static <T> T mouse(@UnknownInitialization T item)
@@ -467,7 +467,7 @@ public class FXUtility
     }
 
     // As mouse method above, but for when we are doing a key listener
-    @SuppressWarnings("initialization")
+    @SuppressWarnings("return")
     @Pure
     public static <T> T keyboard(@UnknownInitialization T item)
     {
@@ -475,7 +475,7 @@ public class FXUtility
     }
 
     // As mouse method above, but for when we are doing a focus listener
-    @SuppressWarnings("initialization")
+    @SuppressWarnings("return")
     @Pure
     public static <T> T focused(@UnknownInitialization T item)
     {

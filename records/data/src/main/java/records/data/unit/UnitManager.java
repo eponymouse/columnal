@@ -42,7 +42,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 09/12/2016.
  */
-public class UnitManager
+public final class UnitManager
 {
     // Left means it's an alias, Right means full-unit
     private final Map<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> builtInUnits = new HashMap<>();

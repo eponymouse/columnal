@@ -1,3 +1,7 @@
+apply plugin: 'java-library'
+apply plugin: 'org.checkerframework'
+apply plugin: 'org.openjfx.javafxplugin'
+
 dependencies {
     implementation project(':app')
     implementation project(':data')
@@ -22,13 +26,37 @@ dependencies {
     testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
     testImplementation 'org.testfx:testfx-junit:4.0.15-alpha'
     testImplementation 'org.testfx:openjfx-monocle:jdk-12.0.1+2'
+    testAnnotationProcessor project(':anns')
+    testAnnotationProcessor project(':anns-threadchecker')
+    testAnnotationProcessor project(':threadchecker')
     testCompileOnly project(':anns')
     testCompileOnly project(':anns-threadchecker')
     testCompileOnly project(':threadchecker')
 }
 
 javafx {
-    modules = [ 'javafx.controls', 'javafx.swing' ]
+    modules = [ 'javafx.base', 'javafx.controls', 'javafx.swing' ]
+    configuration = "testImplementation"
+}
+
+test {
+    useJUnit()
+
+    scanForTestClasses = false
+    filter {
+        includeTestsMatching "Test*"
+        includeTestsMatching "Prop*"
+    }
+    
+    jvmArgs += ['-Xmx2G',
+            '-Djava.awt.headless=true',
+            '-Dtestfx.robot=glass', 
+            '-Dtestfx.headless=true',
+            '-Dprism.order=sw', 
+            '-Dprism.text=t2k', 
+            '-Dglass.platform=Monocle', 
+            '-Dmonocle.platform=Headless', 
+            '-Dheadless.geometry=1920x1200-32']
 }
 
 description = 'tests'

@@ -454,6 +454,7 @@ public class TypesDialog extends Dialog<Void>
                 }
             }
 
+            @SuppressWarnings("prefer.map.and.orelse")
             @Override
             @OnThread(Tag.FXPlatform)
             protected Pair<TagValueEdit, FXPlatformSupplier<Either<@Localized String, TagType<JellyType>>>> makeCellContent(Optional<Either<@Localized String, TagType<JellyType>>> initialContent, boolean editImmediately)

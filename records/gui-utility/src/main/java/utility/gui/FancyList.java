@@ -245,8 +245,8 @@ public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends 
 
     }
 
-    @RequiresNonNull({"children", "cells"})
-    private void updateChildren(@UnknownInitialization(Object.class) FancyList<T, CELL_CONTENT> this)
+    //@RequiresNonNull({"bottomPane", "children", "cells", "scrollPane"})
+    private void updateChildren(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this)
     {
         for (int i = 0; i < cells.size(); i++)
         {

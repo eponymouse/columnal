@@ -7,14 +7,13 @@ dependencies {
     implementation libs.javaSMT
     implementation libs.commons.io
     testImplementation libs.bundles.junitWithQuickcheck
+    annotationProcessor project(':anns')
     compileOnly project(':anns')
+    annotationProcessor project(':anns-threadchecker')
     compileOnly project(':anns-threadchecker')
+    annotationProcessor project(':threadchecker')
     compileOnly project(':threadchecker')
     
-}
-
-javafx {
-    modules = [ 'javafx.graphics' ]
 }
 
 description = 'data'

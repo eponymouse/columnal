@@ -158,7 +158,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         tableBorderOverlay = new TableBorderOverlay();
         floatingSupplier.addItem(tableBorderOverlay);
 
-        @SuppressWarnings("initialization") // Don't understand why I need this
+        @SuppressWarnings("assignment") // Don't understand why I need this
         @Initialized TableHat hat = new TableHat(this, parent, check);
         this.tableHat = hat;
         floatingSupplier.addItem(this.tableHat);

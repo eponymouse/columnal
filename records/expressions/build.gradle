@@ -6,14 +6,6 @@ dependencies {
     implementation libs.guava
     implementation libs.commons.lang3
     testImplementation libs.bundles.junitWithQuickcheck
-    compileOnly project(':anns')
-    compileOnly project(':anns-threadchecker')
-    compileOnly project(':threadchecker')
 }
-
-javafx {
-    modules = [ 'javafx.graphics' ]
-}
-
 
 description = 'expressions'

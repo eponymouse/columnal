@@ -233,6 +233,7 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
         }
     }
 
+    @SuppressWarnings("recorded")
     public static TypeExpression parseTypeExpression(String src) throws UserException, InternalException
     {
         class WrappedUserException extends RuntimeException
@@ -336,7 +337,8 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
                     for (int i = 0; i < ctx.fieldName().size(); i++)
                     {
                         @ExpressionIdentifier String fieldName = IdentifierUtility.asExpressionIdentifier(ctx.fieldName(i).getText());
-                        members.add(new Pair<>(fieldName, visitTypeExpression(ctx.typeExpression(i))));
+                        if (fieldName != null)
+                            members.add(new Pair<>(fieldName, visitTypeExpression(ctx.typeExpression(i))));
                     }
                     
                     return new RecordTypeExpression(members.build());

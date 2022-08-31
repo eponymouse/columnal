@@ -63,7 +63,7 @@ public class TypeApplyExpression extends TypeExpression
         for (int i = 0; i < arguments.size(); i++)
         {
             // Bit of a hack to look for RecordTypeExpression exactly...
-            Either<UnitExpression, TypeExpression> e = arguments.get(i);
+            Either<@Recorded UnitExpression, @Recorded TypeExpression> e = arguments.get(i);
             sb.append(e.<String>either(u -> "({" + u.save(saveDestination,  true) + "})", x -> x instanceof RecordTypeExpression ? x.save(saveDestination, renames) : "(" + x.save(saveDestination, renames) + ")"));
         }
         return sb.toString();

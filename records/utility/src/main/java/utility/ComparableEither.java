@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ComparableEither<A extends Comparable<?super A>, B extends Comparable<? super B>> extends Either<A, B> implements Comparable<ComparableEither<A, B>>
 {
+    @SuppressWarnings("bound")
     private ComparableEither(@Nullable A a, @Nullable B b, boolean isA)
     {
         super(a, b, isA);

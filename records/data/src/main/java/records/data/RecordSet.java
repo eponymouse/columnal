@@ -61,7 +61,7 @@ public abstract class RecordSet
         Set<ColumnId> colNames = new HashSet<>();
         for (SimulationFunction<RecordSet, ? extends Column> f : columns)
         {
-            @SuppressWarnings("initialization")
+            @SuppressWarnings("argument")
             Column newCol = f.apply(this);
             this.columns.add(newCol);
             colNames.add(newCol.getName());

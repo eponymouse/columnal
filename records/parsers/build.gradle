@@ -1,13 +1,30 @@
-plugins {
+/*plugins {
     id 'antlr'
 }
-
-apply plugin: 'antlr'
+*/
 apply plugin: 'java-library'
+apply plugin: 'antlr'
+
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+repositories() {
+    mavenCentral()
+}
+
+checkerFramework {
+    checkers = [
+    ]
+    extraJavacArgs = [
+    ]
+}
 
 dependencies {
-    antlr libs.antlr.exec
-    implementation libs.antlr
+    //antlr libs.antlr.exec
+    //implementation libs.antlr
+    antlr 'org.antlr:antlr4:4.7.1'
+    implementation 'org.antlr:antlr4-runtime:4.7.1'
 }
 
 generateGrammarSource {

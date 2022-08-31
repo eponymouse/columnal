@@ -5,20 +5,6 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.dataflow.qual.Pure;
 
-// Pretty much all methods in JavaFX can be treated as UnknownInitialization
-// because they only require initialisation of their own class.
-
-package javafx.beans.property;
-class SimpleObjectProperty<T>
-{
-    @Pure T get();
-}
-package javafx.beans.binding;
-class DoubleBinding
-{
-    void bind(@UnknownInitialization(javafx.beans.binding.DoubleBinding.class) DoubleBinding this, Observable... obs);
-}
-
 package javafx.css;
 class Styleable
 {
@@ -35,9 +21,10 @@ class Point2D
 package javafx.scene;
 class Parent
 {
+    ObservableList<Node> getChildren(@UnknownInitialization(javafx.scene.Parent.class) Parent this);
     // Can *request* layout even if children are uninitialized:
     void requestLayout(@UnknownInitialization(javafx.scene.Parent.class) Parent this);
-    ObservableList<Node> getChildren(@UnknownInitialization(javafx.scene.Parent.class) Parent this);
+    
 }
 
 class Node
@@ -110,142 +97,6 @@ class Scene
     WritableImage snapshot(@Nullable WritableImage image);
 }
 
-package javafx.scene.control;
-class DialogPane
-{
-    /* The initialisation is a slight lie.  This method is called from
-       DialogPane's constructor, but after all other initialisation: */
-    protected Node createButtonBar(@UnknownInitialization(javafx.scene.control.DialogPane.class) DialogPane this);
-    public final ObservableList<ButtonType> getButtonTypes(@UnknownInitialization(javafx.scene.control.DialogPane.class) DialogPane this);
-    protected Node createButton(@UnknownInitialization(javafx.scene.control.DialogPane.class) DialogPane this, ButtonType buttonType);
-    public Node lookupButton(@UnknownInitialization(javafx.scene.control.DialogPane.class) DialogPane this, ButtonType buttonType);
-}
-class Dialog<R>
-{
-    void setResizable(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, boolean b);
-    void initStyle(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, StageStyle s);
-    void initModality(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, Modality m);
-    void initOwner(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, Window w);
-    DialogPane getDialogPane(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
-    void setDialogPane(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, DialogPane value);
-    void setResultConverter(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, Callback<ButtonType, @Nullable R> a);
-    ObjectProperty<Callback<ButtonType, @Nullable R>> resultConverterProperty(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
-    void setResult(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, @Nullable R r);
-    R getResult(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
-    void setOnShown(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
-    void setOnHidden(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
-    void setOnShowing(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
-    void setOnHiding(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
-    void setTitle(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, @Localized String s);
-    void close(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
-    
-    ReadOnlyBooleanProperty showingProperty(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
-    
-    double getX(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
-    double getY(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
-    double getWidth(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
-    double getHeight(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
-    
-    void setX(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, double x);
-    void setY(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, double y);
-    void setWidth(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, double width);
-    void setHeight(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, double height);
-}
-class Labeled
-{
-    void setContentDisplay(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, ContentDisplay contentDisplay);
-    void setText(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, String s);
-    StringProperty textProperty(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this);
-    void setGraphic(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, @Nullable Node graphic);
-    void setAlignment(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, Pos value);
-}
-class ButtonBase
-{
-    public void setOnAction(@UnknownInitialization(javafx.scene.control.ButtonBase.class) Button this, @NonNull EventHandler<ActionEvent> ev);
-}
-class Label
-{
-    
-}
-class ToggleButton
-{
-    ToggleButton(@Localized String text);
-    ToggleButton(@Localized String text, Node graphic);
-    BooleanProperty selectedProperty(@UnknownInitialization(javafx.scene.control.ToggleButton.class) ToggleButton this); 
-}
-class ScrollPane
-{
-    Property viewportBoundsProperty(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this);
-    Property contentProperty(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this);
-    Bounds getViewportBounds(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this);
-    Node getContent(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this);
-    void setContent(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this, Node content);
-    void setFitToWidth(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this, boolean b);
-    void setFitToHeight(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this, boolean b);
-}
-@Interned class ButtonType
-{
-
-}
-class ComboBox<T>
-{
-    ObjectProperty<@Nullable T> valueProperty();
-}
-class TableView<S>
-{
-    ObsverableList<S> getItems(@UnknownInitialization(javafx.scene.control.TableView.class) TableView<S> this);
-    ObservableList<TableColumn<S,?>> getColumns(@UnknownInitialization(javafx.scene.control.TableView.class) TableView<S> this);
-}
-class ListView<T>
-{
-    void setCellFactory(@UnknownInitialization(javafx.scene.control.ListView.class) ListView<T> this, Callback factory);
-    MultipleSelectionModel getSelectionModel(@UnknownInitialization(javafx.scene.control.ListView.class) ListView this);
-    void setOnKeyPressed(@UnknownInitialization(javafx.scene.control.ListView.class) ListView this, EventHandler handler);
-    List getItems(@UnknownInitialization(javafx.scene.control.ListView.class) ListView<T> this);
-    void setEditable(@UnknownInitialization(javafx.scene.control.ListView.class) ListView<T> this, boolean b);
-}
-class SelectionModel<T>
-{
-    ReadOnlyObjectProperty<@Nullable T> selectedItemProperty();
-    @Nullable T getSelectedItem();
-}
-class TableCell<S, T>
-{
-     void setGraphic(@Nullable Node a);
-}
-class Cell<T>
-{
-     @Nullable T getItem(@UnknownInitialization(javafx.scene.control.Cell.class) Cell this);
-     ReadOnlyBooleanProperty emptyProperty(@UnknownInitialization(javafx.scene.control.Cell.class) Cell this);
-     void updateItem(@Nullable T item, boolean empty);
-}
-class IndexedCell<T>
-{
-     int getIndex(@UnknownInitialization(javafx.scene.control.IndexedCell.class) IndexedCell this);
-}
-class PopupControl
-{
-    ObservableList<String> getStyleClass(@UnknownInitialization(javafx.scene.control.PopupControl.class) PopupControl this);
-    void setSkin(@UnknownInitialization(javafx.scene.control.PopupControl.class) PopupControl this, Skin<?> value);
-    ObjectProperty<Skin<?>> skinProperty(@UnknownInitialization(javafx.scene.control.PopupControl.class) PopupControl this);
-}
-class Menu
-{
-    Menu(@NonNull String text, @Nullable Node graphic, @NonNull MenuItem... menuItems);
-}
-class MenuItem
-{
-    void setDisable(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this, boolean b);
-    void setOnMenuValidation(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this,EventHandler e);
-    <T extends Event> void addEventHandler(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this,EventType t, EventHandler e);
-    StringProperty textProperty(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this);
-    ReadOnlyObjectProperty parentMenuProperty(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this);
-    List<String> getStyleClass(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this);
-}
-class Tooltip
-{
-    public static void install(@UnknownInitialization(javafx.scene.Node.class) Node node, Tooltip t);
-}
 package javafx.scene.shape;
 class Shape
 {
@@ -380,34 +231,3 @@ class FileChooser
     @Nullable List<@NonNull File> showOpenMultipleDialog(@Nullable Window w);
     @Nullable File showSaveDialog(@Nullable Window w);
 }
-/*
-package org.scenicview;
-class ScenicView
-{
-    // Not actually true (will throw NPE) but we only this for debugging and don't want to do a null check:
-    void show(@Nullable Scene target);
-}
-package org.controlsfx.control;
-class SegmentedButton
-{
-    List getButtons(@UnknownInitialization(org.controlsfx.control.SegmentedButton.class) SegmentedButton this);
-    ToggleGroup getToggleGroup(@UnknownInitialization(org.controlsfx.control.SegmentedButton.class) SegmentedButton this);
-}
-class PopOver
-{
-    void setDetachable(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, boolean b);
-    BooleanProperty detachedProperty(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this);
-    void show(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, @NonNull Node owner);
-    void setArrowIndent(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, double x);
-    void setArrowSize(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, double x);
-    void setArrowLocation(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, ArrowLocation location);
-    StackPane getRoot(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this);
-    void setContentNode(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, Node content);
-    ReadOnlyObjectProperty<Scene> sceneProperty(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this);
-}
-package javafx.embed.swing;
-class SwingFXUtils
-{
-    static BufferedImage fromFXImage(Image img, @Nullable BufferedImage bimg);
-}
-*/

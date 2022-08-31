@@ -267,7 +267,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
             }
 
             @Override
-            @SuppressWarnings("initialization") // Mainly because awkward to refer to our own type
+            @SuppressWarnings("override.receiver") // Mainly because awkward to refer to our own type
             protected Dimension2D getEditorDimension()
             {
                 if (sidePaneNode == null)

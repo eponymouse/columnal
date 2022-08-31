@@ -9,12 +9,5 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-api:2.13.1'
     implementation 'org.apache.logging.log4j:log4j-core:2.13.1'
     implementation 'info.debatty:java-string-similarity:1.2.1'
-    compileOnly project(':anns')
-    compileOnly project(':anns-threadchecker')
-    compileOnly project(':threadchecker')
 }
-javafx {
-    modules = [ 'javafx.base', 'javafx.graphics' ]
-}
-
 description = 'utility'

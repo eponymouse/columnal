@@ -625,7 +625,7 @@ final class LexCompletionList extends Region
     }
     
     @OnThread(Tag.FXPlatform)
-    private class CompletionRow extends Region
+    private final class CompletionRow extends Region
     {
         private final HelpfulTextFlow mainText;
         private final Label sideText;

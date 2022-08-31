@@ -55,8 +55,8 @@ public class RecordTypeExp extends TypeExp
         
         // LHS of pair is us, RHS is b
         HashMap<@ExpressionIdentifier String, Pair<@Nullable TypeExp, @Nullable TypeExp>> occurs = new HashMap<>();
-        knownMembers.forEach((k, v) -> occurs.put(k, new Pair<>(v, null)));
-        bt.knownMembers.forEach((k, v) -> occurs.merge(k, new Pair<>(null, v), (oldVal, newVal) -> new Pair<>(oldVal.getFirst(), newVal.getSecond())));
+        knownMembers.forEach((k, v) -> occurs.put(k, new Pair<@Nullable TypeExp, @Nullable TypeExp>(v, null)));
+        bt.knownMembers.forEach((k, v) -> occurs.merge(k, new Pair<@Nullable TypeExp, @Nullable TypeExp>(null, v), (oldVal, newVal) -> new Pair<@Nullable TypeExp, @Nullable TypeExp>(oldVal.getFirst(), newVal.getSecond())));
 
         HashMap<@ExpressionIdentifier String, TypeExp> unified = new HashMap<>();
         

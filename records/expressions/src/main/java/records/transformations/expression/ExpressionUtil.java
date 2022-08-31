@@ -137,9 +137,9 @@ public class ExpressionUtil
                             {
                                 case "column":
                                     if (idents.size() == 2)
-                                        return Stream.of(new Pair<>(new TableId(idents.get(0)), new ColumnId(idents.get(1))));
+                                        return Stream.of(new Pair<@Nullable TableId, ColumnId>(new TableId(idents.get(0)), new ColumnId(idents.get(1))));
                                     else if (idents.size() == 1)
-                                        return Stream.of(new Pair<>(null, new ColumnId(idents.get(0))));
+                                        return Stream.of(new Pair<@Nullable TableId, ColumnId>(null, new ColumnId(idents.get(0))));
                                     break;
                             }
                         }

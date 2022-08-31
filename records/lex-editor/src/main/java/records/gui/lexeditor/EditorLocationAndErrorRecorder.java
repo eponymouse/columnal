@@ -177,7 +177,12 @@ public class EditorLocationAndErrorRecorder
             @Nullable CanonicalSpan resolvedLocation = positions.get(e);
             if (resolvedLocation != null)
             {
-                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(SaveDestination.TO_EDITOR_FULL_NAME, BracketedStatus.DONT_NEED_BRACKETS, new TableAndColumnRenames(ImmutableMap.of())), q)));
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListInt(quickFixes, q -> {
+                    CanonicalSpan replPos = positions.get(q.getReplacementTarget());
+                    if (replPos == null)
+                        throw new InternalException("Could not resolve location for expression: " + q.getReplacementTarget());
+                    return new TextQuickFix(replPos, exp -> exp.save(SaveDestination.TO_EDITOR_FULL_NAME, BracketedStatus.DONT_NEED_BRACKETS, new TableAndColumnRenames(ImmutableMap.of())), q);
+                }));
             }
             else
             {
@@ -192,7 +197,12 @@ public class EditorLocationAndErrorRecorder
             @Nullable CanonicalSpan resolvedLocation = positions.get(e);
             if (resolvedLocation != null)
             {
-                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(SaveDestination.TO_EDITOR_FULL_NAME, new TableAndColumnRenames(ImmutableMap.of())), q)));
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListInt(quickFixes, q -> {
+                    CanonicalSpan replPos = positions.get(q.getReplacementTarget());
+                    if (replPos == null)
+                        throw new InternalException("Could not resolve location for expression: " + q.getReplacementTarget());
+                    return new TextQuickFix(replPos, exp -> exp.save(SaveDestination.TO_EDITOR_FULL_NAME, new TableAndColumnRenames(ImmutableMap.of())), q);
+                }));
             }
             else
             {
@@ -207,7 +217,12 @@ public class EditorLocationAndErrorRecorder
             @Nullable CanonicalSpan resolvedLocation = positions.get(e);
             if (resolvedLocation != null)
             {
-                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListI(quickFixes, q -> new TextQuickFix(positions.get(q.getReplacementTarget()), exp -> exp.save(SaveDestination.TO_EDITOR_FULL_NAME, false), q)));
+                return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListInt(quickFixes, q -> {
+                    CanonicalSpan replPos = positions.get(q.getReplacementTarget());
+                    if (replPos == null)
+                        throw new InternalException("Could not resolve location for expression: " + q.getReplacementTarget());
+                    return new TextQuickFix(replPos, exp -> exp.save(SaveDestination.TO_EDITOR_FULL_NAME, false), q);
+                }));
             }
             else
             {

@@ -7,9 +7,6 @@ dependencies {
     implementation libs.guava
     implementation libs.commons.lang3
     implementation 'ch.obermuhlner:big-math:2.0.0'
-    compileOnly project(':anns')
-    compileOnly project(':anns-threadchecker')
-    compileOnly project(':threadchecker')
 }
 
 description = 'functions'

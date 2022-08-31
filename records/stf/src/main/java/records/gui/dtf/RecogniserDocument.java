@@ -116,7 +116,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
         latestValue = recogniser.process(ParseProgress.fromStart(text), false)
                         .flatMap(SuccessDetails::requireEnd);
         // Once latestValue is set, we're fully initialised but checker doesn't know this:
-        @SuppressWarnings("initialization")
+        @SuppressWarnings("assignment")
         @Initialized RecogniserDocument<V> initialized = this;
         FXPlatformRunnable reset = () -> {
             Utility.later(this).replaceText(0, Utility.later(this).getLength(), valueOnFocusGain);

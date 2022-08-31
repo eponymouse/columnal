@@ -148,7 +148,7 @@ public class AggregateSplitByPane extends BorderPane
         @Override
         protected Pair<ColumnPane, FXPlatformSupplier<Optional<ColumnId>>> makeCellContent(Optional<Optional<ColumnId>> initialContent, boolean editImmediately)
         {
-            ColumnPane columnPane = new ColumnPane(!initialContent.isPresent() ? null : initialContent.get().orElse(null), editImmediately);
+            ColumnPane columnPane = new ColumnPane(initialContent.flatMap(Function.identity()).orElse(null), editImmediately);
             return new Pair<>(columnPane, () -> Optional.ofNullable(columnPane.currentValue().getValue()));
         }
 

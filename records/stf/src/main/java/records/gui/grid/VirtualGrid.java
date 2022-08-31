@@ -61,6 +61,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.checkerframework.checker.units.qual.UnknownUnits;
 import org.checkerframework.dataflow.qual.Pure;
@@ -117,7 +118,7 @@ import java.util.stream.DoubleStream;
  */
 
 @OnThread(Tag.FXPlatform)
-public final class VirtualGrid implements ScrollBindable
+public final class VirtualGrid extends GridWithColumnWidths implements ScrollBindable
 {
     private static final double MAX_EXTRA_X_PIXELS = 800;
     private static final double MAX_EXTRA_Y_PIXELS = 800;
@@ -201,10 +202,6 @@ public final class VirtualGrid implements ScrollBindable
     private final ObjectProperty<@AbsColIndex Integer> currentColumns = new SimpleObjectProperty<>();
 
     private static final double rowHeight = 24;
-    private static final double DEFAULT_COLUMN_WIDTH = 100;
-    private static final double fixedFirstColumnWidth = 20;
-
-    private final Map<@AbsColIndex Integer, Double> customisedColumnWidths = new HashMap<>();
     private double @Nullable[] cachedColumnLeftX;
 
     // null means the grid doesn't have focus:
@@ -823,15 +820,8 @@ public final class VirtualGrid implements ScrollBindable
         
         return cachedColumnLeftX[endColIndexExcl] - cachedColumnLeftX[startColIndexIncl];
     }
-
-    @Pure
-    public final double getColumnWidth(@UnknownInitialization(Object.class) VirtualGrid this, int columnIndex)
-    {
-        if (columnIndex == 0)
-            return fixedFirstColumnWidth;
-        else
-            return customisedColumnWidths.getOrDefault(columnIndex, DEFAULT_COLUMN_WIDTH);
-    }
+    
+    
 
     @Pure
     public final ImmutableMap<@AbsColIndex Integer, Double> getCustomisedColumnWidths()

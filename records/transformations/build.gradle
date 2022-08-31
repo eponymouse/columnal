@@ -6,15 +6,7 @@ dependencies {
     implementation project(':expressions')
     implementation project(':functions')
     implementation project(':r-interop')
-    compileOnly project(':anns')
-    compileOnly project(':anns-threadchecker')
-    compileOnly project(':threadchecker')
     implementation libs.guava
 }
-
-javafx {
-    modules = [ 'javafx.base', 'javafx.controls', 'javafx.graphics' ]
-}
-
 
 description = 'transformations'

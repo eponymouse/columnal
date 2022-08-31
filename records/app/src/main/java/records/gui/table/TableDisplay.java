@@ -550,11 +550,13 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         return showAddColumnArrow(table);
     }
 
+    @RequiresNonNull("columnDisplay")
     private int internal_getColumnCount(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table)
     {
         return (displayColumns == null ? 0 : displayColumns.size()) + (showAddColumnArrow(table) ? 1 : 0);
     }
 
+    @RequiresNonNull("columnDisplay")
     private boolean showAddColumnArrow(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table)
     {
         return addColumnOperation(table) != null &&
@@ -571,7 +573,8 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     }
 
     // The last data row in grid area terms, not including any append buttons
-    @SuppressWarnings("units")
+    @SuppressWarnings({"contracts.precondition.override", "units"})
+    @RequiresNonNull("columnDisplay")
     @OnThread(Tag.FXPlatform)
     public GridAreaCellPosition getDataDisplayBottomRightIncl(@UnknownInitialization(DataDisplay.class) TableDisplay this)
     {
@@ -743,7 +746,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         if (table instanceof VisitableTransformation)
         {
             @UnknownInitialization(DataDisplay.class) TableDisplay us = this;
-            @SuppressWarnings("initialization") // Don't understand why we need this here
+            @SuppressWarnings("assignment") // Don't understand why we need this here
             @Initialized TableHat hat = new TableHat(us, parent, (VisitableTransformation) table);
             this.tableHat = hat;
             supplierFloating.addItem(this.tableHat);
@@ -785,7 +788,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         };
     }
     
-    @RequiresNonNull({"onModify", "parent", "recordSet", "table"})
+    @RequiresNonNull({"columnDisplay", "errorMessage", "onModify", "parent", "recordSet", "table"})
     private void setupWithRecordSet(@UnknownInitialization(DataDisplay.class) TableDisplay this)
     {
         @NonNull RecordSet recordSetFinal = this.recordSet;
@@ -823,7 +826,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         });
 
         // Should be done last:
-        @SuppressWarnings("initialization") @Initialized TableDisplay usInit = this;
+        @SuppressWarnings("assignment") @Initialized TableDisplay usInit = this;
         recordSet.setListener(usInit);
     }
 

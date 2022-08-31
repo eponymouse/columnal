@@ -21,7 +21,7 @@ public class TCPlugin implements Plugin
     @Override
     public String getName()
     {
-        return "threadchecker.TCPlugin";
+        return "threadchecker.plugin.TCPlugin";
     }
 
     @Override

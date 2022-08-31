@@ -240,7 +240,9 @@ public abstract class TextEditorBase extends Region
         // Must construct this after textFlow:
         this.caretAndSelectionNodes = new CaretAndSelectionNodes();
         
-        getChildren().setAll(caretAndSelectionNodes.backgroundsPane, caretAndSelectionNodes.errorUnderlinePane, textFlow);
+        // Don't understand why calling getChildren() directly doesn't satisfy the checker
+        Utility.later(this).
+            getChildren().setAll(caretAndSelectionNodes.backgroundsPane, caretAndSelectionNodes.errorUnderlinePane, textFlow);
 
         
         setOnContextMenuRequested(e -> {

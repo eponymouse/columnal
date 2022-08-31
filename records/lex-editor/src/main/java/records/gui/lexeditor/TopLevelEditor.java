@@ -299,12 +299,12 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
      * the caret.
      */
     @OnThread(Tag.FXPlatform)
-    private class InformationPopup extends PopOver //implements ErrorMessageDisplayer
+    private final class InformationPopup extends PopOver //implements ErrorMessageDisplayer
     {
         private final EnumMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> displays = new EnumMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>(DisplayType.class);
 
-        private final TextFlow textFlow;
-        private final FixList fixList;
+        private final TextFlow textFlow = new TextFlow();
+        private final FixList fixList = new FixList(ImmutableList.of());
 
         // null when definitely stopped.
         private @Nullable Animation hidingAnimation;
@@ -332,11 +332,8 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             });
 
             //Log.debug("Showing error [initial]: \"" + errorMessage.get().toPlain() + "\"");
-            textFlow = new TextFlow();
             textFlow.getStyleClass().add("expression-info-error");
             textFlow.managedProperty().bind(textFlow.visibleProperty());
-
-            fixList = new FixList(ImmutableList.of());
 
             BorderPane container = new BorderPane(textFlow, null, null, fixList, null);
             container.getStyleClass().add("expression-info-content");

@@ -34,7 +34,7 @@ public class TaggedRecogniser extends Recogniser<@ImmediateValue TaggedValue>
     {
         ParseProgress pp = parseProgress.skipSpaces();
         
-        List<Pair<Integer, TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>>> tagsLargestFirst = new ArrayList<>(Utility.streamIndexed(tags).collect(Collectors.<Pair<Integer, TagType<Recogniser<@ImmediateValue ?>>>>toList()));
+        List<Pair<Integer, TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>>> tagsLargestFirst = new ArrayList<>(Utility.streamIndexed(tags).collect(Collectors.<Pair<Integer, TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>>>toList()));
         // Longest names first:
         Collections.<Pair<Integer, TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>>>sort(tagsLargestFirst, Comparator.<Pair<Integer, TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>>, Integer>comparing(p -> -p.getSecond().getName().length()));
 

@@ -6,14 +6,6 @@ dependencies {
     implementation libs.guava
     implementation 'org.controlsfx:controlsfx:8.40.12'
     implementation 'org.fxmisc.wellbehaved:wellbehavedfx:0.3'
-    compileOnly project(':anns')
-    compileOnly project(':anns-threadchecker')
-    compileOnly project(':threadchecker')
 }
-
-javafx {
-    modules = [ 'javafx.controls', 'javafx.graphics' ]
-}
-
 
 description = 'stf'

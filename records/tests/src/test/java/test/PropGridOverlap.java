@@ -28,7 +28,7 @@ import static org.junit.Assert.assertFalse;
 @RunWith(JUnitQuickcheck.class)
 public class PropGridOverlap extends FXApplicationTest
 {
-    @Property(trials = 1000)
+    @Property(trials = 100)
     public void testLoad(@From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas)
     {
         TestUtil.fxTest_(() -> {
@@ -90,7 +90,7 @@ public class PropGridOverlap extends FXApplicationTest
         }
     }
 
-    @Property(trials = 1000)
+    @Property(trials = 100)
     public void testMove(@From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas, int toMove, int newColumn, int newRow)
     {
         TestUtil.fxTest_(() -> {

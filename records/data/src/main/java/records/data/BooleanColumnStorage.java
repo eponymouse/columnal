@@ -45,7 +45,7 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
             @Override
             public @Value Boolean _getWithProgress(int i, @Nullable ProgressListener progressListener) throws UserException, InternalException
             {
-                return BooleanColumnStorage.this.getWithProgress(i, progressListener);
+                return Utility.later(BooleanColumnStorage.this).getWithProgress(i, progressListener);
             }
 
             @Override

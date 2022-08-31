@@ -760,7 +760,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         tableManager.addListener(new TableManagerListener()
         {
             // No-one will add tables after the constructor, so this is okay:
-            @SuppressWarnings("initialization")
+            @SuppressWarnings("assignment")
             private final View thisView = View.this;
 
             @Override
@@ -1325,7 +1325,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         }
 
         @RequiresNonNull("results")
-        @SuppressWarnings("initialization")
+        @SuppressWarnings("method.invocation")
         private void selectResult(@UnknownInitialization(Object.class) FindEverywhereDialog this)
         {
             @Nullable Result result = results.getSelectionModel().getSelectedItem();

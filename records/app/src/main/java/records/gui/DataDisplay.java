@@ -134,7 +134,7 @@ public abstract class DataDisplay extends HeadedDisplay
             @Override
             public void doCopy(CellPosition topLeftIncl, CellPosition bottomRightIncl)
             {
-                DataDisplay.this.doCopy(new RectangleBounds(topLeftIncl, bottomRightIncl));
+                Utility.later(DataDisplay.this).doCopy(new RectangleBounds(topLeftIncl, bottomRightIncl));
             }
 
             @Override
@@ -153,7 +153,7 @@ public abstract class DataDisplay extends HeadedDisplay
             @Override
             public void gotoRow(Window parent, @AbsColIndex int column)
             {
-                DataDisplay.this.gotoRow(parent, column);
+                Utility.later(DataDisplay.this).gotoRow(parent, column);
             }
         };
     }

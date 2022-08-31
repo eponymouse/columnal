@@ -92,7 +92,7 @@ public class AddSubtractExpression extends NaryOpTotalExpression
                 if (fixes.isEmpty())
                     return ImmutableMap.of();
                 else
-                    return ImmutableMap.of(this, new Pair<>(null, fixes));
+                    return ImmutableMap.of(this, new Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>(null, fixes));
             }
             @Nullable TypeError err = null;
             if (p.getAvailableTypesForError().size() > 1)

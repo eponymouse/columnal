@@ -59,7 +59,7 @@ public class LexCompletion
     
     public LexCompletion(@CanonicalLocation int startIncl, @CanonicalLocation int endIncl, StyledString display, String htmlPageName)
     {
-        this(startIncl, endIncl, null, display, 0, LexSelectionBehaviour.NO_AUTO_SELECT, Either.right(new Pair<>(htmlPageName, null)), "");
+        this(startIncl, endIncl, null, display, 0, LexSelectionBehaviour.NO_AUTO_SELECT, Either.right(new Pair<String, @Nullable String>(htmlPageName, null)), "");
     }
     
     public LexCompletion withReplacement(String newContent)
@@ -97,7 +97,7 @@ public class LexCompletion
     public LexCompletion withFurtherDetailsURL(@Nullable String url)
     {
         if (url != null)
-            this.furtherDetails = Either.right(new Pair<>(url, null));
+            this.furtherDetails = Either.right(new Pair<String, @Nullable String>(url, null));
         return this;
     }
 

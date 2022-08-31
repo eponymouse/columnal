@@ -17,7 +17,8 @@ public abstract class ErrorHandler
         public @OnThread(Tag.Simulation) void showError(String title, Function<@Localized String, @Localized String> errWrap, Exception e)
         {
             // Default if new handler not set is just to log
-            Log.log(title + errWrap.apply(e.getLocalizedMessage()), e);
+            @Localized String localMsg = e.getLocalizedMessage();
+            Log.log(title + (localMsg == null ? "<null>" : errWrap.apply(localMsg)), e);
         }
     };
 

@@ -13,8 +13,4 @@ dependencies {
     compileOnly project(':threadchecker')
 }
 
-javafx {
-    modules = [ 'javafx.controls', 'javafx.graphics', 'javafx.web' ]
-}
-
 description = 'lex-editor'

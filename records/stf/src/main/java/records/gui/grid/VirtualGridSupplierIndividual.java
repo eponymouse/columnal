@@ -12,6 +12,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.util.Duration;
 import org.checkerframework.checker.nullness.qual.KeyFor;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
@@ -43,7 +44,7 @@ import java.util.stream.Stream;
  * @param <S> The possible styles for that GUI node (usually best to use an enum, but not required)
  */
 @OnThread(Tag.FXPlatform)
-public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA_INFO extends GridCellInfo<T, S>> extends VirtualGridSupplier<T>
+public abstract class VirtualGridSupplierIndividual<T extends Node, S extends @NonNull Object, GRID_AREA_INFO extends GridCellInfo<T, S>> extends VirtualGridSupplier<T>
 {
     // Maximum extra rows/cols to keep as spare cells
     private static final int MAX_EXTRA_ROW_COLS = 4;
