@@ -47,6 +47,22 @@ compileSass {
 build.dependsOn(compileSass)
 jar.dependsOn(compileSass)
 
+task validateXmlHelp(type: XmlValidate) {
+    xml fileTree(dir: 'src/main/help', include: '*.xml')
+    xsd = file('src/main/help/help.xsd')
+}
+
+task validateXmlFuncdoc(type: XmlValidate) {
+    xml fileTree(dir: 'src/main/funcdoc', include: '*.xml')
+    xsd = file('src/main/funcdoc/funcdoc.xsd')
+}
+
+// This should probably be check really, but I don't want to wait for the CI:
+build.dependsOn(validateXmlFuncdoc)
+build.dependsOn(validateXmlHelp)
+
+
+
 ext {
     javaMainClass = "records.gui.Main"
 }
