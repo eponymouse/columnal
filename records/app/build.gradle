@@ -1,8 +1,14 @@
 plugins {
     id 'application'
     id 'io.miret.etienne.sass' version '1.4.1'
+    id 'com.github.eerohele.saxon-gradle' version '0.9.0-beta4'
 }
 apply plugin: 'java'
+
+// From https://github.com/eerohele/saxon-gradle
+configurations {
+    saxon
+}
 
 dependencies {
     implementation project(':utility')
@@ -28,6 +34,10 @@ dependencies {
     implementation 'net.java.dev.jna:jna:5.4.0'
     implementation 'net.java.dev.jna:jna-platform:5.4.0'
     implementation 'com.badlogicgames.packr:packr:3.0.3'
+
+    // As per https://github.com/eerohele/saxon-gradle
+    saxon 'net.sf.saxon:Saxon-HE:9.9.1-5'
+
 }
 
 task copySCSS(type: Copy) {
@@ -48,20 +58,33 @@ build.dependsOn(compileSass)
 jar.dependsOn(compileSass)
 
 task validateXmlHelp(type: XmlValidate) {
-    xml fileTree(dir: 'src/main/help', include: '*.xml')
-    xsd = file('src/main/help/help.xsd')
+    xml fileTree(dir: "${projectDir}/src/main/help", include: '*.xml')
+    xsd = file("${projectDir}/src/main/help/help.xsd")
 }
 
 task validateXmlFuncdoc(type: XmlValidate) {
-    xml fileTree(dir: 'src/main/funcdoc', include: '*.xml')
-    xsd = file('src/main/funcdoc/funcdoc.xsd')
+    xml fileTree(dir: "${projectDir}/src/main/funcdoc", include: '*.xml')
+    xsd = file("${projectDir}/src/main/funcdoc/funcdoc.xsd")
 }
 
 // This should probably be check really, but I don't want to wait for the CI:
 build.dependsOn(validateXmlFuncdoc)
 build.dependsOn(validateXmlHelp)
 
+task xsltHelp(type: com.github.eerohele.SaxonXsltTask) {
+    // Use the Saxon version you specified in the "dependencies" block.
+    classpath.from(configurations.saxon)
 
+    stylesheet "${projectDir}/src/main/xslt/make-help-html.xsl"
+
+    // Transform every .xml file in the "input" directory.
+    input fileTree(dir: "${projectDir}/src/main/help", include: '*.xml')
+    outputFileExtension 'html'
+    output "${buildDir}/resources/main"
+}
+
+build.dependsOn(xsltHelp)
+jar.dependsOn(xsltHelp)
 
 ext {
     javaMainClass = "records.gui.Main"
