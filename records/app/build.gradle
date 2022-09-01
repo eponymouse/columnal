@@ -1,14 +1,9 @@
 plugins {
     id 'application'
     id 'io.miret.etienne.sass' version '1.4.1'
-    id 'com.github.eerohele.saxon-gradle' version '0.9.0-beta4'
 }
 apply plugin: 'java'
 
-// From https://github.com/eerohele/saxon-gradle
-configurations {
-    saxon
-}
 
 dependencies {
     implementation project(':utility')
@@ -34,10 +29,6 @@ dependencies {
     implementation 'net.java.dev.jna:jna:5.4.0'
     implementation 'net.java.dev.jna:jna-platform:5.4.0'
     implementation 'com.badlogicgames.packr:packr:3.0.3'
-
-    // As per https://github.com/eerohele/saxon-gradle
-    saxon 'net.sf.saxon:Saxon-HE:9.9.1-5'
-
 }
 
 task copySCSS(type: Copy) {
@@ -71,20 +62,54 @@ task validateXmlFuncdoc(type: XmlValidate) {
 build.dependsOn(validateXmlFuncdoc)
 build.dependsOn(validateXmlHelp)
 
-task xsltHelp(type: com.github.eerohele.SaxonXsltTask) {
-    // Use the Saxon version you specified in the "dependencies" block.
-    classpath.from(configurations.saxon)
-
+task xsltHelp(type: SaxonXsltTask) {
     stylesheet "${projectDir}/src/main/xslt/make-help-html.xsl"
-
-    // Transform every .xml file in the "input" directory.
     input fileTree(dir: "${projectDir}/src/main/help", include: '*.xml')
     outputFileExtension 'html'
     output "${buildDir}/resources/main"
 }
 
-build.dependsOn(xsltHelp)
-jar.dependsOn(xsltHelp)
+task xsltHelpIndiv(type: SaxonXsltTask) {
+    stylesheet "${projectDir}/src/main/xslt/make-help-indiv.xsl"
+    input fileTree(dir: "${projectDir}/src/main/help", include: '*.xml')
+    parameters (
+        myOutputDir: "${buildDir}/resources/main"
+    )
+}
+
+task xsltFuncdocIndivHtml(type: SaxonXsltTask) {
+    stylesheet "${projectDir}/src/main/xslt/funcdoc-indiv-html.xsl"
+    input fileTree(dir: "${projectDir}/src/main/funcdoc", include: '_all.xml')
+    parameters (
+        myOutputDir: "${buildDir}/resources/main"
+    )
+}
+
+task xsltFuncdocJoinedHtml(type: SaxonXsltTask) {
+    stylesheet "${projectDir}/src/main/xslt/funcdoc-joined-html.xsl"
+    input fileTree(dir: "${projectDir}/src/main/funcdoc", include: '*.xml')
+    outputFileExtension 'html'
+    output "${buildDir}/resources/main"
+}
+
+task xsltFuncdocTypesAndMini(type: SaxonXsltTask) {
+    stylesheet "${projectDir}/src/main/xslt/funcdoc-types-and-mini.xsl"
+    input file("${projectDir}/src/main/funcdoc/_all.xml")
+    parameters (
+        myOutputDir: "${buildDir}/resources/main"
+    )
+}
+
+task xsltExtractTests(type: SaxonXsltTask) {
+    stylesheet "${projectDir}/src/main/xslt/extract-tests.xsl"
+    input fileTree(dir: "${projectDir}/src/main/funcdoc", include: '*.xml')
+    outputFileExtension 'test'
+    output "${buildDir}/resources/main"
+}
+
+
+build.dependsOn(xsltHelp, xsltHelpIndiv, xsltFuncdocIndivHtml, xsltFuncdocJoinedHtml, xsltFuncdocTypesAndMini, xsltExtractTests)
+jar.dependsOn(xsltHelp, xsltHelpIndiv, xsltFuncdocIndivHtml, xsltFuncdocJoinedHtml, xsltFuncdocTypesAndMini, xsltExtractTests)
 
 ext {
     javaMainClass = "records.gui.Main"
