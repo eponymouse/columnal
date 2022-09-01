@@ -48,7 +48,7 @@ $table-header-divider: grey(60%);
 $table-header-border: grey(60%);
 $table-header-text-color: white;
 $table-header-background-color: rgb(154, 183, 237);
-$table-header-transformation-background-color: hsl(105, 35%, 50%);
+$table-header-transformation-background-color: hsb(105, 35%, 50%);
 $table-header-background-color-selected: $focus-color;
 $table-header-background-color-check-failing: hsb(358, 76%, 50%);
 $table-header-name-border-color: grey(85%);
@@ -57,10 +57,10 @@ $table-border-color: grey(50%);
 $table-row-label-background-color: grey(90%);
 $table-row-label-border-color: $table-border-color;
 $table-row-label-text-color: grey(50%);
-$table-pick-overlay-stroke: hsl(26, 82%, 46%);
-$table-pick-overlay-fill: hsla(26, 82%, 46%, 0.5);
-$table-source-overlay-stroke: hsl(105, 100%, 30%);
-$table-source-overlay-fill: hsla(105, 100%, 30%, 0.35);
+$table-pick-overlay-stroke: hsb(26, 82%, 46%);
+$table-pick-overlay-fill: hsba(26, 82%, 46%, 0.5);
+$table-source-overlay-stroke: hsb(105, 100%, 30%);
+$table-source-overlay-fill: hsba(105, 100%, 30%, 0.35);
 $column-header-background-color: hsb(218, 11%, 89%);
 $column-header-text-color: hsb(218, 41%, 30%);
 $expand-arrow-color: grey(60%);
@@ -74,8 +74,8 @@ $status-bar-border: grey(60%);
 $light-dialog-background: grey(95%);
 $light-dialog-background-dark: grey(92%);
 
-$error-outline: hsl(354, 80%, 34%);
-$error-text: hsl(354, 80%, 34%);
+$error-outline: hsb(354, 80%, 34%);
+$error-text: hsb(354, 80%, 34%);
 
 $editor-error-background: hsb(350, 20%, 100%);
 $editor-error-stroke: hsb(350, 95%, 60%);
@@ -90,7 +90,7 @@ $editor-popup-prompt-border: hsb(101, 66%, 46%);
 $recipe-background: hsb(48, 25%, 95%);
 $recipe-text: hsb(57, 100%, 20%);
 
-$doc-header-background: hsl(260, 50%, 85%);
+$doc-header-background: hsb(260, 50%, 85%);
 
 $import-arrow: grey(50%);
 
