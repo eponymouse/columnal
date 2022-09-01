@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<all xmlns:xi="http://www.w3.org/2001/XInclude">
+<all xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation="funcdoc.xsd">
     <xi:include href="types.xml"/>
     <xi:include href="literals.xml"/>
     <xi:include href="syntax.xml"/>
