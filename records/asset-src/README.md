@@ -1,0 +1,1 @@
+This file contains the source of some of the graphical assets.  These items are copyright Neil Brown; they are not under an open source license. 
