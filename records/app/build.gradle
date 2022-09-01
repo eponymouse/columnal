@@ -47,6 +47,7 @@ compileSass {
 
 build.dependsOn(compileSass)
 jar.dependsOn(compileSass)
+run.dependsOn(compileSass)
 
 task validateXmlHelp(type: XmlValidate) {
     xml fileTree(dir: "${projectDir}/src/main/help", include: '*.xml')
