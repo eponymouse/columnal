@@ -78,6 +78,7 @@ public class PropNumericStorage
         testNumbers(input);
         // We add a new number which may cause the whole thing to be shifted
         // to higher storage, then test with that:
+        input = new ArrayList<>(input);
         input.add(n);
         testNumbers(input);
     }
