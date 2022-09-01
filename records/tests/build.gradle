@@ -46,7 +46,11 @@ test {
     filter {
         includeTestsMatching "Test*"
         includeTestsMatching "Prop*"
+        excludeTestsMatching "*\$*"
+        excludeTestsMatching "test.TestUtil*"
     }
+    
+    maxParallelForks = 4 
     
     jvmArgs += ['-Xmx2G',
             '-Djava.awt.headless=true',
