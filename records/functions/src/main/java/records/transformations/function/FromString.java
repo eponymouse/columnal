@@ -100,7 +100,7 @@ public class FromString
         @Value Object value = convertFromString(type, stringView);
         stringView.skipSpaces();
         if (stringView.getPosition() < src.length())
-            throw new UserException("Entire string was not used during conversion, remainder: " + stringView.snippet());
+            throw new UserException("Entire string was not used during conversion to " + type + ", remainder: " + stringView.snippet() + " from original \"" + src + "\"");
         return value;
     }
 
