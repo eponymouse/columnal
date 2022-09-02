@@ -1376,77 +1376,87 @@ public abstract class DataType implements StyledShowable
         // multiple matches and thus show up an ambiguous parse.
         public ImmutableList<ImmutableList<DateTimeFormatter>> getFlexibleFormatters()
         {
-            return FLEXIBLE_FORMATTERS.computeIfAbsent(getType(), type -> {
-                // Shared among some branches:
-                ImmutableList.Builder<ImmutableList<DateTimeFormatter>> r = ImmutableList.builder();
-                switch (type)
-                {
-                    case YEARMONTHDAY:
-                        // All the formats here use space as a separator, and assume that
-                        // the items have been fed through the pre-process function in here.
-                        return ImmutableList.of(
-                                l(m(" ", DAY, MONTH_TEXT_SHORT, YEAR4)), // dd MMM yyyy
-                                l(m(" ", DAY, MONTH_TEXT_LONG, YEAR4)), // dd MMM yyyy
+            // We can't use computeIfAbsent because it causes ConcurrentModificationException:
+            ImmutableList<ImmutableList<DateTimeFormatter>> existing = FLEXIBLE_FORMATTERS.get(getType());
+            if (existing != null)
+                return existing;
+            ImmutableList<ImmutableList<DateTimeFormatter>> calc = makeFlexibleFormatter(getType());
+            FLEXIBLE_FORMATTERS.put(getType(), calc);
+            return calc;
+            
+        }
+        private ImmutableList<ImmutableList<DateTimeFormatter>> makeFlexibleFormatter(DateTimeType type)
+        {
+            // Shared among some branches:
+            ImmutableList.Builder<ImmutableList<DateTimeFormatter>> r = ImmutableList.builder();
+            switch (type)
+            {
+                case YEARMONTHDAY:
+                    // All the formats here use space as a separator, and assume that
+                    // the items have been fed through the pre-process function in here.
+                    return ImmutableList.of(
+                        l(m(" ", DAY, MONTH_TEXT_SHORT, YEAR4)), // dd MMM yyyy
+                        l(m(" ", DAY, MONTH_TEXT_LONG, YEAR4)), // dd MMM yyyy
 
-                                l(m(" ", MONTH_TEXT_SHORT, DAY, YEAR4)), // MMM dd yyyy
-                                l(m(" ", MONTH_TEXT_LONG, DAY, YEAR4)), // MMM dd yyyy
+                        l(m(" ", MONTH_TEXT_SHORT, DAY, YEAR4)), // MMM dd yyyy
+                        l(m(" ", MONTH_TEXT_LONG, DAY, YEAR4)), // MMM dd yyyy
 
-                                l(m(" ", YEAR4, MONTH_TEXT_SHORT, DAY)), // yyyy MMM dd
+                        l(m(" ", YEAR4, MONTH_TEXT_SHORT, DAY)), // yyyy MMM dd
 
-                                l(m(" ", YEAR4, MONTH_NUM, DAY)), // yyyy MM dd
+                        l(m(" ", YEAR4, MONTH_NUM, DAY)), // yyyy MM dd
 
-                                l(m(" ", DAY, MONTH_NUM, YEAR4), m(" ", MONTH_NUM, DAY, YEAR4)), // dd MM yyyy or MM dd yyyy
+                        l(m(" ", DAY, MONTH_NUM, YEAR4), m(" ", MONTH_NUM, DAY, YEAR4)), // dd MM yyyy or MM dd yyyy
 
-                                l(m(" ", DAY, MONTH_NUM, YEAR2), m(" ", MONTH_NUM, DAY, YEAR2)) // dd MM yy or MM dd yy
-                        );
-                    case TIMEOFDAY:
-                        return ImmutableList.of(
-                                l(m(":", HOUR, MIN, SEC_OPT, FRAC_SEC_OPT)), // HH:mm[:ss[.S]]
-                                l(m(":", HOUR12, MIN, SEC_OPT, FRAC_SEC_OPT, AMPM)) // hh:mm[:ss[.S]] PM
-                        );
-                    case DATETIME:
-                        for (List<DateTimeFormatter> timeFormats : new DateTimeInfo(DateTimeType.TIMEOFDAY).getFlexibleFormatters())
+                        l(m(" ", DAY, MONTH_NUM, YEAR2), m(" ", MONTH_NUM, DAY, YEAR2)) // dd MM yy or MM dd yy
+                    );
+                case TIMEOFDAY:
+                    return ImmutableList.of(
+                        l(m(":", HOUR, MIN, SEC_OPT, FRAC_SEC_OPT)), // HH:mm[:ss[.S]]
+                        l(m(":", HOUR12, MIN, SEC_OPT, FRAC_SEC_OPT, AMPM)) // hh:mm[:ss[.S]] PM
+                    );
+                case DATETIME:
+                    for (List<DateTimeFormatter> timeFormats : new DateTimeInfo(DateTimeType.TIMEOFDAY).getFlexibleFormatters())
+                    {
+                        for (List<DateTimeFormatter> dateFormats : new DateTimeInfo(DateTimeType.YEARMONTHDAY).getFlexibleFormatters())
                         {
-                            for (List<DateTimeFormatter> dateFormats : new DateTimeInfo(DateTimeType.YEARMONTHDAY).getFlexibleFormatters())
-                            {
-                                ImmutableList<DateTimeFormatter> newFormatsSpace = Utility.allPairs(dateFormats, timeFormats, (d, t) -> new DateTimeFormatterBuilder().append(d).appendLiteral(" ").append(t).toFormatter());
-                                ImmutableList<DateTimeFormatter> newFormatsT = Utility.allPairs(dateFormats, timeFormats, (d, t) -> new DateTimeFormatterBuilder().append(d).appendLiteral("T").append(t).toFormatter());
-                                r.add(newFormatsSpace);
-                                r.add(newFormatsT);
-                            }
+                            ImmutableList<DateTimeFormatter> newFormatsSpace = Utility.allPairs(dateFormats, timeFormats, (d, t) -> new DateTimeFormatterBuilder().append(d).appendLiteral(" ").append(t).toFormatter());
+                            ImmutableList<DateTimeFormatter> newFormatsT = Utility.allPairs(dateFormats, timeFormats, (d, t) -> new DateTimeFormatterBuilder().append(d).appendLiteral("T").append(t).toFormatter());
+                            r.add(newFormatsSpace);
+                            r.add(newFormatsT);
                         }
-                        return r.build();
-                    case YEARMONTH:
-                        return ImmutableList.of(
-                            l(m(" ", F.MONTH_NUM, F.YEAR4)),
-                            l(m(" ", F.MONTH_TEXT_SHORT, F.YEAR2)),
-                            l(m(" ", F.MONTH_TEXT_SHORT, F.YEAR4)),
-                            l(m(" ", F.MONTH_TEXT_LONG, F.YEAR4)),
-                            l(m(" ", F.YEAR4, F.MONTH_NUM))
-                        );
-                    case DATETIMEZONED:
-                        for (ImmutableList<DateTimeFormatter> dateTimeFormats : new DateTimeInfo(DateTimeType.DATETIME).getFlexibleFormatters())
-                        {
-                            r.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapListI(dateTimeFormats, dateTimeFormat -> {
-                                DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
-                                b.optionalStart().appendLiteral(" ").optionalEnd();
-                                b.appendZoneRegionId();
-                                return b.toFormatter();
-                            }));
-                            r.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapListI(dateTimeFormats, dateTimeFormat -> {
-                                DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
-                                b.optionalStart().appendLiteral(" ").optionalEnd();
-                                b.appendZoneText(TextStyle.SHORT);
-                                return b.toFormatter();
-                            }));
-                            r.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapListI(dateTimeFormats, dateTimeFormat -> {
-                                DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
-                                b.optionalStart().appendLiteral(" ").optionalEnd();
-                                b.appendOffsetId().appendLiteral("[").appendZoneRegionId().appendLiteral("]");
-                                return b.toFormatter();
-                            }));
-                        }
-                        return r.build();
+                    }
+                    return r.build();
+                case YEARMONTH:
+                    return ImmutableList.of(
+                        l(m(" ", F.MONTH_NUM, F.YEAR4)),
+                        l(m(" ", F.MONTH_TEXT_SHORT, F.YEAR2)),
+                        l(m(" ", F.MONTH_TEXT_SHORT, F.YEAR4)),
+                        l(m(" ", F.MONTH_TEXT_LONG, F.YEAR4)),
+                        l(m(" ", F.YEAR4, F.MONTH_NUM))
+                    );
+                case DATETIMEZONED:
+                    for (ImmutableList<DateTimeFormatter> dateTimeFormats : new DateTimeInfo(DateTimeType.DATETIME).getFlexibleFormatters())
+                    {
+                        r.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapListI(dateTimeFormats, dateTimeFormat -> {
+                            DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
+                            b.optionalStart().appendLiteral(" ").optionalEnd();
+                            b.appendZoneRegionId();
+                            return b.toFormatter();
+                        }));
+                        r.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapListI(dateTimeFormats, dateTimeFormat -> {
+                            DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
+                            b.optionalStart().appendLiteral(" ").optionalEnd();
+                            b.appendZoneText(TextStyle.SHORT);
+                            return b.toFormatter();
+                        }));
+                        r.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapListI(dateTimeFormats, dateTimeFormat -> {
+                            DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
+                            b.optionalStart().appendLiteral(" ").optionalEnd();
+                            b.appendOffsetId().appendLiteral("[").appendZoneRegionId().appendLiteral("]");
+                            return b.toFormatter();
+                        }));
+                    }
+                    return r.build();
                         /*
                     case TIMEOFDAYZONED:
                         for (List<DateTimeFormatter> formatters : new DateTimeInfo(DateTimeType.TIMEOFDAY).getFlexibleFormatters())
@@ -1465,9 +1475,9 @@ public abstract class DataType implements StyledShowable
                         }
                         return r.build();
                         */
-                }
-                return ImmutableList.<ImmutableList<DateTimeFormatter>>of(ImmutableList.<DateTimeFormatter>of(getStrictFormatter()));
-            });
+            }
+            return ImmutableList.<ImmutableList<DateTimeFormatter>>of(ImmutableList.<DateTimeFormatter>of(getStrictFormatter()));
+
         }
 
         // public for testing
