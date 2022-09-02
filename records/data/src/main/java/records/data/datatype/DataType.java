@@ -1512,7 +1512,12 @@ public abstract class DataType implements StyledShowable
                         b.appendValue(ChronoField.CLOCK_HOUR_OF_AMPM, 1, 2, SignStyle.NEVER);
                         break;
                     case AMPM:
-                        b.optionalStart().appendLiteral(" ").optionalEnd().appendText(ChronoField.AMPM_OF_DAY);
+                        b.parseCaseInsensitive()
+                         .optionalStart()
+                         .appendLiteral(" ")
+                         .optionalEnd()
+                         .appendText(ChronoField.AMPM_OF_DAY)
+                         .parseCaseSensitive();
                         break;
                     case DAY:
                         if (i != 0) b.appendLiteral(sep);
@@ -1520,11 +1525,11 @@ public abstract class DataType implements StyledShowable
                         break;
                     case MONTH_TEXT_SHORT:
                         if (i != 0) b.appendLiteral(sep);
-                        b.appendText(ChronoField.MONTH_OF_YEAR, TextStyle.SHORT);
+                        b.parseCaseInsensitive().appendText(ChronoField.MONTH_OF_YEAR, TextStyle.SHORT).parseCaseSensitive();
                         break;
                     case MONTH_TEXT_LONG:
                         if (i != 0) b.appendLiteral(sep);
-                        b.appendText(ChronoField.MONTH_OF_YEAR, TextStyle.FULL);
+                        b.parseCaseInsensitive().appendText(ChronoField.MONTH_OF_YEAR, TextStyle.FULL).parseCaseSensitive();
                         break;
                     case MONTH_NUM:
                         if (i != 0) b.appendLiteral(sep);
