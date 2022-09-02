@@ -1411,8 +1411,8 @@ public abstract class DataType implements StyledShowable
                     );
                 case TIMEOFDAY:
                     return ImmutableList.of(
-                        l(m(":", HOUR, MIN, SEC_OPT, FRAC_SEC_OPT)), // HH:mm[:ss[.S]]
-                        l(m(":", HOUR12, MIN, SEC_OPT, FRAC_SEC_OPT, AMPM)) // hh:mm[:ss[.S]] PM
+                        l(m(":", HOUR, MIN, SEC_OPT_FRAC_OPT)), // HH:mm[:ss[.S]]
+                        l(m(":", HOUR12, MIN, SEC_OPT_FRAC_OPT, AMPM)) // hh:mm[:ss[.S]] PM
                     );
                 case DATETIME:
                     for (List<DateTimeFormatter> timeFormats : new DateTimeInfo(DateTimeType.TIMEOFDAY).getFlexibleFormatters())
@@ -1481,7 +1481,7 @@ public abstract class DataType implements StyledShowable
         }
 
         // public for testing
-        public static enum F {FRAC_SEC_OPT, SEC_OPT, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT_SHORT, MONTH_TEXT_LONG, MONTH_NUM, YEAR2, YEAR4 }
+        public static enum F {SEC_OPT_FRAC_OPT, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT_SHORT, MONTH_TEXT_LONG, MONTH_NUM, YEAR2, YEAR4 }
 
         // public for testing
         public static DateTimeFormatter m(String sep, F... items)
@@ -1491,14 +1491,15 @@ public abstract class DataType implements StyledShowable
             {
                 switch (items[i])
                 {
-                    case FRAC_SEC_OPT:
-                        // From http://stackoverflow.com/questions/30090710/java-8-datetimeformatter-parsing-for-optional-fractional-seconds-of-varying-sign
-                        b.appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true);
-                        break;
-                    case SEC_OPT:
+                    case SEC_OPT_FRAC_OPT:
                         b.optionalStart();
                         if (i != 0) b.appendLiteral(sep);
-                        b.appendValue(ChronoField.SECOND_OF_MINUTE, 2, 2, SignStyle.NEVER).optionalEnd();
+                        b.appendValue(ChronoField.SECOND_OF_MINUTE, 2, 2, SignStyle.NEVER);
+                        b.optionalStart();
+                        // From http://stackoverflow.com/questions/30090710/java-8-datetimeformatter-parsing-for-optional-fractional-seconds-of-varying-sign
+                        b.appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true);
+                        b.optionalEnd();
+                        b.optionalEnd();
                         break;
                     case MIN:
                         if (i != 0) b.appendLiteral(sep);

@@ -45,7 +45,7 @@ public class TestFormat
     private static final ColumnType TEXT = new TextColumnType();
     private static final ColumnType BOOL = new BoolColumnType("true", "false");
     private static final ColumnType DATE = new CleanDateColumnType(DateTimeType.YEARMONTHDAY, true, m(" ", DAY, MONTH_NUM, YEAR2), LocalDate::from);
-    private static final ColumnType TIME = new CleanDateColumnType(DateTimeType.TIMEOFDAY, false, m(":", HOUR, MIN, SEC_OPT, FRAC_SEC_OPT), LocalTime::from);
+    private static final ColumnType TIME = new CleanDateColumnType(DateTimeType.TIMEOFDAY, false, m(":", HOUR, MIN, SEC_OPT_FRAC_OPT), LocalTime::from);
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
     private static ColumnInfo col(ColumnType type, @ExpressionIdentifier String name)
