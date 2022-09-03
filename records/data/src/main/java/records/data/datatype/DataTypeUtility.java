@@ -9,6 +9,7 @@ import annotation.userindex.qual.UserIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import log.Log;
+import one.util.streamex.StreamEx;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
@@ -60,6 +61,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -335,6 +337,17 @@ public class DataTypeUtility
         {
         }
         return null;
+    }
+
+    // If zone is already normalised, original will be returned
+    private static ZonedDateTime normalizeZoneId(ZonedDateTime from)
+    {
+        ZoneId z = from.getZone();
+        ZoneId n = z.normalized();
+        if (z.equals(n))
+            return from;
+        else
+            return ZonedDateTime.of(from.toLocalDateTime(), n);
     }
 
     @SuppressWarnings("valuetype")
@@ -725,12 +738,17 @@ public class DataTypeUtility
                     return value;
             }
             // If all the values of longest length are the same, that's fine:
-            HashSet<Pair<Integer, TemporalAccessor>> distinctValues = new HashSet<>(
-                possibles.stream().filter(p -> p.getFirst() == longest).collect(Collectors.<Pair<Integer, TemporalAccessor>>toList())
-            );
+            @SuppressWarnings("type.argument")
+            List<Pair<Integer, TemporalAccessor>> distinctValues =
+                StreamEx.of(possibles.stream())
+                    .filter(p -> p.getFirst() == longest)
+                    // Time zones are annoying because UTC can parse as UTC or Etc/UTC but they are both the same when
+                    // normalized so we normalize while checking for distinct values:
+                    .distinct(p -> p.mapSecond(t -> t instanceof ZonedDateTime ? normalizeZoneId((ZonedDateTime) t) : t))
+                    .collect(Collectors.<Pair<Integer, TemporalAccessor>>toList());
             if (distinctValues.size() == 1)
             {
-                Pair<Integer, TemporalAccessor> chosen = distinctValues.iterator().next();
+                Pair<Integer, TemporalAccessor> chosen = distinctValues.get(0);
                 src.setPosition(chosen.getFirst());
                 @ImmediateValue TemporalAccessor value = value(dateTimeInfo, chosen.getSecond());
                 if (value != null)
