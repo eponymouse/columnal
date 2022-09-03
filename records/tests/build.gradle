@@ -18,7 +18,7 @@ dependencies {
     implementation libs.commons.io
     implementation 'org.apache.poi:poi-ooxml:4.1.2'
     implementation libs.guava
-    implementation 'one.util:streamex:0.6.3'
+    implementation 'one.util:streamex:0.8.1'
     implementation libs.javaSMT
     implementation libs.commons.lang3
     implementation 'org.controlsfx:controlsfx:8.40.12'
