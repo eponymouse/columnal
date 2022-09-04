@@ -19,6 +19,9 @@ include(':tests')
 dependencyResolutionManagement {
     versionCatalogs {
         libs {
+            library('checkerframework', 'org.checkerframework:checker:3.24.0')
+            library('checkerframework-qual', 'org.checkerframework:checker-qual:3.24.0')
+            
             library('guava', 'com.google.guava:guava:28.1-jre')
             library('antlr.exec', 'org.antlr:antlr4:4.7.1')
             library('antlr', 'org.antlr:antlr4-runtime:4.7.1')

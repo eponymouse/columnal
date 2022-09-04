@@ -56,8 +56,8 @@ subprojects { subproject ->
     }
 
     dependencies {
-      checkerFramework 'org.checkerframework:checker:3.24.0'
-      implementation 'org.checkerframework:checker-qual:3.24.0'
+      checkerFramework libs.checkerframework
+      implementation libs.checkerframework.qual
 
       annotationProcessor project(':anns')
       compileOnly project(':anns')

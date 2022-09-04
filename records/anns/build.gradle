@@ -15,8 +15,8 @@ dependencies {
     implementation libs.xom
     // We must make this dependencies explicit because we're actually compiling
     // against the checkerframework in this module:
-    implementation 'org.checkerframework:checker:3.24.0'
-    implementation 'org.checkerframework:checker-qual:3.24.0'
+    implementation libs.checkerframework
+    implementation libs.checkerframework.qual
 }
 
 description = 'anns'
