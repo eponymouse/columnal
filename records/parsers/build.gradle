@@ -21,10 +21,10 @@ checkerFramework {
 }
 
 dependencies {
-    //antlr libs.antlr.exec
-    //implementation libs.antlr
-    antlr 'org.antlr:antlr4:4.7.1'
-    implementation 'org.antlr:antlr4-runtime:4.7.1'
+    antlr libs.antlr.exec
+    implementation libs.antlr
+    //antlr 'org.antlr:antlr4:4.7.1'
+    //implementation 'org.antlr:antlr4-runtime:4.7.1'
 }
 
 generateGrammarSource {

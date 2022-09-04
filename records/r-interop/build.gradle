@@ -4,8 +4,8 @@ dependencies {
     implementation libs.guava
     implementation libs.commons.io
     implementation libs.commons.lang3
-    implementation 'com.google.code.findbugs:jsr305:3.0.2'
-    testImplementation 'org.hamcrest:hamcrest-library:2.1'
+    //implementation 'com.google.code.findbugs:jsr305:3.0.2'
+    testImplementation libs.hamcrest
     testImplementation libs.bundles.junitWithQuickcheck
     compileOnly project(':anns')
     compileOnly project(':anns-threadchecker')

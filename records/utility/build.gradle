@@ -1,13 +1,13 @@
 dependencies {
     implementation project(':parsers')
     implementation libs.guava
-    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+    //implementation 'com.google.code.findbugs:jsr305:3.0.2'
     implementation libs.antlr
     implementation libs.javaSMT
     implementation libs.commons.io
     implementation libs.commons.lang3
-    implementation 'org.apache.logging.log4j:log4j-api:2.13.1'
-    implementation 'org.apache.logging.log4j:log4j-core:2.13.1'
-    implementation 'info.debatty:java-string-similarity:1.2.1'
+    implementation libs.log4j.api
+    implementation libs.log4j.core
+    implementation libs.stringsimilarity
 }
 description = 'utility'

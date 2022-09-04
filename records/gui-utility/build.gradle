@@ -3,10 +3,10 @@ dependencies {
     implementation project(':parsers')
     implementation libs.guava
     implementation libs.commons.lang3
-    implementation 'org.controlsfx:controlsfx:8.40.12'
-    implementation 'org.fxmisc.wellbehaved:wellbehavedfx:0.3'
-    implementation 'net.coobird:thumbnailator:0.4.8'
-    implementation 'net.java.dev.jna:jna-platform:5.4.0'
+    implementation libs.controlsfx
+    implementation libs.wellbehavedfx
+    implementation libs.thumbnailator
+    implementation libs.jna
 }
 
 description = 'gui-utility'

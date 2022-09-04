@@ -6,8 +6,8 @@ dependencies {
     implementation project(':parsers')
     implementation libs.guava
     implementation libs.commons.lang3
-    implementation 'org.controlsfx:controlsfx:8.40.12'
-    implementation 'info.debatty:java-string-similarity:1.2.1'
+    implementation libs.controlsfx
+    implementation libs.stringsimilarity
     compileOnly project(':anns')
     compileOnly project(':anns-threadchecker')
     compileOnly project(':threadchecker')

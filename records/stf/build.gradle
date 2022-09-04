@@ -4,8 +4,8 @@ dependencies {
     implementation project(':data')
     implementation project(':parsers')
     implementation libs.guava
-    implementation 'org.controlsfx:controlsfx:8.40.12'
-    implementation 'org.fxmisc.wellbehaved:wellbehavedfx:0.3'
+    implementation libs.controlsfx
+    implementation libs.wellbehavedfx
 }
 
 description = 'stf'
