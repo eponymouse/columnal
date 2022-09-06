@@ -53,12 +53,12 @@ import xyz.columnal.utility.FXPlatformSupplierInt;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.UnitType;
 import xyz.columnal.utility.Utility;
-import utility.gui.DialogPaneWithSideButtons;
-import utility.gui.DoubleOKLightDialog;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
-import utility.gui.LabelledGrid;
-import utility.gui.TimedFocusable;
+import xyz.columnal.utility.gui.DialogPaneWithSideButtons;
+import xyz.columnal.utility.gui.DoubleOKLightDialog;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.GUI;
+import xyz.columnal.utility.gui.LabelledGrid;
+import xyz.columnal.utility.gui.TimedFocusable;
 
 import java.util.List;
 import java.util.Optional;

@@ -9,7 +9,7 @@ import records.data.TableManager;
 import records.transformations.HideColumnsPanel;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 @OnThread(Tag.FXPlatform)
 class CustomColumnDisplayDialog extends Dialog<ImmutableList<ColumnId>>

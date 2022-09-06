@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import annotation.help.qual.HelpKey;
 import javafx.beans.binding.Bindings;
@@ -23,7 +23,7 @@ import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformRunnable;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
-import utility.gui.Help.HelpInfo;
+import xyz.columnal.utility.gui.Help.HelpInfo;
 
 /**
  * A little question mark in a circle which offers a short toolip when hovered over,

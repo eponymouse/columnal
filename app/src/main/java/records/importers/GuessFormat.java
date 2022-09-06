@@ -49,8 +49,8 @@ import xyz.columnal.utility.SimulationConsumer;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.Workers.Priority;
-import utility.gui.FXUtility;
-import utility.gui.LabelledGrid;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.LabelledGrid;
 import xyz.columnal.utility.TranslationUtility;
 
 import java.io.File;

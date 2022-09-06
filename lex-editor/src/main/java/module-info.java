@@ -7,7 +7,7 @@ module lexeditor
     requires static annsthreadchecker;
     requires data;
     requires expressions;
-    requires guiutility;
+    requires xyz.columnal.utility.gui;
     requires parsers;
     requires xyz.columnal.utility;
 

@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;

@@ -79,7 +79,7 @@ import xyz.columnal.utility.SimulationSupplier;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.Workers.Priority;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -18,7 +18,7 @@ import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.ResourceUtility;
 import xyz.columnal.utility.Utility;
-import utility.gui.GUI;
+import xyz.columnal.utility.gui.GUI;
 import xyz.columnal.utility.TranslationUtility;
 
 import java.net.URL;

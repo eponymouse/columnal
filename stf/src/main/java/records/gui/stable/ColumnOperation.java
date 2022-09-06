@@ -6,7 +6,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.Workers.Priority;
-import utility.gui.GUI;
+import xyz.columnal.utility.gui.GUI;
 
 /**
  * Created by neil on 29/05/2017.

@@ -19,9 +19,9 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.IdentifierUtility;
-import utility.gui.FXUtility;
-import utility.gui.Instruction;
-import utility.gui.TimedFocusable;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.Instruction;
+import xyz.columnal.utility.gui.TimedFocusable;
 
 import java.util.List;
 

@@ -26,8 +26,8 @@ import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.Workers.Priority;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.GUI;
 
 import java.util.ArrayList;
 import java.util.Comparator;

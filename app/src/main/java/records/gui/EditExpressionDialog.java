@@ -18,11 +18,11 @@ import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformSupplierInt;
-import utility.gui.DialogPaneWithSideButtons;
-import utility.gui.DoubleOKLightDialog;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
-import utility.gui.LightDialog;
+import xyz.columnal.utility.gui.DialogPaneWithSideButtons;
+import xyz.columnal.utility.gui.DoubleOKLightDialog;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.GUI;
+import xyz.columnal.utility.gui.LightDialog;
 
 import java.util.Optional;
 

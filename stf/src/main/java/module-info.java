@@ -7,7 +7,7 @@ module stf
     requires static anns;
     requires static annsthreadchecker;
     requires data;
-    requires guiutility;
+    requires xyz.columnal.utility.gui;
     requires parsers;
     requires xyz.columnal.utility;
 

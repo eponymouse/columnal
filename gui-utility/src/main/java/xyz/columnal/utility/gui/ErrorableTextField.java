@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.DoubleExpression;
@@ -25,7 +25,7 @@ import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import utility.gui.FixList.FixInfo;
+import xyz.columnal.utility.gui.FixList.FixInfo;
 import xyz.columnal.styled.StyledCSS;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;

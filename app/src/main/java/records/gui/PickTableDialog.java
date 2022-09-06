@@ -9,9 +9,9 @@ import records.data.Table;
 import records.data.TableId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.gui.DialogPaneWithSideButtons;
-import utility.gui.FXUtility;
-import utility.gui.LightDialog;
+import xyz.columnal.utility.gui.DialogPaneWithSideButtons;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.LightDialog;
 
 @OnThread(Tag.FXPlatform)
 public class PickTableDialog extends LightDialog<Table>

@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectExpression;

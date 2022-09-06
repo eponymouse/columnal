@@ -9,8 +9,8 @@ import records.transformations.HideColumns;
 import records.transformations.HideColumnsPanel;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.gui.DimmableParent;
-import utility.gui.LightDialog;
+import xyz.columnal.utility.gui.DimmableParent;
+import xyz.columnal.utility.gui.LightDialog;
 
 /**
  * A dialog for editing a HideColumns transformation.

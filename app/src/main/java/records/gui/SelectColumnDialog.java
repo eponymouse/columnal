@@ -29,12 +29,12 @@ import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
-import utility.gui.DimmableParent.Undimmed;
-import utility.gui.ErrorableLightDialog;
-import utility.gui.FXUtility;
-import utility.gui.Instruction;
-import utility.gui.LabelledGrid;
-import utility.gui.LabelledGrid.Row;
+import xyz.columnal.utility.gui.DimmableParent.Undimmed;
+import xyz.columnal.utility.gui.ErrorableLightDialog;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.Instruction;
+import xyz.columnal.utility.gui.LabelledGrid;
+import xyz.columnal.utility.gui.LabelledGrid.Row;
 
 import java.util.function.Predicate;
 import java.util.stream.Stream;

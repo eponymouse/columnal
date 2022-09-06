@@ -66,8 +66,8 @@ import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.Workers.Priority;
-import utility.gui.Clickable;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.Clickable;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.List;
 import java.util.Optional;

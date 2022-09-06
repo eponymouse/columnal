@@ -39,7 +39,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.SimulationSupplier;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.Collection;
 import java.util.Comparator;

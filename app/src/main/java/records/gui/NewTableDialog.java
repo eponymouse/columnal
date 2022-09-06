@@ -13,10 +13,10 @@ import records.gui.NewTableDialog.DataOrTransform;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
-import utility.gui.DimmableParent;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
-import utility.gui.LightDialog;
+import xyz.columnal.utility.gui.DimmableParent;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.GUI;
+import xyz.columnal.utility.gui.LightDialog;
 
 import java.util.Optional;
 

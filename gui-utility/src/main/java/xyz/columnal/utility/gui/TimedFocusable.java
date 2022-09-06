@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;

@@ -42,7 +42,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Pair;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Collections;

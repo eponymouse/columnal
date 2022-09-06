@@ -12,7 +12,7 @@ import xyz.columnal.error.InternalException;
 import records.gui.lexeditor.completion.InsertListener;
 import records.gui.lexeditor.completion.LexAutoCompleteWindow;
 import xyz.columnal.utility.ResourceUtility;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.net.URL;
 

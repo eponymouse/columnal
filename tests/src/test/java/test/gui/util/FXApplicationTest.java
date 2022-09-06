@@ -35,7 +35,7 @@ import test.gui.trait.ScreenshotTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import javax.imageio.ImageIO;
 import java.awt.*;

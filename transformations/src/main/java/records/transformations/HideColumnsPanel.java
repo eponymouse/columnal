@@ -39,9 +39,9 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Workers;
-import utility.gui.FXUtility;
-import utility.gui.FXUtility.DragHandler;
-import utility.gui.GUI;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility.DragHandler;
+import xyz.columnal.utility.gui.GUI;
 
 import java.util.ArrayList;
 import java.util.Collections;

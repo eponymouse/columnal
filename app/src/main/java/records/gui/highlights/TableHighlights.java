@@ -30,8 +30,8 @@ import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.FXPlatformFunction;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
-import utility.gui.ResizableRectangle;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.ResizableRectangle;
 
 import java.util.Objects;
 import java.util.Optional;

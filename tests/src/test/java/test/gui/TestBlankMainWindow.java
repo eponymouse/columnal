@@ -71,7 +71,7 @@ import xyz.columnal.utility.Either;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.ArrayList;

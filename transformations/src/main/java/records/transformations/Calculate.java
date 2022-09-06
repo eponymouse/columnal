@@ -40,7 +40,7 @@ import xyz.columnal.utility.SimulationConsumer;
 import xyz.columnal.utility.SimulationFunction;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -9,7 +9,7 @@ import records.data.datatype.DataType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformConsumer;
-import utility.gui.GUI;
+import xyz.columnal.utility.gui.GUI;
 
 public class ColumnDetails
 {

@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.event.ActionEvent;

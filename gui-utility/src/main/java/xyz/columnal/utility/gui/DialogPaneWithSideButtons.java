@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;

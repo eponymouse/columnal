@@ -37,7 +37,7 @@ import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.FXPlatformRunnable;
 import xyz.columnal.utility.Pair;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.TranslationUtility;
 
 import java.lang.ref.WeakReference;

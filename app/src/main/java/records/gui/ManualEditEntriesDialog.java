@@ -25,9 +25,9 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.*;
 import xyz.columnal.utility.Workers.Priority;
-import utility.gui.DimmableParent;
-import utility.gui.FancyList;
-import utility.gui.LightDialog;
+import xyz.columnal.utility.gui.DimmableParent;
+import xyz.columnal.utility.gui.FancyList;
+import xyz.columnal.utility.gui.LightDialog;
 
 import java.util.HashMap;
 import java.util.Map;

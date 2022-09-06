@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import annotation.help.qual.HelpKey;
 import com.google.common.cache.CacheBuilder;

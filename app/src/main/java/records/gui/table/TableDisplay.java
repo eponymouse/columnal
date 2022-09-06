@@ -120,10 +120,10 @@ import xyz.columnal.utility.*;
 import xyz.columnal.utility.Utility.ListEx;
 import xyz.columnal.utility.Utility.Record;
 import xyz.columnal.utility.Workers.Priority;
-import utility.gui.Clickable;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
-import utility.gui.ScrollPaneFill;
+import xyz.columnal.utility.gui.Clickable;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.GUI;
+import xyz.columnal.utility.gui.ScrollPaneFill;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.*;

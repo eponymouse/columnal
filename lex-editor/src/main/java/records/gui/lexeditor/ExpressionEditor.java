@@ -31,7 +31,7 @@ import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.FXPlatformSupplierInt;
 import xyz.columnal.utility.Pair;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.Comparator;
 import java.util.function.Predicate;

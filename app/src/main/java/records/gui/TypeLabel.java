@@ -12,7 +12,7 @@ import xyz.columnal.error.UserException;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 /**
  * Displays the type of the given expression, dynamically

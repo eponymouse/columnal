@@ -31,8 +31,8 @@ import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformRunnable;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
-import utility.gui.TextEditorBase;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.TextEditorBase;
 
 import java.util.ArrayList;
 import java.util.BitSet;

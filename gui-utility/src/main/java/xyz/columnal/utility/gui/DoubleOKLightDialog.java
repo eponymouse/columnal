@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import javafx.event.ActionEvent;
 import javafx.scene.Node;

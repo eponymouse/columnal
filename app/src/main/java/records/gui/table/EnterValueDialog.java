@@ -17,10 +17,10 @@ import records.gui.dtf.TableDisplayUtility.RecogniserAndType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
-import utility.gui.DimmableParent;
-import utility.gui.ErrorableLightDialog;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
+import xyz.columnal.utility.gui.DimmableParent;
+import xyz.columnal.utility.gui.ErrorableLightDialog;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.GUI;
 
 @OnThread(Tag.FXPlatform)
 public class EnterValueDialog<V extends @NonNull @ImmediateValue Object> extends ErrorableLightDialog<V>

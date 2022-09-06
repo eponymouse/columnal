@@ -19,8 +19,8 @@ import threadchecker.Tag;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.Workers.WorkInfo;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.GUI;
 
 @OnThread(Tag.FXPlatform)
 public class TaskManagerWindow extends Dialog<Void>

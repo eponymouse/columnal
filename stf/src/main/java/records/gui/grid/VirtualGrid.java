@@ -87,8 +87,8 @@ import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.FXPlatformRunnable;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.GUI;
 
 import java.util.*;
 import java.util.Map.Entry;

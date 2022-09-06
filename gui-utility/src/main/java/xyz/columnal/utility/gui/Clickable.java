@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import javafx.geometry.Point2D;
 import javafx.scene.control.Tooltip;

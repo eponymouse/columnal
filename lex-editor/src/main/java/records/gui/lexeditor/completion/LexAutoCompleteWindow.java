@@ -26,7 +26,7 @@ import xyz.columnal.utility.FXPlatformSupplier;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.ResourceUtility;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.net.URL;
 import java.util.List;

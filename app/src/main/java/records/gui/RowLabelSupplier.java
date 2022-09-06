@@ -39,8 +39,8 @@ import xyz.columnal.utility.Either;
 import xyz.columnal.utility.FXPlatformRunnable;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
-import utility.gui.ResizableRectangle;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.ResizableRectangle;
 
 import java.util.HashMap;
 import java.util.Map;

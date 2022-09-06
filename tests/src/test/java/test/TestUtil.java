@@ -93,7 +93,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Utility.ListEx;
 import xyz.columnal.utility.Workers.Priority;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.io.File;
 import java.io.IOException;

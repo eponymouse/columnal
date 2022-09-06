@@ -26,8 +26,8 @@ import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
-import utility.gui.*;
-import utility.gui.DimmableParent.Undimmed;
+import xyz.columnal.utility.gui.*;
+import xyz.columnal.utility.gui.DimmableParent.Undimmed;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import annotation.units.DisplayLocation;
 import com.google.common.collect.ImmutableList;

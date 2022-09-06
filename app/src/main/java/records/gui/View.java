@@ -90,8 +90,8 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.*;
 import xyz.columnal.utility.Workers.Priority;
-import utility.gui.DimmableParent;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.DimmableParent;
+import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.TranslationUtility;
 
 import javax.swing.filechooser.FileSystemView;

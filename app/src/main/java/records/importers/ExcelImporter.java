@@ -36,7 +36,7 @@ import xyz.columnal.utility.SimulationSupplier;
 import xyz.columnal.utility.UnitType;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.Workers.Priority;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.TranslationUtility;
 
 import java.io.File;

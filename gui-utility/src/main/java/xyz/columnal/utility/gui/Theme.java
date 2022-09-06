@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import threadchecker.OnThread;
 import threadchecker.Tag;

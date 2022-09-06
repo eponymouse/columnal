@@ -54,7 +54,7 @@ import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.IdentifierUtility.Consumed;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.TranslationUtility;
 
 import java.util.*;

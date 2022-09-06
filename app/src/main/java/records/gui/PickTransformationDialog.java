@@ -13,10 +13,10 @@ import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
-import utility.gui.DimmableParent;
-import utility.gui.FXUtility;
-import utility.gui.LightDialog;
-import utility.gui.ScrollPaneFill;
+import xyz.columnal.utility.gui.DimmableParent;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.LightDialog;
+import xyz.columnal.utility.gui.ScrollPaneFill;
 
 import java.util.Optional;
 

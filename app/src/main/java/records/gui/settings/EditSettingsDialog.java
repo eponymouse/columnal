@@ -13,9 +13,9 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.TranslationUtility;
-import utility.gui.ErrorableDialog;
-import utility.gui.GUI;
-import utility.gui.LabelledGrid;
+import xyz.columnal.utility.gui.ErrorableDialog;
+import xyz.columnal.utility.gui.GUI;
+import xyz.columnal.utility.gui.LabelledGrid;
 
 import java.io.File;
 

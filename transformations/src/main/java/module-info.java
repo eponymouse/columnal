@@ -8,7 +8,7 @@ module transformations
     requires data;
     requires expressions;
     requires functions;
-    requires guiutility;
+    requires xyz.columnal.utility.gui;
     requires parsers;
     requires rinterop;
     requires xyz.columnal.utility;

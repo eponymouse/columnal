@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import com.google.common.collect.ImmutableList;
 import com.sun.jna.Native;

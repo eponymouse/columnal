@@ -45,9 +45,9 @@ import xyz.columnal.utility.Either;
 import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
-import utility.gui.HelpfulTextFlow;
-import utility.gui.ResizableRectangle;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.HelpfulTextFlow;
+import xyz.columnal.utility.gui.ResizableRectangle;
 
 import java.util.ArrayList;
 import java.util.Arrays;

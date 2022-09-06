@@ -13,8 +13,8 @@ import threadchecker.Tag;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.TranslationUtility;
-import utility.gui.ErrorableLightDialog;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.ErrorableLightDialog;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.Objects;
 

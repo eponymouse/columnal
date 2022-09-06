@@ -26,9 +26,9 @@ import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Workers;
-import utility.gui.DimmableParent;
-import utility.gui.ErrorableDialog;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.DimmableParent;
+import xyz.columnal.utility.gui.ErrorableDialog;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.ArrayList;

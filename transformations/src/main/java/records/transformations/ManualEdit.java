@@ -45,7 +45,7 @@ import xyz.columnal.utility.SimulationFunctionInt;
 import xyz.columnal.utility.SimulationRunnableNoError;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.ArrayList;

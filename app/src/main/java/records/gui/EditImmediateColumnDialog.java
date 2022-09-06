@@ -35,12 +35,12 @@ import xyz.columnal.utility.Either;
 import xyz.columnal.utility.ExBiFunction;
 import xyz.columnal.utility.FXPlatformRunnable;
 import xyz.columnal.utility.Utility;
-import utility.gui.AlignedLabels;
-import utility.gui.ErrorableLightDialog;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
-import utility.gui.LabelledGrid;
-import utility.gui.LightDialog;
+import xyz.columnal.utility.gui.AlignedLabels;
+import xyz.columnal.utility.gui.ErrorableLightDialog;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.GUI;
+import xyz.columnal.utility.gui.LabelledGrid;
+import xyz.columnal.utility.gui.LightDialog;
 import xyz.columnal.utility.TranslationUtility;
 
 /**

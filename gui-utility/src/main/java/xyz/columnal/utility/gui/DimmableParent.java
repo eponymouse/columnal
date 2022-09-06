@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import javafx.scene.control.Dialog;
 import javafx.stage.Window;

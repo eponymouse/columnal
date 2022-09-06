@@ -11,7 +11,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.List;
 import java.util.Optional;

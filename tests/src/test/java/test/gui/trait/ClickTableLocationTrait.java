@@ -15,7 +15,7 @@ import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformBiConsumer;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.Set;
 import java.util.function.Predicate;

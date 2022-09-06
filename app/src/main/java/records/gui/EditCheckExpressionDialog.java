@@ -22,10 +22,10 @@ import threadchecker.Tag;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.FXPlatformFunction;
 import xyz.columnal.utility.Pair;
-import utility.gui.DialogPaneWithSideButtons;
-import utility.gui.DoubleOKLightDialog;
-import utility.gui.FXUtility;
-import utility.gui.LabelledGrid;
+import xyz.columnal.utility.gui.DialogPaneWithSideButtons;
+import xyz.columnal.utility.gui.DoubleOKLightDialog;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.LabelledGrid;
 
 // Edit column name and expression for that column
 @OnThread(Tag.FXPlatform)

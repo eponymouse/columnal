@@ -42,9 +42,9 @@ import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.ResourceUtility;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
-import utility.gui.TextEditorBase;
-import utility.gui.TimedFocusable;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.TextEditorBase;
+import xyz.columnal.utility.gui.TimedFocusable;
 
 import javax.swing.SwingUtilities;
 import java.awt.Desktop;

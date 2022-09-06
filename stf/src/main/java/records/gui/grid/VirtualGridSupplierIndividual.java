@@ -23,7 +23,7 @@ import xyz.columnal.utility.FXPlatformFunction;
 import xyz.columnal.utility.FXPlatformRunnable;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Collection;

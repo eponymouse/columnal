@@ -26,7 +26,7 @@ import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.Workers.Priority;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.Arrays;
 import java.util.Collection;

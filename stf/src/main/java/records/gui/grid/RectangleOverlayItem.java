@@ -14,7 +14,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Pair;
-import utility.gui.ResizableRectangle;
+import xyz.columnal.utility.gui.ResizableRectangle;
 
 import java.util.Optional;
 

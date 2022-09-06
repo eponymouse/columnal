@@ -1,4 +1,4 @@
-package utility.gui;
+package xyz.columnal.utility.gui;
 
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;

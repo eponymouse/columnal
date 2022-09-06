@@ -41,9 +41,9 @@ import xyz.columnal.utility.SimulationSupplier;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.Workers.Priority;
-import utility.gui.Clickable;
-import utility.gui.FXUtility;
-import utility.gui.SmallDeleteButton;
+import xyz.columnal.utility.gui.Clickable;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.SmallDeleteButton;
 
 import java.util.*;
 import java.util.function.Supplier;

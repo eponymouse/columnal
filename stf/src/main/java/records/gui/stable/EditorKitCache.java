@@ -37,7 +37,7 @@ import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.Workers.Priority;
 import xyz.columnal.utility.Workers.Worker;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.TranslationUtility;
 
 import java.util.Collection;

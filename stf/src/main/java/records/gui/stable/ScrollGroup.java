@@ -18,7 +18,7 @@ import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformBiFunction;
 import xyz.columnal.utility.FXPlatformFunction;
 import xyz.columnal.utility.Pair;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.IdentityHashMap;
 import java.util.Optional;

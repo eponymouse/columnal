@@ -50,7 +50,7 @@ import xyz.columnal.utility.Either;
 import xyz.columnal.utility.FXPlatformFunction;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
-import utility.gui.Clickable;
+import xyz.columnal.utility.gui.Clickable;
 
 import java.util.ArrayList;
 import java.util.List;

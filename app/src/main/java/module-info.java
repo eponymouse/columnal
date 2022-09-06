@@ -7,7 +7,7 @@ module app
     requires data;
     requires expressions;
     requires functions;
-    requires guiutility;
+    requires xyz.columnal.utility.gui;
     requires lexeditor;
     requires parsers;
     requires rinterop;

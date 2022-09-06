@@ -45,11 +45,11 @@ import xyz.columnal.utility.FXPlatformSupplier;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
-import utility.gui.DialogPaneWithSideButtons;
-import utility.gui.ErrorableDialog;
-import utility.gui.FXUtility;
-import utility.gui.FancyList;
-import utility.gui.GUI;
+import xyz.columnal.utility.gui.DialogPaneWithSideButtons;
+import xyz.columnal.utility.gui.ErrorableDialog;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FancyList;
+import xyz.columnal.utility.gui.GUI;
 import xyz.columnal.utility.TranslationUtility;
 
 import java.util.Arrays;

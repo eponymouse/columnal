@@ -37,9 +37,9 @@ import xyz.columnal.utility.FXPlatformRunnable;
 import xyz.columnal.utility.FXPlatformSupplier;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
-import utility.gui.ResizableRectangle;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.GUI;
+import xyz.columnal.utility.gui.ResizableRectangle;
 
 import java.util.ArrayList;
 import java.util.Iterator;

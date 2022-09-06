@@ -8,7 +8,7 @@ import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.TranslationUtility;
-import utility.gui.ErrorableTextField;
+import xyz.columnal.utility.gui.ErrorableTextField;
 
 /**
  * Created by neil on 30/04/2017.

@@ -1,6 +1,6 @@
-module guiutility
+module xyz.columnal.utility.gui
 {
-    exports utility.gui;
+    exports xyz.columnal.utility.gui;
 
     requires static anns;
     requires static annsthreadchecker;

@@ -13,7 +13,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformRunnable;
 import xyz.columnal.utility.TranslationUtility;
-import utility.gui.ErrorableTextField;
+import xyz.columnal.utility.gui.ErrorableTextField;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -28,7 +28,7 @@ import test.gen.GenString;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Comparator;

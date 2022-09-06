@@ -31,7 +31,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.SimulationSupplier;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import static org.junit.Assert.assertNotNull;
 

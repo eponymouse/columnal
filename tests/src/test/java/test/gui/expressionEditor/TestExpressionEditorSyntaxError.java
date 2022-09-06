@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import static org.junit.Assert.*;
 

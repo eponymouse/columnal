@@ -9,7 +9,7 @@ import javafx.scene.control.MenuItem;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.TranslationUtility;
 
 import java.time.Instant;

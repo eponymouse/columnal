@@ -63,8 +63,8 @@ import xyz.columnal.utility.Either;
 import xyz.columnal.utility.ExSupplier;
 import xyz.columnal.utility.SimulationFunction;
 import xyz.columnal.utility.Utility;
-import utility.gui.FXUtility;
-import utility.gui.FancyList;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.FancyList;
 
 import java.math.BigDecimal;
 import java.util.AbstractList;

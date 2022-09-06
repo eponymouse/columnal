@@ -30,9 +30,9 @@ import xyz.columnal.utility.Either;
 import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.SimulationConsumerNoError;
-import utility.gui.ErrorableDialog;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
+import xyz.columnal.utility.gui.ErrorableDialog;
+import xyz.columnal.utility.gui.FXUtility;
+import xyz.columnal.utility.gui.GUI;
 import xyz.columnal.utility.TranslationUtility;
 
 import java.io.File;
