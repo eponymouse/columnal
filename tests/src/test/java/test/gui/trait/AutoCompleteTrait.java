@@ -11,7 +11,7 @@ import records.gui.lexeditor.completion.LexAutoCompleteWindow;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;

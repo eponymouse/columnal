@@ -10,7 +10,7 @@ import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TextField;
 import javafx.stage.Window;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import threadchecker.OnThread;
 import threadchecker.Tag;

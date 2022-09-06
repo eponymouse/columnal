@@ -14,20 +14,20 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.*;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.function.core.AsType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.Pair;
-import utility.TaggedValue;
-import utility.Utility;
-import utility.Utility.ListEx;
-import utility.Utility.Record;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.TaggedValue;
+import xyz.columnal.utility.Utility;
+import xyz.columnal.utility.Utility.ListEx;
+import xyz.columnal.utility.Utility.Record;
 
 import java.util.Map.Entry;
 

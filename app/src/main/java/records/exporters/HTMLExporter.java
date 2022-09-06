@@ -9,12 +9,12 @@ import records.data.Column;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.datatype.DataTypeUtility;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
-import utility.TranslationUtility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.TranslationUtility;
 
 import java.io.File;
 import java.io.IOException;

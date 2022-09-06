@@ -11,18 +11,18 @@ import records.data.datatype.TypeManager;
 import records.data.unit.SingleUnit;
 import records.data.unit.UnitDeclaration;
 import records.data.unit.UnitManager;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.QuickFix.QuickFixAction;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.Pair;
-import utility.SimulationConsumer;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.SimulationConsumer;
+import xyz.columnal.utility.Utility;
 
 import java.util.stream.Stream;
 

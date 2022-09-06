@@ -9,7 +9,7 @@ import org.testfx.api.FxRobotInterface;
 import records.data.CellPosition;
 import records.data.TableId;
 import records.data.TableManager;
-import records.error.UserException;
+import xyz.columnal.error.UserException;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import test.TestUtil;

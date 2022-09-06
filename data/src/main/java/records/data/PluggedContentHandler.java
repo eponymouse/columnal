@@ -1,11 +1,11 @@
 package records.data;
 
 import com.google.common.collect.ImmutableMap;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
-import utility.SimulationConsumer;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.SimulationConsumer;
 
 import java.util.function.Consumer;
 

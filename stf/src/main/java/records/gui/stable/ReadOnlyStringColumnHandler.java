@@ -9,8 +9,8 @@ import records.data.ColumnId;
 import records.gui.dtf.ReadOnlyDocument;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformBiConsumer;
-import utility.FXPlatformConsumer;
+import xyz.columnal.utility.FXPlatformBiConsumer;
+import xyz.columnal.utility.FXPlatformConsumer;
 
 public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
 {

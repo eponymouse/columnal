@@ -6,7 +6,7 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.input.MouseButton;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.service.query.NodeQuery;
 import records.gui.grid.RectangleBounds;
@@ -14,7 +14,7 @@ import records.gui.grid.VirtualGrid;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformBiConsumer;
+import xyz.columnal.utility.FXPlatformBiConsumer;
 import utility.gui.FXUtility;
 
 import java.util.Set;

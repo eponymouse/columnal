@@ -13,7 +13,7 @@ module app
     requires rinterop;
     requires stf;
     requires transformations;
-    requires utility;
+    requires xyz.columnal.utility;
     
     requires java.desktop;
     requires javafx.base;

@@ -5,10 +5,10 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.gui.dtf.Recogniser;
-import utility.Either;
-import utility.ParseProgress;
-import utility.Utility.ListEx;
-import utility.Utility.ListExList;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.ParseProgress;
+import xyz.columnal.utility.Utility.ListEx;
+import xyz.columnal.utility.Utility.ListExList;
 
 public class ListRecogniser extends Recogniser<@ImmediateValue ListEx>
 {

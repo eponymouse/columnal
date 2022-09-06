@@ -1,4 +1,4 @@
-package records.error;
+package xyz.columnal.error;
 
 /**
  * Created by neil on 04/11/2016.

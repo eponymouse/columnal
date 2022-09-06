@@ -17,7 +17,7 @@ import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformSupplierInt;
+import xyz.columnal.utility.FXPlatformSupplierInt;
 import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.DoubleOKLightDialog;
 import utility.gui.FXUtility;

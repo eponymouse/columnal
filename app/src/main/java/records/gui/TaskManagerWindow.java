@@ -16,9 +16,9 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
-import utility.Workers;
-import utility.Workers.WorkInfo;
+import xyz.columnal.utility.Utility;
+import xyz.columnal.utility.Workers;
+import xyz.columnal.utility.Workers.WorkInfo;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 

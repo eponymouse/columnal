@@ -1,7 +1,7 @@
 package records.gui.stable;
 
 import records.data.CellPosition;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 public class ColumnSelection //implements CellSelection
 {

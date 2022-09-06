@@ -3,13 +3,13 @@ package records.plugins;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import log.Log;
+import xyz.columnal.log.Log;
 import records.data.PluggedContentHandler;
 import records.data.SaveTag;
-import styled.StyledString;
-import utility.Pair;
-import utility.SimulationConsumer;
-import utility.Utility;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.SimulationConsumer;
+import xyz.columnal.utility.Utility;
 
 import java.io.File;
 import java.io.IOException;

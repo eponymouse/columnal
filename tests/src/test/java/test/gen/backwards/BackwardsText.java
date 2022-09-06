@@ -4,8 +4,8 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.datatype.DataType;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.StringConcatExpression;
 

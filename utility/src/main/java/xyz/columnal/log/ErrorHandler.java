@@ -1,9 +1,9 @@
-package log;
+package xyz.columnal.log;
 
 import javafx.application.Platform;
 import org.checkerframework.checker.i18n.qual.Localized;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

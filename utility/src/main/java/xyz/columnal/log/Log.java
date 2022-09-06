@@ -1,4 +1,4 @@
-package log;
+package xyz.columnal.log;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.logging.log4j.Level;
@@ -11,10 +11,10 @@ import org.apache.logging.log4j.util.PropertiesUtil;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import java.util.Properties;
 import java.util.function.Consumer;

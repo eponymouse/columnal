@@ -8,15 +8,15 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.unit.Unit;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
 import test.TestUtil;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import java.math.BigDecimal;
 import java.math.MathContext;

@@ -9,13 +9,13 @@ import records.data.EditableColumn;
 import records.data.EditableRecordSet;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import test.gen.type.GenDataType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.SimulationFunction;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.SimulationFunction;
 
 import java.util.ArrayList;
 import java.util.Collections;

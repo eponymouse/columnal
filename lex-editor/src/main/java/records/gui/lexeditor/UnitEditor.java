@@ -6,7 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.TypeManager;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.UnitExpression;
-import utility.FXPlatformConsumer;
+import xyz.columnal.utility.FXPlatformConsumer;
 
 public class UnitEditor extends TopLevelEditor<UnitExpression, UnitLexer, CodeCompletionContext>
 {

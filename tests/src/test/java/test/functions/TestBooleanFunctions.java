@@ -7,15 +7,15 @@ import org.junit.Test;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.Not;
 import records.transformations.function.Xor;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 import records.transformations.expression.function.ValueFunction;
 
 import static org.junit.Assert.assertEquals;

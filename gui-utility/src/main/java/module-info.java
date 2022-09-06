@@ -5,7 +5,7 @@ module guiutility
     requires static anns;
     requires static annsthreadchecker;
     requires parsers;
-    requires utility;
+    requires xyz.columnal.utility;
 
     requires com.google.common;
     requires com.sun.jna;

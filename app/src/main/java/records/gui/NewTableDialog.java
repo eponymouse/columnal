@@ -12,7 +12,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import records.gui.NewTableDialog.DataOrTransform;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 import utility.gui.DimmableParent;
 import utility.gui.FXUtility;
 import utility.gui.GUI;

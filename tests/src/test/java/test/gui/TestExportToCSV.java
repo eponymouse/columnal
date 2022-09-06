@@ -26,8 +26,8 @@ import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;

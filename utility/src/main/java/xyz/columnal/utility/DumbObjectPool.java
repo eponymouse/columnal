@@ -1,9 +1,9 @@
-package utility;
+package xyz.columnal.utility;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;

@@ -9,7 +9,7 @@ module stf
     requires data;
     requires guiutility;
     requires parsers;
-    requires utility;
+    requires xyz.columnal.utility;
 
     requires com.google.common;
     requires javafx.controls;

@@ -8,7 +8,7 @@ import records.data.ColumnId;
 import records.data.datatype.DataType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
+import xyz.columnal.utility.FXPlatformConsumer;
 import utility.gui.GUI;
 
 public class ColumnDetails

@@ -1,9 +1,9 @@
 package records.data;
 
-import records.error.InternalException;
-import records.error.UserException;
-import utility.SimulationFunction;
-import utility.SimulationFunctionInt;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
+import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.SimulationFunctionInt;
 
 import java.util.List;
 

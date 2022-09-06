@@ -1,4 +1,4 @@
-package utility;
+package xyz.columnal.utility;
 
 /**
  * Created by neil on 29/10/2016.

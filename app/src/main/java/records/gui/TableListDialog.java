@@ -15,15 +15,15 @@ import records.data.Table;
 import records.data.TableId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.FXPlatformSupplier;
-import utility.IdentifierUtility;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.IdentifierUtility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
-import utility.TranslationUtility;
+import xyz.columnal.utility.TranslationUtility;
 
 import java.util.Optional;
 

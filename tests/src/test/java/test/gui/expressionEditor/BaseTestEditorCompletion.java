@@ -9,8 +9,8 @@ import records.gui.lexeditor.completion.LexAutoCompleteWindow;
 import records.gui.lexeditor.completion.LexCompletion;
 import test.TestUtil;
 import test.gui.util.FXApplicationTest;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 
 import java.util.List;
 import java.util.Objects;

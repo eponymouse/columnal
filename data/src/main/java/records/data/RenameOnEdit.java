@@ -6,7 +6,7 @@ import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;

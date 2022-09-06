@@ -7,7 +7,7 @@ import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.scene.Node;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.transformations.expression.CanonicalSpan;
@@ -16,13 +16,13 @@ import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
 import records.gui.lexeditor.completion.InsertListener;
 import records.gui.lexeditor.completion.LexCompletionGroup;
-import styled.StyledCSS;
-import styled.StyledShowable;
-import styled.StyledString;
-import utility.FXPlatformBiFunction;
-import utility.IdentifierUtility.Consumed;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.styled.StyledCSS;
+import xyz.columnal.styled.StyledShowable;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.FXPlatformBiFunction;
+import xyz.columnal.utility.IdentifierUtility.Consumed;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -149,7 +149,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         return acd.build();
     }
 
-    static class LexerResult<EXPRESSION extends styled.StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
+    static class LexerResult<EXPRESSION extends xyz.columnal.styled.StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext>
     {
         public static class CaretPos
         {

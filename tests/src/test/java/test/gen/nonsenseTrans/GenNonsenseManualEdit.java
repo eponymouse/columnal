@@ -13,7 +13,7 @@ import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.transformations.ManualEdit;
 import records.transformations.ManualEdit.ColumnReplacementValues;
 import test.DummyManager;
@@ -23,8 +23,8 @@ import test.gen.type.GenTypeAndValueGen;
 import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.Pair;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
 
 import java.util.HashMap;
 

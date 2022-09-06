@@ -17,13 +17,13 @@ import records.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.completion.InsertListener;
 import records.transformations.expression.QuickFix;
-import styled.StyledShowable;
-import styled.StyledString;
+import xyz.columnal.styled.StyledShowable;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;

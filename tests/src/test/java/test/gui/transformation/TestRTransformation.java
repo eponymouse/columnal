@@ -25,7 +25,7 @@ import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
+import xyz.columnal.utility.Either;
 
 import java.util.Random;
 

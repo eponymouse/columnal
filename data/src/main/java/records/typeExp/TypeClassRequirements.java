@@ -6,8 +6,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.typeExp.TypeExp.TypeError;
-import styled.StyledString;
-import utility.Utility;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Utility;
 
 import java.util.Map.Entry;
 import java.util.stream.Collectors;

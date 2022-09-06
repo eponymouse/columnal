@@ -1,4 +1,4 @@
-package utility;
+package xyz.columnal.utility;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.ImmediateValue;
@@ -13,7 +13,7 @@ import info.debatty.java.stringsimilarity.Damerau;
 import javafx.css.Styleable;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
@@ -38,9 +38,9 @@ import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
-import records.error.InternalException;
-import records.error.ParseException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.ParseException;
+import xyz.columnal.error.UserException;
 import records.grammar.DataLexer;
 import records.grammar.DataLexer2;
 import records.grammar.DataParser;

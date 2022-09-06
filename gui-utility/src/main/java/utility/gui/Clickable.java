@@ -8,12 +8,12 @@ import javafx.scene.text.Text;
 import javafx.util.Duration;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import styled.StyledString.Style;
+import xyz.columnal.styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformRunnable;
-import utility.FXPlatformSupplier;
-import utility.TranslationUtility;
+import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.TranslationUtility;
 
 @OnThread(Tag.FXPlatform)
 public abstract class Clickable extends Style<Clickable>

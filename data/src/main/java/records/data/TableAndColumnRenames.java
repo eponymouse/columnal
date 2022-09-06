@@ -5,7 +5,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 import java.util.HashMap;
 import java.util.Map;

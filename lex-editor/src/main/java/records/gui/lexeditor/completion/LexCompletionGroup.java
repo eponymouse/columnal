@@ -3,8 +3,8 @@ package records.gui.lexeditor.completion;
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import styled.StyledString;
-import utility.Utility;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Utility;
 
 import java.util.OptionalInt;
 

@@ -11,7 +11,7 @@ module transformations
     requires guiutility;
     requires parsers;
     requires rinterop;
-    requires utility;
+    requires xyz.columnal.utility;
     
     requires com.google.common;
     requires javafx.base;

@@ -30,11 +30,11 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.dataflow.qual.Pure;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
-import utility.FXPlatformSupplier;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;
 import java.util.BitSet;

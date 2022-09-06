@@ -8,13 +8,13 @@ import org.junit.runner.RunWith;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.typeExp.units.MutUnitVar;
 import records.typeExp.units.UnitExp;
 import test.gen.GenUnit;
-import utility.ExConsumer;
-import utility.ExRunnable;
+import xyz.columnal.utility.ExConsumer;
+import xyz.columnal.utility.ExRunnable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

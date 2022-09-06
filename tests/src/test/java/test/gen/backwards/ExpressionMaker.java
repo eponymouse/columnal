@@ -1,7 +1,7 @@
 package test.gen.backwards;
 
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.Expression;
 
 @FunctionalInterface

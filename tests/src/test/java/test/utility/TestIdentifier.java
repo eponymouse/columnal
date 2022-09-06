@@ -3,7 +3,7 @@ package test.utility;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import utility.IdentifierUtility;
+import xyz.columnal.utility.IdentifierUtility;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;

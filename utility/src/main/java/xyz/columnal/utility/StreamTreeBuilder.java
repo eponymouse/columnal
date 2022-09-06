@@ -1,4 +1,4 @@
-package utility;
+package xyz.columnal.utility;
 
 import java.util.ArrayList;
 import java.util.List;

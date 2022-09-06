@@ -3,7 +3,7 @@ package records.gui.stable;
 import javafx.animation.AnimationTimer;
 import javafx.animation.Interpolator;
 import javafx.beans.property.DoubleProperty;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import threadchecker.OnThread;

@@ -15,12 +15,12 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.unit.Unit;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import test.gen.type.GenDataType;
-import utility.Either;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 
 import java.util.Collections;
 import java.util.HashSet;

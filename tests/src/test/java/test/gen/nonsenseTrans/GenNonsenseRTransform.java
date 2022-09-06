@@ -6,7 +6,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.DataTestUtil;
 import records.data.TableId;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.transformations.RTransformation;
 import test.DummyManager;
 import test.TestUtil;

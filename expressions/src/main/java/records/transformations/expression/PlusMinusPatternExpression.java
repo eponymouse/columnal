@@ -6,18 +6,18 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.datatype.DataTypeUtility;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
 import records.typeExp.units.UnitExp;
-import styled.StyledString;
-import utility.Pair;
-import utility.Utility;
-import utility.Utility.EpsilonType;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
+import xyz.columnal.utility.Utility.EpsilonType;
 
 /**
  * This is a pattern match item, value +- tolerance.

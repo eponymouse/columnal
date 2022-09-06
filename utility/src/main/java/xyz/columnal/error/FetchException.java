@@ -1,4 +1,4 @@
-package records.error;
+package xyz.columnal.error;
 
 import java.io.IOException;
 

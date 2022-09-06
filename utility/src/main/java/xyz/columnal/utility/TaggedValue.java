@@ -1,4 +1,4 @@
-package utility;
+package xyz.columnal.utility;
 
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;

@@ -1,7 +1,7 @@
-package records.error;
+package xyz.columnal.error;
 
 import org.checkerframework.dataflow.qual.Pure;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

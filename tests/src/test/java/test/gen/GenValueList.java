@@ -5,11 +5,11 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import test.TestUtil;
 import test.gen.GenValueList.ListAndType;
-import utility.Utility.ListEx;
+import xyz.columnal.utility.Utility.ListEx;
 
 /**
  * Created by neil on 22/01/2017.

@@ -1,7 +1,7 @@
-package utility;
+package xyz.columnal.utility;
 
 import com.google.common.collect.ImmutableList;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.checkerframework.checker.interning.qual.UsesObjectEquals;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.checkerframework.checker.nullness.qual.NonNull;

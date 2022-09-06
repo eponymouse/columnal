@@ -8,7 +8,7 @@ import org.testfx.api.FxRobotInterface;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;

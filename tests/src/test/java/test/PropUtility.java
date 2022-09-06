@@ -8,9 +8,9 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import org.sosy_lab.common.rationals.Rational;
-import records.error.UserException;
+import xyz.columnal.error.UserException;
 import test.gen.GenNumber;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;

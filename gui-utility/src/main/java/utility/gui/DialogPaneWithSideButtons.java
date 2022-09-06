@@ -10,14 +10,14 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import java.util.Comparator;
 import java.util.List;

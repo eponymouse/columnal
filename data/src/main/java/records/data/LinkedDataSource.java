@@ -3,7 +3,7 @@ package records.data;
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;

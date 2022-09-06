@@ -8,10 +8,10 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.gui.lexeditor.completion.InsertListener;
 import records.gui.lexeditor.completion.LexAutoCompleteWindow;
-import utility.ResourceUtility;
+import xyz.columnal.utility.ResourceUtility;
 import utility.gui.FXUtility;
 
 import java.net.URL;

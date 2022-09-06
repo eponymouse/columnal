@@ -6,7 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
+import xyz.columnal.utility.Either;
 
 /**
  * A selection of cells.  This might be, for example:

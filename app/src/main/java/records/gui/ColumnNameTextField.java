@@ -7,7 +7,7 @@ import records.data.ColumnId;
 import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.TranslationUtility;
+import xyz.columnal.utility.TranslationUtility;
 import utility.gui.ErrorableTextField;
 
 /**

@@ -4,8 +4,8 @@ import annotation.qual.Value;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.UnitExpression;
 

@@ -15,15 +15,15 @@ import records.data.columntype.NumericColumnType;
 import records.data.columntype.TextColumnType;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.unit.Unit;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.importers.GuessFormat;
 import records.importers.ColumnInfo;
 import records.importers.GuessFormat.FinalTextFormat;
 import test.gen.GenFormat;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import java.nio.charset.Charset;
 import java.time.LocalDate;

@@ -1,7 +1,7 @@
-package utility;
+package xyz.columnal.utility;
 
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 
 /**
  * Created by neil on 16/11/2016.

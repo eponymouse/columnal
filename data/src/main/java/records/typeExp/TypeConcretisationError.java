@@ -2,7 +2,7 @@ package records.typeExp;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 
 /**
  * Basically a wrapper for a String error, with a flag recording whether fixing the type

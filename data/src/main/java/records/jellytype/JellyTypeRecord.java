@@ -10,14 +10,14 @@ import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.loadsave.OutputBuilder;
 import records.typeExp.MutVar;
 import records.typeExp.RecordTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
-import utility.Either;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Utility;
 
 import java.util.Comparator;
 import java.util.Map.Entry;

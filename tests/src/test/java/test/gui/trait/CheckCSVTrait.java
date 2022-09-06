@@ -9,14 +9,14 @@ import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.gui.grid.VirtualGrid;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 
 import java.io.File;
 import java.io.IOException;

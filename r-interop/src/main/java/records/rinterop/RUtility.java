@@ -9,11 +9,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeUtility;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.rinterop.RVisitor.PairListEntry;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 
 import java.math.BigDecimal;
 import java.time.Instant;

@@ -11,7 +11,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 /**
  * A LightDialog variant that when OK is clicked, checks if result is valid.

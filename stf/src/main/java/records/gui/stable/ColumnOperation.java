@@ -4,8 +4,8 @@ import javafx.scene.control.MenuItem;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Workers;
-import utility.Workers.Priority;
+import xyz.columnal.utility.Workers;
+import xyz.columnal.utility.Workers.Priority;
 import utility.gui.GUI;
 
 /**

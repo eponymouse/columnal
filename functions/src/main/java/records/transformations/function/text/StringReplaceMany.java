@@ -5,15 +5,15 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.function.ValueFunction;
 import records.transformations.function.FunctionDefinition;
-import utility.Either;
-import utility.SimulationFunction;
-import utility.Utility;
-import utility.Utility.ListEx;
-import utility.Utility.Record;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.Utility;
+import xyz.columnal.utility.Utility.ListEx;
+import xyz.columnal.utility.Utility.Record;
 
 import java.util.ArrayList;
 

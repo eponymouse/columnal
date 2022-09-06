@@ -3,9 +3,9 @@ package records.typeExp.units;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.unit.Unit;
-import styled.CommonStyles;
-import styled.StyledShowable;
-import styled.StyledString;
+import xyz.columnal.styled.CommonStyles;
+import xyz.columnal.styled.StyledShowable;
+import xyz.columnal.styled.StyledString;
 
 import java.util.Objects;
 

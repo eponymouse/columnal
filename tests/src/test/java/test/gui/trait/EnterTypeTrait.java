@@ -4,7 +4,7 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import javafx.scene.input.KeyCode;
 import org.testfx.api.FxRobotInterface;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.IdentTypeExpression;
@@ -17,9 +17,9 @@ import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.Pair;
-import utility.UnitType;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.UnitType;
 
 import java.util.Random;
 

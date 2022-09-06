@@ -1,8 +1,8 @@
-package records.error;
+package xyz.columnal.error;
 
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

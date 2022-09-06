@@ -4,9 +4,9 @@ import annotation.units.CanonicalLocation;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.completion.LexAutoComplete.LexSelectionBehaviour;
-import styled.StyledString;
-import utility.Either;
-import utility.Pair;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
 
 import java.util.Objects;
 

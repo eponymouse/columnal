@@ -28,14 +28,14 @@ import javafx.scene.shape.PathElement;
 import javafx.scene.text.HitInfo;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
-import utility.Utility.IndexRange;
+import xyz.columnal.utility.Utility;
+import xyz.columnal.utility.Utility.IndexRange;
 
 import java.util.ArrayList;
 import java.util.Arrays;

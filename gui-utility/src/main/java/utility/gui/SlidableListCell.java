@@ -12,8 +12,8 @@ import javafx.util.Duration;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformRunnable;
-import utility.Utility;
+import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.Utility;
 
 import java.util.List;
 

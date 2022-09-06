@@ -11,17 +11,17 @@ import records.data.EditableRecordSet;
 import records.data.RecordSet;
 import records.data.TableManager;
 import records.data.columntype.TextColumnType;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.importers.GuessFormat.GuessException;
 import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.TrimChoice;
 import records.importers.ImportPlainTable.PlainImportInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
-import utility.SimulationFunction;
-import utility.UnitType;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.UnitType;
 
 import java.util.List;
 

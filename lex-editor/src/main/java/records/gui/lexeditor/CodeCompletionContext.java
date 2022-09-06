@@ -9,9 +9,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.TopLevelEditor.DisplayType;
 import records.gui.lexeditor.completion.LexCompletion;
 import records.gui.lexeditor.completion.LexCompletionGroup;
-import styled.StyledString;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 
 import java.util.EnumMap;
 

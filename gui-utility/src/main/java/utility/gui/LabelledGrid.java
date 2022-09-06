@@ -14,8 +14,8 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
-import utility.TranslationUtility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.TranslationUtility;
 
 /**
  * A GridPane with three columns (label, help box, and content) and

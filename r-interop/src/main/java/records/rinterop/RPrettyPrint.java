@@ -5,8 +5,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.List;

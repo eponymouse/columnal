@@ -3,7 +3,7 @@ package records.transformations.expression.function;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 
 public interface FunctionLookup
 {

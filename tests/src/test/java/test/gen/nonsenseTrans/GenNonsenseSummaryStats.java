@@ -8,8 +8,8 @@ import records.data.ColumnId;
 import records.data.DataTestUtil;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.Aggregate;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.Expression;
@@ -20,7 +20,7 @@ import test.TestUtil;
 import test.TestUtil.Transformation_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 import java.util.List;
 

@@ -6,13 +6,13 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.datatype.DataType;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.Expression;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 import java.util.List;
 

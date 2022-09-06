@@ -8,8 +8,8 @@ import records.data.unit.UnitManager;
 import records.jellytype.JellyUnit;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.Expression.SaveDestination;
-import styled.StyledString;
-import utility.IdentifierUtility;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.IdentifierUtility;
 
 // Same distinction as IdentExpression/InvalidIdentExpression
 public class InvalidSingleUnitExpression extends UnitExpression

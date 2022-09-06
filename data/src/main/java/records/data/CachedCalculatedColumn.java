@@ -1,17 +1,17 @@
 package records.data;
 
-import log.Log;
+import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.ColumnStorage.BeforeGet;
 import records.data.datatype.DataTypeValue;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.ExFunction;
-import utility.FunctionInt;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.ExFunction;
+import xyz.columnal.utility.FunctionInt;
+import xyz.columnal.utility.Utility;
 
 import java.util.function.Function;
 import java.util.stream.Stream;

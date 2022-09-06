@@ -6,8 +6,8 @@ import records.data.GridComment;
 import records.data.Table;
 import records.data.TableManager;
 import records.data.Transformation;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.TransformationManager;
 
 /**

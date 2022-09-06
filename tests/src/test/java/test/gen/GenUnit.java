@@ -8,8 +8,8 @@ import records.data.unit.SingleUnit;
 import records.data.unit.SingleUnit;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 
 import java.util.List;
 

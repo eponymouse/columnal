@@ -16,13 +16,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunction;
-import utility.FXPlatformRunnable;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.FXPlatformFunction;
+import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;

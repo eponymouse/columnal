@@ -9,9 +9,9 @@ import records.data.DataSource;
 import records.data.TableManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.Pair;
-import utility.SimulationConsumerNoError;
+import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.SimulationConsumerNoError;
 
 import java.io.File;
 import java.net.URL;

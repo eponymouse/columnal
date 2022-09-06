@@ -11,8 +11,8 @@ import records.data.TableManager;
 import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformRunnable;
-import utility.TranslationUtility;
+import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.TranslationUtility;
 import utility.gui.ErrorableTextField;
 
 import java.util.ArrayList;

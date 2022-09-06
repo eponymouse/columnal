@@ -1,6 +1,6 @@
 package records.gui.stable;
 
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 public class ScrollResult<T extends Integer>
 {

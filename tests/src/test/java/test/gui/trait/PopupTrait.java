@@ -6,14 +6,14 @@ import javafx.scene.Node;
 import javafx.scene.input.MouseButton;
 import javafx.stage.PopupWindow;
 import javafx.stage.Window;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.controlsfx.control.PopOver;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.service.query.PointQuery;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import java.util.function.Supplier;
 

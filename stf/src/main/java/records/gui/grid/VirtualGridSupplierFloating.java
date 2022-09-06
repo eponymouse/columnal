@@ -10,11 +10,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.CellPosition;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;

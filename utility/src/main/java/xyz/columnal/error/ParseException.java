@@ -1,11 +1,11 @@
-package records.error;
+package xyz.columnal.error;
 
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.commons.lang3.StringUtils;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 /**
  * Created by neil on 14/01/2017.

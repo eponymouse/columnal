@@ -3,12 +3,12 @@ package records.exporters;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import records.data.Table;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.rinterop.ConvertToR;
 import records.rinterop.ConvertFromR.TableType;
 import records.rinterop.RWrite;
-import utility.TranslationUtility;
+import xyz.columnal.utility.TranslationUtility;
 
 import java.io.File;
 import java.io.IOException;

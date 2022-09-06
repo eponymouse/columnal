@@ -3,9 +3,9 @@ package records.data;
 import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeManager;
-import records.error.InternalException;
-import records.error.UserException;
-import styled.StyledString;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

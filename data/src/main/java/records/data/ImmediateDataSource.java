@@ -1,22 +1,22 @@
 package records.data;
 
 import annotation.qual.Value;
-import log.ErrorHandler;
+import xyz.columnal.log.ErrorHandler;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.i18n.qual.Localized;
 import records.data.TableOperations.DeleteColumn;
 import records.data.datatype.DataType;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.TranslationUtility;
-import utility.Workers;
-import utility.Workers.Priority;
+import xyz.columnal.utility.TranslationUtility;
+import xyz.columnal.utility.Workers;
+import xyz.columnal.utility.Workers.Priority;
 
 import java.io.File;
 import java.util.Optional;

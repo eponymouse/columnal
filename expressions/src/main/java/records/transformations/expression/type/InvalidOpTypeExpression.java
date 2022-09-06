@@ -7,13 +7,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.grammar.FormatLexer;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.Expression.SaveDestination;
-import styled.StyledString;
-import utility.Utility;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Utility;
 
 import java.util.Objects;
 import java.util.stream.Collectors;

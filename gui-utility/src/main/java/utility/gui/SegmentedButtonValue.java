@@ -10,8 +10,8 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.controlsfx.control.SegmentedButton;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
-import utility.TranslationUtility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.TranslationUtility;
 
 import java.util.IdentityHashMap;
 

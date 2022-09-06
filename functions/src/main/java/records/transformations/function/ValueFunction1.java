@@ -1,8 +1,8 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import records.transformations.expression.function.ValueFunction;

@@ -9,14 +9,14 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.data.NumericColumnStorage;
 import records.data.datatype.NumberInfo;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import test.gen.GenNumber;
 import test.gen.GenNumbers;
 import test.gen.GenNumbersAsString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import java.io.IOException;
 import java.math.BigDecimal;

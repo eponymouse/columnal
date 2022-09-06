@@ -6,7 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stable.ScrollGroup.Token;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 // An item which can have its scrolling bound to VirtScrollStrTextGrid
 @OnThread(Tag.FXPlatform)

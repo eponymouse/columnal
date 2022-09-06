@@ -4,15 +4,15 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table;
 import records.data.TableId;
 import records.data.datatype.DataType;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import records.transformations.expression.TypeState;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformSupplierInt;
+import xyz.columnal.utility.FXPlatformSupplierInt;
 
 public class ExpressionErrorException extends UserException
 {

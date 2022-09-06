@@ -1,7 +1,7 @@
-package styled;
+package xyz.columnal.styled;
 
 import javafx.scene.text.Text;
-import styled.StyledString.Style;
+import xyz.columnal.styled.StyledString.Style;
 
 public class CommonStyles
 {

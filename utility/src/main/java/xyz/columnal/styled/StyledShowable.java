@@ -1,4 +1,4 @@
-package styled;
+package xyz.columnal.styled;
 
 public interface StyledShowable
 {

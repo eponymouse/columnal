@@ -1,7 +1,7 @@
 package records.transformations.function;
 
 import annotation.funcdoc.qual.FuncDocKey;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 
 /**
  * Base class for functions which take a single numeric input,

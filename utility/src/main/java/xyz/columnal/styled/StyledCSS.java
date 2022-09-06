@@ -1,13 +1,13 @@
-package styled;
+package xyz.columnal.styled;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import javafx.scene.text.Text;
-import styled.StyledString.Style;
+import xyz.columnal.styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 /**
  * A Style for StyledString that applies a set of CSS classes.

@@ -7,7 +7,7 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.Expression.SaveDestination;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 
 public class UnitExpressionIntLiteral extends UnitExpression
 {

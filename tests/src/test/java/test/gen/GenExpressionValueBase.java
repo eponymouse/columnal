@@ -8,15 +8,15 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.javaruntype.type.TypeParameter;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.Expression;
 import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 import java.math.BigDecimal;
 import java.util.IdentityHashMap;

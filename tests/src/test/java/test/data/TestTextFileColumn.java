@@ -19,16 +19,16 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.unit.Unit;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import test.gen.GenFile;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.IdentifierUtility;
-import utility.SimulationFunction;
-import utility.Utility;
-import utility.Utility.ReadState;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.IdentifierUtility;
+import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.Utility;
+import xyz.columnal.utility.Utility.ReadState;
 
 import java.io.IOException;
 

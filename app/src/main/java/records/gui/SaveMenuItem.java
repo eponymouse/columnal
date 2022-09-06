@@ -10,7 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.gui.FXUtility;
-import utility.TranslationUtility;
+import xyz.columnal.utility.TranslationUtility;
 
 import java.time.Instant;
 

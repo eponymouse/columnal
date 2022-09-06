@@ -1,4 +1,4 @@
-package utility;
+package xyz.columnal.utility;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.identifier.qual.UnitIdentifier;
@@ -15,7 +15,7 @@ import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser.IdentContext;
 import records.grammar.UnitLexer;
 import records.grammar.UnitParser.SingleUnitContext;
-import utility.Utility.DescriptiveErrorListener;
+import xyz.columnal.utility.Utility.DescriptiveErrorListener;
 
 import java.util.ArrayList;
 import java.util.Arrays;

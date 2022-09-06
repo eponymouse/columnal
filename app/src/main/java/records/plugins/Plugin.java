@@ -2,8 +2,8 @@ package records.plugins;
 
 import com.google.common.collect.ImmutableMap;
 import records.data.SaveTag;
-import utility.Pair;
-import utility.SimulationConsumer;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.SimulationConsumer;
 
 public abstract class Plugin
 {

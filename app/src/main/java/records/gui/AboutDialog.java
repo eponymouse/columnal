@@ -11,7 +11,7 @@ import javafx.stage.Modality;
 import javafx.stage.Window;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 import utility.gui.DimmableParent;
 import utility.gui.FXUtility;
 import utility.gui.GUI;

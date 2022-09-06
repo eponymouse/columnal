@@ -5,8 +5,8 @@ import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.gui.dtf.Recogniser;
-import utility.Either;
-import utility.ParseProgress;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.ParseProgress;
 
 public class BooleanRecogniser extends Recogniser<@ImmediateValue Boolean>
 {

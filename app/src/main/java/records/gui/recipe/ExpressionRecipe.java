@@ -8,8 +8,8 @@ import records.gui.lexeditor.ExpressionEditor.ColumnPicker;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformSupplier;
-import utility.TranslationUtility;
+import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.TranslationUtility;
 
 @OnThread(Tag.FXPlatform)
 public abstract class ExpressionRecipe

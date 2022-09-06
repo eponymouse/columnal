@@ -7,7 +7,7 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.TranslationUtility;
+import xyz.columnal.utility.TranslationUtility;
 
 import java.util.ArrayList;
 

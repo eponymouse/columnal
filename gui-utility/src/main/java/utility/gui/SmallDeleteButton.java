@@ -10,8 +10,8 @@ import javafx.scene.shape.Path;
 import javafx.scene.shape.Shape;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
+import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.FXPlatformRunnable;
 
 /**
  * A cross shape, like the close on a web browser tab header

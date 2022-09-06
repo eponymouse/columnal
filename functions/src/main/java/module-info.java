@@ -13,7 +13,7 @@ module functions
     requires data;
     requires expressions;
     requires parsers;
-    requires utility;
+    requires xyz.columnal.utility;
 
     requires big.math;
     requires com.google.common;

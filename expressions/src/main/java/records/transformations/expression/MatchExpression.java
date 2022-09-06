@@ -9,8 +9,8 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.transformations.expression.explanation.Explanation;
 import records.transformations.expression.explanation.Explanation.ExecutionType;
@@ -18,11 +18,11 @@ import records.transformations.expression.explanation.Explanation.ExplanationSou
 import records.transformations.expression.explanation.ExplanationLocation;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;

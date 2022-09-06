@@ -6,7 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.Expression.SaveDestination;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 
 public class UnitRaiseExpression extends UnitExpression
 {

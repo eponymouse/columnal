@@ -7,8 +7,8 @@ import records.data.TableId;
 import records.data.TableManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Workers;
-import utility.Workers.Priority;
+import xyz.columnal.utility.Workers;
+import xyz.columnal.utility.Workers.Priority;
 
 public abstract class SimpleColumnOperation extends ColumnOperation
 {

@@ -1,6 +1,6 @@
-package records.error;
+package xyz.columnal.error;
 
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 
 /**
  * Created by neil on 22/10/2016.

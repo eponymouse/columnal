@@ -1,8 +1,8 @@
 package records.rinterop;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 
 import java.io.DataInputStream;
 import java.io.IOException;

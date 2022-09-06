@@ -5,17 +5,17 @@ import annotation.qual.Value;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.function.ValueFunction;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.ValueFunction1;
 import records.transformations.function.ValueFunction2;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.SimulationFunction;
-import utility.TaggedValue;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.TaggedValue;
 
 public class GetOptionalOrDefault extends FunctionDefinition
 {

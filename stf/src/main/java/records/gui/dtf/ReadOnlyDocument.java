@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.dtf.Document.TrackedPosition.Bias;
-import utility.FXPlatformRunnable;
-import utility.Pair;
+import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.Pair;
 
 import java.util.Set;
 import java.util.stream.Collectors;

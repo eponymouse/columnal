@@ -6,7 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.Expression.SaveDestination.ToEditor;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;

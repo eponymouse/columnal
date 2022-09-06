@@ -5,10 +5,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import styled.StyledString;
-import utility.Either;
-import utility.Pair;
-import utility.ParseProgress;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.ParseProgress;
 
 public abstract class Recogniser<T>
 {

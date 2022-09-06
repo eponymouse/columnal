@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import test.gen.GenGraph;
 import test.gen.GenGraph.Graph;
-import utility.GraphUtility;
+import xyz.columnal.utility.GraphUtility;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -10,9 +10,9 @@ import records.data.ColumnId;
 import records.data.Table;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.Pair;
-import utility.TranslationUtility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.TranslationUtility;
 import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
 

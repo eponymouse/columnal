@@ -7,14 +7,14 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.grammar.FormatParser;
 import records.loadsave.OutputBuilder;
 import records.typeExp.MutVar;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
-import utility.Either;
+import xyz.columnal.utility.Either;
 
 import java.util.Objects;
 import java.util.function.Consumer;

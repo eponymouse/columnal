@@ -2,8 +2,8 @@ package records.gui.lexeditor;
 
 import annotation.units.CanonicalLocation;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import styled.StyledShowable;
-import utility.Pair;
+import xyz.columnal.styled.StyledShowable;
+import xyz.columnal.utility.Pair;
 
 import java.util.ArrayList;
 

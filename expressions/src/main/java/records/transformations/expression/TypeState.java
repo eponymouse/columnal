@@ -13,13 +13,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.transformations.expression.function.FunctionLookup;
 import records.typeExp.TypeExp;
 import records.typeExp.TypeExp.TypeError;
-import styled.StyledString;
-import utility.Either;
-import utility.Utility;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Utility;
 
 import java.util.HashMap;
 import java.util.List;

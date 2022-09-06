@@ -1,6 +1,6 @@
 package records.gui.stable;
 
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 public class RowSelection //implements CellSelection
 {

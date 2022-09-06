@@ -5,9 +5,9 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeUtility;
-import records.error.InternalException;
-import records.error.UserException;
-import utility.Utility;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
+import xyz.columnal.utility.Utility;
 
 import java.io.DataOutputStream;
 import java.io.File;

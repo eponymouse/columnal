@@ -7,10 +7,10 @@ import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.typeExp.units.UnitExp;
-import styled.StyledString;
-import utility.Either;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Either;
 
 import java.util.Objects;
 

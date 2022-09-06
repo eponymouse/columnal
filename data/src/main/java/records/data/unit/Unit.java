@@ -4,8 +4,8 @@ import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
-import records.error.UserException;
-import utility.Pair;
+import xyz.columnal.error.UserException;
+import xyz.columnal.utility.Pair;
 
 import java.util.Collections;
 import java.util.Map;

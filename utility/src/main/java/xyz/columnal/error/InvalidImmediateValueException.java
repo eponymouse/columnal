@@ -1,6 +1,6 @@
-package records.error;
+package xyz.columnal.error;
 
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 
 public class InvalidImmediateValueException extends UserException
 {

@@ -10,12 +10,12 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.StringView;
 import records.data.datatype.TypeManager;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
-import styled.StyledString;
-import utility.Either;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Either;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Objects;

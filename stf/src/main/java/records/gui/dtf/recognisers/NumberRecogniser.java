@@ -2,12 +2,12 @@ package records.gui.dtf.recognisers;
 
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
-import records.error.UserException;
+import xyz.columnal.error.UserException;
 import records.gui.dtf.Recogniser;
-import utility.Either;
-import utility.Pair;
-import utility.ParseProgress;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.ParseProgress;
+import xyz.columnal.utility.Utility;
 
 public class NumberRecogniser extends Recogniser<@ImmediateValue Number>
 {

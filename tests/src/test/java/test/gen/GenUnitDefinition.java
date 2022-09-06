@@ -9,8 +9,8 @@ import org.sosy_lab.common.rationals.Rational;
 import records.data.unit.SingleUnit;
 import records.data.unit.UnitDeclaration;
 import test.gen.GenUnitDefinition.UnitDetails;
-import utility.Either;
-import utility.Pair;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

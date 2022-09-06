@@ -5,7 +5,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.transformations.Filter;
 import records.transformations.expression.Expression;
 import test.DummyManager;
@@ -13,7 +13,7 @@ import test.TestUtil;
 import test.TestUtil.Transformation_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 /**
  * Created by neil on 27/11/2016.

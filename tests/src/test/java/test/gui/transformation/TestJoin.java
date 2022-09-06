@@ -27,11 +27,11 @@ import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.Pair;
-import utility.SimulationFunction;
-import utility.TaggedValue;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.TaggedValue;
+import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;

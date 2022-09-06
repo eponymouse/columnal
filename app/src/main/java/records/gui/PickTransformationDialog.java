@@ -12,7 +12,7 @@ import records.transformations.TransformationInfo;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 import utility.gui.DimmableParent;
 import utility.gui.FXUtility;
 import utility.gui.LightDialog;

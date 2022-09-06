@@ -7,7 +7,7 @@ import records.data.ColumnId;
 import records.data.DataTestUtil;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.transformations.Join;
 import test.DummyManager;
 import test.TestUtil;
@@ -15,7 +15,7 @@ import test.TestUtil.Transformation_Mgr;
 import test.gen.GenValueBase;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 import static org.junit.Assume.assumeNoException;
 

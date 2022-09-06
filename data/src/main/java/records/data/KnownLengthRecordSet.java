@@ -1,10 +1,10 @@
 package records.data;
 
 import annotation.units.TableDataRowIndex;
-import records.error.InternalException;
-import records.error.UserException;
-import utility.ExFunction;
-import utility.SimulationFunction;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
+import xyz.columnal.utility.ExFunction;
+import xyz.columnal.utility.SimulationFunction;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package utility;
+package xyz.columnal.utility;
 
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;

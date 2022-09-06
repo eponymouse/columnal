@@ -20,9 +20,9 @@ import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformRunnable;
-import utility.TranslationUtility;
-import utility.Utility;
+import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.TranslationUtility;
+import xyz.columnal.utility.Utility;
 import utility.gui.Help.HelpInfo;
 
 /**

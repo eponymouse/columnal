@@ -9,11 +9,11 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.FlatDataTypeVisitor;
 import records.data.datatype.NumberInfo;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.NumericLiteral;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -36,13 +36,13 @@ import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.stable.ScrollGroup;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 import test.TestUtil;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformRunnable;
-import utility.Pair;
+import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.Pair;
 
 import java.util.ArrayList;
 import java.util.Optional;

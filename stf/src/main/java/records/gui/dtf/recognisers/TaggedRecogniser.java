@@ -8,11 +8,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.gui.dtf.Recogniser;
-import utility.Either;
-import utility.Pair;
-import utility.ParseProgress;
-import utility.TaggedValue;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.ParseProgress;
+import xyz.columnal.utility.TaggedValue;
+import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;

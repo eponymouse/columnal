@@ -28,13 +28,13 @@ import records.transformations.expression.type.RecordTypeExpression;
 import records.transformations.expression.type.TypeApplyExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.UnitLiteralTypeExpression;
-import styled.StyledShowable;
-import styled.StyledString;
+import xyz.columnal.styled.StyledShowable;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;

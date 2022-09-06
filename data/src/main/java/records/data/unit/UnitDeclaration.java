@@ -4,7 +4,7 @@ import annotation.identifier.qual.UnitIdentifier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 import java.util.ArrayList;
 import java.util.List;

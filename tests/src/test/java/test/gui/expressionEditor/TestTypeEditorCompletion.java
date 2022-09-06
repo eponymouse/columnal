@@ -29,8 +29,8 @@ import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
-import utility.SimulationSupplier;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.SimulationSupplier;
 import utility.gui.FXUtility;
 
 import static org.junit.Assert.assertNotNull;

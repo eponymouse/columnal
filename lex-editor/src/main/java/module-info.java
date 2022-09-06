@@ -9,7 +9,7 @@ module lexeditor
     requires expressions;
     requires guiutility;
     requires parsers;
-    requires utility;
+    requires xyz.columnal.utility;
 
     requires com.google.common;
     requires java.desktop;

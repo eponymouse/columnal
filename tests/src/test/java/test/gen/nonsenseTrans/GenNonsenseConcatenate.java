@@ -6,7 +6,7 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.DataTestUtil;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.transformations.Concatenate;
 import records.transformations.Concatenate.IncompleteColumnHandling;
 import test.DummyManager;

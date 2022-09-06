@@ -2,19 +2,19 @@ package records.rinterop;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.data.RecordSet;
 import records.data.Settings;
 import records.data.TableManager;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.rinterop.ConvertFromR.TableType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import java.io.File;
 import java.io.IOException;

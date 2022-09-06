@@ -15,11 +15,11 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.ResourceUtility;
-import utility.Utility;
+import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.ResourceUtility;
+import xyz.columnal.utility.Utility;
 import utility.gui.GUI;
-import utility.TranslationUtility;
+import xyz.columnal.utility.TranslationUtility;
 
 import java.net.URL;
 

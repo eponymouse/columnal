@@ -20,9 +20,9 @@ import test.gen.type.GenJellyTypeMaker.TypeKinds;
 import test.importExport.GenRCompatibleRecordSet.RCompatibleRecordSet;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.SimulationFunction;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.Utility;
 
 import static org.junit.Assert.assertEquals;
 

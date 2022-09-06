@@ -7,12 +7,12 @@ import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.DataTestUtil;
 import records.data.datatype.DataType;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.FieldAccessExpression;
 import test.TestUtil;
-import utility.Pair;
-import utility.Utility.RecordMap;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility.RecordMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -2,11 +2,11 @@ package records.data.datatype;
 
 import annotation.qual.Value;
 import records.data.Column;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility.ListEx;
+import xyz.columnal.utility.Utility.ListEx;
 
 /**
  * A ListEx wrapped around a column

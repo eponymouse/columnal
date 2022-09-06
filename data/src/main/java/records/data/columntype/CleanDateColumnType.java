@@ -4,9 +4,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.error.InternalException;
-import utility.Either;
-import utility.Utility;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Utility;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

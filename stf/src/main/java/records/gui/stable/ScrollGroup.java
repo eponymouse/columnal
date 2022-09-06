@@ -15,9 +15,9 @@ import org.checkerframework.checker.units.qual.A;
 import records.gui.stable.SmoothScroller.ScrollClamp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformBiFunction;
-import utility.FXPlatformFunction;
-import utility.Pair;
+import xyz.columnal.utility.FXPlatformBiFunction;
+import xyz.columnal.utility.FXPlatformFunction;
+import xyz.columnal.utility.Pair;
 import utility.gui.FXUtility;
 
 import java.util.IdentityHashMap;

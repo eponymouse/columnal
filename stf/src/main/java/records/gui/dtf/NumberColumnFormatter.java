@@ -13,9 +13,9 @@ import records.data.datatype.DataTypeUtility;
 import records.gui.stable.EditorKitCache;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 import utility.gui.FXUtility;
 
 import java.math.BigInteger;

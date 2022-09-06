@@ -5,11 +5,11 @@ import de.uni_freiburg.informatik.ultimate.smtinterpol.util.IdentityHashSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.error.InternalException;
-import records.error.UserException;
-import styled.CommonStyles;
-import styled.StyledString;
-import utility.Either;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
+import xyz.columnal.styled.CommonStyles;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Either;
 
 /**
  * Named MutVar after the Sheard paper.  Essentially, any time there

@@ -7,8 +7,8 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.*;
 import records.data.Table.InitialLoadDetails;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.Aggregate;
 import records.transformations.Calculate;
 import records.transformations.Concatenate;
@@ -27,11 +27,11 @@ import test.TestUtil;
 import test.gen.type.GenDataTypeMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeAndValueMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeMaker;
-import utility.Either;
-import utility.ExSupplier;
-import utility.IdentifierUtility;
-import utility.Pair;
-import utility.SimulationFunction;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.ExSupplier;
+import xyz.columnal.utility.IdentifierUtility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.SimulationFunction;
 
 import java.util.ArrayList;
 

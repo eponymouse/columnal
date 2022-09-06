@@ -9,10 +9,10 @@ import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformRunnable;
+import xyz.columnal.utility.FXPlatformRunnable;
 
 /**
  * A GUI list of quick-fix suggestions.  Like a ListView, but sizes to fit properly

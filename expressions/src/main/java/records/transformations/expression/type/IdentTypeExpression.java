@@ -3,18 +3,18 @@ package records.transformations.expression.type;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.jellytype.JellyType;
 import records.transformations.expression.Expression.SaveDestination;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 
 import java.util.Objects;
 

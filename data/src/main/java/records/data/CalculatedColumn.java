@@ -2,8 +2,8 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnStorage.BeforeGet;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

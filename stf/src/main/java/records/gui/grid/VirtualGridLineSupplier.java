@@ -8,9 +8,9 @@ import javafx.scene.shape.Line;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import styled.StyledString;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 
 import java.util.Collection;
 import java.util.HashMap;

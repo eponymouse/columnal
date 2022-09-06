@@ -3,11 +3,11 @@ package records.data;
 import annotation.identifier.qual.ExpressionIdentifier;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import styled.StyledShowable;
-import styled.StyledString;
+import xyz.columnal.styled.StyledShowable;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import java.io.Serializable;
 

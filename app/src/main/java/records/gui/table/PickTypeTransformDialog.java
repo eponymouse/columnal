@@ -12,7 +12,7 @@ import records.gui.table.PickTypeTransformDialog.TypeTransform;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformSupplier;
+import xyz.columnal.utility.FXPlatformSupplier;
 import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.DimmableParent;
 import utility.gui.FXUtility;

@@ -32,13 +32,13 @@ import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGridSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.table.TableDisplay;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.FXPlatformRunnable;
-import utility.Pair;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.ResizableRectangle;
 

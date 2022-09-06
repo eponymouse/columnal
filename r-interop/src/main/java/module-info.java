@@ -5,7 +5,7 @@ module rinterop
     requires static anns;
     requires static annsthreadchecker;
     requires data;
-    requires utility;
+    requires xyz.columnal.utility;
     
     requires com.google.common;
     requires commons.io;

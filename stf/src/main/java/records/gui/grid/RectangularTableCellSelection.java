@@ -8,8 +8,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Utility;
 
 /**
  * A rectangular selection is constrained to one table

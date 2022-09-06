@@ -1,7 +1,7 @@
 package records.data;
 
 import org.checkerframework.dataflow.qual.Pure;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

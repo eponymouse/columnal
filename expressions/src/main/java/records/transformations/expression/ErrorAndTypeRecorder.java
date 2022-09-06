@@ -13,10 +13,10 @@ import records.transformations.expression.function.FunctionLookup;
 import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeExp;
 import records.typeExp.TypeExp.TypeError;
-import styled.StyledShowable;
-import styled.StyledString;
-import utility.Either;
-import utility.Pair;
+import xyz.columnal.styled.StyledShowable;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
 
 import java.util.List;
 import java.util.function.Consumer;

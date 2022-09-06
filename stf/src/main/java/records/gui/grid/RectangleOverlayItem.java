@@ -9,11 +9,11 @@ import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.Pair;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
 import utility.gui.ResizableRectangle;
 
 import java.util.Optional;

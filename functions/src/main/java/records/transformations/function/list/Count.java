@@ -5,13 +5,13 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.function.FunctionDefinition;
-import utility.Either;
-import utility.SimulationFunction;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.SimulationFunction;
 import records.transformations.expression.function.ValueFunction;
-import utility.Utility.ListEx;
+import xyz.columnal.utility.Utility.ListEx;
 
 /**
  * Created by neil on 14/01/2017.

@@ -12,14 +12,14 @@ import org.junit.runner.RunWith;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
 import records.data.datatype.DataTypeUtility;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import test.gen.GenEditableColumn;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.SimulationRunnable;
-import utility.Utility;
+import xyz.columnal.utility.SimulationRunnable;
+import xyz.columnal.utility.Utility;
 
 import javax.swing.SwingUtilities;
 import java.lang.reflect.InvocationTargetException;

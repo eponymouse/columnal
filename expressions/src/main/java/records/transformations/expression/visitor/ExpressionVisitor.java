@@ -16,9 +16,9 @@ import records.transformations.expression.DefineExpression.Definition;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.expression.type.TypeExpression;
-import styled.StyledString;
-import utility.Either;
-import utility.Pair;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.List;

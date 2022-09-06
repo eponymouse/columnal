@@ -1,6 +1,6 @@
-package utility;
+package xyz.columnal.utility;
 
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

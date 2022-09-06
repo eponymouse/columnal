@@ -5,11 +5,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.expression.visitor.ExpressionVisitor;
 import records.typeExp.TypeExp;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 
 /**
  * Created by neil on 27/11/2016.

@@ -1,4 +1,4 @@
-package utility;
+package xyz.columnal.utility;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;

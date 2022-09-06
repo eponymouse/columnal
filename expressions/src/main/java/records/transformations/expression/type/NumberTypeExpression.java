@@ -3,20 +3,20 @@ package records.transformations.expression.type;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableMap;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.jellytype.JellyType;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpression.UnitLookupException;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 
 import java.util.Objects;
 

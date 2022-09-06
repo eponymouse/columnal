@@ -6,7 +6,7 @@ import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Iterator;

@@ -13,8 +13,8 @@ import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.datatype.TypeManager;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.gui.lexeditor.ExpressionEditor;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
@@ -30,7 +30,7 @@ import test.gen.nonsenseTrans.GenNonsenseExpression;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 import java.util.stream.Stream;
 

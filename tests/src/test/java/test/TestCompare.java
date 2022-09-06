@@ -7,11 +7,11 @@ import java.util.List;
 import annotation.qual.Value;
 import org.junit.Test;
 import records.data.datatype.DataTypeUtility;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 import static org.junit.Assert.assertEquals;
 
 /**

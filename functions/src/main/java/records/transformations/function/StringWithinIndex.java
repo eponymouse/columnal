@@ -3,10 +3,10 @@ package records.transformations.function;
 import annotation.qual.Value;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.error.InternalException;
-import records.error.UserException;
-import utility.SimulationFunction;
-import utility.Utility.ListEx;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
+import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.Utility.ListEx;
 import records.transformations.expression.function.ValueFunction;
 
 import java.util.ArrayList;

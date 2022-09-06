@@ -5,9 +5,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.grammar.GrammarUtility;
 import records.gui.dtf.Recogniser;
-import utility.Either;
-import utility.Pair;
-import utility.ParseProgress;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.ParseProgress;
 
 public class StringRecogniser extends Recogniser<@ImmediateValue String>
 {

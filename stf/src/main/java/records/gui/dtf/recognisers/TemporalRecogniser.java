@@ -2,18 +2,18 @@ package records.gui.dtf.recognisers;
 
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
-import log.Log;
+import xyz.columnal.log.Log;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.PositionedUserException;
 import records.data.datatype.DataTypeUtility.StringView;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.gui.dtf.Recogniser;
-import utility.Either;
-import utility.Pair;
-import utility.ParseProgress;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.ParseProgress;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;

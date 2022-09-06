@@ -6,13 +6,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.visitor.ExpressionVisitor;
-import styled.StyledString;
-import utility.IdentifierUtility;
-import utility.Pair;
+import xyz.columnal.styled.StyledString;
+import xyz.columnal.utility.IdentifierUtility;
+import xyz.columnal.utility.Pair;
 
 import java.util.Objects;
 import java.util.Random;

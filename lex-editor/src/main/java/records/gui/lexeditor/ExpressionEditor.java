@@ -28,9 +28,9 @@ import records.transformations.expression.TypeState;
 import records.transformations.expression.function.FunctionLookup;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformSupplierInt;
-import utility.Pair;
+import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.FXPlatformSupplierInt;
+import xyz.columnal.utility.Pair;
 import utility.gui.FXUtility;
 
 import java.util.Comparator;

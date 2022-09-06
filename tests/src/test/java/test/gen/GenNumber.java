@@ -6,8 +6,8 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
-import records.error.UserException;
-import utility.Utility;
+import xyz.columnal.error.UserException;
+import xyz.columnal.utility.Utility;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

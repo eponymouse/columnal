@@ -4,19 +4,19 @@ import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataRowIndex;
 import javafx.geometry.Point2D;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformFunction;
-import utility.FXPlatformRunnable;
-import utility.Utility;
+import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.FXPlatformFunction;
+import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.Utility;
 
 import java.util.Optional;
 

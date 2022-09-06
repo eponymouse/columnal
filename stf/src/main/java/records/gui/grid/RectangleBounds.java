@@ -1,10 +1,10 @@
 package records.gui.grid;
 
-import log.Log;
+import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import records.error.InternalException;
-import utility.Utility;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.utility.Utility;
 
 import java.util.Objects;
 import java.util.Optional;

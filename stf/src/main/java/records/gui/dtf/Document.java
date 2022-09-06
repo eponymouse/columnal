@@ -8,8 +8,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.dtf.Document.TrackedPosition.Bias;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformRunnable;
-import utility.Pair;
+import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.Pair;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -11,7 +11,7 @@ import records.gui.grid.RectangleBounds;
 import records.gui.table.HeadedDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
+import xyz.columnal.utility.Either;
 
 public class EntireTableSelection implements CellSelection
 {

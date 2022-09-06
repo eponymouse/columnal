@@ -10,7 +10,7 @@ module expressions
     requires static annsthreadchecker;
     requires data;
     requires parsers;
-    requires utility;
+    requires xyz.columnal.utility;
 
     //requires common;
     requires com.google.common;

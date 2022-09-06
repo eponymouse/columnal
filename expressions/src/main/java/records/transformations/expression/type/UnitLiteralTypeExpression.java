@@ -6,11 +6,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.jellytype.JellyType;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.UnitExpression;
-import styled.StyledString;
+import xyz.columnal.styled.StyledString;
 
 import java.util.Objects;
 

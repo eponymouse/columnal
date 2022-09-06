@@ -5,13 +5,13 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.grammar.GrammarUtility;
-import utility.Pair;
-import utility.ResourceUtility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.ResourceUtility;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;

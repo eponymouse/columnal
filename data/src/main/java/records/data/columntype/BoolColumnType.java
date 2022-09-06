@@ -2,7 +2,7 @@ package records.data.columntype;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import utility.Either;
+import xyz.columnal.utility.Either;
 
 import java.util.Objects;
 

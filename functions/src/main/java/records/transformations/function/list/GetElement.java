@@ -11,15 +11,15 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.transformations.function.FunctionDefinition;
 import threadchecker.OnThread;
-import utility.Either;
-import utility.Pair;
-import utility.SimulationFunction;
-import utility.Utility;
-import utility.Utility.ListEx;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.Utility;
+import xyz.columnal.utility.Utility.ListEx;
 
 import java.util.stream.Collectors;
 

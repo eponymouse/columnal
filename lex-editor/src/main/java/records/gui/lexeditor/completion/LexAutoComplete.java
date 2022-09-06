@@ -9,8 +9,8 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import records.gui.lexeditor.EditorDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.Utility;
+import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.List;

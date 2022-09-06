@@ -9,13 +9,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.gui.dtf.Recogniser;
-import utility.Either;
-import utility.IdentifierUtility;
-import utility.Pair;
-import utility.ParseProgress;
-import utility.Utility;
-import utility.Utility.Record;
-import utility.Utility.RecordMap;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.IdentifierUtility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.ParseProgress;
+import xyz.columnal.utility.Utility;
+import xyz.columnal.utility.Utility.Record;
+import xyz.columnal.utility.Utility.RecordMap;
 
 import java.util.HashMap;
 

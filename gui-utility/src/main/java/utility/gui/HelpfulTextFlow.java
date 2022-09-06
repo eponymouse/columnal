@@ -9,7 +9,7 @@ import javafx.scene.shape.Path;
 import javafx.scene.text.TextFlow;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
+import xyz.columnal.utility.Pair;
 
 @OnThread(Tag.FXPlatform)
 public class HelpfulTextFlow extends TextFlow

@@ -4,13 +4,13 @@ import annotation.qual.Value;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataTypeValue;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.SimulationRunnable;
-import utility.Utility;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.SimulationRunnable;
+import xyz.columnal.utility.Utility;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.List;

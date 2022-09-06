@@ -7,8 +7,8 @@ import org.testfx.api.FxRobotInterface;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformSupplier;
-import utility.Utility;
+import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.Utility;
 
 import java.util.OptionalInt;
 import java.util.function.Predicate;

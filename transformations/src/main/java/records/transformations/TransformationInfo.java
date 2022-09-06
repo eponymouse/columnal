@@ -8,13 +8,13 @@ import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.grammar.Versions.ExpressionVersion;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformSupplier;
-import utility.SimulationSupplier;
+import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.SimulationSupplier;
 
 import java.util.List;
 import java.util.Optional;

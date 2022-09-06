@@ -5,10 +5,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.rinterop.RVisitor.PairListEntry;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;

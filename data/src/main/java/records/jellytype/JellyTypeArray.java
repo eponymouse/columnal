@@ -8,13 +8,13 @@ import records.data.datatype.TaggedTypeDefinition.TaggedInstantiationException;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.loadsave.OutputBuilder;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
-import utility.Either;
+import xyz.columnal.utility.Either;
 
 import java.util.Objects;
 import java.util.function.Consumer;

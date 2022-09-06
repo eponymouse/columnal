@@ -3,8 +3,8 @@ package records.data;
 import annotation.identifier.qual.ExpressionIdentifier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import styled.StyledShowable;
-import styled.StyledString;
+import xyz.columnal.styled.StyledShowable;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

@@ -1,7 +1,7 @@
 package records.gui.lexeditor;
 
-import styled.StyledShowable;
-import styled.StyledString;
+import xyz.columnal.styled.StyledShowable;
+import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

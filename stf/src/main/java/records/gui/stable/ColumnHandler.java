@@ -5,13 +5,13 @@ import annotation.units.TableDataRowIndex;
 import javafx.scene.input.KeyCode;
 import records.data.CellPosition;
 import records.data.RecordSet.RecordSetListener;
-import records.error.InternalException;
-import records.error.UserException;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 import records.gui.dtf.DocumentTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformBiConsumer;
-import utility.FXPlatformConsumer;
+import xyz.columnal.utility.FXPlatformBiConsumer;
+import xyz.columnal.utility.FXPlatformConsumer;
 
 import java.util.Collection;
 

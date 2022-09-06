@@ -1,10 +1,10 @@
 package records.transformations.function;
 
 import com.google.common.collect.ImmutableList;
-import log.Log;
+import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
-import records.error.InternalException;
+import xyz.columnal.error.InternalException;
 import records.transformations.expression.function.FunctionLookup;
 import records.transformations.expression.function.StandardFunctionDefinition;
 import records.transformations.function.comparison.Max;
@@ -36,7 +36,7 @@ import records.transformations.function.text.StringLowerCase;
 import records.transformations.function.text.StringReplace;
 import records.transformations.function.text.StringReplaceMany;
 import records.transformations.function.text.StringSplit;
-import utility.Utility;
+import xyz.columnal.utility.Utility;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;

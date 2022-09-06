@@ -8,7 +8,7 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.TypeManager;
 import records.transformations.expression.Expression.SaveDestination;
 import records.transformations.expression.type.TypeExpression;
-import utility.FXPlatformConsumer;
+import xyz.columnal.utility.FXPlatformConsumer;
 
 public class TypeEditor extends TopLevelEditor<TypeExpression, TypeLexer, CodeCompletionContext>
 {

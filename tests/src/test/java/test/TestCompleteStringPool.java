@@ -3,8 +3,8 @@ package test;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
-import records.error.InternalException;
-import utility.DumbObjectPool;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.utility.DumbObjectPool;
 
 import static org.junit.Assert.assertEquals;
 
