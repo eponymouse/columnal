@@ -111,7 +111,7 @@ public class RImporter implements Importer
             getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("general", "dialogs"));
             initModality(Modality.APPLICATION_MODAL);
             initOwner(parent);
-            setTitle("Choose tables to import");
+            setTitle(TranslationUtility.getString("choose.tables.to.import"));
             // Indexes match those from tables
             ListView<String> listView = new ListView<>(FXCollections.<String>observableList(Utility.<Pair<String, EditableRecordSet>, String>mapListI(tables, p -> p.getFirst())));
             listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);

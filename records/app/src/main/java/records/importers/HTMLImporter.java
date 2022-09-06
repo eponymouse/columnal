@@ -366,7 +366,7 @@ public class HTMLImporter implements Importer
         });
 
         List<SimulationSupplier<DataSource>> sources = results.stream().flatMap((FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>> s) -> Utility.streamNullable(s.get())).collect(Collectors.<SimulationSupplier<DataSource>>toList());
-        Workers.onWorkerThread("Loading HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_("Error loading HTML", () -> withDataSources.consume(Utility.<SimulationSupplier<DataSource>, DataSource>mapListExI(sources, s -> s.get()))));
+        Workers.onWorkerThread("Loading HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.loading.html"), () -> withDataSources.consume(Utility.<SimulationSupplier<DataSource>, DataSource>mapListExI(sources, s -> s.get()))));
     }
 
     @OnThread(Tag.Simulation)
@@ -431,7 +431,7 @@ public class HTMLImporter implements Importer
     @Override
     public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> recordLoadedTable)
     {
-        Workers.onWorkerThread("Importing HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_("Error importing HTML", () -> {
+        Workers.onWorkerThread("Importing HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.importing.html"), () -> {
             try
             {
                 importHTMLFileThen(parent, tableManager, src, destination, origin, dataSources -> {

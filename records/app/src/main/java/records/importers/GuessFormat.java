@@ -1052,7 +1052,7 @@ validated.equals("C") && !fromFile.equals("C") ? IdentifierUtility.identNum(vali
         Import<InitialTextFormat, FinalTextFormat> imp = guessTextFormat(mgr.getTypeManager(), mgr.getUnitManager(), initial, null, null);
         Platform.runLater(() -> {
             new ImportChoicesDialog<InitialTextFormat, FinalTextFormat>(parentWindow, suggestedName, imp).showAndWait().ifPresent(importInfo -> {
-                Workers.onWorkerThread("Importing", Priority.SAVE, () -> FXUtility.alertOnError_("Error importing data", () -> then.consume(importInfo)));
+                Workers.onWorkerThread("Importing", Priority.SAVE, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.import"), () -> then.consume(importInfo)));
             });
         });
     }

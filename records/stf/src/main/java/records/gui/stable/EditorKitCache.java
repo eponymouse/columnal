@@ -280,7 +280,7 @@ public final class EditorKitCache<V extends @NonNull @Value Object> implements C
 
         public synchronized void update(String content, @Nullable @Value V loadedItem)
         {
-            FXUtility.alertOnErrorFX_("Error loading value for display", () -> {
+            FXUtility.alertOnErrorFX_(TranslationUtility.getString("error.loading.value"), () -> {
                 this.loadedItemOrError = Either.<Document, @Localized String>left(makeEditorKit.makeKit(rowIndex, new Pair<>(content, loadedItem), relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/);
             });
             updateDisplay();

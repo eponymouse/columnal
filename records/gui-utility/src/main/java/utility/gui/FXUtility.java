@@ -511,13 +511,13 @@ public class FXUtility
 
 
     @OnThread(Tag.Simulation)
-    public static void alertOnError_(String title, RunOrError r)
+    public static void alertOnError_(@Localized String title, RunOrError r)
     {
         alertOnError_(title, err -> err, r);
     }
 
     @OnThread(Tag.Simulation)
-    public static void alertOnError_(String title, Function<@Localized String, @Localized String> errWrap, RunOrError r)
+    public static void alertOnError_(@Localized String title, Function<@Localized String, @Localized String> errWrap, RunOrError r)
     {
         try
         {
@@ -533,7 +533,7 @@ public class FXUtility
     }
 
     @OnThread(Tag.FXPlatform)
-    public static void alertOnErrorFX_(String title, RunOrErrorFX r)
+    public static void alertOnErrorFX_(@Localized String title, RunOrErrorFX r)
     {
         try
         {
@@ -546,7 +546,7 @@ public class FXUtility
     }
 
     @OnThread(Tag.FXPlatform)
-    public static <T> @Nullable T alertOnErrorFX(String title, GenOrErrorFX<T> r)
+    public static <T> @Nullable T alertOnErrorFX(@Localized String title, GenOrErrorFX<T> r)
     {
         try
         {
@@ -560,13 +560,13 @@ public class FXUtility
     }
 
     @OnThread(Tag.FXPlatform)
-    public static void showError(String title, Exception e)
+    public static void showError(@Localized String title, Exception e)
     {
         showError(title, x -> x, e);
     }
 
     @OnThread(Tag.FXPlatform)
-    public static void showError(String title, Function<@Localized String, @Localized String> errWrap, Exception e)
+    public static void showError(@Localized String title, Function<@Localized String, @Localized String> errWrap, Exception e)
     {
         if (showingError)
         {
@@ -605,7 +605,7 @@ public class FXUtility
     }
 
     @OnThread(Tag.Simulation)
-    public static <T> Optional<T> alertOnError(String title, GenOrError<@Nullable T> r)
+    public static <T> Optional<T> alertOnError(@Localized String title, GenOrError<@Nullable T> r)
     {
         try
         {

@@ -38,6 +38,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.SimulationFunction;
+import utility.TranslationUtility;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -64,7 +65,7 @@ public class TransformationEdits
         EditColumnExpressionDialog.withoutSidePane(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), columnId, expression, ed -> new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId(), ed == null ? null : calc.makeEditor(ed)), () -> Calculate.makeTypeState(parent.getManager()), null).showAndWait().ifPresent(newDetails -> {
             ImmutableMap<ColumnId, Expression> newColumns = Utility.appendToMap(calc.getCalculatedColumns(), newDetails.columnId, newDetails.expression, columnId);
             Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
-                FXUtility.alertOnError_("Error saving column", () ->
+                FXUtility.alertOnError_(TranslationUtility.getString("error.saving.column"), () ->
                     parent.getManager().edit(calc, id -> new Calculate(parent.getManager(), calc.getDetailsForCopy(id), calc.getSrcTableId(), newColumns), RenameOnEdit.UNNEEDED /* edit column won't affect it */)
                 );
             });
@@ -103,7 +104,7 @@ public class TransformationEdits
             final @Nullable Pair<ColumnId, ImmutableList<String>> exampleFinal = example;
             FXUtility.runAfter(() -> {
                 new EditAggregateSplitByDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), exampleFinal, aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> Workers.onWorkerThread("Edit aggregate", Priority.SAVE, () -> {
-                    FXUtility.alertOnError_("Error editing aggregate", () -> parent.getManager().edit(aggregate, id -> new Aggregate(parent.getManager(), aggregate.getDetailsForCopy(id), aggregate.getSrcTableId(), aggregate.getColumnExpressions(), splitBy), RenameOnEdit.ifOldAuto(Aggregate.suggestedName(splitBy, aggregate.getColumnExpressions()))));
+                    FXUtility.alertOnError_(TranslationUtility.getString("error.editing.aggregate"), () -> parent.getManager().edit(aggregate, id -> new Aggregate(parent.getManager(), aggregate.getDetailsForCopy(id), aggregate.getSrcTableId(), aggregate.getColumnExpressions(), splitBy), RenameOnEdit.ifOldAuto(Aggregate.suggestedName(splitBy, aggregate.getColumnExpressions()))));
                 }));
             });
         }).start();
@@ -179,7 +180,7 @@ public class TransformationEdits
                     }
                 }
                 Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
-                    FXUtility.alertOnError_("Error saving column", () -> {
+                    FXUtility.alertOnError_(TranslationUtility.getString("error.saving.column"), () -> {
                         ImmutableList<Pair<ColumnId, Expression>> newColumnsBuilt = newColumns.build();
                         parent.getManager().edit(agg, id -> new Aggregate(parent.getManager(), agg.getDetailsForCopy(id), agg.getSrcTableId(), newColumnsBuilt, newDetails.extra), RenameOnEdit.ifOldAuto(Aggregate.suggestedName(newDetails.extra, newColumnsBuilt)));
                     });
@@ -193,7 +194,7 @@ public class TransformationEdits
     {
         new EditImmediateColumnDialog(parent, parent.getManager(),columnId, type, false, initialFocus).showAndWait().ifPresent(columnDetails -> {
             Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
-                FXUtility.alertOnError_("Error saving column", () -> {
+                FXUtility.alertOnError_(TranslationUtility.getString("error.saving.column"), () -> {
                     @Nullable TableMaker<ImmediateDataSource> makeReplacement = null;
                     // If column type and default value are unaltered, don't need to re-do table:
                     final Column oldColumn = data.getData().getColumn(columnId);

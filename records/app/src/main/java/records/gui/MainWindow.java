@@ -250,9 +250,9 @@ public class MainWindow
         if (src != null)
         {
             @NonNull Pair<File, String> srcFinal = src;
-            Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_("Error loading " + srcFinal.getFirst().getName(), err -> {
+            Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.loading", srcFinal.getFirst().getName()), err -> {
                 Platform.runLater(() -> updateBanner(v, banner, false));
-                return TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err);
+                return TranslationUtility.getString("error.loading.file", srcFinal.getFirst().getAbsolutePath(), err);
             }, () -> {
                 v.getManager().setBanAllR(!View.checkHashMatch(srcFinal.getFirst(), Hashing.sha256().hashString(srcFinal.getSecond(), StandardCharsets.UTF_8)));
                 v.getManager().loadAll(srcFinal.getSecond(), v::loadColumnWidths);

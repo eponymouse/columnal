@@ -27,6 +27,7 @@ import org.controlsfx.control.PopOver;
 import records.data.ColumnId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import utility.TranslationUtility;
 import utility.gui.FixList;
 import utility.gui.FixList.FixInfo;
 import records.gui.lexeditor.EditorContent.CaretMoveReason;
@@ -219,7 +220,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
                     {
                         @Nullable Pair<@Nullable ColumnId, Expression> latest = forceCloseDialog();
                         if (latest != null)
-                            Workers.onWorkerThread("Moving Calculate column", Priority.SAVE, () -> FXUtility.alertOnError_("Moving Calculate", () -> toRun.consume(latest)));
+                            Workers.onWorkerThread("Moving Calculate column", Priority.SAVE, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.moving.calculate"), () -> toRun.consume(latest)));
                     }
                     else
                     {

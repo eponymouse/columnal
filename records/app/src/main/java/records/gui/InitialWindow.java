@@ -176,7 +176,7 @@ public class InitialWindow
     @OnThread(Tag.FXPlatform)
     public static MainWindow.@Nullable MainWindowActions newProject(@Nullable Stage parent, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
     {
-        return FXUtility.<MainWindow.@Nullable MainWindowActions>alertOnErrorFX("Error creating new file", () ->
+        return FXUtility.<MainWindow.@Nullable MainWindowActions>alertOnErrorFX(TranslationUtility.getString("error.creating.new.file"), () ->
         {
             @Nullable File dest;
             try

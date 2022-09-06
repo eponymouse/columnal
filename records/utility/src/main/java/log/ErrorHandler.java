@@ -14,7 +14,7 @@ public abstract class ErrorHandler
     private static ErrorHandler errorHandler = new ErrorHandler()
     {
         @Override
-        public @OnThread(Tag.Simulation) void showError(String title, Function<@Localized String, @Localized String> errWrap, Exception e)
+        public @OnThread(Tag.Simulation) void showError(@Localized String title, Function<@Localized String, @Localized String> errWrap, Exception e)
         {
             // Default if new handler not set is just to log
             @Localized String localMsg = e.getLocalizedMessage();
@@ -33,13 +33,13 @@ public abstract class ErrorHandler
     }
 
     @OnThread(Tag.Simulation)
-    public final void alertOnError_(String title, RunOrError r)
+    public final void alertOnError_(@Localized String title, RunOrError r)
     {
         alertOnError_(title, err -> err, r);
     }
 
     @OnThread(Tag.Simulation)
-    public final void alertOnError_(String title, Function<@Localized String, @Localized String> errWrap, RunOrError r)
+    public final void alertOnError_(@Localized String title, Function<@Localized String, @Localized String> errWrap, RunOrError r)
     {
         try
         {
@@ -52,14 +52,14 @@ public abstract class ErrorHandler
     }
 
     @OnThread(Tag.Simulation)
-    public final void showError(String title, Exception e)
+    public final void showError(@Localized String title, Exception e)
     {
         showError(title, x -> x, e);
     }
 
     // Note -- should not block the simulation thread!
     @OnThread(Tag.Simulation)
-    public abstract void showError(String title, Function<@Localized String, @Localized String> errWrap, Exception e);
+    public abstract void showError(@Localized String title, Function<@Localized String, @Localized String> errWrap, Exception e);
 
     public static interface RunOrError
     {

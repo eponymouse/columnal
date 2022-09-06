@@ -39,6 +39,7 @@ import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.SimulationSupplier;
+import utility.TranslationUtility;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -94,7 +95,7 @@ public class ClipboardUtils
             }
             catch (UserException e)
             {
-                FXUtility.showError("Error copying content", e);
+                FXUtility.showError(TranslationUtility.getString("error.copying.content"), e);
             }
             catch (InternalException e)
             {
@@ -184,13 +185,13 @@ public class ClipboardUtils
             for (Pair<ColumnId, DataTypeValue> c : columns)
             {
                 b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).unquoted(c.getFirst()).t(FormatLexer.TYPE, FormatLexer.VOCABULARY);
-                FXUtility.alertOnError_("Error copying column: " + c.getFirst().getRaw(), () -> c.getSecond().getType().save(b));
+                FXUtility.alertOnError_(TranslationUtility.getString("error.copying.column", c.getFirst().getRaw()), () -> c.getSecond().getType().save(b));
                 b.nl();
             }
             b.pop();
             b.end().raw("FF").t(MainLexer.FORMAT).nl();
             StringBuilder plainText = new StringBuilder();
-            FXUtility.alertOnError_("Error copying data values", () -> {
+            FXUtility.alertOnError_(TranslationUtility.getString("error.copying.data.values"), () -> {
                 b.t(MainLexer.VALUES).begin().raw("VV").nl();
                 b.pushPrefix(new SaveTag("VV"));
                 RowRange rowRange = rowRangeSupplier.get();

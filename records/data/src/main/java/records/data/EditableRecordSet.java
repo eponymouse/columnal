@@ -28,6 +28,7 @@ import utility.SimulationFunctionInt;
 import utility.SimulationRunnable;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
+import utility.TranslationUtility;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
@@ -220,7 +221,7 @@ public class EditableRecordSet extends RecordSet
         }
         catch (InternalException | UserException e)
         {
-            ErrorHandler.getErrorHandler().showError("Error inserting rows", e);
+            ErrorHandler.getErrorHandler().showError(TranslationUtility.getString("error.inserting.rows"), e);
             for (SimulationRunnable revertOne : revert)
             {
                 try
@@ -229,7 +230,7 @@ public class EditableRecordSet extends RecordSet
                 }
                 catch (InternalException e2)
                 {
-                    ErrorHandler.getErrorHandler().showError("Error reversing row insertion", e2);
+                    ErrorHandler.getErrorHandler().showError(TranslationUtility.getString("error.reversing.row.insertion"), e2);
                 }
             }
             return null;
@@ -266,7 +267,7 @@ public class EditableRecordSet extends RecordSet
         }
         catch (InternalException | UserException e)
         {
-            ErrorHandler.getErrorHandler().showError("Error removing rows", e);
+            ErrorHandler.getErrorHandler().showError(TranslationUtility.getString("error.removing.rows"), e);
             for (SimulationRunnable revertOne : revert)
             {
                 try
@@ -275,7 +276,7 @@ public class EditableRecordSet extends RecordSet
                 }
                 catch (InternalException e2)
                 {
-                    ErrorHandler.getErrorHandler().showError("Error reversing row removal", e2);
+                    ErrorHandler.getErrorHandler().showError(TranslationUtility.getString("error.reversing.row.removal"), e2);
                 }
             }
             return null;

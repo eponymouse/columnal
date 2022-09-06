@@ -45,6 +45,7 @@ import utility.Pair;
 import utility.SimulationConsumer;
 import utility.SimulationFunction;
 import utility.SimulationFunctionInt;
+import utility.TranslationUtility;
 import utility.Utility;
 
 import java.io.File;
@@ -874,7 +875,7 @@ public class TableManager
         for (String script : scripts)
         {
             Log.debug("Reloading:\n" + script);
-            ErrorHandler.getErrorHandler().alertOnError_("Error re-running transformations", () -> {
+            ErrorHandler.getErrorHandler().alertOnError_(TranslationUtility.getString("error.rerunning.transformations"), () -> {
                 ContentContext ctxt = Utility.parseAsOne(script, MainLexer2::new, MainParser2::new, (MainParser2 p) -> p.content());
                 if (ctxt.ATOM(0).getText().equals("DATA"))
                     loadOneDataTable(new Pair<SaveTag, String>(new SaveTag(ctxt.detail()), Utility.getDetail(ctxt.detail())));
@@ -907,7 +908,7 @@ public class TableManager
     public RenameTable getRenameTableOperation(Table table)
     {
         return newName -> {
-            ErrorHandler.getErrorHandler().alertOnError_("Error renaming table", () -> {
+            ErrorHandler.getErrorHandler().alertOnError_(TranslationUtility.getString("error.renaming.table"), () -> {
                 this.<Table>editImpl(table.getId(), null, new TableAndColumnRenames(ImmutableMap.of(table.getId(), new Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>>(newName, ImmutableMap.of()))));
             });
         };

@@ -520,7 +520,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                     }
                     catch (UserException | InternalException e)
                     {
-                        FXUtility.showError("Error hiding column", e);
+                        FXUtility.showError(TranslationUtility.getString("error.hiding.column"), e);
                     }
                     break;
                 case CUSTOM:
@@ -658,7 +658,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     @Override
     public void doDelete()
     {
-        Workers.onWorkerThread("Deleting table", Priority.SAVE, () -> FXUtility.alertOnError_("Deleting table", () -> table.getManager().remove(table.getId())));
+        Workers.onWorkerThread("Deleting table", Priority.SAVE, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.deleting.table"), () -> table.getManager().remove(table.getId())));
     }
 
     @Override
@@ -735,7 +735,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         // Crucial to set onModify before calling setupWithRecordSet:
         this.onModify = () -> {
             parent.modified();
-            Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_("Error updating dependent transformations", () -> parent.getManager().reRun(table)));
+            Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.updating.dependent.transformations"), () -> parent.getManager().reRun(table)));
         };
         
         this.recordSet = recordSet;
@@ -884,7 +884,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             GUI.menu("tableDisplay.menu.showColumns",
                 GUI.radioMenuItems(show, showItems.values().toArray(new RadioMenuItem[0]))
             ),
-            GUI.menuItem("tableDisplay.menu.copyValues", () -> FXUtility.alertOnErrorFX_("Error copying values", () -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), Utility.mapListEx(table.getData().getColumns(), c -> new Pair<>(c.getName(), c.getType())), new CompleteRowRangeSupplier(), null))),
+            GUI.menuItem("tableDisplay.menu.copyValues", () -> FXUtility.alertOnErrorFX_(TranslationUtility.getString("error.copying.values"), () -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), Utility.mapListEx(table.getData().getColumns(), c -> new Pair<>(c.getName(), c.getType())), new CompleteRowRangeSupplier(), null))),
             GUI.menuItem("tableDisplay.menu.exportData", () -> {
                 ExporterManager.getInstance().chooseAndExportFile(parent, table);
             }),
@@ -954,12 +954,12 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     {
         Alert alert = new Alert(AlertType.CONFIRMATION, "Transformation results cannot be directly edited.  Add an edit transformation to allow editing of specific items?", ButtonType.YES, ButtonType.CANCEL);
         alert.setHeaderText("Create edit transformation?");
-        alert.setTitle(alert.getHeaderText());
+        alert.titleProperty().bind(alert.headerTextProperty());
         alert.getDialogPane().lookupButton(ButtonType.YES).getStyleClass().add("yes-button");
         if (alert.showAndWait().equals(Optional.of(ButtonType.YES)))
         {
             CellPosition insertPos = parent.getManager().getNextInsertPosition(getTable().getId());
-            Workers.onWorkerThread("Creating edit transformation", Priority.SAVE, () -> FXUtility.alertOnError_("Creating edit", () -> {
+            Workers.onWorkerThread("Creating edit transformation", Priority.SAVE, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.creating.edit"), () -> {
                 @NonNull ManualEdit manualEdit = (ManualEdit)parent.getManager().record(new ManualEdit(parent.getManager(), new InitialLoadDetails(null, null, insertPos, null), getTable().getId(), null, ImmutableMap.of(column.getFirst(), new ColumnReplacementValues(column.getSecond(), ImmutableList.<Pair<@Value Object, Either<String, @Value Object>>>of(new Pair<@Value Object, Either<String, @Value Object>>(DataTypeUtility.value(index), value))))));
                 Platform.runLater(() -> TableHat.editManualEdit(parent, manualEdit, true, RenameOnEdit::renameToSuggested));
             }));
@@ -1090,7 +1090,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 {
                     Calculate calc = (Calculate) table;
                     // Allow editing of any column:
-                    return t -> FXUtility.alertOnErrorFX_("Error editing column", () -> {
+                    return t -> FXUtility.alertOnErrorFX_(TranslationUtility.getString("error.editing.column"), () -> {
                         TransformationEdits.editColumn_Calc(FXUtility.mouse(TableDisplay.this).parent, calc, c);
                     });
                 }
@@ -1101,7 +1101,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                     {
                         if (columnExpression.getFirst().equals(c))
                         {
-                            return t -> FXUtility.alertOnErrorFX_("Error editing column", () -> {
+                            return t -> FXUtility.alertOnErrorFX_(TranslationUtility.getString("error.editing.column"), () -> {
                                 TransformationEdits.editColumn_Agg(FXUtility.mouse(TableDisplay.this).parent, aggregate, c);
                             });
                         }
@@ -1129,7 +1129,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             @Override
             public @OnThread(Tag.Simulation) void execute(CellPosition insertPosition)
             {
-                FXUtility.alertOnError_("Investigating type transformation", new RunOrError()
+                FXUtility.alertOnError_(TranslationUtility.getString("error.investigating.type.transformation"), new RunOrError()
                 {
                     @Override
                     public @OnThread(Tag.Simulation) void run() throws InternalException, UserException
@@ -1290,7 +1290,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                                     @OnThread(Tag.FXPlatform)
                                     public Optional<Expression> get()
                                     {
-                                        Optional<Expression> r = FXUtility.alertOnErrorFX("Recognising tagged", () -> unwrapOptionalType(inner, columnReference, TableDisplayUtility.recogniser(inner, false)));
+                                        Optional<Expression> r = FXUtility.alertOnErrorFX(TranslationUtility.getString("error.recognising.tagged.type"), () -> unwrapOptionalType(inner, columnReference, TableDisplayUtility.recogniser(inner, false)));
                                         if (r != null)
                                             return r;
                                         else
@@ -1352,7 +1352,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                         new PickTypeTransformDialog(parent, possibles).showAndWait().flatMap(tt -> tt.transformed.get()).ifPresent(expression -> {
                             CellPosition targetPos = tableManager.getNextInsertPosition(table.getId());
                             Workers.onWorkerThread("Creating type transformation", Priority.SAVE, () -> {
-                                FXUtility.alertOnError_("Making type transformation", () -> {
+                                FXUtility.alertOnError_(TranslationUtility.getString("error.making.type.transformation"), () -> {
                                     Calculate calculate = new Calculate(tableManager, new InitialLoadDetails(targetPos), table.getId(), ImmutableMap.of(columnId, expression));
                                     tableManager.record(calculate);
                                 });
@@ -1366,12 +1366,12 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             @OnThread(Tag.FXPlatform)
             private <T extends @NonNull @ImmediateValue Object> Optional<Expression> unwrapOptionalType(DataType inner, Expression columnReference, RecogniserAndType<T> recogniser)
             {
-                @Nullable Optional<Expression> optionalExpression = FXUtility.<Optional<Expression>>alertOnErrorFX("Asking for default value", () -> {
+                @Nullable Optional<Expression> optionalExpression = FXUtility.<Optional<Expression>>alertOnErrorFX(TranslationUtility.getString("error.asking.for.default.value"), () -> {
                     EnterValueDialog<T> dialog = new EnterValueDialog<T>(parent, inner, recogniser);
                     return dialog.showAndWait().<Expression>flatMap(new Function<T, Optional<? extends Expression>>() {
                         @Override
                         public Optional<? extends Expression> apply(T v) {
-                            return Optional.<Expression>ofNullable(FXUtility.<Expression>alertOnErrorFX("Converting value to expression", () -> {
+                            return Optional.<Expression>ofNullable(FXUtility.<Expression>alertOnErrorFX(TranslationUtility.getString("error.converting.value.to.expression"), () -> {
                                 Expression defaultValueExpression = AppUtility.valueToExpressionFX(tableManager.getTypeManager(), functionLookup, inner, (@ImmediateValue T) v);
                                 return new CallExpression(functionLookup, GetOptionalOrDefault.NAME, columnReference, defaultValueExpression);
                             }));
@@ -1428,7 +1428,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         
         dialog.showAndWait().ifPresent(p -> {
             Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
-                FXUtility.alertOnError_("Error adding column", () -> {
+                FXUtility.alertOnError_(TranslationUtility.getString("error.adding.column"), () -> {
                     ImmutableMap<ColumnId, Expression> newCols = Utility.appendToMap(calc.getCalculatedColumns(), p.columnId, p.expression, null);
                     parent.getManager().edit(calc, id -> new Calculate(parent.getManager(), calc.getDetailsForCopy(id),
                         calc.getSrcTableId(), newCols), renameOnEdit.apply(Calculate.suggestedName(newCols)));
@@ -1443,7 +1443,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
 
         dialog.showAndWait().ifPresent(p -> {
             Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
-                    FXUtility.alertOnError_("Error adding column", () -> {
+                    FXUtility.alertOnError_(TranslationUtility.getString("error.adding.column"), () -> {
                         ImmutableList<Pair<ColumnId, Expression>> newCols = Utility.appendToList(agg.getColumnExpressions(), new Pair<>(p.columnId, p.expression));
                         parent.getManager().edit(agg, id -> new Aggregate(parent.getManager(), agg.getDetailsForCopy(id),
                                 agg.getSrcTableId(), newCols, p.extra), RenameOnEdit.ifOldAuto(Aggregate.suggestedName(agg.getSplitBy(), newCols)));
@@ -1456,7 +1456,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     {
         Optional<EditImmediateColumnDialog.ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(parent, parent.getManager(), null, null, false, InitialFocus.FOCUS_COLUMN_NAME).showAndWait();
         optInitialDetails.ifPresent(initialDetails -> Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
-            FXUtility.alertOnError_("Error adding column", () ->
+            FXUtility.alertOnError_(TranslationUtility.getString("error.adding.column"), () ->
                 ids.getData().addColumn(beforeColumn, initialDetails.dataType.makeImmediateColumn(initialDetails.columnId, initialDetails.defaultValue))
             )
         ));
@@ -1499,7 +1499,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             @OnThread(Tag.Simulation)
             public void execute(CellPosition insertPosition)
             {
-                FXUtility.alertOnError_("Error adding column", () -> {
+                FXUtility.alertOnError_(TranslationUtility.getString("error.adding.column"), () -> {
                     Transformation t = makeTransform.makeTransform(newColumnId, insertPosition);
                     tableManager.record(t);
                 });
@@ -1515,7 +1515,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             @OnThread(Tag.Simulation)
             public void execute(CellPosition insertPosition)
             {
-                FXUtility.alertOnError_("Error adding column", () -> {
+                FXUtility.alertOnError_(TranslationUtility.getString("error.adding.column"), () -> {
                     Transformation t = makeTransform.makeTransform(insertPosition);
                     tableManager.record(t);
                 });
@@ -1598,7 +1598,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                             filter.getFilterExpression(), true,
                             new MultipleTableLookup(filter.getId(), parent.getManager(), filter.getSrcTableId(), null),
                             () -> Filter.makeTypeState(parent.getManager().getTypeManager()),
-                            DataType.BOOLEAN, "filter.header").showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_("Error editing filter", () ->
+                            DataType.BOOLEAN, "filter.header").showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_(TranslationUtility.getString("error.editing.filter"), () ->
                     {
 
                         parent.getManager().edit(table, id -> new Filter(parent.getManager(),
@@ -1710,7 +1710,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                     new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, false, fixer.columnLookup, fixer.makeTypeState, fixer.expectedType, headerKey)
                             .showAndWait().ifPresent(newExp -> {
                         Workers.onWorkerThread("Editing table", Priority.SAVE, () ->
-                                FXUtility.alertOnError_("Error applying fix", () ->
+                                FXUtility.alertOnError_(TranslationUtility.getString("error.applying.fix"), () ->
                                         parent.getManager().edit(table, _id -> fixer.replaceExpression(newExp), RenameOnEdit.UNNEEDED /* we'll live without rename on fix */)
                                 )
                         );
@@ -1861,7 +1861,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     {
         public ErrorDetailsDialog(ImmutableList<Text> details, String plainContent)
         {
-            setTitle("Error details");
+            setTitle(TranslationUtility.getString("error.details.dialog"));
             initModality(Modality.NONE);
             ButtonType copyButtonType = new ButtonType("Copy", ButtonData.OTHER);
             getDialogPane().getButtonTypes().setAll(ButtonType.OK, copyButtonType);

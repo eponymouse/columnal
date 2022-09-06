@@ -38,6 +38,7 @@ import utility.IdentifierUtility;
 import utility.Pair;
 import utility.SimulationConsumer;
 import utility.SimulationFunction;
+import utility.TranslationUtility;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -281,7 +282,7 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
     {
         if (newColumns.containsKey(columnId))
         {
-            FXUtility.alertOnError_("Error deleting column", () -> {
+            FXUtility.alertOnError_(TranslationUtility.getString("error.deleting.column"), () -> {
                 ImmutableMap.Builder<ColumnId, Expression> filtered = ImmutableMap.builder();
                 newColumns.forEach((c, e) -> {
                     if (!c.equals(columnId))

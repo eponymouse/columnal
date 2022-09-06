@@ -53,6 +53,7 @@ import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.TranslationUtility;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -283,7 +284,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     @Override
     public void doDelete()
     {
-        Workers.onWorkerThread("Deleting table", Priority.SAVE, () -> FXUtility.alertOnError_("Deleting check", () -> check.getManager().remove(check.getId())));
+        Workers.onWorkerThread("Deleting table", Priority.SAVE, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.deleting.check"), () -> check.getManager().remove(check.getId())));
     }
 
     @Override

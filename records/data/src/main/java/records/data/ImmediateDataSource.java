@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import log.ErrorHandler;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.i18n.qual.Localized;
 import records.data.TableOperations.DeleteColumn;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -13,6 +14,7 @@ import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.TranslationUtility;
 import utility.Workers;
 import utility.Workers.Priority;
 
@@ -51,7 +53,7 @@ public class ImmediateDataSource extends DataSource
         b.nl();
         b.id(renames.tableId(getId())).nl();
         b.t(MainLexer.FORMAT, MainLexer.VOCABULARY).begin().nl();
-        String errorTitle = "Error saving table: " + getId().getRaw();
+        @Localized String errorTitle = TranslationUtility.getString("error.saving.table", getId().getRaw());
         ErrorHandler.getErrorHandler().alertOnError_(errorTitle, () ->
         {
             for (Column c : data.getColumns())
@@ -105,7 +107,7 @@ public class ImmediateDataSource extends DataSource
                 data.deleteColumn(deleteColumnName);
             }
         }, appendRowCount -> {
-            ErrorHandler.getErrorHandler().alertOnError_("Error find table length for: " + getId().getRaw(), () ->
+            ErrorHandler.getErrorHandler().alertOnError_(TranslationUtility.getString("error.finding.length", getId().getRaw()), () ->
             {
                 data.insertRows(data.getLength(), appendRowCount);
             });

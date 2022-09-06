@@ -40,6 +40,7 @@ import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
 import records.gui.EntireTableSelection;
+import utility.TranslationUtility;
 import utility.gui.ErrorableTextField;
 import records.gui.TableNameTextField;
 import records.gui.grid.CellSelection;
@@ -231,7 +232,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
                 reRun.setOnMouseClicked(e -> {
                     if (e.getButton() == MouseButton.PRIMARY)
                     {
-                        Workers.onWorkerThread("Re-evaluating " + table.getId().getRaw(), Priority.FETCH, () -> FXUtility.alertOnError_("Error evaluating R", () -> rerunOp.run()));
+                        Workers.onWorkerThread("Re-evaluating " + table.getId().getRaw(), Priority.FETCH, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.evaluating.r"), () -> rerunOp.run()));
                         e.consume();
                     }
                     

@@ -558,7 +558,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     File dest = new File(dir.exists() ? dir : null, "emergency" + System.currentTimeMillis() + Main.EXTENSION_INCL_DOT);
                     FileUtils.writeStringToFile(dest, previousVersion, StandardCharsets.UTF_8);
                     Platform.runLater(() -> {
-                        FXUtility.showError("Problem undoing: content saved to " + dest.getAbsolutePath(), e);
+                        FXUtility.showError(TranslationUtility.getString("problem.undoing.content.saved.to", dest.getAbsolutePath()), e);
                     });
                 }
                 catch (IOException ioEx)
@@ -566,7 +566,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     // Last gasp -- copy content to clipboard and tell user
                     Platform.runLater(() -> {
                         Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, previousVersion));
-                        FXUtility.showError("Problem undoing: content copied to clipboard", e);
+                        FXUtility.showError(TranslationUtility.getString("problem.undoing.content.copied.to.clipboard"), e);
                     });
                 }
             }
@@ -895,7 +895,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     if (!content.isEmpty())
                     {
                         Workers.onWorkerThread("Pasting new table", Priority.SAVE, () -> {
-                            FXUtility.alertOnError_("Error pasting table data", () -> {
+                            FXUtility.alertOnError_(TranslationUtility.getString("error.pasting.table.data"), () -> {
                                 ImmediateDataSource data = new ImmediateDataSource(tableManager, new InitialLoadDetails(null, null, target, null), new EditableRecordSet(Utility.<LoadedColumnInfo, SimulationFunction<RecordSet, EditableColumn>>mapList_Index(content, (i, c) -> c.load(i)), () -> content.stream().mapToInt(c -> c.dataValues.size()).max().orElse(0)));
                                 tableManager.record(data);
                                 Platform.runLater(() -> selectAfter.consume(data));
@@ -1062,7 +1062,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(thisView, thisView.getManager(), null, null, true, InitialFocus.FOCUS_TABLE_NAME).showAndWait();
                     optInitialDetails.ifPresent(initialDetails -> {
                         Workers.onWorkerThread("Creating table", Priority.SAVE, () -> {
-                            FXUtility.alertOnError_("Error creating first column", () -> {
+                            FXUtility.alertOnError_(TranslationUtility.getString("error.creating.first.column"), () -> {
                                 ImmediateDataSource data = new ImmediateDataSource(tableManager, initialDetails.tableId != null ? initialLoadDetails.withTableId(initialDetails.tableId) : initialLoadDetails, EditableRecordSet.newRecordSetSingleColumn(initialDetails.columnId, initialDetails.dataType, initialDetails.defaultValue));
                                 tableManager.record(data);
                             });
@@ -1086,7 +1086,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                         {
                             @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;
                             Workers.onWorkerThread("Creating transformation", Priority.SAVE, () -> {
-                                FXUtility.alertOnError_("Error creating transformation", () -> {
+                                FXUtility.alertOnError_(TranslationUtility.getString("error.creating.transformation"), () -> {
                                     Transformation transformation = makeTransFinal.get();
                                     tableManager.record(transformation);
                                     Platform.runLater(() -> {
@@ -1105,7 +1105,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                 case CHECK:
                     new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
                         new EditCheckExpressionDialog(thisView, srcTable, CheckType.ALL_ROWS, new BooleanLiteral(true), true, ct -> Check.getColumnLookup(tableManager, srcTable.getId(), null, ct)).showAndWait().ifPresent(details -> {
-                            Workers.onWorkerThread("Creating check", Priority.SAVE, () -> FXUtility.alertOnError_("Error creating check", () -> {
+                            Workers.onWorkerThread("Creating check", Priority.SAVE, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.creating.check"), () -> {
                                 Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, null, cellPosition, null), srcTable.getId(), details.getFirst(), details.getSecond());
                                 tableManager.record(check);
                             }));
@@ -1125,7 +1125,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             {
                 @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;
                 Workers.onWorkerThread("Creating transformation", Priority.SAVE, () -> {
-                    FXUtility.alertOnError_("Error creating transformation", () -> {
+                    FXUtility.alertOnError_(TranslationUtility.getString("error.creating.transformation"), () -> {
                         Transformation transformation = makeTransFinal.get();
                         tableManager.record(transformation);
                         Platform.runLater(() -> {

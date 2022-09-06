@@ -353,7 +353,7 @@ public class TableDisplayUtility
                         @Override
                         public @OnThread(Tag.FXPlatform) void save(String text, @Nullable @Value T v, FXPlatformRunnable reset)
                         {
-                            Workers.onWorkerThread("Saving value: " + text, Priority.SAVE, () -> FXUtility.alertOnError_("Error storing data value", () -> {
+                            Workers.onWorkerThread("Saving value: " + text, Priority.SAVE, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.storing.data"), () -> {
                                 try
                                 {
                                     g.set(rowIndex, v == null ? Either.left(text) : Either.right(v));

@@ -130,7 +130,7 @@ public class Main extends Application
         ErrorHandler.setErrorHandler(new ErrorHandler()
         {
             @Override
-            public @OnThread(Tag.Simulation) void showError(String title, Function<@Localized String, @Localized String> errWrap, Exception e)
+            public @OnThread(Tag.Simulation) void showError(@Localized String title, Function<@Localized String, @Localized String> errWrap, Exception e)
             {
                 Platform.runLater(() -> FXUtility.showError(title, errWrap, e));
             }

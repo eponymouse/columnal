@@ -43,6 +43,7 @@ import utility.Pair;
 import utility.SimulationFunction;
 import utility.SimulationFunctionInt;
 import utility.SimulationRunnableNoError;
+import utility.TranslationUtility;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -448,7 +449,7 @@ edit : editHeader editColumn*;
                 
                 dataType = getType.withSet((index, value) -> {
                     ColumnReplacementValues columnReplacements = replacements.computeIfAbsent(getName(), k -> new ColumnReplacementValues(getType.getType(), ImmutableList.of()));
-                    FXUtility.alertOnError_("Error looking up identifier value to store edit against", () ->
+                    FXUtility.alertOnError_(TranslationUtility.getString("error.lookup.identifier"), () ->
                     columnReplacements.replacementValues.put(
                         getReplacementKeyForRow(index),
                         value.<ComparableEither<String, ComparableValue>>either(err -> ComparableEither.<String, ComparableValue>left(err), v -> ComparableEither.<String, ComparableValue>right(new ComparableValue(v)))

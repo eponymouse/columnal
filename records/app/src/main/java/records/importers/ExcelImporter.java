@@ -148,7 +148,7 @@ public class ExcelImporter implements Importer
             {
                 @NonNull ImportInfo<PlainImportInfo> outcomeNonNull = outcome;
                 SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), outcomeNonNull.getFormat().trim.trim(vals), outcomeNonNull.getFormat().columnInfo));
-                Workers.onWorkerThread("Loading " + src.getName(), Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_("Error importing Excel", () -> {
+                Workers.onWorkerThread("Loading " + src.getName(), Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.importing.excel"), () -> {
                     DataSource dataSource = makeDataSource.get();
                     recordLoadedTable.consume(dataSource);
                 }));
