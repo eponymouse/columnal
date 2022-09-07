@@ -5,7 +5,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataTypeUtility;
+import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.error.UserException;
 import xyz.columnal.utility.Utility;
 

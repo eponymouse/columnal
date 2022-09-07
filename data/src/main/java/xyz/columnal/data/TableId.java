@@ -1,4 +1,4 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import org.checkerframework.checker.nullness.qual.Nullable;

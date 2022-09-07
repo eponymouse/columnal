@@ -1,19 +1,19 @@
-package records.jellytype;
+package xyz.columnal.jellytype;
 
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
-import records.data.datatype.NumberInfo;
-import records.data.datatype.TypeId;
-import records.data.datatype.TypeManager;
-import records.data.unit.Unit;
+import xyz.columnal.data.datatype.DataType;
+import xyz.columnal.data.datatype.NumberInfo;
+import xyz.columnal.data.datatype.TypeId;
+import xyz.columnal.data.datatype.TypeManager;
+import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import records.grammar.FormatParser;
-import records.loadsave.OutputBuilder;
-import records.typeExp.MutVar;
-import records.typeExp.NumTypeExp;
-import records.typeExp.TypeExp;
-import records.typeExp.units.MutUnitVar;
+import xyz.columnal.loadsave.OutputBuilder;
+import xyz.columnal.typeExp.MutVar;
+import xyz.columnal.typeExp.NumTypeExp;
+import xyz.columnal.typeExp.TypeExp;
+import xyz.columnal.typeExp.units.MutUnitVar;
 import xyz.columnal.utility.Either;
 
 import java.util.Objects;

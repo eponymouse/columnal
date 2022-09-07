@@ -3,7 +3,7 @@ package test.gen;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import records.data.datatype.DataType;
+import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import test.TestUtil;

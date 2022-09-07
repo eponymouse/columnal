@@ -1,7 +1,7 @@
-package records.data.columntype;
+package xyz.columnal.data.columntype;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.TypeManager;
+import xyz.columnal.data.datatype.TypeManager;
 
 /**
  * A column type which also has the option to be blank.

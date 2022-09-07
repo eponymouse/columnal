@@ -1,9 +1,9 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
+import xyz.columnal.data.datatype.DataType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

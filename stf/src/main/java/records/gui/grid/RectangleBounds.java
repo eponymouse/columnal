@@ -2,7 +2,7 @@ package records.gui.grid;
 
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
+import xyz.columnal.data.CellPosition;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.utility.Utility;
 

@@ -2,10 +2,10 @@ package test.expressions;
 
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
-import records.data.ColumnId;
-import records.data.TableAndColumnRenames;
-import records.data.datatype.TypeManager;
-import records.data.unit.UnitManager;
+import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.TableAndColumnRenames;
+import xyz.columnal.data.datatype.TypeManager;
+import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import records.transformations.expression.*;

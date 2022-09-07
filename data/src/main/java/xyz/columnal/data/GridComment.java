@@ -1,8 +1,8 @@
-package records.data;
+package xyz.columnal.data;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Table.Saver;
+import xyz.columnal.data.Table.Saver;
 import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;

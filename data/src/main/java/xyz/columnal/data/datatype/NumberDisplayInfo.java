@@ -1,4 +1,4 @@
-package records.data.datatype;
+package xyz.columnal.data.datatype;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;

@@ -12,7 +12,7 @@ import javafx.scene.shape.QuadCurveTo;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
+import xyz.columnal.data.CellPosition;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;

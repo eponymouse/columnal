@@ -1,8 +1,8 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import records.data.datatype.DataType;
-import records.data.datatype.DataTypeUtility;
+import xyz.columnal.data.datatype.DataType;
+import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.utility.SimulationFunction;

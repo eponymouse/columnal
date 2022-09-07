@@ -7,7 +7,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
-import records.data.datatype.DataType;
+import xyz.columnal.data.datatype.DataType;
 import records.gui.table.PickTypeTransformDialog.TypeTransform;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;

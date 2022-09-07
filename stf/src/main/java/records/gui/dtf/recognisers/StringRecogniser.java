@@ -2,7 +2,7 @@ package records.gui.dtf.recognisers;
 
 import annotation.qual.ImmediateValue;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataTypeUtility;
+import xyz.columnal.data.datatype.DataTypeUtility;
 import records.grammar.GrammarUtility;
 import records.gui.dtf.Recogniser;
 import xyz.columnal.utility.Either;

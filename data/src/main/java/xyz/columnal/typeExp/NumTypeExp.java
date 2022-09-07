@@ -1,14 +1,14 @@
-package records.typeExp;
+package xyz.columnal.typeExp;
 
 import com.google.common.collect.ImmutableSet;
 import de.uni_freiburg.informatik.ultimate.smtinterpol.util.IdentityHashSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
-import records.data.datatype.NumberInfo;
-import records.data.datatype.TypeManager;
-import records.data.unit.Unit;
+import xyz.columnal.data.datatype.DataType;
+import xyz.columnal.data.datatype.NumberInfo;
+import xyz.columnal.data.datatype.TypeManager;
+import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
-import records.typeExp.units.UnitExp;
+import xyz.columnal.typeExp.units.UnitExp;
 import xyz.columnal.styled.StyledString;
 import xyz.columnal.utility.Either;
 

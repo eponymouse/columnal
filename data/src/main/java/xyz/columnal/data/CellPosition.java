@@ -1,4 +1,4 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;

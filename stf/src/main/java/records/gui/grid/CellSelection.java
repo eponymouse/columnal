@@ -3,7 +3,7 @@ package records.gui.grid;
 import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
+import xyz.columnal.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

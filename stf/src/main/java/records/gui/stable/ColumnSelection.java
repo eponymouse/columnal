@@ -1,6 +1,6 @@
 package records.gui.stable;
 
-import records.data.CellPosition;
+import xyz.columnal.data.CellPosition;
 import xyz.columnal.utility.Utility;
 
 public class ColumnSelection //implements CellSelection

@@ -5,7 +5,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
+import xyz.columnal.data.CellPosition;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import xyz.columnal.styled.StyledString;

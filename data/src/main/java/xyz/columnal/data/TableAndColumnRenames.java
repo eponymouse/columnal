@@ -1,4 +1,4 @@
-package records.data;
+package xyz.columnal.data;
 
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;

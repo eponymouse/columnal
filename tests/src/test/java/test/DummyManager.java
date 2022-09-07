@@ -1,11 +1,11 @@
 package test;
 
 import com.google.common.collect.ImmutableMap;
-import records.data.DataSource;
-import records.data.GridComment;
-import records.data.Table;
-import records.data.TableManager;
-import records.data.Transformation;
+import xyz.columnal.data.DataSource;
+import xyz.columnal.data.GridComment;
+import xyz.columnal.data.Table;
+import xyz.columnal.data.TableManager;
+import xyz.columnal.data.Transformation;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import records.transformations.TransformationManager;

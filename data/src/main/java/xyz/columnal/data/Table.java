@@ -1,4 +1,4 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
@@ -15,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.datatype.DataType;
+import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import records.grammar.DisplayLexer;
@@ -26,7 +26,7 @@ import records.grammar.MainParser.DetailContext;
 import records.grammar.MainParser.DetailPrefixedContext;
 import records.grammar.MainParser.DisplayContext;
 import records.grammar.Versions.OverallVersion;
-import records.loadsave.OutputBuilder;
+import xyz.columnal.loadsave.OutputBuilder;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;

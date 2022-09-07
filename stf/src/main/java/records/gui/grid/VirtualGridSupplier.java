@@ -9,7 +9,7 @@ import javafx.geometry.VPos;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.CellPosition;
+import xyz.columnal.data.CellPosition;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;

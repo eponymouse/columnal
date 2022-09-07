@@ -1,12 +1,12 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import records.data.datatype.DataType;
-import records.data.datatype.DataType.SpecificDataTypeVisitor;
-import records.data.datatype.DataTypeValue;
+import xyz.columnal.data.datatype.DataType;
+import xyz.columnal.data.datatype.DataType.SpecificDataTypeVisitor;
+import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;

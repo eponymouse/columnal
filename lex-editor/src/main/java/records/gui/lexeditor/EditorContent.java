@@ -11,7 +11,7 @@ import javafx.scene.Node;
 import javafx.scene.text.Text;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Table.Display;
+import xyz.columnal.data.Table.Display;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.Lexer.LexerResult;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;

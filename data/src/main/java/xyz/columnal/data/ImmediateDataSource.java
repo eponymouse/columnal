@@ -1,17 +1,17 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.qual.Value;
 import xyz.columnal.log.ErrorHandler;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.i18n.qual.Localized;
-import records.data.TableOperations.DeleteColumn;
-import records.data.datatype.DataType;
+import xyz.columnal.data.TableOperations.DeleteColumn;
+import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.MainLexer;
-import records.loadsave.OutputBuilder;
+import xyz.columnal.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.TranslationUtility;

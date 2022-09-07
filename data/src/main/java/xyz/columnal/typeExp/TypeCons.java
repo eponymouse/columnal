@@ -1,4 +1,4 @@
-package records.typeExp;
+package xyz.columnal.typeExp;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
@@ -6,15 +6,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import de.uni_freiburg.informatik.ultimate.smtinterpol.util.IdentityHashSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
-import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.data.datatype.TypeId;
-import records.data.datatype.TypeManager;
-import records.data.unit.Unit;
+import xyz.columnal.data.datatype.DataType;
+import xyz.columnal.data.datatype.DataType.DateTimeInfo;
+import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import xyz.columnal.data.datatype.TypeId;
+import xyz.columnal.data.datatype.TypeManager;
+import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.typeExp.units.UnitExp;
+import xyz.columnal.typeExp.units.UnitExp;
 import xyz.columnal.styled.StyledString;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Utility;

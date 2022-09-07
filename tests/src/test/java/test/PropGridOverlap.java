@@ -12,7 +12,7 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import records.data.CellPosition;
+import xyz.columnal.data.CellPosition;
 import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGrid;
 import test.gen.GenGridAreaList;

@@ -1,11 +1,11 @@
-package records.typeExp;
+package xyz.columnal.typeExp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.typeExp.TypeExp.TypeError;
+import xyz.columnal.typeExp.TypeExp.TypeError;
 import xyz.columnal.styled.StyledString;
 import xyz.columnal.utility.Utility;
 

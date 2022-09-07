@@ -10,7 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.effect.GaussianBlur;
 import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
+import xyz.columnal.data.CellPosition;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.dtf.Document;

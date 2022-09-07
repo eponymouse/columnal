@@ -1,12 +1,12 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Column.ProgressListener;
-import records.data.datatype.DataTypeValue.GetValue;
+import xyz.columnal.data.Column.ProgressListener;
+import xyz.columnal.data.datatype.DataTypeValue.GetValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.InvalidImmediateValueException;
 import xyz.columnal.error.UserException;

@@ -2,9 +2,9 @@ package records.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.scene.control.ButtonType;
-import records.data.ColumnId;
-import records.data.TableManager;
-import records.data.RenameOnEdit;
+import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.TableManager;
+import xyz.columnal.data.RenameOnEdit;
 import records.transformations.HideColumns;
 import records.transformations.HideColumnsPanel;
 import threadchecker.OnThread;

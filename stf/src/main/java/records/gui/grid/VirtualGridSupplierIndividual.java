@@ -14,7 +14,7 @@ import javafx.util.Duration;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
+import xyz.columnal.data.CellPosition;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;

@@ -1,7 +1,7 @@
-package records.data.datatype;
+package xyz.columnal.data.datatype;
 
 import annotation.qual.Value;
-import records.data.Column;
+import xyz.columnal.data.Column;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;

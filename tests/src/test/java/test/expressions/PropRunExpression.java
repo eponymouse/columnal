@@ -12,7 +12,7 @@ import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression.CheckedExp;
 import records.transformations.expression.Expression.LocationInfo;
-import records.typeExp.TypeExp;
+import xyz.columnal.typeExp.TypeExp;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.ExpressionValue;

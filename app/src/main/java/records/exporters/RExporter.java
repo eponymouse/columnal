@@ -2,7 +2,7 @@ package records.exporters;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
-import records.data.Table;
+import xyz.columnal.data.Table;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import records.rinterop.ConvertToR;

@@ -1,4 +1,4 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
@@ -6,8 +6,8 @@ import annotation.units.TableDataRowIndex;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.Table.Display;
-import records.data.datatype.DataTypeValue;
+import xyz.columnal.data.Table.Display;
+import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;

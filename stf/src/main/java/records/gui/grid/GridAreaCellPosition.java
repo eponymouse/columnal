@@ -5,7 +5,7 @@ import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaColIndex;
 import annotation.units.GridAreaRowIndex;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
+import xyz.columnal.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

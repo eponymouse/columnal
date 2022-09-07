@@ -1,4 +1,4 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.units.TableDataRowIndex;
 import xyz.columnal.error.InternalException;

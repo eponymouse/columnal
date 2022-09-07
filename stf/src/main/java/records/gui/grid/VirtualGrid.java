@@ -68,7 +68,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
-import records.data.CellPosition;
+import xyz.columnal.data.CellPosition;
 import records.gui.grid.VirtualGridSupplier.ContainerChildren;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;

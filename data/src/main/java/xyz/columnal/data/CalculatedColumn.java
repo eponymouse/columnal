@@ -1,7 +1,7 @@
-package records.data;
+package xyz.columnal.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.ColumnStorage.BeforeGet;
+import xyz.columnal.data.ColumnStorage.BeforeGet;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;

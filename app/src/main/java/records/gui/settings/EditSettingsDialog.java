@@ -8,7 +8,7 @@ import javafx.stage.Modality;
 import javafx.stage.Window;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Settings;
+import xyz.columnal.data.Settings;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

@@ -2,12 +2,12 @@ package records.transformations;
 
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
-import records.data.Table;
-import records.data.Table.InitialLoadDetails;
-import records.data.TableId;
-import records.data.TableManager;
-import records.data.Transformation;
+import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.Table;
+import xyz.columnal.data.Table.InitialLoadDetails;
+import xyz.columnal.data.TableId;
+import xyz.columnal.data.TableManager;
+import xyz.columnal.data.Transformation;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import records.grammar.Versions.ExpressionVersion;

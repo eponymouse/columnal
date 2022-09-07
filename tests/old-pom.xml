@@ -190,7 +190,7 @@
                 <version>1.1.11</version>
                 <configuration>
                     <targetClasses>
-                        <param>records.data*</param>
+                        <param>xyz.columnal.data*</param>
                         <param>records.transformations*</param>
                     </targetClasses>
                 </configuration>

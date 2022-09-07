@@ -1,13 +1,13 @@
 module data
 {
-    exports records.data;
-    exports records.data.columntype;
-    exports records.data.datatype;
-    exports records.data.unit;
-    exports records.jellytype;
-    exports records.loadsave;
-    exports records.typeExp;
-    exports records.typeExp.units;
+    exports xyz.columnal.data;
+    exports xyz.columnal.data.columntype;
+    exports xyz.columnal.data.datatype;
+    exports xyz.columnal.data.unit;
+    exports xyz.columnal.jellytype;
+    exports xyz.columnal.loadsave;
+    exports xyz.columnal.typeExp;
+    exports xyz.columnal.typeExp.units;
 
     requires static anns;
     requires static annsthreadchecker;

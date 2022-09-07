@@ -1,9 +1,9 @@
-package records.data;
+package xyz.columnal.data;
 
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import records.data.ColumnStorage.BeforeGet;
-import records.data.datatype.DataTypeValue;
+import xyz.columnal.data.ColumnStorage.BeforeGet;
+import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;

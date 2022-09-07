@@ -2,9 +2,9 @@ package records.gui.stable;
 
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
-import records.data.TableId;
-import records.data.TableManager;
+import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.TableId;
+import xyz.columnal.data.TableManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Workers;

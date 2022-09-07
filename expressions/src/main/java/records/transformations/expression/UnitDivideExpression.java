@@ -2,8 +2,8 @@ package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.unit.UnitManager;
-import records.jellytype.JellyUnit;
+import xyz.columnal.data.unit.UnitManager;
+import xyz.columnal.jellytype.JellyUnit;
 import records.transformations.expression.Expression.SaveDestination;
 
 public class UnitDivideExpression extends UnitExpression

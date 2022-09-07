@@ -1,4 +1,4 @@
-package records.data;
+package xyz.columnal.data;
 
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;

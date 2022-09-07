@@ -1,7 +1,7 @@
 package records.transformations;
 
-import records.data.TableManager;
-import records.data.Transformation;
+import xyz.columnal.data.TableManager;
+import xyz.columnal.data.Transformation;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

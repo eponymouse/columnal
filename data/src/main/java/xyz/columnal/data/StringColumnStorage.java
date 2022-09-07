@@ -1,11 +1,11 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Column.ProgressListener;
-import records.data.datatype.DataTypeUtility;
-import records.data.datatype.DataTypeValue;
+import xyz.columnal.data.Column.ProgressListener;
+import xyz.columnal.data.datatype.DataTypeUtility;
+import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;

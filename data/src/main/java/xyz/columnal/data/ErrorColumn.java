@@ -1,8 +1,8 @@
-package records.data;
+package xyz.columnal.data;
 
 import com.google.common.collect.ImmutableList;
-import records.data.datatype.DataTypeValue;
-import records.data.datatype.TypeManager;
+import xyz.columnal.data.datatype.DataTypeValue;
+import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.styled.StyledString;

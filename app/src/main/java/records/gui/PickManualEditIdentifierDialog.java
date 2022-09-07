@@ -12,7 +12,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.ColumnId;
+import xyz.columnal.data.ColumnId;
 import records.gui.AutoComplete.Completion;
 import records.gui.AutoComplete.CompletionListener;
 import records.gui.AutoComplete.WhitespacePolicy;

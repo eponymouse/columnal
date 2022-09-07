@@ -1,8 +1,8 @@
-package records.data.datatype;
+package xyz.columnal.data.datatype;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.unit.Unit;
+import xyz.columnal.data.unit.Unit;
 
 /**
  * Created by neil on 15/05/2017.

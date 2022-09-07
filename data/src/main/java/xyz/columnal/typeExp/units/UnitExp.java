@@ -1,14 +1,14 @@
-package records.typeExp.units;
+package xyz.columnal.typeExp.units;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.math.IntMath;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.unit.SingleUnit;
-import records.data.unit.Unit;
+import xyz.columnal.data.unit.SingleUnit;
+import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
-import records.typeExp.MutVar;
+import xyz.columnal.typeExp.MutVar;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
 import xyz.columnal.utility.ComparableEither;
@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 
 /**
  * As per "Types for Units-of-Measure: Theory and Practice" by Kennedy (CEFP '09),
- * and similar to our own records.data.unit.Unit class, a unit expression is
+ * and similar to our own xyz.columnal.data.unit.Unit class, a unit expression is
  * a map from units to non-zero integer powers, the difference here being simply that
  * a type can either be a concrete defined type, or a type variable awaiting inference.
  */

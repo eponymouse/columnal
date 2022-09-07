@@ -2,14 +2,14 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.TableAndColumnRenames;
-import records.data.datatype.DataTypeUtility;
-import records.data.datatype.TypeManager;
+import xyz.columnal.data.TableAndColumnRenames;
+import xyz.columnal.data.datatype.DataTypeUtility;
+import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import records.grammar.GrammarUtility;
 import records.transformations.expression.visitor.ExpressionVisitor;
-import records.typeExp.TypeExp;
+import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.styled.CommonStyles;
 import xyz.columnal.styled.StyledString;
 

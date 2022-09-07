@@ -7,14 +7,14 @@ import javafx.embed.swing.JFXPanel;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import records.data.ColumnId;
-import records.data.columntype.BoolColumnType;
-import records.data.columntype.CleanDateColumnType;
-import records.data.columntype.ColumnType;
-import records.data.columntype.NumericColumnType;
-import records.data.columntype.TextColumnType;
-import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.data.unit.Unit;
+import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.columntype.BoolColumnType;
+import xyz.columnal.data.columntype.CleanDateColumnType;
+import xyz.columnal.data.columntype.ColumnType;
+import xyz.columnal.data.columntype.NumericColumnType;
+import xyz.columnal.data.columntype.TextColumnType;
+import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import records.importers.GuessFormat;
@@ -33,8 +33,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
-import static records.data.datatype.DataType.DateTimeInfo.F.*;
-import static records.data.datatype.DataType.DateTimeInfo.m;
+import static xyz.columnal.data.datatype.DataType.DateTimeInfo.F.*;
+import static xyz.columnal.data.datatype.DataType.DateTimeInfo.m;
 
 /**
  * Created by neil on 28/10/2016.

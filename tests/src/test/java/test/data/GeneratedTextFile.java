@@ -2,7 +2,7 @@ package test.data;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import records.data.datatype.DataType;
+import xyz.columnal.data.datatype.DataType;
 
 import java.io.File;
 import java.nio.charset.Charset;

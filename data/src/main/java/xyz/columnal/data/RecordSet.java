@@ -1,4 +1,4 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
@@ -8,8 +8,8 @@ import xyz.columnal.log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
-import records.data.datatype.DataTypeValue;
+import xyz.columnal.data.datatype.DataType;
+import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.InvalidImmediateValueException;
 import xyz.columnal.error.UserException;

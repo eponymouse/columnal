@@ -2,8 +2,8 @@ package records.transformations.expression.explanation;
 
 import annotation.units.TableDataRowIndex;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.ColumnId;
-import records.data.TableId;
+import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.TableId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

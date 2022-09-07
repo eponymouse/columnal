@@ -1,4 +1,4 @@
-package records.data.unit;
+package xyz.columnal.data.unit;
 
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;

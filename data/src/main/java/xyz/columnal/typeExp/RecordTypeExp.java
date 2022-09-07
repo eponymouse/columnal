@@ -1,12 +1,12 @@
-package records.typeExp;
+package xyz.columnal.typeExp;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import de.uni_freiburg.informatik.ultimate.smtinterpol.util.IdentityHashSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
-import records.data.datatype.TypeManager;
+import xyz.columnal.data.datatype.DataType;
+import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.styled.StyledString;

@@ -1,9 +1,9 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.qual.Value;
-import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.SpecificDataTypeVisitor;
-import records.data.datatype.DataTypeValue;
+import xyz.columnal.data.datatype.DataType.DateTimeInfo;
+import xyz.columnal.data.datatype.DataType.SpecificDataTypeVisitor;
+import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;

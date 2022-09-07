@@ -1,19 +1,19 @@
-package records.data.datatype;
+package xyz.columnal.data.datatype;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType.TagType;
-import records.data.datatype.TypeManager.TagInfo;
-import records.data.unit.Unit;
+import xyz.columnal.data.datatype.DataType.TagType;
+import xyz.columnal.data.datatype.TypeManager.TagInfo;
+import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import records.grammar.FormatLexer;
-import records.jellytype.JellyType;
-import records.jellytype.JellyType.UnknownTypeException;
-import records.loadsave.OutputBuilder;
+import xyz.columnal.jellytype.JellyType;
+import xyz.columnal.jellytype.JellyType.UnknownTypeException;
+import xyz.columnal.loadsave.OutputBuilder;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.TaggedValue.TaggedTypeDefinitionBase;

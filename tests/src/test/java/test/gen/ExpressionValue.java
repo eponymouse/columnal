@@ -2,10 +2,10 @@ package test.gen;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.RecordSet;
-import records.data.TableId;
-import records.data.datatype.DataType;
-import records.data.datatype.TypeManager;
+import xyz.columnal.data.RecordSet;
+import xyz.columnal.data.TableId;
+import xyz.columnal.data.datatype.DataType;
+import xyz.columnal.data.datatype.TypeManager;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.ColumnLookup;
 import test.TestUtil.SingleTableLookup;

@@ -6,7 +6,7 @@ import java.util.List;
 
 import annotation.qual.Value;
 import org.junit.Test;
-import records.data.datatype.DataTypeUtility;
+import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;

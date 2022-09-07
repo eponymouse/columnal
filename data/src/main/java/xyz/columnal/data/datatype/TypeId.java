@@ -1,4 +1,4 @@
-package records.data.datatype;
+package xyz.columnal.data.datatype;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import org.checkerframework.checker.i18n.qual.Localized;

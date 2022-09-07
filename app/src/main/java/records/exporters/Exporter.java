@@ -2,8 +2,8 @@ package records.exporters;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
-import records.data.RecordSet;
-import records.data.Table;
+import xyz.columnal.data.RecordSet;
+import xyz.columnal.data.Table;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;

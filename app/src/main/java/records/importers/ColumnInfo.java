@@ -1,8 +1,8 @@
 package records.importers;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.ColumnId;
-import records.data.columntype.ColumnType;
+import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.columntype.ColumnType;
 
 /**
  * Created by neil on 31/10/2016.

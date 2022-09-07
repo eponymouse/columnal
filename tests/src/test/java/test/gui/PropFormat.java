@@ -21,19 +21,19 @@ import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import records.data.CellPosition;
-import records.data.ColumnId;
-import records.data.DataSource;
-import records.data.RecordSet;
-import records.data.columntype.CleanDateColumnType;
-import records.data.columntype.NumericColumnType;
-import records.data.columntype.OrBlankColumnType;
-import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.data.datatype.DataTypeUtility;
-import records.data.datatype.TypeManager;
-import records.data.unit.Unit;
-import records.data.unit.UnitManager;
+import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.DataSource;
+import xyz.columnal.data.RecordSet;
+import xyz.columnal.data.columntype.CleanDateColumnType;
+import xyz.columnal.data.columntype.NumericColumnType;
+import xyz.columnal.data.columntype.OrBlankColumnType;
+import xyz.columnal.data.datatype.DataType.DateTimeInfo;
+import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import xyz.columnal.data.datatype.DataTypeUtility;
+import xyz.columnal.data.datatype.TypeManager;
+import xyz.columnal.data.unit.Unit;
+import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import records.gui.grid.RectangleBounds;
@@ -81,7 +81,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static records.data.datatype.DataType.DateTimeInfo.F.*;
+import static xyz.columnal.data.datatype.DataType.DateTimeInfo.F.*;
 
 /**
  * Created by neil on 29/10/2016.

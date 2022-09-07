@@ -1,8 +1,8 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import records.data.Table.Display;
+import xyz.columnal.data.Table.Display;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;

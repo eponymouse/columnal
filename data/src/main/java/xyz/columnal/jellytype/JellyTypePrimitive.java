@@ -1,23 +1,23 @@
-package records.jellytype;
+package xyz.columnal.jellytype;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitorEx;
-import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.TagType;
-import records.data.datatype.NumberInfo;
-import records.data.datatype.TypeId;
-import records.data.datatype.TypeManager;
-import records.data.unit.Unit;
+import xyz.columnal.data.datatype.DataType;
+import xyz.columnal.data.datatype.DataType.DataTypeVisitorEx;
+import xyz.columnal.data.datatype.DataType.DateTimeInfo;
+import xyz.columnal.data.datatype.DataType.TagType;
+import xyz.columnal.data.datatype.NumberInfo;
+import xyz.columnal.data.datatype.TypeId;
+import xyz.columnal.data.datatype.TypeManager;
+import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
-import records.loadsave.OutputBuilder;
-import records.typeExp.MutVar;
-import records.typeExp.TypeExp;
-import records.typeExp.units.MutUnitVar;
+import xyz.columnal.loadsave.OutputBuilder;
+import xyz.columnal.typeExp.MutVar;
+import xyz.columnal.typeExp.TypeExp;
+import xyz.columnal.typeExp.units.MutUnitVar;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Utility;
 

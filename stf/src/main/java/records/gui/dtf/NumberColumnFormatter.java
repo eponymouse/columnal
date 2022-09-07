@@ -9,7 +9,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataTypeUtility;
+import xyz.columnal.data.datatype.DataTypeUtility;
 import records.gui.stable.EditorKitCache;
 import threadchecker.OnThread;
 import threadchecker.Tag;

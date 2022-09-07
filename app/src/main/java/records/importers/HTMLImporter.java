@@ -29,7 +29,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
-import records.data.*;
+import xyz.columnal.data.*;
 import records.gui.grid.GridAreaCellPosition;
 import records.importers.GuessFormat.ImportInfo;
 import records.importers.GuessFormat.TrimChoice;

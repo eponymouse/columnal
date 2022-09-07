@@ -1,9 +1,9 @@
-package records.data.columntype;
+package xyz.columnal.data.columntype;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import xyz.columnal.data.datatype.DataType.DateTimeInfo;
+import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Utility;

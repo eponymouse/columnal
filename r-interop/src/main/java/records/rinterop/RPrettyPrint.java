@@ -4,7 +4,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 

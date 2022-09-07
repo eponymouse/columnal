@@ -1,13 +1,13 @@
-package records.data;
+package xyz.columnal.data;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
-import records.data.datatype.DataType.ColumnMaker;
-import records.data.datatype.TypeManager;
+import xyz.columnal.data.datatype.DataType;
+import xyz.columnal.data.datatype.DataType.ColumnMaker;
+import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UnimplementedException;
 import xyz.columnal.error.UserException;

@@ -1,10 +1,10 @@
-package records.data.columntype;
+package xyz.columnal.data.columntype;
 
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.NumberDisplayInfo;
-import records.data.datatype.NumberDisplayInfo.Padding;
-import records.data.unit.Unit;
+import xyz.columnal.data.datatype.NumberDisplayInfo;
+import xyz.columnal.data.datatype.NumberDisplayInfo.Padding;
+import xyz.columnal.data.unit.Unit;
 
 import java.util.Objects;
 

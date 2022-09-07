@@ -1,4 +1,4 @@
-package records.typeExp;
+package xyz.columnal.typeExp;
 
 /**
  * Ham-fisted way to uncouple us from dependency on Expression class

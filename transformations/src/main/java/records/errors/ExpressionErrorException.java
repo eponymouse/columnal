@@ -1,9 +1,9 @@
 package records.errors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Table;
-import records.data.TableId;
-import records.data.datatype.DataType;
+import xyz.columnal.data.Table;
+import xyz.columnal.data.TableId;
+import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import records.transformations.expression.Expression;

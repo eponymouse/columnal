@@ -1,4 +1,4 @@
-package records.data;
+package xyz.columnal.data;
 
 import org.checkerframework.dataflow.qual.Pure;
 import records.grammar.MainParser2;

@@ -3,7 +3,7 @@ package records.gui;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver.ArrowLocation;
-import records.data.ColumnId;
+import xyz.columnal.data.ColumnId;
 import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;

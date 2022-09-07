@@ -1,8 +1,8 @@
-package records.typeExp.units;
+package xyz.columnal.typeExp.units;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import records.data.unit.Unit;
+import xyz.columnal.data.unit.Unit;
 import xyz.columnal.styled.CommonStyles;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;

@@ -1,7 +1,7 @@
-package records.typeExp;
+package xyz.columnal.typeExp;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
+import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.styled.StyledString;
 
 /**

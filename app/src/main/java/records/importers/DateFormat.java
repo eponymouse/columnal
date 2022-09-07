@@ -1,6 +1,6 @@
 package records.importers;
 
-import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
