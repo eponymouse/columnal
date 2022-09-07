@@ -1,4 +1,4 @@
-package xyz.columnal.errors;
+package xyz.columnal.error.expressions;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.Table;

@@ -1,8 +1,8 @@
 module transformations
 {
-    exports xyz.columnal.errors;
+    exports xyz.columnal.error.expressions;
     exports xyz.columnal.transformations;
-    
+
     requires static anns;
     requires static annsthreadchecker;
     requires data;
