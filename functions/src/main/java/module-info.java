@@ -1,12 +1,12 @@
 module functions
 {
-    exports records.transformations.function;
-    exports records.transformations.function.comparison;
-    exports records.transformations.function.conversion;
-    exports records.transformations.function.core;
-    exports records.transformations.function.list;
-    exports records.transformations.function.optional;
-    exports records.transformations.function.text;
+    exports xyz.columnal.transformations.function;
+    exports xyz.columnal.transformations.function.comparison;
+    exports xyz.columnal.transformations.function.conversion;
+    exports xyz.columnal.transformations.function.core;
+    exports xyz.columnal.transformations.function.list;
+    exports xyz.columnal.transformations.function.optional;
+    exports xyz.columnal.transformations.function.text;
     
     requires static anns;
     requires static annsthreadchecker;

@@ -1,4 +1,4 @@
-package records.transformations.expression.explanation;
+package xyz.columnal.transformations.expression.explanation;
 
 import annotation.units.TableDataRowIndex;
 import org.checkerframework.checker.nullness.qual.Nullable;

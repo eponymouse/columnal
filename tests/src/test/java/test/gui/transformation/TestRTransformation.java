@@ -15,7 +15,7 @@ import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.datatype.DataType;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
-import records.transformations.RTransformation;
+import xyz.columnal.transformations.RTransformation;
 import test.TestUtil;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.CanHaveErrorValues;

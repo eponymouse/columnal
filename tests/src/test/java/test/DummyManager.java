@@ -8,7 +8,7 @@ import xyz.columnal.data.TableManager;
 import xyz.columnal.data.Transformation;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.TransformationManager;
+import xyz.columnal.transformations.TransformationManager;
 
 /**
  * A TableManager implementation useful for testing

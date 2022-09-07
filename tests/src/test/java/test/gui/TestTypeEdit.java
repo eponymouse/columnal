@@ -30,7 +30,7 @@ import records.grammar.MainLexer2;
 import records.grammar.MainParser2;
 import records.gui.MainWindow.MainWindowActions;
 import xyz.columnal.jellytype.JellyType;
-import records.transformations.expression.type.TypeExpression;
+import xyz.columnal.transformations.expression.type.TypeExpression;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenRandom;

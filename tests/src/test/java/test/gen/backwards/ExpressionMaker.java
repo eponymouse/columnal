@@ -2,7 +2,7 @@ package test.gen.backwards;
 
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.expression.Expression;
+import xyz.columnal.transformations.expression.Expression;
 
 @FunctionalInterface
 public interface ExpressionMaker

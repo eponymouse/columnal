@@ -18,7 +18,7 @@ import xyz.columnal.data.TableManager.TableManagerListener;
 import xyz.columnal.data.Transformation;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.Check;
+import xyz.columnal.transformations.Check;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformRunnable;

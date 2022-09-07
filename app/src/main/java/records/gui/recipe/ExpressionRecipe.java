@@ -5,7 +5,7 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.ExpressionEditor.ColumnPicker;
-import records.transformations.expression.Expression;
+import xyz.columnal.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformSupplier;

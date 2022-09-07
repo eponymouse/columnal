@@ -7,7 +7,7 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import xyz.columnal.data.DataTestUtil;
 import xyz.columnal.data.TableId;
 import xyz.columnal.error.InternalException;
-import records.transformations.RTransformation;
+import xyz.columnal.transformations.RTransformation;
 import test.DummyManager;
 import test.TestUtil;
 import test.TestUtil.Transformation_Mgr;

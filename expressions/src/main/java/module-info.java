@@ -1,10 +1,10 @@
 module expressions
 {
-    exports records.transformations.expression;
-    exports records.transformations.expression.explanation;
-    exports records.transformations.expression.function;
-    exports records.transformations.expression.type;
-    exports records.transformations.expression.visitor;
+    exports xyz.columnal.transformations.expression;
+    exports xyz.columnal.transformations.expression.explanation;
+    exports xyz.columnal.transformations.expression.function;
+    exports xyz.columnal.transformations.expression.type;
+    exports xyz.columnal.transformations.expression.visitor;
     
     requires static anns;
     requires static annsthreadchecker;

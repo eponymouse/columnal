@@ -10,7 +10,7 @@ import javafx.scene.Node;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.lexeditor.TopLevelEditor.DisplayType;
-import records.transformations.expression.CanonicalSpan;
+import xyz.columnal.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import records.gui.lexeditor.Lexer.LexerResult.CaretPos;

@@ -1,4 +1,4 @@
-package records.transformations.expression;
+package xyz.columnal.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -7,9 +7,9 @@ import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.checkerframework.dataflow.qual.Pure;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.TypeManager;
-import records.transformations.expression.Expression.CheckedExp;
-import records.transformations.expression.Expression.ExpressionKind;
-import records.transformations.expression.function.FunctionLookup;
+import xyz.columnal.transformations.expression.Expression.CheckedExp;
+import xyz.columnal.transformations.expression.Expression.ExpressionKind;
+import xyz.columnal.transformations.expression.function.FunctionLookup;
 import xyz.columnal.typeExp.TypeConcretisationError;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.TypeExp.TypeError;

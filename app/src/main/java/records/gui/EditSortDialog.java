@@ -33,7 +33,7 @@ import xyz.columnal.error.UserException;
 import records.gui.AutoComplete.CompletionListener;
 import records.gui.AutoComplete.SimpleCompletion;
 import records.gui.AutoComplete.WhitespacePolicy;
-import records.transformations.Sort.Direction;
+import xyz.columnal.transformations.Sort.Direction;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

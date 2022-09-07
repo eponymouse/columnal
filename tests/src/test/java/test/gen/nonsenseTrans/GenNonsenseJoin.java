@@ -8,7 +8,7 @@ import xyz.columnal.data.DataTestUtil;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.TableId;
 import xyz.columnal.error.InternalException;
-import records.transformations.Join;
+import xyz.columnal.transformations.Join;
 import test.DummyManager;
 import test.TestUtil;
 import test.TestUtil.Transformation_Mgr;

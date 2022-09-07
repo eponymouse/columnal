@@ -1,7 +1,7 @@
 module transformations
 {
-    exports records.errors;
-    exports records.transformations;
+    exports xyz.columnal.errors;
+    exports xyz.columnal.transformations;
     
     requires static anns;
     requires static annsthreadchecker;

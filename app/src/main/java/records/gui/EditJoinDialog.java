@@ -16,7 +16,7 @@ import xyz.columnal.data.ColumnId;
 import xyz.columnal.data.Table;
 import xyz.columnal.data.TableId;
 import records.gui.View.Pick;
-import records.transformations.Join;
+import xyz.columnal.transformations.Join;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

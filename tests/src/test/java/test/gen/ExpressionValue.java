@@ -6,8 +6,8 @@ import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.TableId;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.TypeManager;
-import records.transformations.expression.Expression;
-import records.transformations.expression.Expression.ColumnLookup;
+import xyz.columnal.transformations.expression.Expression;
+import xyz.columnal.transformations.expression.Expression.ColumnLookup;
 import test.TestUtil.SingleTableLookup;
 
 import java.util.List;

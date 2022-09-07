@@ -26,7 +26,7 @@ import xyz.columnal.data.unit.UnitManager;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.lexeditor.EditorDisplay;
-import records.transformations.expression.CanonicalSpan;
+import xyz.columnal.transformations.expression.CanonicalSpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import test.TestUtil;

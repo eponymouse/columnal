@@ -1,4 +1,4 @@
-package records.transformations.expression.type;
+package xyz.columnal.transformations.expression.type;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
@@ -12,7 +12,7 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.jellytype.JellyType;
 import xyz.columnal.jellytype.JellyTypeRecord;
 import xyz.columnal.jellytype.JellyTypeRecord.Field;
-import records.transformations.expression.Expression.SaveDestination;
+import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.styled.StyledString;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;

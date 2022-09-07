@@ -191,7 +191,7 @@
                 <configuration>
                     <targetClasses>
                         <param>xyz.columnal.data*</param>
-                        <param>records.transformations*</param>
+                        <param>xyz.columnal.transformations*</param>
                     </targetClasses>
                 </configuration>
             </plugin>

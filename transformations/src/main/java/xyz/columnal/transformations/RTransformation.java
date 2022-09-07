@@ -1,4 +1,4 @@
-package records.transformations;
+package xyz.columnal.transformations;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

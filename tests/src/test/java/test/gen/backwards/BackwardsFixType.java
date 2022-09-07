@@ -8,8 +8,8 @@ import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.jellytype.JellyType;
-import records.transformations.expression.TypeLiteralExpression;
-import records.transformations.function.FunctionList;
+import xyz.columnal.transformations.expression.TypeLiteralExpression;
+import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
 
 import java.util.List;

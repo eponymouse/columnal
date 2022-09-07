@@ -34,7 +34,7 @@ import records.gui.Main.UpgradeInfo;
 import records.gui.grid.VirtualGrid;
 import records.gui.table.HeadedDisplay;
 import records.importers.manager.ImporterManager;
-import records.transformations.Check;
+import xyz.columnal.transformations.Check;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

@@ -9,14 +9,14 @@ import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.function.FunctionDefinition;
-import records.transformations.function.Not;
-import records.transformations.function.Xor;
+import xyz.columnal.transformations.function.FunctionDefinition;
+import xyz.columnal.transformations.function.Not;
+import xyz.columnal.transformations.function.Xor;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
-import records.transformations.expression.function.ValueFunction;
+import xyz.columnal.transformations.expression.function.ValueFunction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

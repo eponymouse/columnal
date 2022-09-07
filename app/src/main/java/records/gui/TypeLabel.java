@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.expression.Expression;
+import xyz.columnal.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.gui.FXUtility;

@@ -9,7 +9,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import xyz.columnal.data.datatype.DataType;
 import records.gui.table.PickTypeTransformDialog.TypeTransform;
-import records.transformations.expression.Expression;
+import xyz.columnal.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformSupplier;

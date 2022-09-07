@@ -14,7 +14,7 @@ import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.datatype.DataTypeValue;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
-import records.transformations.Join;
+import xyz.columnal.transformations.Join;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenRandom;

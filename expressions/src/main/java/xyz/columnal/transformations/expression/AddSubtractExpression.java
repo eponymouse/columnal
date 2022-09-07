@@ -1,4 +1,4 @@
-package records.transformations.expression;
+package xyz.columnal.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
@@ -13,8 +13,8 @@ import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.expression.function.FunctionLookup;
-import records.transformations.expression.visitor.ExpressionVisitor;
+import xyz.columnal.transformations.expression.function.FunctionLookup;
+import xyz.columnal.transformations.expression.visitor.ExpressionVisitor;
 import xyz.columnal.typeExp.NumTypeExp;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.TypeExp.TypeError;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
-import static records.transformations.expression.AddSubtractExpression.AddSubtractOp.ADD;
+import static xyz.columnal.transformations.expression.AddSubtractExpression.AddSubtractOp.ADD;
 
 /**
  * Created by neil on 10/12/2016.

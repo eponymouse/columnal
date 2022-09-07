@@ -8,9 +8,9 @@ import xyz.columnal.data.unit.Unit;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.expression.CallExpression;
-import records.transformations.expression.Expression;
-import records.transformations.function.FunctionList;
+import xyz.columnal.transformations.expression.CallExpression;
+import xyz.columnal.transformations.expression.Expression;
+import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
 import xyz.columnal.utility.Pair;
 

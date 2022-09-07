@@ -15,7 +15,7 @@ import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import records.gui.MainWindow.MainWindowActions;
-import records.transformations.Calculate;
+import xyz.columnal.transformations.Calculate;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.ExpressionValue;

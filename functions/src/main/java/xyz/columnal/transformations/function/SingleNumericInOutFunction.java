@@ -1,4 +1,4 @@
-package records.transformations.function;
+package xyz.columnal.transformations.function;
 
 import annotation.funcdoc.qual.FuncDocKey;
 import xyz.columnal.error.InternalException;

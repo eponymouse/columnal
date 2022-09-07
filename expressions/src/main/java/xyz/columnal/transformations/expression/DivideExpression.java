@@ -1,4 +1,4 @@
-package records.transformations.expression;
+package xyz.columnal.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
@@ -11,7 +11,7 @@ import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.expression.visitor.ExpressionVisitor;
+import xyz.columnal.transformations.expression.visitor.ExpressionVisitor;
 import xyz.columnal.typeExp.NumTypeExp;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.units.UnitExp;

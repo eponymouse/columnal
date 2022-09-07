@@ -1,4 +1,4 @@
-package records.errors;
+package xyz.columnal.errors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.Table;
@@ -6,9 +6,9 @@ import xyz.columnal.data.TableId;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.expression.Expression;
-import records.transformations.expression.Expression.ColumnLookup;
-import records.transformations.expression.TypeState;
+import xyz.columnal.transformations.expression.Expression;
+import xyz.columnal.transformations.expression.Expression.ColumnLookup;
+import xyz.columnal.transformations.expression.TypeState;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;

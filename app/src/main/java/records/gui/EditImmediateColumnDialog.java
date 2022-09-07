@@ -28,7 +28,7 @@ import records.gui.dtf.TableDisplayUtility;
 import records.gui.dtf.TableDisplayUtility.RecogniserAndType;
 import records.gui.lexeditor.TopLevelEditor.Focus;
 import records.gui.lexeditor.TypeEditor;
-import records.transformations.expression.type.TypeExpression;
+import xyz.columnal.transformations.expression.type.TypeExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

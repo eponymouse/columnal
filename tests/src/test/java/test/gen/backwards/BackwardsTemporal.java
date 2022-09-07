@@ -11,8 +11,8 @@ import xyz.columnal.data.datatype.DataType.FlatDataTypeVisitor;
 import xyz.columnal.data.datatype.NumberInfo;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.expression.DivideExpression;
-import records.transformations.expression.NumericLiteral;
+import xyz.columnal.transformations.expression.DivideExpression;
+import xyz.columnal.transformations.expression.NumericLiteral;
 import xyz.columnal.utility.Pair;
 
 import java.time.LocalDate;

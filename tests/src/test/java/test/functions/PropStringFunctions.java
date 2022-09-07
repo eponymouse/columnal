@@ -15,7 +15,7 @@ import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.function.*;
+import xyz.columnal.transformations.function.*;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenRandom;
@@ -25,7 +25,7 @@ import test.gen.UnicodeStringGenerator;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
-import records.transformations.expression.function.ValueFunction;
+import xyz.columnal.transformations.expression.function.ValueFunction;
 
 import java.util.Random;
 

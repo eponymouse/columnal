@@ -9,7 +9,7 @@ import org.testfx.api.FxRobotInterface;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
-import records.transformations.expression.type.TypeExpression;
+import xyz.columnal.transformations.expression.type.TypeExpression;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;

@@ -48,7 +48,7 @@ import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.dtf.DocumentTextField;
 import records.gui.grid.RectangleBounds;
-import records.transformations.expression.type.TypeExpression;
+import xyz.columnal.transformations.expression.type.TypeExpression;
 import test.TestUtil;
 import test.gen.GenNumber;
 import test.gen.GenRandom;

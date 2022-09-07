@@ -9,7 +9,7 @@ import xyz.columnal.data.DataTestUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.expression.FieldAccessExpression;
+import xyz.columnal.transformations.expression.FieldAccessExpression;
 import test.TestUtil;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility.RecordMap;

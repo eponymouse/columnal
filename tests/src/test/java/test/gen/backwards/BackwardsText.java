@@ -6,8 +6,8 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.expression.Expression;
-import records.transformations.expression.StringConcatExpression;
+import xyz.columnal.transformations.expression.Expression;
+import xyz.columnal.transformations.expression.StringConcatExpression;
 
 import java.util.ArrayList;
 import java.util.Collections;

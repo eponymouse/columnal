@@ -10,7 +10,7 @@ import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.TableId;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.HideColumns;
+import xyz.columnal.transformations.HideColumns;
 import test.DummyManager;
 import test.TestUtil;
 import test.TestUtil.Transformation_Mgr;

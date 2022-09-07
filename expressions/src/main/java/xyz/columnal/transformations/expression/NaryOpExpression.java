@@ -1,4 +1,4 @@
-package records.transformations.expression;
+package xyz.columnal.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
@@ -10,7 +10,7 @@ import xyz.columnal.data.TableAndColumnRenames;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.expression.explanation.ExplanationLocation;
+import xyz.columnal.transformations.expression.explanation.ExplanationLocation;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.TypeExp.TypeError;
 import xyz.columnal.styled.StyledString;

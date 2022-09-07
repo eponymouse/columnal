@@ -21,7 +21,7 @@ import records.importers.ColumnInfo;
 import records.importers.GuessFormat.FinalTextFormat;
 import records.importers.GuessFormat.InitialTextFormat;
 import records.importers.GuessFormat.TrimChoice;
-import records.transformations.function.ToDate;
+import xyz.columnal.transformations.function.ToDate;
 import test.DummyManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;

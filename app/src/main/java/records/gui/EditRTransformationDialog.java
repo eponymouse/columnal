@@ -34,7 +34,7 @@ import records.gui.View.Pick;
 import records.rinterop.ConvertToR;
 import records.rinterop.ConvertFromR;
 import records.rinterop.ConvertFromR.TableType;
-import records.transformations.RTransformation;
+import xyz.columnal.transformations.RTransformation;
 import xyz.columnal.styled.StyledCSS;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;

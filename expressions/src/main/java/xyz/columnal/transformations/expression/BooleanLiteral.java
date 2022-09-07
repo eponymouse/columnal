@@ -1,4 +1,4 @@
-package records.transformations.expression;
+package xyz.columnal.transformations.expression;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -7,7 +7,7 @@ import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.expression.visitor.ExpressionVisitor;
+import xyz.columnal.transformations.expression.visitor.ExpressionVisitor;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.styled.StyledString;
 

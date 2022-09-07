@@ -20,7 +20,7 @@ import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.transformations.expression.function.ValueFunction;
+import xyz.columnal.transformations.expression.function.ValueFunction;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

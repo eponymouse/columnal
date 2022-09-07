@@ -17,7 +17,7 @@ import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.Table;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
-import records.transformations.HideColumns;
+import xyz.columnal.transformations.HideColumns;
 import test.TestUtil;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.MustIncludeNumber;

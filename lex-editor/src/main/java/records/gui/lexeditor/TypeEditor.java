@@ -6,8 +6,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.TableAndColumnRenames;
 import xyz.columnal.data.datatype.TypeManager;
-import records.transformations.expression.Expression.SaveDestination;
-import records.transformations.expression.type.TypeExpression;
+import xyz.columnal.transformations.expression.Expression.SaveDestination;
+import xyz.columnal.transformations.expression.type.TypeExpression;
 import xyz.columnal.utility.FXPlatformConsumer;
 
 public class TypeEditor extends TopLevelEditor<TypeExpression, TypeLexer, CodeCompletionContext>
