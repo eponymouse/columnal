@@ -3,5 +3,5 @@ repositories {
 }
 
 dependencies {
-    implementation 'net.sf.saxon:Saxon-HE:9.9.1-5'
+    implementation 'net.sf.saxon:Saxon-HE:9.9.1-8'
 }
