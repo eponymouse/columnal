@@ -1,4 +1,4 @@
-package records.rinterop;
+package xyz.columnal.rinterop;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -11,7 +11,7 @@ import xyz.columnal.data.Settings;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.rinterop.ConvertFromR.TableType;
+import xyz.columnal.rinterop.ConvertFromR.TableType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Utility;

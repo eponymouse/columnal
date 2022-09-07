@@ -28,7 +28,7 @@ dependencies {
 }
 
 generateGrammarSource {
-    arguments += ['-visitor', '-package', 'records.grammar', '-Werror', '-no-listener']
+    arguments += ['-visitor', '-package', 'xyz.columnal.grammar', '-Werror', '-no-listener']
     outputDirectory = new File(buildDir.toString() + "/generated/sources/antlr/main/records/grammar/")
 }
 

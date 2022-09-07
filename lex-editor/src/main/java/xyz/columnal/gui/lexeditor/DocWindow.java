@@ -1,4 +1,4 @@
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import javafx.beans.binding.ObjectExpression;
 import javafx.geometry.Bounds;
@@ -9,8 +9,8 @@ import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.error.InternalException;
-import records.gui.lexeditor.completion.InsertListener;
-import records.gui.lexeditor.completion.LexAutoCompleteWindow;
+import xyz.columnal.gui.lexeditor.completion.InsertListener;
+import xyz.columnal.gui.lexeditor.completion.LexAutoCompleteWindow;
 import xyz.columnal.utility.ResourceUtility;
 import xyz.columnal.utility.gui.FXUtility;
 

@@ -1,4 +1,4 @@
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
 import annotation.units.CanonicalLocation;
@@ -13,8 +13,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.TableAndColumnRenames;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
-import records.gui.lexeditor.TopLevelEditor.DisplayType;
-import records.gui.lexeditor.completion.InsertListener;
+import xyz.columnal.gui.lexeditor.TopLevelEditor.DisplayType;
+import xyz.columnal.gui.lexeditor.completion.InsertListener;
 import xyz.columnal.transformations.expression.BracketedStatus;
 import xyz.columnal.transformations.expression.CanonicalSpan;
 import xyz.columnal.transformations.expression.ErrorAndTypeRecorder;

@@ -14,7 +14,7 @@ import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.grammar.FormatLexer;
+import xyz.columnal.grammar.FormatLexer;
 import xyz.columnal.jellytype.JellyType;
 import xyz.columnal.jellytype.JellyUnit;
 import xyz.columnal.loadsave.OutputBuilder;

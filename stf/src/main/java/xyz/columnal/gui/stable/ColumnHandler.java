@@ -1,4 +1,4 @@
-package records.gui.stable;
+package xyz.columnal.gui.stable;
 
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
@@ -7,7 +7,7 @@ import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.RecordSet.RecordSetListener;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.dtf.DocumentTextField;
+import xyz.columnal.gui.dtf.DocumentTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformBiConsumer;

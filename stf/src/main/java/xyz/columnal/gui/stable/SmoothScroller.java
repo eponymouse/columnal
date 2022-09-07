@@ -1,4 +1,4 @@
-package records.gui.stable;
+package xyz.columnal.gui.stable;
 
 import javafx.animation.AnimationTimer;
 import javafx.animation.Interpolator;

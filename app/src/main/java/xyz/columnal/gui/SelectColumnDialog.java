@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import annotation.help.qual.HelpKey;
 import annotation.identifier.qual.ExpressionIdentifier;
@@ -18,10 +18,10 @@ import xyz.columnal.data.ColumnId;
 import xyz.columnal.data.Table;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.AutoComplete.CompletionListener;
-import records.gui.AutoComplete.SimpleCompletion;
-import records.gui.AutoComplete.WhitespacePolicy;
-import records.gui.lexeditor.ExpressionEditor.ColumnPicker;
+import xyz.columnal.gui.AutoComplete.CompletionListener;
+import xyz.columnal.gui.AutoComplete.SimpleCompletion;
+import xyz.columnal.gui.AutoComplete.WhitespacePolicy;
+import xyz.columnal.gui.lexeditor.ExpressionEditor.ColumnPicker;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

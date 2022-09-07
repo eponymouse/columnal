@@ -32,7 +32,7 @@ import xyz.columnal.data.datatype.DataType.TagType;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.grammar.GrammarUtility;
+import xyz.columnal.grammar.GrammarUtility;
 import xyz.columnal.loadsave.OutputBuilder;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;

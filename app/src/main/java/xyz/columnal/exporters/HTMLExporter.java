@@ -1,4 +1,4 @@
-package records.exporters;
+package xyz.columnal.exporters;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;

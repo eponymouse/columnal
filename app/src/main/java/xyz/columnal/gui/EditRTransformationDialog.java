@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
@@ -29,11 +29,11 @@ import xyz.columnal.data.Table;
 import xyz.columnal.data.TableId;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.EditRTransformationDialog.RDetails;
-import records.gui.View.Pick;
-import records.rinterop.ConvertToR;
-import records.rinterop.ConvertFromR;
-import records.rinterop.ConvertFromR.TableType;
+import xyz.columnal.gui.EditRTransformationDialog.RDetails;
+import xyz.columnal.gui.View.Pick;
+import xyz.columnal.rinterop.ConvertToR;
+import xyz.columnal.rinterop.ConvertFromR;
+import xyz.columnal.rinterop.ConvertFromR.TableType;
 import xyz.columnal.transformations.RTransformation;
 import xyz.columnal.styled.StyledCSS;
 import xyz.columnal.styled.StyledString;

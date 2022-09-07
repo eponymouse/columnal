@@ -1,5 +1,5 @@
 @OnThread(Tag.Simulation)
-package records.rinterop;
+package xyz.columnal.rinterop;
 
 import threadchecker.OnThread;
 import threadchecker.Tag;

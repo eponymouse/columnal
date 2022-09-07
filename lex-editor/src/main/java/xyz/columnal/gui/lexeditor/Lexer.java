@@ -1,4 +1,4 @@
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
 import annotation.units.CanonicalLocation;
@@ -9,13 +9,13 @@ import com.google.common.collect.ImmutableMap;
 import javafx.scene.Node;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.lexeditor.TopLevelEditor.DisplayType;
+import xyz.columnal.gui.lexeditor.TopLevelEditor.DisplayType;
 import xyz.columnal.transformations.expression.CanonicalSpan;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
-import records.gui.lexeditor.completion.InsertListener;
-import records.gui.lexeditor.completion.LexCompletionGroup;
+import xyz.columnal.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
+import xyz.columnal.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import xyz.columnal.gui.lexeditor.Lexer.LexerResult.CaretPos;
+import xyz.columnal.gui.lexeditor.completion.InsertListener;
+import xyz.columnal.gui.lexeditor.completion.LexCompletionGroup;
 import xyz.columnal.styled.StyledCSS;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;

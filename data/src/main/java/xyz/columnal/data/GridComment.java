@@ -3,7 +3,7 @@ package xyz.columnal.data;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.Table.Saver;
-import records.grammar.GrammarUtility;
+import xyz.columnal.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

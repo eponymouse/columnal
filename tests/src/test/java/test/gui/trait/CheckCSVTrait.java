@@ -11,7 +11,7 @@ import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.grid.VirtualGrid;
+import xyz.columnal.gui.grid.VirtualGrid;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;

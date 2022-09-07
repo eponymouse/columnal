@@ -1,4 +1,4 @@
-package records.importers;
+package xyz.columnal.importers;
 
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
@@ -21,11 +21,11 @@ import xyz.columnal.data.ColumnId;
 import xyz.columnal.data.DataSource;
 import xyz.columnal.data.ImmediateDataSource;
 import xyz.columnal.data.TableManager;
-import records.importers.GuessFormat.Import;
-import records.importers.GuessFormat.ImportInfo;
-import records.importers.GuessFormat.TrimChoice;
-import records.importers.ImportPlainTable.PlainImportInfo;
-import records.importers.gui.ImportChoicesDialog;
+import xyz.columnal.importers.GuessFormat.Import;
+import xyz.columnal.importers.GuessFormat.ImportInfo;
+import xyz.columnal.importers.GuessFormat.TrimChoice;
+import xyz.columnal.importers.ImportPlainTable.PlainImportInfo;
+import xyz.columnal.importers.gui.ImportChoicesDialog;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformConsumer;

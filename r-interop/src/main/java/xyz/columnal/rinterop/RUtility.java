@@ -1,4 +1,4 @@
-package records.rinterop;
+package xyz.columnal.rinterop;
 
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
@@ -11,7 +11,7 @@ import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.rinterop.RVisitor.PairListEntry;
+import xyz.columnal.rinterop.RVisitor.PairListEntry;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
 

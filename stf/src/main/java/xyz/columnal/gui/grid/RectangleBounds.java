@@ -1,4 +1,4 @@
-package records.gui.grid;
+package xyz.columnal.gui.grid;
 
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;

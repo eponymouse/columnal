@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import javafx.geometry.Pos;
 import javafx.scene.Node;

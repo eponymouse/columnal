@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;

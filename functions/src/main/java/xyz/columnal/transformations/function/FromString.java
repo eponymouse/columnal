@@ -18,7 +18,7 @@ import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.grammar.GrammarUtility;
+import xyz.columnal.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

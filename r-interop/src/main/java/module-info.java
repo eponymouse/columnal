@@ -1,6 +1,6 @@
 module rinterop
 {
-    exports records.rinterop;
+    exports xyz.columnal.rinterop;
     
     requires static anns;
     requires static annsthreadchecker;

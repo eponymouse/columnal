@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -8,7 +8,7 @@ import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import xyz.columnal.data.TableId;
 import xyz.columnal.data.TableManager;
-import records.grammar.GrammarUtility;
+import xyz.columnal.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformRunnable;

@@ -12,9 +12,9 @@ import xyz.columnal.data.columntype.CleanDateColumnType;
 import xyz.columnal.data.columntype.NumericColumnType;
 import xyz.columnal.data.columntype.TextColumnType;
 import xyz.columnal.data.datatype.DataTypeUtility;
-import records.importers.ColumnInfo;
-import records.importers.GuessFormat.FinalTextFormat;
-import records.importers.GuessFormat.TrimChoice;
+import xyz.columnal.importers.ColumnInfo;
+import xyz.columnal.importers.GuessFormat.FinalTextFormat;
+import xyz.columnal.importers.GuessFormat.TrimChoice;
 import test.gen.GenFormattedData.FormatAndData;
 
 import java.math.BigDecimal;

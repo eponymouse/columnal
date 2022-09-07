@@ -28,7 +28,7 @@ import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 import xyz.columnal.error.InternalException;
-import records.gui.Main;
+import xyz.columnal.gui.Main;
 import test.TestUtil;
 import test.gui.trait.FocusOwnerTrait;
 import test.gui.trait.ScreenshotTrait;

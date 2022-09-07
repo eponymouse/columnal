@@ -1,4 +1,4 @@
-package records.importers;
+package xyz.columnal.importers;
 
 import annotation.qual.ImmediateValue;
 import annotation.units.TableDataRowIndex;
@@ -25,7 +25,7 @@ import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.FetchException;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.importers.GuessFormat.FinalTextFormat;
+import xyz.columnal.importers.GuessFormat.FinalTextFormat;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

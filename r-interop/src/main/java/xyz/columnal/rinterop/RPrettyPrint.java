@@ -1,4 +1,4 @@
-package records.rinterop;
+package xyz.columnal.rinterop;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;

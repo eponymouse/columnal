@@ -1,4 +1,4 @@
-package records.gui.stable;
+package xyz.columnal.gui.stable;
 
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;

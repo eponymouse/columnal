@@ -1,4 +1,4 @@
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
@@ -13,9 +13,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.transformations.expression.CanonicalSpan;
-import records.gui.lexeditor.UnitLexer.UnitBracket;
-import records.gui.lexeditor.UnitLexer.UnitOp;
-import records.gui.lexeditor.completion.InsertListener;
+import xyz.columnal.gui.lexeditor.UnitLexer.UnitBracket;
+import xyz.columnal.gui.lexeditor.UnitLexer.UnitOp;
+import xyz.columnal.gui.lexeditor.completion.InsertListener;
 import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.expression.InvalidOperatorUnitExpression;
 import xyz.columnal.transformations.expression.InvalidSingleUnitExpression;

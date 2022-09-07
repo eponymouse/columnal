@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;

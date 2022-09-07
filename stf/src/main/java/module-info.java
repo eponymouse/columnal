@@ -1,8 +1,8 @@
 module stf
 {
-    exports records.gui.dtf;
-    exports records.gui.grid;
-    exports records.gui.stable;
+    exports xyz.columnal.gui.dtf;
+    exports xyz.columnal.gui.grid;
+    exports xyz.columnal.gui.stable;
     
     requires static anns;
     requires static annsthreadchecker;

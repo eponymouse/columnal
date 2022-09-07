@@ -112,7 +112,7 @@ build.dependsOn(xsltHelp, xsltHelpIndiv, xsltFuncdocIndivHtml, xsltFuncdocJoined
 jar.dependsOn(xsltHelp, xsltHelpIndiv, xsltFuncdocIndivHtml, xsltFuncdocJoinedHtml, xsltFuncdocTypesAndMini, xsltExtractTests)
 
 ext {
-    javaMainClass = "records.gui.Main"
+    javaMainClass = "xyz.columnal.gui.Main"
 }
 application {
     mainClassName = javaMainClass

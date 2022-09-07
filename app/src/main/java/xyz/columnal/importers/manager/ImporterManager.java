@@ -1,4 +1,4 @@
-package records.importers.manager;
+package xyz.columnal.importers.manager;
 
 import com.google.common.collect.ImmutableList;
 import javafx.collections.FXCollections;
@@ -23,7 +23,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.DataSource;
 import xyz.columnal.data.TableManager;
-import records.importers.Importer;
+import xyz.columnal.importers.Importer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

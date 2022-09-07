@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
@@ -10,8 +10,8 @@ import javafx.stage.Modality;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.Table;
 import xyz.columnal.data.datatype.DataType;
-import records.gui.lexeditor.ExpressionEditor;
-import records.gui.lexeditor.TopLevelEditor.Focus;
+import xyz.columnal.gui.lexeditor.ExpressionEditor;
+import xyz.columnal.gui.lexeditor.TopLevelEditor.Focus;
 import xyz.columnal.transformations.Check;
 import xyz.columnal.transformations.Check.CheckType;
 import xyz.columnal.transformations.expression.Expression;

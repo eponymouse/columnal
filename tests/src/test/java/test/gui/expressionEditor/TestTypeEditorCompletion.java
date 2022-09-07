@@ -22,7 +22,7 @@ import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.TaggedTypeDefinition;
 import xyz.columnal.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import xyz.columnal.data.datatype.TypeId;
-import records.gui.MainWindow.MainWindowActions;
+import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.transformations.Calculate;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;

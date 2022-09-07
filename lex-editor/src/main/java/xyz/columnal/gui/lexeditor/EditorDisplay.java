@@ -1,4 +1,4 @@
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import annotation.units.CanonicalLocation;
 import annotation.units.DisplayLocation;
@@ -26,14 +26,14 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.error.InternalException;
-import records.gui.lexeditor.EditorContent.CaretMoveReason;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.gui.lexeditor.completion.LexAutoComplete;
-import records.gui.lexeditor.completion.LexCompletion;
-import records.gui.lexeditor.TopLevelEditor.Focus;
-import records.gui.lexeditor.completion.LexCompletionGroup;
-import records.gui.lexeditor.completion.LexCompletionListener;
+import xyz.columnal.gui.lexeditor.EditorContent.CaretMoveReason;
+import xyz.columnal.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
+import xyz.columnal.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import xyz.columnal.gui.lexeditor.completion.LexAutoComplete;
+import xyz.columnal.gui.lexeditor.completion.LexCompletion;
+import xyz.columnal.gui.lexeditor.TopLevelEditor.Focus;
+import xyz.columnal.gui.lexeditor.completion.LexCompletionGroup;
+import xyz.columnal.gui.lexeditor.completion.LexCompletionListener;
 import xyz.columnal.styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;

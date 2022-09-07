@@ -1,4 +1,4 @@
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;

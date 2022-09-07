@@ -1,4 +1,4 @@
-package records.gui.stable;
+package xyz.columnal.gui.stable;
 
 import javafx.scene.control.MenuItem;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;

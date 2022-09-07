@@ -1,4 +1,4 @@
-package records.gui.table;
+package xyz.columnal.gui.table;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -23,10 +23,10 @@ import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.TableId;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.grid.VirtualGridSupplier.ItemState;
-import records.gui.grid.VirtualGridSupplier.ViewOrder;
-import records.gui.grid.VirtualGridSupplier.VisibleBounds;
-import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
+import xyz.columnal.gui.grid.VirtualGridSupplier.ItemState;
+import xyz.columnal.gui.grid.VirtualGridSupplier.ViewOrder;
+import xyz.columnal.gui.grid.VirtualGridSupplier.VisibleBounds;
+import xyz.columnal.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.explanation.Explanation;
 import xyz.columnal.transformations.expression.explanation.ExplanationLocation;

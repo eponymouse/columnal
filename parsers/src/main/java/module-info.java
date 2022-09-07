@@ -1,6 +1,6 @@
 module parsers
 {
-    exports records.grammar;
+    exports xyz.columnal.grammar;
 
     requires antlr4.runtime;
 }

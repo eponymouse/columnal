@@ -1,4 +1,4 @@
-package records.importers.gui;
+package xyz.columnal.importers.gui;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectExpression;
@@ -15,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.utility.gui.ErrorableTextField;
 import xyz.columnal.utility.gui.ErrorableTextField.ConversionResult;
-import records.importers.ChoiceDetails;
+import xyz.columnal.importers.ChoiceDetails;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;

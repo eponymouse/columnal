@@ -1,4 +1,4 @@
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
 import annotation.units.CanonicalLocation;
@@ -30,10 +30,10 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.gui.FixList;
 import xyz.columnal.utility.gui.FixList.FixInfo;
-import records.gui.lexeditor.EditorContent.CaretMoveReason;
-import records.gui.lexeditor.EditorContent.CaretPositionListener;
+import xyz.columnal.gui.lexeditor.EditorContent.CaretMoveReason;
+import xyz.columnal.gui.lexeditor.EditorContent.CaretPositionListener;
 import xyz.columnal.transformations.expression.CanonicalSpan;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import xyz.columnal.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.QuickFix.QuickFixAction;
 import xyz.columnal.styled.StyledShowable;

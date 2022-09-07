@@ -1,4 +1,4 @@
-package records.gui.lexeditor.completion;
+package xyz.columnal.gui.lexeditor.completion;
 
 import com.google.common.collect.ImmutableList;
 import javafx.animation.KeyFrame;
@@ -6,7 +6,7 @@ import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
 import javafx.util.Duration;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import records.gui.lexeditor.EditorDisplay;
+import xyz.columnal.gui.lexeditor.EditorDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformConsumer;

@@ -1,10 +1,10 @@
-package records.gui.recipe;
+package xyz.columnal.gui.recipe;
 
 import javafx.stage.Window;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.lexeditor.ExpressionEditor.ColumnPicker;
+import xyz.columnal.gui.lexeditor.ExpressionEditor.ColumnPicker;
 import xyz.columnal.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;

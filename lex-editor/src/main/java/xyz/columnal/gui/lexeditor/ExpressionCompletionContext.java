@@ -1,13 +1,13 @@
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.lexeditor.TopLevelEditor.DisplayType;
-import records.gui.lexeditor.completion.LexCompletion;
-import records.gui.lexeditor.completion.LexCompletionGroup;
+import xyz.columnal.gui.lexeditor.TopLevelEditor.DisplayType;
+import xyz.columnal.gui.lexeditor.completion.LexCompletion;
+import xyz.columnal.gui.lexeditor.completion.LexCompletionGroup;
 import xyz.columnal.styled.StyledString;
 import xyz.columnal.utility.FXPlatformBiFunction;
 import xyz.columnal.utility.FXPlatformFunction;

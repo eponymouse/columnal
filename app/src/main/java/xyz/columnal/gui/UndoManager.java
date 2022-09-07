@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;

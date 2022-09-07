@@ -12,7 +12,7 @@ import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.grammar.FormatLexer;
+import xyz.columnal.grammar.FormatLexer;
 import xyz.columnal.loadsave.OutputBuilder;
 import xyz.columnal.typeExp.MutVar;
 import xyz.columnal.typeExp.TypeCons;

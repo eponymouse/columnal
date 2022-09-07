@@ -1,4 +1,4 @@
-package records.rinterop;
+package xyz.columnal.rinterop;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.ImmediateValue;

@@ -1,9 +1,9 @@
-package records.gui.stable;
+package xyz.columnal.gui.stable;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.stable.ScrollGroup.Token;
+import xyz.columnal.gui.stable.ScrollGroup.Token;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;

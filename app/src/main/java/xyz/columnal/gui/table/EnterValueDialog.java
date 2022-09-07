@@ -1,4 +1,4 @@
-package records.gui.table;
+package xyz.columnal.gui.table;
 
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
@@ -10,10 +10,10 @@ import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.dtf.DocumentTextField;
-import records.gui.dtf.RecogniserDocument;
-import records.gui.dtf.TableDisplayUtility;
-import records.gui.dtf.TableDisplayUtility.RecogniserAndType;
+import xyz.columnal.gui.dtf.DocumentTextField;
+import xyz.columnal.gui.dtf.RecogniserDocument;
+import xyz.columnal.gui.dtf.TableDisplayUtility;
+import xyz.columnal.gui.dtf.TableDisplayUtility.RecogniserAndType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

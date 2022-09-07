@@ -20,7 +20,7 @@ import xyz.columnal.data.unit.Unit;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.grammar.GrammarUtility;
+import xyz.columnal.grammar.GrammarUtility;
 import xyz.columnal.jellytype.JellyType;
 import xyz.columnal.loadsave.OutputBuilder;
 import xyz.columnal.transformations.expression.Expression.ColumnLookup.FoundTable;

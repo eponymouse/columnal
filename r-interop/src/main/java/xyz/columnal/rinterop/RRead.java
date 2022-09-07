@@ -1,4 +1,4 @@
-package records.rinterop;
+package xyz.columnal.rinterop;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -7,7 +7,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.rinterop.RVisitor.PairListEntry;
+import xyz.columnal.rinterop.RVisitor.PairListEntry;
 import xyz.columnal.utility.Utility;
 
 import java.io.BufferedInputStream;

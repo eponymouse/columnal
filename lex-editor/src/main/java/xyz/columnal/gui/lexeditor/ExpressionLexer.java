@@ -1,4 +1,4 @@
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
@@ -25,14 +25,14 @@ import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.ExceptionWithStyle;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.grammar.GrammarUtility;
+import xyz.columnal.grammar.GrammarUtility;
 import xyz.columnal.transformations.expression.CanonicalSpan;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.gui.lexeditor.completion.InsertListener;
-import records.gui.lexeditor.completion.LexCompletion;
-import records.gui.lexeditor.completion.LexAutoComplete.LexSelectionBehaviour;
-import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
-import records.gui.lexeditor.completion.LexCompletionGroup;
+import xyz.columnal.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import xyz.columnal.gui.lexeditor.completion.InsertListener;
+import xyz.columnal.gui.lexeditor.completion.LexCompletion;
+import xyz.columnal.gui.lexeditor.completion.LexAutoComplete.LexSelectionBehaviour;
+import xyz.columnal.gui.lexeditor.Lexer.LexerResult.CaretPos;
+import xyz.columnal.gui.lexeditor.completion.LexCompletionGroup;
 import xyz.columnal.jellytype.JellyType;
 import xyz.columnal.transformations.expression.*;
 import xyz.columnal.transformations.expression.DefineExpression.DefineItem;
@@ -86,16 +86,16 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     public static enum Keyword implements ExpressionToken
     {
         OPEN_SQUARE("["), CLOSE_SQUARE("]"), OPEN_ROUND("("), CLOSE_ROUND(")"), QUEST("?"),
-        IF(records.grammar.ExpressionLexer.IF), THEN(records.grammar.ExpressionLexer.THEN), ELSE(records.grammar.ExpressionLexer.ELSE), ENDIF(records.grammar.ExpressionLexer.ENDIF),
-        MATCH(records.grammar.ExpressionLexer.MATCH),
-        CASE(records.grammar.ExpressionLexer.CASE),
-        ORCASE(records.grammar.ExpressionLexer.ORCASE),
-        GIVEN(records.grammar.ExpressionLexer.CASEGUARD),
-        ENDMATCH(records.grammar.ExpressionLexer.ENDMATCH),
-        DEFINE(records.grammar.ExpressionLexer.DEFINE),
-        ENDDEFINE(records.grammar.ExpressionLexer.ENDDEFINE),
-        FUNCTION(records.grammar.ExpressionLexer.FUNCTION),
-        ENDFUNCTION(records.grammar.ExpressionLexer.ENDFUNCTION);
+        IF(xyz.columnal.grammar.ExpressionLexer.IF), THEN(xyz.columnal.grammar.ExpressionLexer.THEN), ELSE(xyz.columnal.grammar.ExpressionLexer.ELSE), ENDIF(xyz.columnal.grammar.ExpressionLexer.ENDIF),
+        MATCH(xyz.columnal.grammar.ExpressionLexer.MATCH),
+        CASE(xyz.columnal.grammar.ExpressionLexer.CASE),
+        ORCASE(xyz.columnal.grammar.ExpressionLexer.ORCASE),
+        GIVEN(xyz.columnal.grammar.ExpressionLexer.CASEGUARD),
+        ENDMATCH(xyz.columnal.grammar.ExpressionLexer.ENDMATCH),
+        DEFINE(xyz.columnal.grammar.ExpressionLexer.DEFINE),
+        ENDDEFINE(xyz.columnal.grammar.ExpressionLexer.ENDDEFINE),
+        FUNCTION(xyz.columnal.grammar.ExpressionLexer.FUNCTION),
+        ENDFUNCTION(xyz.columnal.grammar.ExpressionLexer.ENDFUNCTION);
 
         private final String keyword;
 
@@ -106,7 +106,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
         private Keyword(int token)
         {
-            this.keyword = Utility.literal(records.grammar.ExpressionLexer.VOCABULARY, token);
+            this.keyword = Utility.literal(xyz.columnal.grammar.ExpressionLexer.VOCABULARY, token);
         }
 
         @Override

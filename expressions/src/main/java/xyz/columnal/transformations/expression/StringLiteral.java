@@ -7,7 +7,7 @@ import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.grammar.GrammarUtility;
+import xyz.columnal.grammar.GrammarUtility;
 import xyz.columnal.transformations.expression.visitor.ExpressionVisitor;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.styled.CommonStyles;

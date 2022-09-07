@@ -1,4 +1,4 @@
-package records.importers;
+package xyz.columnal.importers;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.ColumnId;

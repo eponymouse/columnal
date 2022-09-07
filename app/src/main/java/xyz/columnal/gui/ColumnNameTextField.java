@@ -1,10 +1,10 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver.ArrowLocation;
 import xyz.columnal.data.ColumnId;
-import records.grammar.GrammarUtility;
+import xyz.columnal.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.TranslationUtility;

@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.geometry.Point2D;
@@ -9,8 +9,8 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.Table;
 import xyz.columnal.data.datatype.DataType;
-import records.gui.lexeditor.ExpressionEditor;
-import records.gui.lexeditor.TopLevelEditor.Focus;
+import xyz.columnal.gui.lexeditor.ExpressionEditor;
+import xyz.columnal.gui.lexeditor.TopLevelEditor.Focus;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.Expression.ColumnLookup;
 import xyz.columnal.transformations.expression.TypeState;

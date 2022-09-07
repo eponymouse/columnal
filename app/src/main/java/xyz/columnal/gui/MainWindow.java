@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
@@ -29,11 +29,11 @@ import xyz.columnal.data.Table.TableDisplayBase;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.CheckSummaryLabel.ChecksStateListener;
-import records.gui.Main.UpgradeInfo;
-import records.gui.grid.VirtualGrid;
-import records.gui.table.HeadedDisplay;
-import records.importers.manager.ImporterManager;
+import xyz.columnal.gui.CheckSummaryLabel.ChecksStateListener;
+import xyz.columnal.gui.Main.UpgradeInfo;
+import xyz.columnal.gui.grid.VirtualGrid;
+import xyz.columnal.gui.table.HeadedDisplay;
+import xyz.columnal.importers.manager.ImporterManager;
 import xyz.columnal.transformations.Check;
 import threadchecker.OnThread;
 import threadchecker.Tag;

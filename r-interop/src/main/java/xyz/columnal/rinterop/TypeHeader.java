@@ -1,4 +1,4 @@
-package records.rinterop;
+package xyz.columnal.rinterop;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.error.InternalException;

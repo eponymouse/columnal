@@ -1,14 +1,14 @@
-package records.gui.grid;
+package xyz.columnal.gui.grid;
 
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
-import records.gui.grid.VirtualGridSupplier.ItemState;
-import records.gui.grid.VirtualGridSupplier.ViewOrder;
-import records.gui.grid.VirtualGridSupplier.VisibleBounds;
-import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
+import xyz.columnal.gui.grid.VirtualGridSupplier.ItemState;
+import xyz.columnal.gui.grid.VirtualGridSupplier.ViewOrder;
+import xyz.columnal.gui.grid.VirtualGridSupplier.VisibleBounds;
+import xyz.columnal.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;

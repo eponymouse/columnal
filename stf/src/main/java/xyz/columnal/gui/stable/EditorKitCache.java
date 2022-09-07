@@ -1,4 +1,4 @@
-package records.gui.stable;
+package xyz.columnal.gui.stable;
 
 import annotation.qual.Value;
 import annotation.units.TableDataColIndex;
@@ -23,10 +23,10 @@ import xyz.columnal.data.datatype.DataTypeValue.GetValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.InvalidImmediateValueException;
 import xyz.columnal.error.UserException;
-import records.gui.dtf.Document;
-import records.gui.dtf.DocumentTextField;
-import records.gui.dtf.ReadOnlyDocument;
-import records.gui.dtf.TableDisplayUtility.GetDataPosition;
+import xyz.columnal.gui.dtf.Document;
+import xyz.columnal.gui.dtf.DocumentTextField;
+import xyz.columnal.gui.dtf.ReadOnlyDocument;
+import xyz.columnal.gui.dtf.TableDisplayUtility.GetDataPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

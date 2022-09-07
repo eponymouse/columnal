@@ -1,4 +1,4 @@
-package records.rinterop;
+package xyz.columnal.rinterop;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
@@ -24,7 +24,7 @@ import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.rinterop.ConvertFromR.TableType;
+import xyz.columnal.rinterop.ConvertFromR.TableType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

@@ -1,4 +1,4 @@
-package records.gui.settings;
+package xyz.columnal.gui.settings;
 
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;

@@ -1,4 +1,4 @@
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import annotation.units.CanonicalLocation;
 import annotation.units.DisplayLocation;
@@ -12,12 +12,12 @@ import javafx.scene.text.Text;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.Table.Display;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.gui.lexeditor.Lexer.LexerResult;
-import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
-import records.gui.lexeditor.TopLevelEditor.DisplayType;
-import records.gui.lexeditor.TopLevelEditor.Focus;
-import records.gui.lexeditor.completion.InsertListener;
+import xyz.columnal.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import xyz.columnal.gui.lexeditor.Lexer.LexerResult;
+import xyz.columnal.gui.lexeditor.Lexer.LexerResult.CaretPos;
+import xyz.columnal.gui.lexeditor.TopLevelEditor.DisplayType;
+import xyz.columnal.gui.lexeditor.TopLevelEditor.Focus;
+import xyz.columnal.gui.lexeditor.completion.InsertListener;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
 import xyz.columnal.utility.FXPlatformConsumer;

@@ -1,6 +1,6 @@
 module app
 {
-    exports records.gui;
+    exports xyz.columnal.gui;
 
     requires static anns;
     requires static annsthreadchecker;

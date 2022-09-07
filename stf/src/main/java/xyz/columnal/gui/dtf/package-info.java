@@ -1,5 +1,5 @@
 @OnThread(Tag.FXPlatform)
-package records.gui.dtf;
+package xyz.columnal.gui.dtf;
 
 import threadchecker.OnThread;
 import threadchecker.Tag;

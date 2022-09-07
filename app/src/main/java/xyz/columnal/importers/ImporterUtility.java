@@ -1,4 +1,4 @@
-package records.importers;
+package xyz.columnal.importers;
 
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
@@ -36,8 +36,8 @@ import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.stable.ReadOnlyStringColumnHandler;
-import records.gui.stable.ColumnDetails;
+import xyz.columnal.gui.stable.ReadOnlyStringColumnHandler;
+import xyz.columnal.gui.stable.ColumnDetails;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

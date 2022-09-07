@@ -1,4 +1,4 @@
-package records.rinterop;
+package xyz.columnal.rinterop;
 
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;

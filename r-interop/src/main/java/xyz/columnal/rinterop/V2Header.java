@@ -1,4 +1,4 @@
-package records.rinterop;
+package xyz.columnal.rinterop;
 
 import java.io.DataInputStream;
 import java.io.IOException;

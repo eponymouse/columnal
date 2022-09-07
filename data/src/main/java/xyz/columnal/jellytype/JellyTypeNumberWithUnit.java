@@ -8,7 +8,7 @@ import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
-import records.grammar.FormatParser;
+import xyz.columnal.grammar.FormatParser;
 import xyz.columnal.loadsave.OutputBuilder;
 import xyz.columnal.typeExp.MutVar;
 import xyz.columnal.typeExp.NumTypeExp;

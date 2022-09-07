@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
@@ -33,7 +33,7 @@ import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.lexeditor.TypeEditor;
+import xyz.columnal.gui.lexeditor.TypeEditor;
 import xyz.columnal.jellytype.JellyType;
 import xyz.columnal.transformations.expression.type.InvalidIdentTypeExpression;
 import xyz.columnal.transformations.expression.type.TypeExpression;

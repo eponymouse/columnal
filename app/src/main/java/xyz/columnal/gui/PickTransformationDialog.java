@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;

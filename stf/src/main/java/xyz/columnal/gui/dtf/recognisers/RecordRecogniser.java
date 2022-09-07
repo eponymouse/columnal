@@ -1,4 +1,4 @@
-package records.gui.dtf.recognisers;
+package xyz.columnal.gui.dtf.recognisers;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.ImmediateValue;
@@ -8,7 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.datatype.DataTypeUtility;
-import records.gui.dtf.Recogniser;
+import xyz.columnal.gui.dtf.Recogniser;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.Pair;

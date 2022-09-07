@@ -1,4 +1,4 @@
-package records.gui.dtf;
+package xyz.columnal.gui.dtf;
 
 import annotation.units.CanonicalLocation;
 import annotation.units.DisplayLocation;
@@ -23,8 +23,8 @@ import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
-import records.gui.dtf.Document.DocumentListener;
-import records.gui.dtf.Document.TrackedPosition.Bias;
+import xyz.columnal.gui.dtf.Document.DocumentListener;
+import xyz.columnal.gui.dtf.Document.TrackedPosition.Bias;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;

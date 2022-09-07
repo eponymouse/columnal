@@ -1,9 +1,9 @@
-package records.gui.dtf;
+package xyz.columnal.gui.dtf;
 
 import com.google.common.collect.ImmutableSet;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.dtf.Document.TrackedPosition.Bias;
+import xyz.columnal.gui.dtf.Document.TrackedPosition.Bias;
 import xyz.columnal.utility.FXPlatformRunnable;
 import xyz.columnal.utility.Pair;
 

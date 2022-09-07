@@ -1,4 +1,4 @@
-package records.gui.table;
+package xyz.columnal.gui.table;
 
 import com.google.common.collect.ImmutableList;
 import javafx.scene.control.ButtonType;

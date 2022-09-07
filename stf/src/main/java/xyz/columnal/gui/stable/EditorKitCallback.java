@@ -1,8 +1,8 @@
-package records.gui.stable;
+package xyz.columnal.gui.stable;
 
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
-import records.gui.dtf.Document;
+import xyz.columnal.gui.dtf.Document;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

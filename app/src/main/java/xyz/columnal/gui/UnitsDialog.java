@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import annotation.identifier.qual.UnitIdentifier;
 import com.google.common.collect.ImmutableMap;
@@ -26,10 +26,10 @@ import xyz.columnal.data.unit.UnitDeclaration;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.grammar.UnitLexer;
-import records.grammar.UnitParser;
-import records.grammar.UnitParser.ScaleContext;
-import records.gui.lexeditor.UnitEditor;
+import xyz.columnal.grammar.UnitLexer;
+import xyz.columnal.grammar.UnitParser;
+import xyz.columnal.grammar.UnitParser.ScaleContext;
+import xyz.columnal.gui.lexeditor.UnitEditor;
 import xyz.columnal.jellytype.JellyUnit;
 import xyz.columnal.transformations.expression.UnitExpression;
 import xyz.columnal.transformations.expression.UnitExpression.UnitLookupException;

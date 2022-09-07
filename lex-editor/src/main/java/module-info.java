@@ -1,7 +1,7 @@
 module lexeditor
 {
-    exports records.gui.lexeditor;
-    exports records.gui.lexeditor.completion;
+    exports xyz.columnal.gui.lexeditor;
+    exports xyz.columnal.gui.lexeditor.completion;
     
     requires static anns;
     requires static annsthreadchecker;

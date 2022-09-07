@@ -1,4 +1,4 @@
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
@@ -22,14 +22,14 @@ import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.ExceptionWithStyle;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.grammar.FormatLexer;
-import records.gui.lexeditor.TopLevelEditor.DisplayType;
+import xyz.columnal.grammar.FormatLexer;
+import xyz.columnal.gui.lexeditor.TopLevelEditor.DisplayType;
 import xyz.columnal.transformations.expression.CanonicalSpan;
-import records.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import records.gui.lexeditor.completion.InsertListener;
-import records.gui.lexeditor.completion.LexCompletion;
-import records.gui.lexeditor.Lexer.LexerResult.CaretPos;
-import records.gui.lexeditor.completion.LexCompletionGroup;
+import xyz.columnal.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
+import xyz.columnal.gui.lexeditor.completion.InsertListener;
+import xyz.columnal.gui.lexeditor.completion.LexCompletion;
+import xyz.columnal.gui.lexeditor.Lexer.LexerResult.CaretPos;
+import xyz.columnal.gui.lexeditor.completion.LexCompletionGroup;
 import xyz.columnal.jellytype.JellyType;
 import xyz.columnal.jellytype.JellyType.UnknownTypeException;
 import xyz.columnal.transformations.expression.Expression.SaveDestination;

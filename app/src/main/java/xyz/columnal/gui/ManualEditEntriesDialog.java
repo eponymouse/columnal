@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -18,7 +18,7 @@ import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.DataTypeUtility.ComparableValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.table.TableDisplay;
+import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.transformations.ManualEdit;
 import xyz.columnal.transformations.ManualEdit.ColumnReplacementValues;
 import threadchecker.OnThread;

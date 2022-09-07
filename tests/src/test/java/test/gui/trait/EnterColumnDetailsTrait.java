@@ -8,7 +8,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.testfx.api.FxRobotInterface;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.EditImmediateColumnDialog.ColumnDetails;
+import xyz.columnal.gui.EditImmediateColumnDialog.ColumnDetails;
 import xyz.columnal.transformations.expression.type.TypeExpression;
 import test.TestUtil;
 import threadchecker.OnThread;

@@ -1,4 +1,4 @@
-package records.importers;
+package xyz.columnal.importers;
 
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
@@ -13,10 +13,10 @@ import xyz.columnal.data.TableManager;
 import xyz.columnal.data.columntype.TextColumnType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.importers.GuessFormat.GuessException;
-import records.importers.GuessFormat.Import;
-import records.importers.GuessFormat.TrimChoice;
-import records.importers.ImportPlainTable.PlainImportInfo;
+import xyz.columnal.importers.GuessFormat.GuessException;
+import xyz.columnal.importers.GuessFormat.Import;
+import xyz.columnal.importers.GuessFormat.TrimChoice;
+import xyz.columnal.importers.ImportPlainTable.PlainImportInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;

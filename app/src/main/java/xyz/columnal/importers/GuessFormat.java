@@ -1,4 +1,4 @@
-package records.importers;
+package xyz.columnal.importers;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.HashMultiset;
@@ -37,8 +37,8 @@ import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.importers.gui.ImportChoicesDialog;
-import records.importers.gui.ImporterGUI;
+import xyz.columnal.importers.gui.ImportChoicesDialog;
+import xyz.columnal.importers.gui.ImporterGUI;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

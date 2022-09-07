@@ -1,4 +1,4 @@
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
@@ -22,12 +22,12 @@ import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.CanonicalSpan;
-import records.gui.lexeditor.ExpressionLexer.AddedSpaceCalculator;
-import records.gui.lexeditor.ExpressionLexer.Keyword;
-import records.gui.lexeditor.ExpressionLexer.Op;
-import records.gui.lexeditor.ExpressionSaver.BracketContent;
-import records.gui.lexeditor.TopLevelEditor.DisplayType;
-import records.gui.lexeditor.completion.InsertListener;
+import xyz.columnal.gui.lexeditor.ExpressionLexer.AddedSpaceCalculator;
+import xyz.columnal.gui.lexeditor.ExpressionLexer.Keyword;
+import xyz.columnal.gui.lexeditor.ExpressionLexer.Op;
+import xyz.columnal.gui.lexeditor.ExpressionSaver.BracketContent;
+import xyz.columnal.gui.lexeditor.TopLevelEditor.DisplayType;
+import xyz.columnal.gui.lexeditor.completion.InsertListener;
 import xyz.columnal.transformations.expression.*;
 import xyz.columnal.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import xyz.columnal.transformations.expression.ComparisonExpression.ComparisonOperator;

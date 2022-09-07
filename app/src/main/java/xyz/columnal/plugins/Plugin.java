@@ -1,4 +1,4 @@
-package records.plugins;
+package xyz.columnal.plugins;
 
 import com.google.common.collect.ImmutableMap;
 import xyz.columnal.data.SaveTag;

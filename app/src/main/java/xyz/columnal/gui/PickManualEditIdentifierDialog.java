@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
@@ -13,9 +13,9 @@ import javafx.stage.Modality;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.ColumnId;
-import records.gui.AutoComplete.Completion;
-import records.gui.AutoComplete.CompletionListener;
-import records.gui.AutoComplete.WhitespacePolicy;
+import xyz.columnal.gui.AutoComplete.Completion;
+import xyz.columnal.gui.AutoComplete.CompletionListener;
+import xyz.columnal.gui.AutoComplete.WhitespacePolicy;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

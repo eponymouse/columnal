@@ -1,4 +1,4 @@
-package records.gui.lexeditor.completion;
+package xyz.columnal.gui.lexeditor.completion;
 
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
@@ -17,8 +17,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
-import records.gui.lexeditor.completion.LexCompletionList;
-import records.gui.lexeditor.completion.LexAutoComplete.LexSelectionBehaviour;
+import xyz.columnal.gui.lexeditor.completion.LexCompletionList;
+import xyz.columnal.gui.lexeditor.completion.LexAutoComplete.LexSelectionBehaviour;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformConsumer;

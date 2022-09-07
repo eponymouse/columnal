@@ -1,14 +1,14 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import annotation.units.AbsColIndex;
 import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
-import records.gui.grid.CellSelection;
-import records.gui.grid.GridArea;
-import records.gui.grid.RectangleBounds;
-import records.gui.table.HeadedDisplay;
+import xyz.columnal.gui.grid.CellSelection;
+import xyz.columnal.gui.grid.GridArea;
+import xyz.columnal.gui.grid.RectangleBounds;
+import xyz.columnal.gui.table.HeadedDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

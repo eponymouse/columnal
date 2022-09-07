@@ -1,4 +1,4 @@
-package records.gui.stable;
+package xyz.columnal.gui.stable;
 
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
@@ -6,7 +6,7 @@ import javafx.scene.input.KeyCode;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.ColumnId;
-import records.gui.dtf.ReadOnlyDocument;
+import xyz.columnal.gui.dtf.ReadOnlyDocument;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformBiConsumer;

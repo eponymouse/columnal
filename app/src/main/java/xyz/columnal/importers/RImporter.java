@@ -1,4 +1,4 @@
-package records.importers;
+package xyz.columnal.importers;
 
 import com.google.common.collect.ImmutableList;
 import javafx.collections.FXCollections;
@@ -20,8 +20,8 @@ import xyz.columnal.data.TableId;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.rinterop.ConvertFromR;
-import records.rinterop.RRead;
+import xyz.columnal.rinterop.ConvertFromR;
+import xyz.columnal.rinterop.RRead;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.IdentifierUtility;

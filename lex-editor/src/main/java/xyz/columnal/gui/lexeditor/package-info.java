@@ -1,5 +1,5 @@
 @OnThread(Tag.FXPlatform)
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import threadchecker.OnThread;
 import threadchecker.Tag;

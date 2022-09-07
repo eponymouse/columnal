@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;

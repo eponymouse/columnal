@@ -1,4 +1,4 @@
-package records.gui.stable;
+package xyz.columnal.gui.stable;
 
 import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;

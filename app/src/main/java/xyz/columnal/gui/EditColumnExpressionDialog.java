@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
@@ -31,14 +31,14 @@ import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.AutoComplete.Completion;
-import records.gui.AutoComplete.CompletionCalculator;
-import records.gui.AutoComplete.CompletionListener;
-import records.gui.AutoComplete.WhitespacePolicy;
-import records.gui.lexeditor.ExpressionEditor;
-import records.gui.lexeditor.ExpressionEditor.ColumnPicker;
-import records.gui.lexeditor.TopLevelEditor.Focus;
-import records.gui.recipe.ExpressionRecipe;
+import xyz.columnal.gui.AutoComplete.Completion;
+import xyz.columnal.gui.AutoComplete.CompletionCalculator;
+import xyz.columnal.gui.AutoComplete.CompletionListener;
+import xyz.columnal.gui.AutoComplete.WhitespacePolicy;
+import xyz.columnal.gui.lexeditor.ExpressionEditor;
+import xyz.columnal.gui.lexeditor.ExpressionEditor.ColumnPicker;
+import xyz.columnal.gui.lexeditor.TopLevelEditor.Focus;
+import xyz.columnal.gui.recipe.ExpressionRecipe;
 import xyz.columnal.transformations.expression.BracketedStatus;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.Expression.ColumnLookup;

@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
@@ -15,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.ColumnId;
 import xyz.columnal.data.Table;
 import xyz.columnal.data.TableId;
-import records.gui.View.Pick;
+import xyz.columnal.gui.View.Pick;
 import xyz.columnal.transformations.Join;
 import threadchecker.OnThread;
 import threadchecker.Tag;

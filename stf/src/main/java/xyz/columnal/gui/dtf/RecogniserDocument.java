@@ -1,4 +1,4 @@
-package records.gui.dtf;
+package xyz.columnal.gui.dtf;
 
 import annotation.qual.ImmediateValue;
 import annotation.qual.UnknownIfValue;
@@ -18,9 +18,9 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import xyz.columnal.error.InternalException;
-import records.gui.dtf.Recogniser.ErrorDetails;
+import xyz.columnal.gui.dtf.Recogniser.ErrorDetails;
 import xyz.columnal.utility.ParseProgress;
-import records.gui.dtf.Recogniser.SuccessDetails;
+import xyz.columnal.gui.dtf.Recogniser.SuccessDetails;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.*;

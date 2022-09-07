@@ -1,4 +1,4 @@
-package records.exporters;
+package xyz.columnal.exporters;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;

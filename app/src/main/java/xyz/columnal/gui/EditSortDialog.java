@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
@@ -30,9 +30,9 @@ import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.AutoComplete.CompletionListener;
-import records.gui.AutoComplete.SimpleCompletion;
-import records.gui.AutoComplete.WhitespacePolicy;
+import xyz.columnal.gui.AutoComplete.CompletionListener;
+import xyz.columnal.gui.AutoComplete.SimpleCompletion;
+import xyz.columnal.gui.AutoComplete.WhitespacePolicy;
 import xyz.columnal.transformations.Sort.Direction;
 import threadchecker.OnThread;
 import threadchecker.Tag;

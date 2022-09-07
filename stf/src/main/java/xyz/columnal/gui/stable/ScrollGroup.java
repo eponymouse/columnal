@@ -1,4 +1,4 @@
-package records.gui.stable;
+package xyz.columnal.gui.stable;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
@@ -12,7 +12,7 @@ import javafx.scene.input.ScrollEvent;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.units.qual.A;
-import records.gui.stable.SmoothScroller.ScrollClamp;
+import xyz.columnal.gui.stable.SmoothScroller.ScrollClamp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformBiFunction;

@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;

@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
@@ -20,7 +20,7 @@ import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.Main.UpgradeInfo;
+import xyz.columnal.gui.Main.UpgradeInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;

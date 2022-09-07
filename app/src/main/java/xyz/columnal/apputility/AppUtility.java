@@ -1,4 +1,4 @@
-package records.apputility;
+package xyz.columnal.apputility;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.ImmediateValue;

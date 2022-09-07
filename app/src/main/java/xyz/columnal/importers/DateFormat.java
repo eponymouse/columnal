@@ -1,4 +1,4 @@
-package records.importers;
+package xyz.columnal.importers;
 
 import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 

@@ -1,4 +1,4 @@
-package records.gui.grid;
+package xyz.columnal.gui.grid;
 
 import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;

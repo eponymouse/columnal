@@ -1,4 +1,4 @@
-package records.gui.dtf;
+package xyz.columnal.gui.dtf;
 
 public interface CaretPositionMapper
 {

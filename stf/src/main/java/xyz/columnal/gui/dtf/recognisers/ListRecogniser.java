@@ -1,10 +1,10 @@
-package records.gui.dtf.recognisers;
+package xyz.columnal.gui.dtf.recognisers;
 
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import records.gui.dtf.Recogniser;
+import xyz.columnal.gui.dtf.Recogniser;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.ParseProgress;
 import xyz.columnal.utility.Utility.ListEx;

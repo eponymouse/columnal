@@ -10,7 +10,7 @@ import xyz.columnal.data.TableManager;
 import xyz.columnal.data.Transformation;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.grammar.Versions.ExpressionVersion;
+import xyz.columnal.grammar.Versions.ExpressionVersion;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformSupplier;

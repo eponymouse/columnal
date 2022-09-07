@@ -1,9 +1,9 @@
-package records.gui.dtf.recognisers;
+package xyz.columnal.gui.dtf.recognisers;
 
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import xyz.columnal.error.UserException;
-import records.gui.dtf.Recogniser;
+import xyz.columnal.gui.dtf.Recogniser;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.ParseProgress;

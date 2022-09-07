@@ -1,4 +1,4 @@
-package records.gui.grid;
+package xyz.columnal.gui.grid;
 
 import annotation.units.AbsColIndex;
 import javafx.beans.binding.DoubleExpression;

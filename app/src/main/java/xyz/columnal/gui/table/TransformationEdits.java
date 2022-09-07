@@ -1,4 +1,4 @@
-package records.gui.table;
+package xyz.columnal.gui.table;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -21,12 +21,12 @@ import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.InvalidImmediateValueException;
 import xyz.columnal.error.UserException;
-import records.gui.AggregateSplitByPane;
-import records.gui.EditAggregateSplitByDialog;
-import records.gui.EditColumnExpressionDialog;
-import records.gui.EditImmediateColumnDialog;
-import records.gui.EditImmediateColumnDialog.InitialFocus;
-import records.gui.View;
+import xyz.columnal.gui.AggregateSplitByPane;
+import xyz.columnal.gui.EditAggregateSplitByDialog;
+import xyz.columnal.gui.EditColumnExpressionDialog;
+import xyz.columnal.gui.EditImmediateColumnDialog;
+import xyz.columnal.gui.EditImmediateColumnDialog.InitialFocus;
+import xyz.columnal.gui.View;
 import xyz.columnal.transformations.Aggregate;
 import xyz.columnal.transformations.Calculate;
 import xyz.columnal.data.RenameOnEdit;

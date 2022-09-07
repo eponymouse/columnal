@@ -1,4 +1,4 @@
-package records.exporters.manager;
+package xyz.columnal.exporters.manager;
 
 import com.google.common.collect.ImmutableList;
 import javafx.collections.FXCollections;
@@ -18,7 +18,7 @@ import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.Table;
 import xyz.columnal.data.TableManager;
-import records.exporters.Exporter;
+import xyz.columnal.exporters.Exporter;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

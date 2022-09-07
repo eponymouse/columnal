@@ -1,4 +1,4 @@
-package records.plugins;
+package xyz.columnal.plugins;
 
 /**
  * An indirection for loading plugins.  Subclasses must always have a zero-arg constructor,

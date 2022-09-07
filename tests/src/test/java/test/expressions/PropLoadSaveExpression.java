@@ -15,7 +15,7 @@ import xyz.columnal.data.TableId;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import records.gui.lexeditor.ExpressionEditor;
+import xyz.columnal.gui.lexeditor.ExpressionEditor;
 import xyz.columnal.transformations.expression.BracketedStatus;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.Expression.ColumnLookup;

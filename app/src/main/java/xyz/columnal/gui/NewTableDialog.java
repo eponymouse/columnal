@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
@@ -9,7 +9,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import records.gui.NewTableDialog.DataOrTransform;
+import xyz.columnal.gui.NewTableDialog.DataOrTransform;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;

@@ -1,4 +1,4 @@
-package records.gui.dtf;
+package xyz.columnal.gui.dtf;
 
 import annotation.qual.ImmediateValue;
 import com.google.common.collect.ImmutableList;

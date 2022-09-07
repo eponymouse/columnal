@@ -1,4 +1,4 @@
-package records.gui.grid;
+package xyz.columnal.gui.grid;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
@@ -15,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
-import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
+import xyz.columnal.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;

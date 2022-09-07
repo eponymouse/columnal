@@ -1,4 +1,4 @@
-package records.gui.lexeditor;
+package xyz.columnal.gui.lexeditor;
 
 import annotation.units.CanonicalLocation;
 import org.checkerframework.checker.nullness.qual.Nullable;

@@ -8,7 +8,7 @@ import xyz.columnal.data.TableAndColumnRenames;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
-import records.grammar.FormatLexer;
+import xyz.columnal.grammar.FormatLexer;
 import xyz.columnal.jellytype.JellyType;
 import xyz.columnal.loadsave.OutputBuilder;
 import xyz.columnal.transformations.expression.Expression.SaveDestination;

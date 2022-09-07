@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import annotation.units.AbsColIndex;
 import com.google.common.collect.ImmutableList;
@@ -10,13 +10,13 @@ import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.TableOperations.AppendRows;
-import records.gui.DataCellSupplier.CellStyle;
-import records.gui.grid.GridAreaCellPosition;
-import records.gui.grid.RectangleBounds;
-import records.gui.grid.VirtualGrid;
-import records.gui.grid.VirtualGridSupplierIndividual;
-import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
-import records.gui.table.TableDisplay;
+import xyz.columnal.gui.DataCellSupplier.CellStyle;
+import xyz.columnal.gui.grid.GridAreaCellPosition;
+import xyz.columnal.gui.grid.RectangleBounds;
+import xyz.columnal.gui.grid.VirtualGrid;
+import xyz.columnal.gui.grid.VirtualGridSupplierIndividual;
+import xyz.columnal.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
+import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;

@@ -1,8 +1,8 @@
-package records.importers;
+package xyz.columnal.importers;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.importers.GuessFormat.TrimChoice;
+import xyz.columnal.importers.GuessFormat.TrimChoice;
 
 import java.util.ArrayList;
 import java.util.List;

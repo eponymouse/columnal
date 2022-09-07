@@ -16,7 +16,7 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.error.expressions.ExpressionErrorException;
 import xyz.columnal.error.expressions.ExpressionErrorException.EditableExpression;
-import records.grammar.Versions.ExpressionVersion;
+import xyz.columnal.grammar.Versions.ExpressionVersion;
 import xyz.columnal.transformations.expression.BooleanLiteral;
 import xyz.columnal.transformations.expression.BracketedStatus;
 import xyz.columnal.transformations.expression.ErrorAndTypeRecorderStorer;

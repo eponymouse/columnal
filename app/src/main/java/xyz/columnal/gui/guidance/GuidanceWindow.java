@@ -1,4 +1,4 @@
-package records.gui.guidance;
+package xyz.columnal.gui.guidance;
 
 import javafx.animation.Animation;
 import javafx.animation.FillTransition;

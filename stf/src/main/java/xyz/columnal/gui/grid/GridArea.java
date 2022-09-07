@@ -1,4 +1,4 @@
-package records.gui.grid;
+package xyz.columnal.gui.grid;
 
 import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;

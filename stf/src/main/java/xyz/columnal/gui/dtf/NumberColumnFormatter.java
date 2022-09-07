@@ -1,4 +1,4 @@
-package records.gui.dtf;
+package xyz.columnal.gui.dtf;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -10,7 +10,7 @@ import javafx.scene.text.TextAlignment;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.datatype.DataTypeUtility;
-import records.gui.stable.EditorKitCache;
+import xyz.columnal.gui.stable.EditorKitCache;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformConsumer;

@@ -1,4 +1,4 @@
-package records.gui;
+package xyz.columnal.gui;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
@@ -24,14 +24,14 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.TableId;
-import records.gui.RowLabelSupplier.LabelPane;
-import records.gui.grid.RectangleBounds;
-import records.gui.grid.RectangleOverlayItem;
-import records.gui.grid.VirtualGrid;
-import records.gui.grid.VirtualGrid.ListenerOutcome;
-import records.gui.grid.VirtualGridSupplier;
-import records.gui.grid.VirtualGridSupplierFloating;
-import records.gui.table.TableDisplay;
+import xyz.columnal.gui.RowLabelSupplier.LabelPane;
+import xyz.columnal.gui.grid.RectangleBounds;
+import xyz.columnal.gui.grid.RectangleOverlayItem;
+import xyz.columnal.gui.grid.VirtualGrid;
+import xyz.columnal.gui.grid.VirtualGrid.ListenerOutcome;
+import xyz.columnal.gui.grid.VirtualGridSupplier;
+import xyz.columnal.gui.grid.VirtualGridSupplierFloating;
+import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;

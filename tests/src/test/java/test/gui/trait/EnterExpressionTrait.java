@@ -13,7 +13,7 @@ import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.datatype.TypeManager.TagInfo;
 import xyz.columnal.error.InternalException;
-import records.grammar.ExpressionLexer;
+import xyz.columnal.grammar.ExpressionLexer;
 import xyz.columnal.transformations.expression.*;
 import xyz.columnal.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import xyz.columnal.transformations.expression.ComparisonExpression.ComparisonOperator;

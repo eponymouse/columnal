@@ -1,4 +1,4 @@
-package records.exporters;
+package xyz.columnal.exporters;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;

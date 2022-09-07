@@ -9,7 +9,7 @@ import xyz.columnal.log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.grammar.GrammarUtility;
+import xyz.columnal.grammar.GrammarUtility;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.ResourceUtility;
 

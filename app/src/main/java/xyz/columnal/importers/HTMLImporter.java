@@ -1,4 +1,4 @@
-package records.importers;
+package xyz.columnal.importers;
 
 import annotation.units.GridAreaColIndex;
 import annotation.units.GridAreaRowIndex;
@@ -30,11 +30,11 @@ import org.jsoup.select.Elements;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 import xyz.columnal.data.*;
-import records.gui.grid.GridAreaCellPosition;
-import records.importers.GuessFormat.ImportInfo;
-import records.importers.GuessFormat.TrimChoice;
-import records.importers.ImportPlainTable.PlainImportInfo;
-import records.importers.gui.ImportChoicesDialog;
+import xyz.columnal.gui.grid.GridAreaCellPosition;
+import xyz.columnal.importers.GuessFormat.ImportInfo;
+import xyz.columnal.importers.GuessFormat.TrimChoice;
+import xyz.columnal.importers.ImportPlainTable.PlainImportInfo;
+import xyz.columnal.importers.gui.ImportChoicesDialog;
 import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.FXPlatformSupplier;
 import xyz.columnal.utility.IdentifierUtility;

@@ -1,10 +1,10 @@
-package records.gui.dtf.recognisers;
+package xyz.columnal.gui.dtf.recognisers;
 
 import annotation.qual.ImmediateValue;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.datatype.DataTypeUtility;
-import records.grammar.GrammarUtility;
-import records.gui.dtf.Recogniser;
+import xyz.columnal.grammar.GrammarUtility;
+import xyz.columnal.gui.dtf.Recogniser;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.ParseProgress;
