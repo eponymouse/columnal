@@ -1,7 +1,6 @@
 plugins {
   id 'org.checkerframework' version '0.6.15' apply false
   id 'org.openjfx.javafxplugin' version '0.0.10' apply false
-  id "com.gradle.enterprise" version "3.8.1"
 }
 
 // We configure this here because it determines JavaFX modules and stubs:
@@ -84,12 +83,4 @@ subprojects { subproject ->
     options.release = 11
   }
 
-}
-
-// For using --scan automatically:
-gradleEnterprise {
-  buildScan {
-    termsOfServiceUrl = 'https://gradle.com/terms-of-service'
-    termsOfServiceAgree = 'yes'
-  }
 }

@@ -1,3 +1,16 @@
+plugins {
+    id "com.gradle.enterprise" version "3.8.1"
+}
+
+// For using --scan automatically:
+gradleEnterprise {
+    buildScan {
+        termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+        termsOfServiceAgree = 'yes'
+    }
+}
+
+
 rootProject.name = 'records'
 include(':parsers')
 include(':book')
