@@ -50,8 +50,8 @@ test {
         excludeTestsMatching "test.TestUtil*"
     }
     
-    forkEvery = 1
-    maxParallelForks = 4 
+    //forkEvery = 1
+    //maxParallelForks = 4 
     
     jvmArgs += ['-Xmx2G',
             '-Djava.awt.headless=true',
