@@ -11,7 +11,7 @@ gradleEnterprise {
 }
 
 
-rootProject.name = 'records'
+rootProject.name = 'columnal'
 include(':parsers')
 include(':book')
 include(':anns-threadchecker')
@@ -48,7 +48,13 @@ dependencyResolutionManagement {
             library('controlsfx', 'org.controlsfx:controlsfx:8.40.12')
             library('wellbehavedfx', 'org.fxmisc.wellbehaved:wellbehavedfx:0.3')
             library('thumbnailator', 'net.coobird:thumbnailator:0.4.8')
-            library('jna', 'net.java.dev.jna:jna-platform:5.4.0')
+            library('jna', 'net.java.dev.jna:jna:5.4.0')
+            library('jna-platform', 'net.java.dev.jna:jna-platform:5.4.0')
+            library('poi-ooxml', 'org.apache.poi:poi-ooxml:4.1.2')
+            library('streamex', 'one.util:streamex:0.8.1')
+            library('jsoup', 'org.jsoup:jsoup:1.11.3')
+            library('packr', 'com.badlogicgames.packr:packr:3.0.3')
+            library('bigmath', 'ch.obermuhlner:big-math:2.0.0')
 
             library('hamcrest','org.hamcrest:hamcrest-library:2.1')
             library('junit-quickcheck-core', 'com.pholser:junit-quickcheck-core:0.8.2')

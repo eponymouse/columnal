@@ -6,7 +6,7 @@ dependencies {
     implementation libs.commons.lang3
     implementation libs.javaSMT
     implementation libs.commons.io
-    implementation 'one.util:streamex:0.8.1'
+    implementation libs.streamex
     testImplementation libs.bundles.junitWithQuickcheck
     annotationProcessor project(':anns')
     compileOnly project(':anns')

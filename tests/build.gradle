@@ -16,9 +16,9 @@ dependencies {
     implementation project(':utility')
     testImplementation libs.hamcrest
     implementation libs.commons.io
-    implementation 'org.apache.poi:poi-ooxml:4.1.2'
+    implementation libs.poi.ooxml
     implementation libs.guava
-    implementation 'one.util:streamex:0.8.1'
+    implementation libs.streamex
     implementation libs.javaSMT
     implementation libs.commons.lang3
     implementation libs.controlsfx

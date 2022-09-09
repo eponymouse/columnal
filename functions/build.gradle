@@ -6,7 +6,7 @@ dependencies {
     implementation libs.javaSMT
     implementation libs.guava
     implementation libs.commons.lang3
-    implementation 'ch.obermuhlner:big-math:2.0.0'
+    implementation libs.bigmath
 }
 
 description = 'functions'

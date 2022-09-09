@@ -17,17 +17,17 @@ dependencies {
     implementation project(':transformations')
     implementation project(':r-interop')
     implementation libs.guava
-    implementation 'org.fxmisc.wellbehaved:wellbehavedfx:0.3'
-    implementation 'com.google.code.findbugs:jsr305:3.0.2'
-    implementation 'org.controlsfx:controlsfx:8.40.12'
-    implementation 'org.apache.poi:poi-ooxml:4.1.2'
-    implementation 'org.jsoup:jsoup:1.11.3'
+    implementation libs.wellbehavedfx
+    //implementation 'com.google.code.findbugs:jsr305:3.0.2'
+    implementation libs.controlsfx
+    implementation libs.poi.ooxml
+    implementation libs.jsoup
     implementation libs.commons.io
     implementation libs.commons.lang3
     implementation libs.javaSMT
-    implementation 'net.java.dev.jna:jna:5.4.0'
-    implementation 'net.java.dev.jna:jna-platform:5.4.0'
-    implementation 'com.badlogicgames.packr:packr:3.0.3'
+    implementation libs.jna
+    implementation libs.jna.platform
+    implementation libs.packr
 }
 
 task copySCSS(type: Copy) {

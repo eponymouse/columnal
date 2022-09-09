@@ -6,7 +6,7 @@ dependencies {
     implementation libs.controlsfx
     implementation libs.wellbehavedfx
     implementation libs.thumbnailator
-    implementation libs.jna
+    implementation libs.jna.platform
 }
 
 description = 'gui-utility'
