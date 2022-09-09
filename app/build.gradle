@@ -107,9 +107,18 @@ task xsltExtractTests(type: SaxonXsltTask) {
     output "${buildDir}/resources/main"
 }
 
-
 build.dependsOn(xsltHelp, xsltHelpIndiv, xsltFuncdocIndivHtml, xsltFuncdocJoinedHtml, xsltFuncdocTypesAndMini, xsltExtractTests)
 jar.dependsOn(xsltHelp, xsltHelpIndiv, xsltFuncdocIndivHtml, xsltFuncdocJoinedHtml, xsltFuncdocTypesAndMini, xsltExtractTests)
+
+// Parallel execution of XSLT tasks causes a Saxon exception, although I believe it may be
+// an underlying problem to do with this: https://issuetracker.google.com/issues/137929327?pli=1
+// found via https://github.com/bazelbuild/bazel/issues/12768 and leads to https://bugs.openjdk.org/browse/JDK-8205976
+// At a guess this can be solved with sequential execution, hence this:
+xsltHelpIndiv.mustRunAfter(xsltHelp)
+xsltFuncdocIndivHtml.mustRunAfter(xsltHelpIndiv)
+xsltFuncdocJoinedHtml.mustRunAfter(xsltFuncdocIndivHtml)
+xsltFuncdocTypesAndMini.mustRunAfter(xsltFuncdocJoinedHtml)
+xsltExtractTests.mustRunAfter(xsltFuncdocTypesAndMini)
 
 ext {
     javaMainClass = "xyz.columnal.gui.Main"
