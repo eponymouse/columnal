@@ -27,7 +27,7 @@ dependencies {
     implementation libs.javaSMT
     implementation libs.jna
     implementation libs.jna.platform
-    implementation libs.packr
+    //implementation libs.packr
 }
 
 task copySCSS(type: Copy) {
