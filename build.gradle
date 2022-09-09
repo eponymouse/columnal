@@ -16,7 +16,7 @@ def projectsToJavaFX = [
 ]
 
 subprojects { subproject ->
-  if (!subproject.name.startsWith("ann") && !subproject.name.equals("threadchecker") && !subproject.name.equals("tests")) {
+  if (!subproject.name.startsWith("ann") && !subproject.name.equals("threadchecker") && !subproject.name.equals("tests") && !subproject.name.equals("xml")) {
     apply plugin: 'java-library'
     apply plugin: 'org.checkerframework'
     apply plugin: 'org.openjfx.javafxplugin'
@@ -44,8 +44,8 @@ subprojects { subproject ->
       ] + ("all".equals(project.findProperty("checkers")) ? [
           '-Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex,annotation.units.CanonicalLocation,annotation.units.DisplayLocation,annotation.units.RawInputLocation,annotation.units.DisplayPixels,annotation.units.VirtualPixels',
           "-Apropfiles=$rootDir/app/src/main/resources/transformations_en.properties:$rootDir/app/src/main/resources/expression_en.properties:$rootDir/app/src/main/resources/function_en.properties:$rootDir/app/src/main/resources/newcolumn_en.properties:$rootDir/app/src/main/resources/dataentry_en.properties:$rootDir/app/src/main/resources/main_en.properties:$rootDir/app/src/main/resources/import_en.properties",
-          "-Ahelpfiles=$rootDir/app/src/main/help/agg-recipe.xml;$rootDir/app/src/main/help/edit-settings.xml;$rootDir/app/src/main/help/guess-format.xml;$rootDir/app/src/main/help/edit-check.xml;$rootDir/app/src/main/help/edit-column.xml;$rootDir/app/src/main/help/edit-join.xml;$rootDir/app/src/main/help/edit-r.xml;$rootDir/app/src/main/help/edit-unit.xml;$rootDir/app/src/main/help/split-by.xml",
-          "-Afuncdocfiles=$rootDir/app/src/main/funcdoc/boolean.xml;$rootDir/app/src/main/funcdoc/comparison.xml;$rootDir/app/src/main/funcdoc/conversion.xml;$rootDir/app/src/main/funcdoc/core.xml;$rootDir/app/src/main/funcdoc/datetime.xml;$rootDir/app/src/main/funcdoc/list.xml;$rootDir/app/src/main/funcdoc/listprocess.xml;$rootDir/app/src/main/funcdoc/literals.xml;$rootDir/app/src/main/funcdoc/lookup.xml;$rootDir/app/src/main/funcdoc/math.xml;$rootDir/app/src/main/funcdoc/number.xml;$rootDir/app/src/main/funcdoc/operators.xml;$rootDir/app/src/main/funcdoc/optional.xml;$rootDir/app/src/main/funcdoc/text.xml",
+          "-Ahelpfiles=$rootDir/xml/src/main/help/agg-recipe.xml;$rootDir/xml/src/main/help/edit-settings.xml;$rootDir/xml/src/main/help/guess-format.xml;$rootDir/xml/src/main/help/edit-check.xml;$rootDir/xml/src/main/help/edit-column.xml;$rootDir/xml/src/main/help/edit-join.xml;$rootDir/xml/src/main/help/edit-r.xml;$rootDir/xml/src/main/help/edit-unit.xml;$rootDir/xml/src/main/help/split-by.xml",
+          "-Afuncdocfiles=$rootDir/xml/src/main/funcdoc/boolean.xml;$rootDir/xml/src/main/funcdoc/comparison.xml;$rootDir/xml/src/main/funcdoc/conversion.xml;$rootDir/xml/src/main/funcdoc/core.xml;$rootDir/xml/src/main/funcdoc/datetime.xml;$rootDir/xml/src/main/funcdoc/list.xml;$rootDir/xml/src/main/funcdoc/listprocess.xml;$rootDir/xml/src/main/funcdoc/literals.xml;$rootDir/xml/src/main/funcdoc/lookup.xml;$rootDir/xml/src/main/funcdoc/math.xml;$rootDir/xml/src/main/funcdoc/number.xml;$rootDir/xml/src/main/funcdoc/operators.xml;$rootDir/xml/src/main/funcdoc/optional.xml;$rootDir/xml/src/main/funcdoc/text.xml",
       ] : []) + ("true".equals(project.findProperty("threadCheck")) ? ['-Xplugin:threadchecker.plugin.TCPlugin'] : [])
     }
     javafx {
@@ -58,7 +58,7 @@ subprojects { subproject ->
     dependencies {
       checkerFramework libs.checkerframework
       implementation libs.checkerframework.qual
-
+      
       annotationProcessor project(':anns')
       compileOnly project(':anns')
       annotationProcessor project(':anns-threadchecker')
@@ -66,6 +66,7 @@ subprojects { subproject ->
       annotationProcessor project(':threadchecker')
       compileOnly project(':threadchecker')
     }
+    build.dependsOn ':xml:build'
 
     sourceCompatibility = 11
     targetCompatibility = 11

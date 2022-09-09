@@ -1,0 +1,74 @@
+plugins {
+    id 'base'
+}
+
+task validateXmlHelp(type: XmlValidate) {
+    xml fileTree(dir: "${projectDir}/src/main/help", include: '*.xml')
+    xsd = file("${projectDir}/src/main/help/help.xsd")
+}
+
+task validateXmlFuncdoc(type: XmlValidate) {
+    xml fileTree(dir: "${projectDir}/src/main/funcdoc", include: '*.xml')
+    xsd = file("${projectDir}/src/main/funcdoc/funcdoc.xsd")
+}
+
+// This should probably be check really, but I don't want to wait for the CI:
+assemble.dependsOn(validateXmlFuncdoc)
+assemble.dependsOn(validateXmlHelp)
+
+task xsltHelp(type: SaxonXsltTask) {
+    stylesheet "${projectDir}/src/main/xslt/make-help-html.xsl"
+    input fileTree(dir: "${projectDir}/src/main/help", include: '*.xml')
+    outputFileExtension 'html'
+    output "${buildDir}/resources/main"
+}
+
+task xsltHelpIndiv(type: SaxonXsltTask) {
+    stylesheet "${projectDir}/src/main/xslt/make-help-indiv.xsl"
+    input fileTree(dir: "${projectDir}/src/main/help", include: '*.xml')
+    parameters (
+            myOutputDir: "${buildDir}/resources/main"
+    )
+}
+
+task xsltFuncdocIndivHtml(type: SaxonXsltTask) {
+    stylesheet "${projectDir}/src/main/xslt/funcdoc-indiv-html.xsl"
+    input fileTree(dir: "${projectDir}/src/main/funcdoc", include: '_all.xml')
+    parameters (
+            myOutputDir: "${buildDir}/resources/main"
+    )
+}
+
+task xsltFuncdocJoinedHtml(type: SaxonXsltTask) {
+    stylesheet "${projectDir}/src/main/xslt/funcdoc-joined-html.xsl"
+    input fileTree(dir: "${projectDir}/src/main/funcdoc", include: '*.xml')
+    outputFileExtension 'html'
+    output "${buildDir}/resources/main"
+}
+
+task xsltFuncdocTypesAndMini(type: SaxonXsltTask) {
+    stylesheet "${projectDir}/src/main/xslt/funcdoc-types-and-mini.xsl"
+    input file("${projectDir}/src/main/funcdoc/_all.xml")
+    parameters (
+            myOutputDir: "${buildDir}/resources/main"
+    )
+}
+
+task xsltExtractTests(type: SaxonXsltTask) {
+    stylesheet "${projectDir}/src/main/xslt/extract-tests.xsl"
+    input fileTree(dir: "${projectDir}/src/main/funcdoc", include: '*.xml')
+    outputFileExtension 'test'
+    output "${buildDir}/resources/main"
+}
+
+assemble.dependsOn(xsltHelp, xsltHelpIndiv, xsltFuncdocIndivHtml, xsltFuncdocJoinedHtml, xsltFuncdocTypesAndMini, xsltExtractTests)
+
+// Parallel execution of XSLT tasks causes a Saxon exception, although I believe it may be
+// an underlying problem to do with this: https://issuetracker.google.com/issues/137929327?pli=1
+// found via https://github.com/bazelbuild/bazel/issues/12768 and leads to https://bugs.openjdk.org/browse/JDK-8205976
+// At a guess this can be solved with sequential execution, hence this:
+xsltHelpIndiv.mustRunAfter(xsltHelp)
+xsltFuncdocIndivHtml.mustRunAfter(xsltHelpIndiv)
+xsltFuncdocJoinedHtml.mustRunAfter(xsltFuncdocIndivHtml)
+xsltFuncdocTypesAndMini.mustRunAfter(xsltFuncdocJoinedHtml)
+xsltExtractTests.mustRunAfter(xsltFuncdocTypesAndMini)

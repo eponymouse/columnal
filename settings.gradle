@@ -28,6 +28,7 @@ include(':r-interop')
 include(':anns')
 include(':threadchecker')
 include(':tests')
+include(':xml')
 
 dependencyResolutionManagement {
     versionCatalogs {
