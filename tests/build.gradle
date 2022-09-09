@@ -48,10 +48,13 @@ test {
         includeTestsMatching "Prop*"
         excludeTestsMatching "*\$*"
         excludeTestsMatching "test.TestUtil*"
+        
+        // Temporarily exclude what I think are the longest-running tests:
+        excludeTestsMatching "*TestExpression*"
     }
     
-    //forkEvery = 1
-    //maxParallelForks = 4 
+    forkEvery = 1
+    maxParallelForks = 3 
     
     jvmArgs += ['-Xmx2G',
             '-Djava.awt.headless=true',
