@@ -43,7 +43,7 @@ import xyz.columnal.transformations.function.Mean;
 import xyz.columnal.transformations.function.number.Round;
 import xyz.columnal.transformations.function.Sum;
 import test.TestUtil;
-import test.gen.GenNumber;
+import test.utility.gen.GenNumber;
 import test.gen.GenNumbers;
 import test.gen.GenUnit;
 import threadchecker.OnThread;

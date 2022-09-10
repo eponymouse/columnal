@@ -24,6 +24,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import test.TestUtil;
+import test.utility.gen.GenNumber;
 
 import java.util.List;
 

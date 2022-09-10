@@ -70,7 +70,7 @@ import xyz.columnal.gui.dtf.DocumentTextField;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.transformations.expression.type.TypeExpression;
 import test.TestUtil;
-import test.gen.GenNumber;
+import test.utility.gen.GenNumber;
 import test.gen.GenRandom;
 import test.gen.type.GenDataTypeMaker;
 import test.gen.type.GenDataTypeMaker.MustHaveValues;

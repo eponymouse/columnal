@@ -16,7 +16,7 @@ def projectsToJavaFX = [
 ]
 
 subprojects { subproject ->
-  if (!subproject.name.startsWith("ann") && !subproject.name.equals("threadchecker") && !subproject.name.equals("tests") && !subproject.name.equals("xml")) {
+  if (!subproject.name.startsWith("ann") && !subproject.name.equals("threadchecker") && !subproject.name.endsWith("tests") && !subproject.name.equals("xml")) {
     apply plugin: 'java-library'
     apply plugin: 'org.checkerframework'
     apply plugin: 'org.openjfx.javafxplugin'
@@ -77,6 +77,44 @@ subprojects { subproject ->
 
     sourceCompatibility = 11
     targetCompatibility = 11
+  }
+  else if (subproject.name.endsWith("tests")) {
+    apply plugin: 'java-library'
+    apply plugin: 'org.openjfx.javafxplugin'
+    apply plugin: 'java-test-fixtures'
+    dependencies {
+      testImplementation libs.checkerframework.qual
+      testImplementation libs.hamcrest
+      testImplementation libs.bundles.junitWithQuickcheck
+      testAnnotationProcessor project(':anns')
+      testAnnotationProcessor project(':anns-threadchecker')
+      testAnnotationProcessor project(':threadchecker')
+      testCompileOnly project(':anns')
+      testCompileOnly project(':anns-threadchecker')
+      testCompileOnly project(':threadchecker')
+
+      testFixturesImplementation libs.checkerframework.qual
+      testFixturesImplementation libs.hamcrest
+      testFixturesImplementation libs.bundles.junitWithQuickcheck
+      testFixturesAnnotationProcessor project(':anns')
+      testFixturesAnnotationProcessor project(':anns-threadchecker')
+      testFixturesAnnotationProcessor project(':threadchecker')
+      testFixturesCompileOnly project(':anns')
+      testFixturesCompileOnly project(':anns-threadchecker')
+      testFixturesCompileOnly project(':threadchecker')
+    }
+
+    test {
+      useJUnit()
+
+      scanForTestClasses = false
+      filter {
+        includeTestsMatching "Test*"
+        includeTestsMatching "Prop*"
+        excludeTestsMatching "*\$*"
+        excludeTestsMatching "test.TestUtil*"
+      }
+    }
   }
 
   repositories {

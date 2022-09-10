@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package test;
+package test.utility;
 
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
@@ -29,7 +29,7 @@ import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import org.sosy_lab.common.rationals.Rational;
 import xyz.columnal.error.UserException;
-import test.gen.GenNumber;
+import test.utility.gen.GenNumber;
 import xyz.columnal.utility.Utility;
 
 import static org.hamcrest.MatcherAssert.assertThat;

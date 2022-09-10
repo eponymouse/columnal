@@ -30,6 +30,7 @@ include(':threadchecker')
 include(':transformations')
 include(':types')
 include(':utility')
+include(':utility-tests')
 include(':xml')
 
 dependencyResolutionManagement {

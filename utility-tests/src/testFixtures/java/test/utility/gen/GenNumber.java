@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package test.gen;
+package test.utility.gen;
 
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
