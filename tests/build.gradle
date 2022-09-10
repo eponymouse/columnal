@@ -8,6 +8,7 @@ dependencies {
     implementation project(':expressions')
     implementation project(':functions')
     implementation project(':gui-utility')
+    implementation project(':identifiers')
     implementation project(':lex-editor')
     implementation project(':parsers')
     implementation project(':r-interop')
