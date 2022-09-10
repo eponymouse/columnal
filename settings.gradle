@@ -12,22 +12,23 @@ gradleEnterprise {
 
 
 rootProject.name = 'columnal'
-include(':parsers')
-include(':book')
+include(':anns')
 include(':anns-threadchecker')
+include(':app')
+include(':book')
+include(':data')
 include(':expressions')
 include(':functions')
-include(':utility')
-include(':transformations')
-include(':data')
-include(':app')
-include(':lex-editor')
-include(':stf')
 include(':gui-utility')
+include(':lex-editor')
+include(':parsers')
 include(':r-interop')
-include(':anns')
-include(':threadchecker')
+include(':stf')
 include(':tests')
+include(':threadchecker')
+include(':transformations')
+include(':types')
+include(':utility')
 include(':xml')
 
 dependencyResolutionManagement {

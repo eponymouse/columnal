@@ -1,15 +1,16 @@
 dependencies {
     implementation project(':parsers')
     implementation project(':utility')
-    implementation project(':types')
     implementation libs.guava
+    /*
     implementation libs.antlr
     implementation libs.commons.lang3
     implementation libs.javaSMT
     implementation libs.commons.io
     implementation libs.streamex
     testImplementation libs.bundles.junitWithQuickcheck
-    
+    */
+
 }
 
-description = 'data'
+description = 'types'
