@@ -1,16 +1,17 @@
-module transformations
+module xyz.columnal.transformations
 {
     exports xyz.columnal.error.expressions;
     exports xyz.columnal.transformations;
 
     requires static anns;
     requires static annsthreadchecker;
-    requires data;
-    requires expressions;
-    requires functions;
+    requires xyz.columnal.data;
+    requires xyz.columnal.expressions;
+    requires xyz.columnal.functions;
     requires xyz.columnal.utility.gui;
-    requires parsers;
-    requires rinterop;
+    requires xyz.columnal.parsers;
+    requires xyz.columnal.rinterop;
+    requires xyz.columnal.types;
     requires xyz.columnal.utility;
     
     requires com.google.common;

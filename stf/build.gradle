@@ -3,6 +3,7 @@ dependencies {
     implementation project(':gui-utility')
     implementation project(':data')
     implementation project(':parsers')
+    implementation project(':types')
     implementation libs.guava
     implementation libs.controlsfx
     implementation libs.wellbehavedfx

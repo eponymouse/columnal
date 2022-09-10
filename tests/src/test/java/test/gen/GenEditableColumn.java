@@ -24,7 +24,8 @@ import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.initialization.qual.Initialized;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.RecordSet;
@@ -67,7 +68,7 @@ public class GenEditableColumn extends GenValueBase<EditableColumn>
             {
                 values.add(Either.right(makeValue(type)));
             }
-            final SimulationFunction<RecordSet, EditableColumn> create = type.makeImmediateColumn(new ColumnId("C"), values, makeValue(type));
+            final SimulationFunction<RecordSet, EditableColumn> create = ColumnUtility.makeImmediateColumn(type, new ColumnId("C"), values, makeValue(type));
             @SuppressWarnings({"keyfor", "units"})
             RecordSet recordSet = new EditableRecordSet(Collections.singletonList(create), () -> length);
             return (EditableColumn)recordSet.getColumns().get(0);

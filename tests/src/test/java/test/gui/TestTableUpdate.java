@@ -32,14 +32,15 @@ import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.CellPosition;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.DataTestUtil;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.ImmediateDataSource;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.Table.InitialLoadDetails;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
@@ -154,8 +155,8 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
             {
                 case 0:
                     EditableRecordSet origRecordSet = new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
-                        colA.getType().makeImmediateColumn(new ColumnId("A"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colA.makeValue())), colA.makeValue()),
-                        colB.getType().makeImmediateColumn(new ColumnId("B"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colB.makeValue())), colB.makeValue())
+                        ColumnUtility.makeImmediateColumn(colA.getType(), new ColumnId("A"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colA.makeValue())), colA.makeValue()),
+                        ColumnUtility.makeImmediateColumn(colB.getType(), new ColumnId("B"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colB.makeValue())), colB.makeValue())
                     ), () -> tableLength);
                     details._test_getTableManager().record(new ImmediateDataSource(details._test_getTableManager(), new InitialLoadDetails(new TableId("Src"), null, CellPosition.ORIGIN.offsetByRowCols(1, 1), null), origRecordSet));
                     break;
@@ -213,8 +214,8 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
         dummy.getTypeManager()._test_copyTaggedTypesFrom(colB.getTypeManager());
 
         EditableRecordSet origRecordSet = new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
-                colA.getType().makeImmediateColumn(new ColumnId("A"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colA.makeValue())), colA.makeValue()),
-                colB.getType().makeImmediateColumn(new ColumnId("B"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colB.makeValue())), colB.makeValue())
+                ColumnUtility.makeImmediateColumn(colA.getType(), new ColumnId("A"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colA.makeValue())), colA.makeValue()),
+                ColumnUtility.makeImmediateColumn(colB.getType(), new ColumnId("B"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colB.makeValue())), colB.makeValue())
         ), () -> tableLength);
         dummy.record(new ImmediateDataSource(dummy, new InitialLoadDetails(new TableId("Src"), null, CellPosition.ORIGIN.offsetByRowCols(1, 1), null), origRecordSet));
         // Now add two transformations:

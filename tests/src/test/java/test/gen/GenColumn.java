@@ -23,15 +23,13 @@ package test.gen;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import xyz.columnal.data.Column;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
-import xyz.columnal.error.UserException;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
@@ -91,7 +89,7 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public ExBiFunction<Integer, RecordSet, Column> columnForType(DataType type, SourceOfRandomness sourceOfRandomness) throws InternalException
     {
-        return (len, rs) -> type.makeImmediateColumn(nextCol.get(), Utility.<Either<String, @Value Object>>makeListEx(len, i -> {
+        return (len, rs) -> ColumnUtility.makeImmediateColumn(type, nextCol.get(), Utility.<Either<String, @Value Object>>makeListEx(len, i -> {
             if (canHaveErrors && sourceOfRandomness.nextInt(10) == 1)
                 return Either.left("#" + r.nextInt());
             else

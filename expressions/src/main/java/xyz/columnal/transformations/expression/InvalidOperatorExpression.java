@@ -24,7 +24,7 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.text.Text;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.TableAndColumnRenames;
+import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;

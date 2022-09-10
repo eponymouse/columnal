@@ -30,7 +30,7 @@ import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.TableAndColumnRenames;
+import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.gui.lexeditor.TopLevelEditor.DisplayType;

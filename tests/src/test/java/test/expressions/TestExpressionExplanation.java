@@ -21,7 +21,6 @@
 package test.expressions;
 
 import annotation.identifier.qual.ExpressionIdentifier;
-import annotation.identifier.qual.IdentifierBottom;
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -34,6 +33,9 @@ import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.NumberInfo;
 import xyz.columnal.data.datatype.TypeManager;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.DataItemPosition;
+import xyz.columnal.id.TableId;
 import xyz.columnal.transformations.expression.BooleanLiteral;
 import xyz.columnal.transformations.expression.EvaluationException;
 import xyz.columnal.transformations.expression.Expression.ExpressionStyler;
@@ -51,9 +53,7 @@ import xyz.columnal.transformations.Check.CheckType;
 import xyz.columnal.transformations.expression.ErrorAndTypeRecorderStorer;
 import xyz.columnal.transformations.expression.EvaluateState;
 import xyz.columnal.transformations.expression.Expression;
-import xyz.columnal.transformations.expression.Expression.CheckedExp;
-import xyz.columnal.transformations.expression.Expression.LocationInfo;
-import xyz.columnal.transformations.expression.Expression.MultipleTableLookup;
+import xyz.columnal.transformations.MultipleTableLookup;
 import xyz.columnal.transformations.function.FunctionList;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.styled.StyledString;

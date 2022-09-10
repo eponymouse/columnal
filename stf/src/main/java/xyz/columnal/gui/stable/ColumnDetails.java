@@ -21,15 +21,11 @@
 package xyz.columnal.gui.stable;
 
 import com.google.common.collect.ImmutableList;
-import javafx.scene.Node;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.datatype.DataType;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformConsumer;
-import xyz.columnal.utility.gui.GUI;
 
 public class ColumnDetails
 {

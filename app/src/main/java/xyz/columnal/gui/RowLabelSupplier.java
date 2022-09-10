@@ -43,7 +43,7 @@ import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.gui.RowLabelSupplier.LabelPane;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.grid.RectangleOverlayItem;
@@ -63,7 +63,6 @@ import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.ResizableRectangle;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalDouble;

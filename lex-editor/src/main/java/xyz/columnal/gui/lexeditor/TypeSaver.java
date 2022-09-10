@@ -22,22 +22,19 @@ package xyz.columnal.gui.lexeditor;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
-import annotation.recorded.qual.UnknownIfRecorded;
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.TableAndColumnRenames;
+import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.transformations.expression.CanonicalSpan;
 import xyz.columnal.gui.lexeditor.TypeLexer.Keyword;
 import xyz.columnal.gui.lexeditor.TypeLexer.Operator;
 import xyz.columnal.gui.lexeditor.TypeSaver.BracketContent;
 import xyz.columnal.gui.lexeditor.completion.InsertListener;
-import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.expression.UnitExpression;
 import xyz.columnal.transformations.expression.type.IdentTypeExpression;
 import xyz.columnal.transformations.expression.type.InvalidIdentTypeExpression;
@@ -59,7 +56,6 @@ import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 
 @OnThread(Tag.FXPlatform)

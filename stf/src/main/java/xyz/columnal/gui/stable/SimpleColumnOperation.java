@@ -23,7 +23,7 @@ package xyz.columnal.gui.stable;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.data.TableManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;

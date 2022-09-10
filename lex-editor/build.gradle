@@ -2,6 +2,7 @@ dependencies {
     implementation project(':utility')
     implementation project(':gui-utility')
     implementation project(':expressions')
+    implementation project(':types')
     implementation project(':data')
     implementation project(':parsers')
     implementation libs.guava

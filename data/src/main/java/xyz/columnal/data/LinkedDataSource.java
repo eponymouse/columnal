@@ -20,11 +20,10 @@
 
 package xyz.columnal.data;
 
-import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.datatype.DataType;
-import xyz.columnal.error.InternalException;
 import xyz.columnal.grammar.MainLexer;
+import xyz.columnal.id.TableAndColumnRenames;
+import xyz.columnal.id.TableId;
 import xyz.columnal.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;

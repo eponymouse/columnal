@@ -24,6 +24,10 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import xyz.columnal.data.datatype.ProgressListener;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableAndColumnRenames;
+import xyz.columnal.id.TableId;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -50,7 +54,6 @@ import xyz.columnal.transformations.expression.ErrorAndTypeRecorderStorer;
 import xyz.columnal.transformations.expression.EvaluateState;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.Expression.ColumnLookup;
-import xyz.columnal.transformations.expression.Expression.FoundTableActual;
 import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.expression.ExpressionUtil;
 import xyz.columnal.transformations.expression.IdentExpression;
@@ -276,7 +279,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
                     if (type == null || concrete == null)
                         throw new UserException((@NonNull StyledString) errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
                     @NonNull DataType typeFinal = concrete;
-                    column = rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.calculateValue(makeEvaluateState(splits, mgr.getTypeManager(), i, false)).value, t -> addManualEditSet(e.getFirst(), t));
+                    column = rs -> ColumnUtility.makeCalculatedColumn(typeFinal, rs, e.getFirst(), i -> expression.calculateValue(makeEvaluateState(splits, mgr.getTypeManager(), i, false)).value, t -> addManualEditSet(e.getFirst(), t));
                     
                 }
                 catch (UserException ex)

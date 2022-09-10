@@ -22,11 +22,8 @@ package xyz.columnal.data;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
-import org.antlr.v4.runtime.tree.TerminalNode;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.datatype.DataType;
-import xyz.columnal.data.datatype.DataType.ColumnMaker;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UnimplementedException;
@@ -36,15 +33,15 @@ import xyz.columnal.grammar.FormatParser.ColumnContext;
 import xyz.columnal.grammar.FormatParser.ColumnNameContext;
 import xyz.columnal.grammar.FormatParser.DefaultValueContext;
 import xyz.columnal.grammar.FormatParser.TypeContext;
-import xyz.columnal.grammar.MainParser.DataFormatContext;
 import xyz.columnal.grammar.MainParser.DataSourceContext;
 import xyz.columnal.grammar.MainParser.DataSourceImmediateContext;
-import xyz.columnal.grammar.MainParser.DetailLineContext;
 import xyz.columnal.grammar.MainParser.TableContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.SaveTag;
+import xyz.columnal.id.TableId;
 import xyz.columnal.utility.Either;
-import xyz.columnal.utility.ExFunction;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.SimulationFunction;
 import xyz.columnal.utility.Utility;
@@ -87,7 +84,7 @@ public abstract class DataSource extends Table
                     throw new InternalException("Null default value even though we are editable; should have thrown earlier.");
                 }
                 Either<String, @Value Object> defaultValue = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(defaultValueUnparsed.trim(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(t, p, false));
-                columns.add(t.makeImmediateColumn(columnId, defaultValue.getRight("Default values cannot be invalid")));
+                columns.add(ColumnUtility.makeImmediateColumn(t, columnId, defaultValue.getRight("Default values cannot be invalid")));
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
             @ExpressionIdentifier String columnName = IdentifierUtility.fixExpressionIdentifier(immed.tableId().getText(), "Table");
@@ -124,7 +121,7 @@ public abstract class DataSource extends Table
                     throw new InternalException("Null default value even though we are editable; should have thrown earlier.");
                 }
                 Either<String, @Value Object> defaultValue = Utility.<Either<String, @Value Object>, DataParser2>parseAsOne(defaultValueUnparsed.trim(), DataLexer2::new, DataParser2::new, p -> DataType.loadSingleItem(t, p, false));
-                columns.add(t.makeImmediateColumn(columnId, defaultValue.getRight("Default values cannot be invalid")));
+                columns.add(ColumnUtility.makeImmediateColumn(t, columnId, defaultValue.getRight("Default values cannot be invalid")));
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
             @ExpressionIdentifier String columnName = IdentifierUtility.fixExpressionIdentifier(immed.tableId().getText(), "Table");
@@ -228,7 +225,7 @@ public abstract class DataSource extends Table
             }));
         }
 
-        public static <C extends EditableColumn, V> SimulationFunction<RecordSet, EditableColumn> create(DataType.ColumnMaker<C, V> c)
+        public static <C extends EditableColumn, V> SimulationFunction<RecordSet, EditableColumn> create(ColumnMaker<C, V> c)
         {
             return rs -> c.apply(rs);
         }

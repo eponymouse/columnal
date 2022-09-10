@@ -6,7 +6,7 @@ module xyz.columnal.utility
     exports xyz.columnal.utility;
 
     requires static annsthreadchecker;
-    requires parsers;
+    requires xyz.columnal.parsers;
 
     requires com.google.common;
     requires javafx.base;

@@ -23,8 +23,8 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import xyz.columnal.data.ColumnId;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableId;
 import test.TestUtil;
 
 public class GenColumnId extends Generator<ColumnId>

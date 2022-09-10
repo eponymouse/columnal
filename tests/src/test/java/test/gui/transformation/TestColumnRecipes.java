@@ -28,12 +28,12 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.control.ListView;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.KnownLengthRecordSet;
 import xyz.columnal.data.RecordSet;
@@ -72,7 +72,6 @@ import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
-import xyz.columnal.utility.FXPlatformRunnable;
 import xyz.columnal.utility.SimulationFunction;
 import xyz.columnal.utility.TaggedValue;
 import xyz.columnal.utility.Utility;
@@ -123,7 +122,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     @SuppressWarnings("valuetype")
     private void testTypeTransform(DataType from, @Nullable DataType to, @Nullable Function<ColumnId, Expression> expression, ImmutableList<Object> values, @Nullable Runnable execAfterTypeSelection) throws Exception
     {
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(from.makeImmediateColumn(new ColumnId("C"), Utility.mapListI(values, v -> v == ERR ? Either.<String, @Value Object>left("Error") : Either.<String, @Value Object>right(v)), DataTypeUtility.makeDefaultValue(from))), values.size()));
+        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(ColumnUtility.makeImmediateColumn(from, new ColumnId("C"), Utility.mapListI(values, v -> v == ERR ? Either.<String, @Value Object>left("Error") : Either.<String, @Value Object>right(v)), DataTypeUtility.makeDefaultValue(from))), values.size()));
 
         // Find the column and scroll to it:
         Table table = mainWindowActions._test_getTableManager().getAllTables().get(0);

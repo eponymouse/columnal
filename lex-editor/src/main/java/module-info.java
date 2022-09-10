@@ -1,14 +1,15 @@
-module lexeditor
+module xyz.columnal.lexeditor
 {
     exports xyz.columnal.gui.lexeditor;
     exports xyz.columnal.gui.lexeditor.completion;
     
     requires static anns;
     requires static annsthreadchecker;
-    requires data;
-    requires expressions;
+    requires xyz.columnal.data;
+    requires xyz.columnal.types;
+    requires xyz.columnal.expressions;
     requires xyz.columnal.utility.gui;
-    requires parsers;
+    requires xyz.columnal.parsers;
     requires xyz.columnal.utility;
 
     requires com.google.common;

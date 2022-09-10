@@ -57,7 +57,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Table;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.gui.EntireTableSelection;
 import xyz.columnal.utility.TranslationUtility;

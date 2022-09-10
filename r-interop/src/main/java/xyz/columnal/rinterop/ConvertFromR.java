@@ -46,6 +46,8 @@ import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.jellytype.JellyType;
 import xyz.columnal.jellytype.JellyType.UnknownTypeException;
 import threadchecker.OnThread;
@@ -63,7 +65,6 @@ import xyz.columnal.utility.Utility.RecordMap;
 import java.time.temporal.TemporalAccessor;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -325,7 +326,7 @@ public class ConvertFromR
     public static Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> convertRToColumn(TypeManager typeManager, RValue rValue, ColumnId columnName) throws UserException, InternalException
     {
         Pair<DataType, ImmutableList<@Value Object>> converted = convertRToTypedValueList(typeManager, rValue);
-        return new Pair<>(converted.getFirst().makeImmediateColumn(columnName, Utility.<@Value Object, Either<String, @Value Object>>mapListI(converted.getSecond(), x -> Either.<String, @Value Object>right(x)), DataTypeUtility.makeDefaultValue(converted.getFirst())), converted.getSecond().size());
+        return new Pair<>(ColumnUtility.makeImmediateColumn(converted.getFirst(), columnName, Utility.<@Value Object, Either<String, @Value Object>>mapListI(converted.getSecond(), x -> Either.<String, @Value Object>right(x)), DataTypeUtility.makeDefaultValue(converted.getFirst())), converted.getSecond().size());
     }
 
     private static SimulationFunction<@Value Object, @Value Object> getOrInternal(ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>> map, DataType key) throws InternalException
@@ -620,7 +621,7 @@ public class ConvertFromR
                         // Not all the same size, treat as record:
                         Pair<DataType, @Value Object> recTypeVal = record(typeManager, fields);
                         
-                        return ImmutableList.of(new Pair<String, EditableRecordSet>("Value", new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(recTypeVal.getFirst().makeImmediateColumn(new ColumnId("Object"), ImmutableList.<Either<String, @Value Object>>of(Either.<String, @Value Object>right(recTypeVal.getSecond())), DataTypeUtility.makeDefaultValue(recTypeVal.getFirst()))), () -> 1)));
+                        return ImmutableList.of(new Pair<String, EditableRecordSet>("Value", new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(ColumnUtility.makeImmediateColumn(recTypeVal.getFirst(), new ColumnId("Object"), ImmutableList.<Either<String, @Value Object>>of(Either.<String, @Value Object>right(recTypeVal.getSecond())), DataTypeUtility.makeDefaultValue(recTypeVal.getFirst()))), () -> 1)));
                     }
                     
                     rowCount = col.getSecond();

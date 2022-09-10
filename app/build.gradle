@@ -16,6 +16,7 @@ dependencies {
     implementation project(':lex-editor')
     implementation project(':transformations')
     implementation project(':r-interop')
+    implementation project(':types')
     implementation libs.guava
     implementation libs.wellbehavedfx
     //implementation 'com.google.code.findbugs:jsr305:3.0.2'

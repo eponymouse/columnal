@@ -23,7 +23,7 @@ package test.gen;
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.RecordSet;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.transformations.expression.Expression;

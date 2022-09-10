@@ -1,18 +1,19 @@
-module app
+module xyz.columnal.app
 {
     exports xyz.columnal.gui;
 
     requires static anns;
     requires static annsthreadchecker;
-    requires data;
-    requires expressions;
-    requires functions;
+    requires xyz.columnal.data;
+    requires xyz.columnal.expressions;
+    requires xyz.columnal.functions;
     requires xyz.columnal.utility.gui;
-    requires lexeditor;
-    requires parsers;
-    requires rinterop;
-    requires stf;
-    requires transformations;
+    requires xyz.columnal.lexeditor;
+    requires xyz.columnal.parsers;
+    requires xyz.columnal.rinterop;
+    requires xyz.columnal.stf;
+    requires xyz.columnal.transformations;
+    requires xyz.columnal.types;
     requires xyz.columnal.utility;
     
     requires java.desktop;

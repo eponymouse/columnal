@@ -1,4 +1,4 @@
-module functions
+module xyz.columnal.functions
 {
     exports xyz.columnal.transformations.function;
     exports xyz.columnal.transformations.function.comparison;
@@ -10,9 +10,9 @@ module functions
     
     requires static anns;
     requires static annsthreadchecker;
-    requires data;
-    requires expressions;
-    requires parsers;
+    requires xyz.columnal.expressions;
+    requires xyz.columnal.parsers;
+    requires xyz.columnal.types;
     requires xyz.columnal.utility;
 
     requires big.math;

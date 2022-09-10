@@ -20,11 +20,9 @@
 
 package xyz.columnal.data;
 
-import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.ColumnStorage.BeforeGet;
-import xyz.columnal.data.Table.Display;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
 import xyz.columnal.data.datatype.NumberInfo;
@@ -37,24 +35,19 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.ExBiConsumer;
 import xyz.columnal.utility.ExFunction;
 import xyz.columnal.utility.FunctionInt;
-import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.TaggedValue;
 import xyz.columnal.utility.Utility;
-import xyz.columnal.utility.Utility.IndexRange;
 import xyz.columnal.utility.Utility.ReadState;
 
 import java.io.IOException;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
-import java.time.temporal.TemporalQuery;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
@@ -70,9 +63,9 @@ public final class TextFileColumn extends Column
     private final DataTypeValue type;
 
     protected <S extends ColumnStorage<?>> TextFileColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, @Nullable String quote,
-                             ColumnId columnName, int columnIndex, int totalColumns,
-                             ExFunction<@Nullable BeforeGet<S>, S> createStorage,
-                             ExBiConsumer<S, ArrayList<String>> addValues) throws InternalException, UserException
+                                                          ColumnId columnName, int columnIndex, int totalColumns,
+                                                          ExFunction<@Nullable BeforeGet<S>, S> createStorage,
+                                                          ExBiConsumer<S, ArrayList<String>> addValues) throws InternalException, UserException
     {
         super(recordSet, columnName);
         this.sep = sep;

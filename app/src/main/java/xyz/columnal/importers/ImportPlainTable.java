@@ -22,25 +22,22 @@ package xyz.columnal.importers;
 
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
-import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.data.columntype.TextColumnType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import xyz.columnal.importers.GuessFormat.GuessException;
 import xyz.columnal.importers.GuessFormat.Import;
 import xyz.columnal.importers.GuessFormat.TrimChoice;
 import xyz.columnal.importers.ImportPlainTable.PlainImportInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationFunction;
 import xyz.columnal.utility.UnitType;
 
 import java.util.List;

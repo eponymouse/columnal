@@ -21,11 +21,10 @@
 package xyz.columnal.transformations;
 
 import com.google.common.collect.ImmutableList;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import xyz.columnal.data.SaveTag;
+import xyz.columnal.id.SaveTag;
 import xyz.columnal.data.Table;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.data.TableManager.TransformationLoader;
 import xyz.columnal.data.Transformation;
@@ -33,9 +32,6 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.DisplayLexer;
 import xyz.columnal.grammar.DisplayParser;
-import xyz.columnal.grammar.MainLexer;
-import xyz.columnal.grammar.MainParser;
-import xyz.columnal.grammar.MainParser.DetailContext;
 import xyz.columnal.grammar.MainParser.DetailPrefixedContext;
 import xyz.columnal.grammar.MainParser.SourceNameContext;
 import xyz.columnal.grammar.MainParser.TableContext;
@@ -50,7 +46,6 @@ import threadchecker.Tag;
 import xyz.columnal.utility.Utility;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by neil on 02/11/2016.

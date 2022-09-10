@@ -24,7 +24,7 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.TableAndColumnRenames;
+import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.TagType;
 import xyz.columnal.data.datatype.DataTypeUtility;

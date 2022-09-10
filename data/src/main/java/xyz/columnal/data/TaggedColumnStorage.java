@@ -23,7 +23,7 @@ package xyz.columnal.data;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.Column.ProgressListener;
+import xyz.columnal.data.datatype.ProgressListener;;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.TagType;
 import xyz.columnal.data.datatype.DataTypeUtility;
@@ -71,7 +71,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedV
             DataType inner = tagType.getInner();
             if (inner != null)
             {
-                ColumnStorage<?> result = DataTypeUtility.makeColumnStorage(inner, null, isImmediateData);
+                ColumnStorage<?> result = ColumnUtility.makeColumnStorage(inner, null, isImmediateData);
                 tagTypesBuilder.add(new TagType<>(tagType.getName(), result));
             }
             else

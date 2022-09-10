@@ -28,7 +28,7 @@ import com.google.common.primitives.Booleans;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.Column;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DataTypeVisitor;

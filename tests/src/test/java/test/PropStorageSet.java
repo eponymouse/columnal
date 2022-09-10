@@ -30,7 +30,8 @@ import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.Column;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.DataTestUtil;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.datatype.DataType;
@@ -70,7 +71,7 @@ public class PropStorageSet
         Platform.runLater(() -> {});
         
         @SuppressWarnings({"keyfor", "units"})
-        EditableRecordSet recordSet = new EditableRecordSet(Collections.singletonList(rs -> typeAndValueGen.getType().makeImmediateColumn(new ColumnId("C"), Collections.emptyList(), typeAndValueGen.makeValue()).apply(rs)), () -> 0);
+        EditableRecordSet recordSet = new EditableRecordSet(Collections.singletonList(rs -> ColumnUtility.makeImmediateColumn(typeAndValueGen.getType(), new ColumnId("C"), Collections.emptyList(), typeAndValueGen.makeValue()).apply(rs)), () -> 0);
         Column c = recordSet.getColumns().get(0);
         assertEquals(0, c.getLength());
         int length = 20;

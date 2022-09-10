@@ -22,7 +22,7 @@ package xyz.columnal.error.expressions;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.Table;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;

@@ -28,7 +28,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.junit.Test;
 import xyz.columnal.data.CellPosition;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.ImmediateDataSource;
 import xyz.columnal.data.MemoryNumericColumn;

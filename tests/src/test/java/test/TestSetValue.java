@@ -27,7 +27,8 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.Column;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.DataTestUtil;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.datatype.DataTypeValue;
@@ -63,7 +64,7 @@ public class TestSetValue
             replacements.add(r.nextInt(8) == 1 ? Either.left("#R" + r.nextInt(100)) : Either.right(typeAndValueGen.makeValue()));
         }
         @SuppressWarnings({"keyfor", "units"})
-        EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(typeAndValueGen.getType().makeImmediateColumn(new ColumnId("C0"), originals, typeAndValueGen.makeValue())), () -> length);
+        EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(ColumnUtility.makeImmediateColumn(typeAndValueGen.getType(), new ColumnId("C0"), originals, typeAndValueGen.makeValue())), () -> length);
         Column col = rs.getColumns().get(0);
 
         List<Pair<Integer, Either<String, @Value Object>>> pendingReplacements = new ArrayList<>();

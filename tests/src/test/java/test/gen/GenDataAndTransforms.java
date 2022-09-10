@@ -26,17 +26,13 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import xyz.columnal.data.*;
-import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.transformations.Aggregate;
 import xyz.columnal.transformations.Calculate;
-import xyz.columnal.transformations.Concatenate;
-import xyz.columnal.transformations.Concatenate.IncompleteColumnHandling;
 import xyz.columnal.transformations.Filter;
 import xyz.columnal.transformations.HideColumns;
-import xyz.columnal.transformations.Join;
-import xyz.columnal.transformations.RTransformation;
 import xyz.columnal.transformations.Sort;
 import xyz.columnal.transformations.Sort.Direction;
 import xyz.columnal.transformations.expression.BooleanLiteral;
@@ -180,7 +176,7 @@ public class GenDataAndTransforms extends Generator<TableManager>
         for (int i = 0; i < numCols; i++)
         {
             DataTypeAndValueMaker t = dataTypeMaker.makeType();
-            cols.add(t.getDataType().makeImmediateColumn(new ColumnId(IdentifierUtility.identNum("Col", i)), DataTestUtil.makeList(r, numRows, numRows, () -> Either.right(t.makeValue())), t.makeValue()));
+            cols.add(ColumnUtility.makeImmediateColumn(t.getDataType(), new ColumnId(IdentifierUtility.identNum("Col", i)), DataTestUtil.makeList(r, numRows, numRows, () -> Either.right(t.makeValue())), t.makeValue()));
         }
         
         mgr.record(new ImmediateDataSource(mgr, TestUtil.ILD,new EditableRecordSet(cols.build(), () -> numRows)));

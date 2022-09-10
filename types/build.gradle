@@ -2,12 +2,12 @@ dependencies {
     implementation project(':parsers')
     implementation project(':utility')
     implementation libs.guava
+    implementation libs.commons.io
+    implementation libs.javaSMT
+    implementation libs.streamex
     /*
     implementation libs.antlr
-    implementation libs.commons.lang3
-    implementation libs.javaSMT
-    implementation libs.commons.io
-    implementation libs.streamex
+    implementation libs.commons.lang3    
     testImplementation libs.bundles.junitWithQuickcheck
     */
 

@@ -36,7 +36,7 @@ import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.Column.AlteredState;
 import xyz.columnal.data.Column.EditableStatus;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.Table.Display;
 import xyz.columnal.data.Transformation.SilentCancelEditException;

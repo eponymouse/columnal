@@ -22,10 +22,10 @@ package xyz.columnal.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.ColumnStorage.BeforeGet;
+import xyz.columnal.data.datatype.ProgressListener;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import threadchecker.OnThread;
-import threadchecker.Tag;
+import xyz.columnal.id.ColumnId;
 
 /**
  * Created by neil on 21/10/2016.

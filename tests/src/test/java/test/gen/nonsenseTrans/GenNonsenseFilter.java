@@ -24,7 +24,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import xyz.columnal.data.Table.InitialLoadDetails;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.transformations.Filter;
 import xyz.columnal.transformations.expression.Expression;

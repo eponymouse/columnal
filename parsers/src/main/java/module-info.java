@@ -1,4 +1,4 @@
-module parsers
+module xyz.columnal.parsers
 {
     exports xyz.columnal.grammar;
 

@@ -27,12 +27,13 @@ import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.Column;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.DataTestUtil;
 import xyz.columnal.data.KnownLengthRecordSet;
 import xyz.columnal.data.MemoryBooleanColumn;
 import xyz.columnal.data.RecordSet;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DataTypeVisitor;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
@@ -742,14 +743,14 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
             {
                 // Return whole column:
                 List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(listInnerType));
-                columns.add(rs -> listInnerType.makeCalculatedColumn(rs, name, i -> value.get(i), t -> t));
+                columns.add(rs -> ColumnUtility.makeCalculatedColumn(listInnerType, rs, name, i -> value.get(i), t -> t));
                 // Each row gets the same full list:
                 return new Pair<List<@Value Object>, Expression>(GenExpressionValueForwards.this.<@Value Object>replicateM(() -> new ListExList(value)), IdentExpression.makeEntireColumnReference(tableId, name));
             }
             else
             {
                 List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(type));
-                columns.add(rs -> type.makeCalculatedColumn(rs, name, i -> value.get(i), t -> t));
+                columns.add(rs -> ColumnUtility.makeCalculatedColumn(type, rs, name, i -> value.get(i), t -> t));
 
                 FunctionLookup functionLookup = FunctionList.getFunctionLookup(dummyManager.getUnitManager());
                 // Index into a whole column:

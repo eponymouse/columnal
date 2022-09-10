@@ -50,7 +50,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.DataTestUtil;
 import xyz.columnal.data.RecordSet;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.FlatDataTypeVisitor;

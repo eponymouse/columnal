@@ -47,6 +47,8 @@ import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.log.Log;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;

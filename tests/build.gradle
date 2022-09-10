@@ -13,6 +13,7 @@ dependencies {
     implementation project(':r-interop')
     implementation project(':stf')
     implementation project(':transformations')
+    implementation project(':types')
     implementation project(':utility')
     testImplementation libs.hamcrest
     implementation libs.commons.io

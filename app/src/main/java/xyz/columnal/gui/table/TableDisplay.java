@@ -47,6 +47,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.log.ErrorHandler.RunOrError;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -114,7 +116,7 @@ import xyz.columnal.transformations.*;
 import xyz.columnal.transformations.ManualEdit.ColumnReplacementValues;
 import xyz.columnal.transformations.Sort.Direction;
 import xyz.columnal.transformations.expression.*;
-import xyz.columnal.transformations.expression.Expression.MultipleTableLookup;
+import xyz.columnal.transformations.MultipleTableLookup;
 import xyz.columnal.transformations.expression.explanation.Explanation;
 import xyz.columnal.transformations.expression.function.FunctionLookup;
 import xyz.columnal.transformations.expression.function.ValueFunction;
@@ -1477,7 +1479,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         Optional<EditImmediateColumnDialog.ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(parent, parent.getManager(), null, null, false, InitialFocus.FOCUS_COLUMN_NAME).showAndWait();
         optInitialDetails.ifPresent(initialDetails -> Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
             FXUtility.alertOnError_(TranslationUtility.getString("error.adding.column"), () ->
-                ids.getData().addColumn(beforeColumn, initialDetails.dataType.makeImmediateColumn(initialDetails.columnId, initialDetails.defaultValue))
+                ids.getData().addColumn(beforeColumn, ColumnUtility.makeImmediateColumn(initialDetails.dataType, initialDetails.columnId, initialDetails.defaultValue))
             )
         ));
     }

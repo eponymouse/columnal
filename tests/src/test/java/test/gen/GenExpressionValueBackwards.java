@@ -22,13 +22,12 @@ package test.gen;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import xyz.columnal.data.Column;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.KnownLengthRecordSet;
 import xyz.columnal.data.MemoryBooleanColumn;
 import xyz.columnal.data.RecordSet;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.data.datatype.TypeManager;
 import test.gen.backwards.*;
 import xyz.columnal.data.datatype.DataType;

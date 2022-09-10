@@ -32,7 +32,7 @@ import javafx.stage.Modality;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.Table;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;

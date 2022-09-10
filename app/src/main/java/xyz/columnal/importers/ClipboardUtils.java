@@ -26,14 +26,15 @@ import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
+import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.DataSource;
 import xyz.columnal.data.DataSource.LoadedFormat;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.RecordSet;
-import xyz.columnal.data.SaveTag;
+import xyz.columnal.id.SaveTag;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.DataTypeValue;
@@ -46,8 +47,6 @@ import xyz.columnal.grammar.DataParser;
 import xyz.columnal.grammar.FormatLexer;
 import xyz.columnal.grammar.MainLexer;
 import xyz.columnal.grammar.MainLexer2;
-import xyz.columnal.grammar.MainParser;
-import xyz.columnal.grammar.MainParser.IsolatedValuesContext;
 import xyz.columnal.grammar.MainParser2;
 import xyz.columnal.grammar.MainParser2.ContentContext;
 import xyz.columnal.grammar.Versions.OverallVersion;
@@ -94,7 +93,7 @@ public class ClipboardUtils
         public SimulationFunction<RecordSet, EditableColumn> load(Integer i)
         {
             return rs -> {
-                return dataType.makeImmediateColumn(columnName != null ? columnName : new ColumnId(IdentifierUtility.identNum("Column", i)), dataValues, DataTypeUtility.makeDefaultValue(dataType)).apply(rs);
+                return ColumnUtility.makeImmediateColumn(dataType, columnName != null ? columnName : new ColumnId(IdentifierUtility.identNum("Column", i)), dataValues, DataTypeUtility.makeDefaultValue(dataType)).apply(rs);
             };
         }
     }

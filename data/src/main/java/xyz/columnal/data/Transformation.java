@@ -33,6 +33,9 @@ import xyz.columnal.data.datatype.DataTypeValue.OverrideSet;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.MainLexer;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableAndColumnRenames;
+import xyz.columnal.id.TableId;
 import xyz.columnal.loadsave.OutputBuilder;
 import xyz.columnal.loadsave.OutputBuilder.QuoteBehaviour;
 import threadchecker.OnThread;
@@ -43,7 +46,6 @@ import xyz.columnal.utility.Utility;
 
 import java.io.File;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**

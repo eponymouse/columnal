@@ -21,7 +21,6 @@
 package xyz.columnal.data;
 
 import annotation.qual.Value;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.SpecificDataTypeVisitor;
 import xyz.columnal.data.datatype.DataTypeUtility;
@@ -30,6 +29,7 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.SimulationRunnable;
 import xyz.columnal.utility.Utility;

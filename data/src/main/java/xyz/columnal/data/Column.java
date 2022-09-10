@@ -20,10 +20,8 @@
 
 package xyz.columnal.data;
 
-import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import xyz.columnal.data.Table.Display;
@@ -32,13 +30,10 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FunctionInt;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.SimulationFunctionInt;
-import xyz.columnal.utility.SimulationSupplierInt;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -181,20 +176,6 @@ public abstract class Column
      */
     @OnThread(Tag.Any)
     public abstract AlteredState getAlteredState();
-
-    public static interface ProgressListener
-    {
-        @OnThread(Tag.Simulation)
-        public void progressUpdate(double progress);
-
-        public static Pair<@Nullable ProgressListener, @Nullable ProgressListener> split(final @Nullable ProgressListener prog)
-        {
-            if (prog == null)
-                return new Pair<@Nullable ProgressListener, @Nullable ProgressListener>(null, null);
-            @NonNull ProgressListener progFinal = prog;
-            return new Pair<>(a -> progFinal.progressUpdate(a * 0.5), b -> progFinal.progressUpdate(b * 0.5 + 0.5));
-        }
-    }
 
     public final RecordSet getRecordSet()
     {

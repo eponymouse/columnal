@@ -1,6 +1,6 @@
 dependencies {
     implementation project(':utility')
-    implementation project(':data')
+    implementation project(':types')
     implementation project(':expressions')
     implementation project(':parsers')
     implementation libs.javaSMT

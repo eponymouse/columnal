@@ -25,7 +25,7 @@ import annotation.units.TableDataRowIndex;
 import javafx.scene.input.KeyCode;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.gui.dtf.ReadOnlyDocument;
 import threadchecker.OnThread;
 import threadchecker.Tag;

@@ -29,6 +29,7 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.*;
+import xyz.columnal.data.DataTestUtil;
 import xyz.columnal.data.TableManager.Loaded;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -38,6 +39,8 @@ import test.gen.GenRandom;
 import test.gen.GenTableManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.id.SaveTag;
+import xyz.columnal.id.TableId;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Pair;
 

@@ -22,9 +22,8 @@ package xyz.columnal.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.scene.control.ButtonType;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.TableManager;
-import xyz.columnal.data.RenameOnEdit;
 import xyz.columnal.transformations.HideColumns;
 import xyz.columnal.transformations.HideColumnsPanel;
 import threadchecker.OnThread;

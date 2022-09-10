@@ -36,7 +36,7 @@ import xyz.columnal.data.DataSource;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.ImmediateDataSource;
 import xyz.columnal.data.Table.InitialLoadDetails;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;

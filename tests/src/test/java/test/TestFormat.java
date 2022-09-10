@@ -27,7 +27,7 @@ import javafx.embed.swing.JFXPanel;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.columntype.BoolColumnType;
 import xyz.columnal.data.columntype.CleanDateColumnType;
 import xyz.columnal.data.columntype.ColumnType;

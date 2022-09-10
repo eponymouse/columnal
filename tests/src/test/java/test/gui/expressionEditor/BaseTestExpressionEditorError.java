@@ -34,7 +34,7 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.SubstringMatcher;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.CellPosition;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.MemoryNumericColumn;

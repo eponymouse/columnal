@@ -1,4 +1,4 @@
-module expressions
+module xyz.columnal.expressions
 {
     exports xyz.columnal.transformations.expression;
     exports xyz.columnal.transformations.expression.explanation;
@@ -8,8 +8,9 @@ module expressions
     
     requires static anns;
     requires static annsthreadchecker;
-    requires data;
-    requires parsers;
+    //requires xyz.columnal.data;
+    requires xyz.columnal.parsers;
+    requires xyz.columnal.types;
     requires xyz.columnal.utility;
 
     //requires common;

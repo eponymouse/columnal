@@ -21,7 +21,6 @@
 package xyz.columnal.importers;
 
 import com.google.common.collect.ImmutableList;
-import javafx.application.Platform;
 import javafx.stage.Window;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
@@ -37,7 +36,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.DataSource;
 import xyz.columnal.data.ImmediateDataSource;
 import xyz.columnal.data.TableManager;
@@ -48,7 +47,6 @@ import xyz.columnal.importers.ImportPlainTable.PlainImportInfo;
 import xyz.columnal.importers.gui.ImportChoicesDialog;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.SimulationConsumerNoError;

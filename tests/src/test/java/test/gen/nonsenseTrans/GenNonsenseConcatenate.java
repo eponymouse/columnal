@@ -25,7 +25,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import xyz.columnal.data.DataTestUtil;
 import xyz.columnal.data.Table.InitialLoadDetails;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.transformations.Concatenate;
 import xyz.columnal.transformations.Concatenate.IncompleteColumnHandling;

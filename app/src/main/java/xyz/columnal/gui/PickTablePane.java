@@ -31,7 +31,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import xyz.columnal.data.Table;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.gui.AutoComplete.CompletionListener;
 import xyz.columnal.gui.AutoComplete.SimpleCompletion;
 import xyz.columnal.gui.AutoComplete.WhitespacePolicy;

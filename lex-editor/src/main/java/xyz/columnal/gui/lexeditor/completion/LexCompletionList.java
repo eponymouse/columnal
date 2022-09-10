@@ -56,7 +56,6 @@ import javafx.util.Duration;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.Table.Display;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;

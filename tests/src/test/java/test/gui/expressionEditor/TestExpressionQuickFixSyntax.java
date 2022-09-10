@@ -20,64 +20,19 @@
 
 package test.gui.expressionEditor;
 
-import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import javafx.scene.Node;
-import javafx.scene.input.KeyCode;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
-import javafx.stage.Window;
-import xyz.columnal.log.Log;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.controlsfx.control.PopOver;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.testfx.service.query.NodeQuery;
-import org.testfx.util.WaitForAsyncUtils;
-import xyz.columnal.data.CellPosition;
-import xyz.columnal.data.ColumnId;
-import xyz.columnal.data.EditableColumn;
-import xyz.columnal.data.EditableRecordSet;
-import xyz.columnal.data.MemoryNumericColumn;
-import xyz.columnal.data.MemoryStringColumn;
-import xyz.columnal.data.RecordSet;
-import xyz.columnal.data.Table.InitialLoadDetails;
-import xyz.columnal.data.TableManager;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.datatype.NumberInfo;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.transformations.expression.ExpressionUtil;
-import xyz.columnal.gui.grid.RectangleBounds;
-import xyz.columnal.gui.lexeditor.EditorDisplay;
-import xyz.columnal.transformations.Calculate;
-import xyz.columnal.transformations.expression.Expression;
-import xyz.columnal.transformations.function.FunctionList;
-import test.DummyManager;
-import test.TestUtil;
-import test.gui.trait.ClickTableLocationTrait;
-import test.gui.trait.ComboUtilTrait;
-import test.gui.trait.EnterExpressionTrait;
-import test.gui.trait.ListUtilTrait;
-import test.gui.trait.PopupTrait;
-import test.gui.trait.ScrollToTrait;
-import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.SimulationFunction;
-import xyz.columnal.utility.Utility;
-import xyz.columnal.utility.gui.FXUtility;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)

@@ -22,6 +22,9 @@ package xyz.columnal.transformations;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableAndColumnRenames;
+import xyz.columnal.id.TableId;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -45,7 +48,6 @@ import xyz.columnal.transformations.expression.EvaluateState;
 import xyz.columnal.transformations.expression.EvaluationException;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.Expression.ColumnLookup;
-import xyz.columnal.transformations.expression.Expression.FoundTableActual;
 import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.expression.Expression.ValueResult;
 import xyz.columnal.transformations.expression.ExpressionUtil;
@@ -121,7 +123,7 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
         {
             ColumnId result = new ColumnId("result");
             theRecordSet = new KnownLengthRecordSet(
-                    ImmutableList.<SimulationFunction<RecordSet, Column>>of(rs -> DataType.BOOLEAN.makeCalculatedColumn(rs, result, n -> Utility.later(this).getResult(), t -> addManualEditSet(result, t)))
+                    ImmutableList.<SimulationFunction<RecordSet, Column>>of(rs -> ColumnUtility.makeCalculatedColumn(DataType.BOOLEAN, rs, result, n -> Utility.later(this).getResult(), t -> addManualEditSet(result, t)))
                     , 1
             );
         }

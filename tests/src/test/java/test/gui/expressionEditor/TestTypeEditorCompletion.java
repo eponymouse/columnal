@@ -22,19 +22,16 @@ package test.gui.expressionEditor;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import xyz.columnal.data.CellPosition;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.ImmediateDataSource;
 import xyz.columnal.data.Table.InitialLoadDetails;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.TagType;
@@ -43,8 +40,6 @@ import xyz.columnal.data.datatype.TaggedTypeDefinition;
 import xyz.columnal.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
-import xyz.columnal.transformations.Calculate;
-import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -72,7 +67,7 @@ public class TestTypeEditorCompletion extends BaseTestEditorCompletion
                 new ImmediateDataSource(toLoad,
                         new InitialLoadDetails(new TableId("IDS"), null, new CellPosition(CellPosition.row(1), CellPosition.col(1)), null),
                         new EditableRecordSet(
-                                ImmutableList.of(rs -> DataType.NUMBER.makeImmediateColumn(new ColumnId("My Number"), DataTypeUtility.value(0)).apply(rs)),
+                                ImmutableList.of(rs -> ColumnUtility.makeImmediateColumn(DataType.NUMBER, new ColumnId("My Number"), DataTypeUtility.value(0)).apply(rs)),
                                 (SimulationSupplier<Integer>)() -> 0)));
         
         mainWindowActions = TestUtil.openDataAsTable(windowToUse, toLoad).get();

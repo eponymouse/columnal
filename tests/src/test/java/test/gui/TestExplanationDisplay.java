@@ -34,6 +34,8 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.gui.grid.RectangleBounds;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.transformations.Check;
 import xyz.columnal.transformations.Check.CheckType;
 import xyz.columnal.transformations.expression.Expression;
@@ -55,7 +57,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
-import static test.TestUtil.fx_;
 
 @OnThread(Tag.Simulation)
 public class TestExplanationDisplay extends FXApplicationTest implements ScrollToTrait, ClickOnTableHeaderTrait

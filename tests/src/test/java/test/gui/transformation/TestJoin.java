@@ -34,6 +34,8 @@ import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.gui.grid.RectangleBounds;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.transformations.Join;
 import test.DummyManager;
 import test.TestUtil;
@@ -101,7 +103,7 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
             ImmutableList<Either<String, @Value Object>> aValues = Utility.<Either<String, @Value Object>>replicateM_Ex(aSize, () -> Either.<String, @Value Object>right(maker.makeValue()));
             if (i <= 2)
             {
-                aColumns.add(maker.getDataType().makeImmediateColumn(new ColumnId("T " + i), aValues, maker.makeValue()));
+                aColumns.add(ColumnUtility.makeImmediateColumn(maker.getDataType(), new ColumnId("T " + i), aValues, maker.makeValue()));
             }
 
             ArrayList<Either<String, @Value Object>> bValues = new ArrayList<>();
@@ -116,7 +118,7 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
             if (i > 0)
             {                
                 // To cause deliberate name confusion, second table columns are offset by one:
-                bColumns.add(maker.getDataType().makeImmediateColumn(new ColumnId((columnsNamedSame ? "T " : "R ") + (i + 1)), bValues, maker.makeValue()));
+                bColumns.add(ColumnUtility.makeImmediateColumn(maker.getDataType(), new ColumnId((columnsNamedSame ? "T " : "R ") + (i + 1)), bValues, maker.makeValue()));
             }
             if (i > 0 && i - 1 < joinColumnCount)
             {

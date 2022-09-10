@@ -18,27 +18,37 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.data;
+package xyz.columnal.id;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+import java.io.Serializable;
+
 /**
  * Created by neil on 14/11/2016.
+ *
+ * Serializable for interface reasons, for not saving to file
  */
 @OnThread(Tag.Any)
-public class TableId implements Comparable<TableId>, StyledShowable
+public class ColumnId implements Comparable<ColumnId>, Serializable, StyledShowable
 {
-    private final @ExpressionIdentifier String tableId;
+    private static final long serialVersionUID = -6813720608766860501L;
+    private final @ExpressionIdentifier String columnId;
 
-    public TableId(@ExpressionIdentifier String tableId)
+    public ColumnId(@ExpressionIdentifier String columnId)
     {
-        this.tableId = tableId;
+        this.columnId = columnId;
+    }
+
+    public static boolean validCharacter(int codePoint, boolean start)
+    {
+        return Character.isLetter(codePoint) || ((codePoint == ' ' || Character.isDigit(codePoint)) && !start);
     }
 
     @Override
@@ -47,43 +57,44 @@ public class TableId implements Comparable<TableId>, StyledShowable
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        TableId tableId1 = (TableId) o;
+        ColumnId tableId1 = (ColumnId) o;
 
-        return tableId.equals(tableId1.tableId);
+        return columnId.equals(tableId1.columnId);
 
     }
 
     @Override
     public int hashCode()
     {
-        return tableId.hashCode();
+        return columnId.hashCode();
     }
 
     @Override
     public String toString()
     {
-        return tableId;
+        return columnId;
     }
 
     public String getOutput()
     {
-        return tableId;
+        return columnId;
     }
 
-    public @ExpressionIdentifier String getRaw()
+    @SuppressWarnings("i18n")
+    public @Localized @ExpressionIdentifier String getRaw()
     {
-        return tableId;
+        return columnId;
     }
 
     @Override
-    public int compareTo(@NonNull TableId o)
+    public int compareTo(ColumnId o)
     {
-        return tableId.compareTo(o.tableId);
+        return columnId.compareTo(o.columnId);
     }
 
     @Override
     public StyledString toStyledString()
     {
-        return StyledString.s(tableId);
+        return StyledString.s(columnId);
     }
 }

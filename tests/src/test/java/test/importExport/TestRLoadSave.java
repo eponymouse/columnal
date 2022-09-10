@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.apache.commons.io.IOUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -38,7 +37,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.Column;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.datatype.ProgressListener;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.DataTestUtil;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.RecordSet;
@@ -485,7 +485,7 @@ public class TestRLoadSave
                 return typeVars.get(0).getRight("Err").fromCollapsed(new GetValue<@Value Object>()
                 {
                     @Override
-                    public @Value Object getWithProgress(int i, Column.@Nullable ProgressListener prog) throws UserException, InternalException
+                    public @Value Object getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                     {
                         return inners.get(i).getSecond();
                     }
@@ -508,7 +508,7 @@ public class TestRLoadSave
                 fieldType.getValue().fromCollapsed(new GetValue<@Value Object>()
                 {
                     @Override
-                    public @Value Object getWithProgress(int i, Column.@Nullable ProgressListener prog) throws UserException, InternalException
+                    public @Value Object getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                     {
                         return g.get(i).getField(fieldType.getKey());
                     }
@@ -538,7 +538,7 @@ public class TestRLoadSave
                 inner.fromCollapsed(new GetValue<@Value Object>()
                 {
                     @Override
-                    public @NonNull @Value Object getWithProgress(int listIndex, Column.@Nullable ProgressListener prog) throws UserException, InternalException
+                    public @NonNull @Value Object getWithProgress(int listIndex, @Nullable ProgressListener prog) throws UserException, InternalException
                     {
                         return modified.get(listIndex);
                     }

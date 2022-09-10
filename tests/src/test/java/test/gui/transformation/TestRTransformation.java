@@ -21,15 +21,14 @@
 package test.gui.transformation;
 
 import com.google.common.collect.ImmutableList;
-import com.pholser.junit.quickcheck.From;
-import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.CellPosition;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.KnownLengthRecordSet;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.datatype.DataType;
@@ -37,17 +36,12 @@ import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.transformations.RTransformation;
 import test.TestUtil;
-import test.gen.GenImmediateData;
-import test.gen.GenImmediateData.CanHaveErrorValues;
-import test.gen.GenRandom;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
-
-import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
@@ -64,7 +58,7 @@ public class TestRTransformation extends FXApplicationTest implements ScrollToTr
         // Uninstall one package first to check installation works:
         Runtime.getRuntime().exec(new String[] {"R", "CMD", "REMOVE", "digest"});
         
-        RecordSet original = new KnownLengthRecordSet(ImmutableList.of(DataType.TEXT.makeImmediateColumn(new ColumnId("The Strings"), ImmutableList.of(Either.right("Hello"), Either.right("There")), "")), 2);
+        RecordSet original = new KnownLengthRecordSet(ImmutableList.of(ColumnUtility.makeImmediateColumn(DataType.TEXT, new ColumnId("The Strings"), ImmutableList.of(Either.right("Hello"), Either.right("There")), "")), 2);
         
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, null, original);
         TestUtil.sleep(5000);

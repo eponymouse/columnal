@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.scene.Scene;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.SingleUnit;
 import xyz.columnal.data.unit.UnitDeclaration;

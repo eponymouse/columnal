@@ -20,16 +20,7 @@
 
 package xyz.columnal.data;
 
-import com.google.common.collect.ImmutableMap;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.ColumnId;
-import xyz.columnal.data.Table;
-import xyz.columnal.data.TableAndColumnRenames;
-import xyz.columnal.data.TableId;
-import xyz.columnal.utility.Pair;
-
-import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
+import xyz.columnal.id.TableId;
 
 public interface RenameOnEdit
 {

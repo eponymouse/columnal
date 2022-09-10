@@ -30,6 +30,7 @@ import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.data.datatype.DataTypeValue.GetValue;
+import xyz.columnal.data.datatype.ProgressListener;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
@@ -67,14 +68,14 @@ public class RecordColumnStorage extends SparseErrorColumnStorage<@Value Record>
         ImmutableMap.Builder<@ExpressionIdentifier String, ColumnStorage<?>> builder = ImmutableMap.builder();
         for (Entry<@ExpressionIdentifier String, DataType> field : fields.entrySet())
         {
-            builder.put(field.getKey(), DataTypeUtility.makeColumnStorage(field.getValue(), beforeGet, isImmediateData));
+            builder.put(field.getKey(), ColumnUtility.makeColumnStorage(field.getValue(), beforeGet, isImmediateData));
         }
         storage = builder.build();
         type = DataTypeValue.record(Utility.<@ExpressionIdentifier String, ColumnStorage<?>, DataType>mapValues(storage, s -> s.getType().getType()), new GetValue<@Value Record>()
         {
             @Override
             @OnThread(Tag.Simulation)
-            public @Value Record getWithProgress(int index, Column.@Nullable ProgressListener progressListener) throws UserException, InternalException
+            public @Value Record getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
             {
                 ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> record = ImmutableMap.builderWithExpectedSize(fields.size());
                 for (Entry<@ExpressionIdentifier String, ColumnStorage<?>> entry : storage.entrySet())

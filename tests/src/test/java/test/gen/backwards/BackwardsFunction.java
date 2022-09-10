@@ -24,10 +24,8 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import javafx.beans.property.adapter.ReadOnlyJavaBeanObjectPropertyBuilder;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.common.value.qual.IntRange;
-import xyz.columnal.data.TableAndColumnRenames;
+import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
@@ -37,14 +35,10 @@ import xyz.columnal.transformations.expression.AddSubtractExpression.AddSubtract
 import xyz.columnal.transformations.expression.ComparisonExpression.ComparisonOperator;
 import xyz.columnal.transformations.expression.DefineExpression.Definition;
 import xyz.columnal.transformations.expression.type.TypeExpression;
-import xyz.columnal.transformations.expression.visitor.ExpressionVisitor;
 import xyz.columnal.transformations.expression.visitor.ExpressionVisitorFlat;
-import xyz.columnal.styled.StyledString;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;
@@ -52,9 +46,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class BackwardsFunction extends BackwardsProvider
 {

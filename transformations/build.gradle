@@ -6,6 +6,7 @@ dependencies {
     implementation project(':expressions')
     implementation project(':functions')
     implementation project(':r-interop')
+    implementation project(':types')
     implementation libs.guava
 }
 

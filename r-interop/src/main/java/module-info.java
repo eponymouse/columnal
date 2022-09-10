@@ -1,10 +1,11 @@
-module rinterop
+module xyz.columnal.rinterop
 {
     exports xyz.columnal.rinterop;
     
     requires static anns;
     requires static annsthreadchecker;
-    requires data;
+    requires xyz.columnal.data;
+    requires xyz.columnal.types;
     requires xyz.columnal.utility;
     
     requires com.google.common;

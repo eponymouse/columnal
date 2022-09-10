@@ -28,21 +28,10 @@ import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import xyz.columnal.log.Log;
 import one.util.streamex.StreamEx;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
-import xyz.columnal.data.ArrayColumnStorage;
-import xyz.columnal.data.BooleanColumnStorage;
-import xyz.columnal.data.ColumnStorage;
-import xyz.columnal.data.ColumnStorage.BeforeGet;
-import xyz.columnal.data.NumericColumnStorage;
-import xyz.columnal.data.StringColumnStorage;
-import xyz.columnal.data.TaggedColumnStorage;
-import xyz.columnal.data.TemporalColumnStorage;
-import xyz.columnal.data.RecordColumnStorage;
-import xyz.columnal.data.datatype.DataType.DataTypeVisitor;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import xyz.columnal.data.datatype.DataType.DataTypeVisitorEx;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -53,12 +42,8 @@ import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.GrammarUtility;
-import xyz.columnal.loadsave.OutputBuilder;
-import xyz.columnal.styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
+import xyz.columnal.log.Log;
 import xyz.columnal.utility.Either;
-import xyz.columnal.utility.FXPlatformSupplier;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.ParseProgress;
 import xyz.columnal.utility.TaggedValue;
@@ -90,7 +75,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -161,62 +145,6 @@ public class DataTypeUtility
     }
     */
 
-    @OnThread(Tag.Simulation)
-    @SuppressWarnings("unchecked")
-    public static ColumnStorage<?> makeColumnStorage(final DataType inner, ColumnStorage.@Nullable BeforeGet<?> beforeGet, boolean isImmediateData) throws InternalException
-    {
-        return inner.apply(new DataTypeVisitorEx<ColumnStorage<?>, InternalException>()
-        {
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnStorage<?> number(NumberInfo displayInfo) throws InternalException
-            {
-                return new NumericColumnStorage(displayInfo, (BeforeGet<NumericColumnStorage>)beforeGet, isImmediateData);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnStorage<?> bool() throws InternalException
-            {
-                return new BooleanColumnStorage((BeforeGet<BooleanColumnStorage>)beforeGet, isImmediateData);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnStorage<?> text() throws InternalException
-            {
-                return new StringColumnStorage((BeforeGet<StringColumnStorage>)beforeGet, isImmediateData);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnStorage<?> date(DateTimeInfo dateTimeInfo) throws InternalException
-            {
-                return new TemporalColumnStorage(dateTimeInfo, (BeforeGet<TemporalColumnStorage>)beforeGet, isImmediateData);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnStorage<?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
-            {
-                return new TaggedColumnStorage(typeName, typeVars, tags, (BeforeGet<TaggedColumnStorage>)beforeGet, isImmediateData);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnStorage<?> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
-            {
-                return new RecordColumnStorage(fields, beforeGet, isImmediateData);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnStorage<?> array(DataType inner) throws InternalException
-            {
-                return new ArrayColumnStorage(inner, (BeforeGet<ArrayColumnStorage>)beforeGet, isImmediateData);
-            }
-        });
-    }
 
     public static @Value int requireInteger(@Value Object o) throws UserException, InternalException
     {

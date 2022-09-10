@@ -23,7 +23,7 @@ package xyz.columnal.data;
 import annotation.qual.Value;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.Column.ProgressListener;
+import xyz.columnal.data.datatype.ProgressListener;;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;

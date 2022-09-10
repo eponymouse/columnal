@@ -22,13 +22,12 @@ package xyz.columnal.transformations.expression.explanation;
 
 import annotation.units.TableDataRowIndex;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.ColumnId;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * A location can be:

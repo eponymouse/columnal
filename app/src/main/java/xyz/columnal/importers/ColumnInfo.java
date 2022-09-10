@@ -21,7 +21,7 @@
 package xyz.columnal.importers;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.columntype.ColumnType;
 
 /**

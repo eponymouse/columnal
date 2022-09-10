@@ -17,8 +17,7 @@
  * You should have received a copy of the GNU General Public License along 
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
-
-package xyz.columnal.data;
+package xyz.columnal.id;
 
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;

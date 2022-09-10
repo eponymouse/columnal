@@ -27,8 +27,6 @@ import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import xyz.columnal.data.Column;
-import xyz.columnal.data.Column.ProgressListener;
 import xyz.columnal.data.datatype.DataType.DataTypeVisitorEx;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
 import xyz.columnal.data.datatype.DataType.TagType;
@@ -359,7 +357,7 @@ public final class DataTypeValue
     public static interface GetValue<T extends @NonNull @Value Object>
     {
         @OnThread(Tag.Simulation)
-        @NonNull @Value T getWithProgress(int index, Column.@Nullable ProgressListener progressListener) throws UserException, InternalException;
+        @NonNull @Value T getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException;
 
         @OnThread(Tag.Simulation)
         default @NonNull @Value T get(int index) throws UserException, InternalException { return getWithProgress(index, null); }

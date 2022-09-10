@@ -24,6 +24,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import xyz.columnal.error.InternalException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.id.TableId;
 
 public interface SingleSourceTransformation
 {

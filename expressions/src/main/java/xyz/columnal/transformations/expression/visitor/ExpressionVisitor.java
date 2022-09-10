@@ -25,23 +25,19 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.ColumnId;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.data.datatype.TypeManager.TagInfo;
 import xyz.columnal.transformations.expression.*;
 import xyz.columnal.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import xyz.columnal.transformations.expression.ComparisonExpression.ComparisonOperator;
-import xyz.columnal.transformations.expression.DefineExpression.Definition;
 import xyz.columnal.transformations.expression.MatchExpression.MatchClause;
-import xyz.columnal.transformations.expression.function.StandardFunctionDefinition;
 import xyz.columnal.transformations.expression.type.TypeExpression;
 import xyz.columnal.styled.StyledString;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Pair;
 
 import java.time.temporal.TemporalAccessor;
-import java.util.List;
 
 public interface ExpressionVisitor<T>
 {

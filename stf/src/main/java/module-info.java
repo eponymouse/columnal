@@ -1,4 +1,4 @@
-module stf
+module xyz.columnal.stf
 {
     exports xyz.columnal.gui.dtf;
     exports xyz.columnal.gui.grid;
@@ -6,10 +6,12 @@ module stf
     
     requires static anns;
     requires static annsthreadchecker;
-    requires data;
-    requires xyz.columnal.utility.gui;
-    requires parsers;
+    requires xyz.columnal.data;
+    requires xyz.columnal.types;
+    requires xyz.columnal.parsers;
     requires xyz.columnal.utility;
+    requires xyz.columnal.utility.gui;
+    
 
     requires com.google.common;
     requires javafx.controls;

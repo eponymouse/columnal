@@ -27,6 +27,7 @@ import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.application.Platform;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.log.ErrorHandler;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -212,7 +213,7 @@ public class EditableRecordSet extends RecordSet
 
     public static EditableRecordSet newRecordSetSingleColumn(ColumnId name, DataType type, @Value Object defaultValue) throws InternalException, UserException
     {
-        return new EditableRecordSet(Collections.<SimulationFunction<RecordSet, EditableColumn>>singletonList(type.makeImmediateColumn(name, defaultValue)::apply), () -> 0);
+        return new EditableRecordSet(Collections.<SimulationFunction<RecordSet, EditableColumn>>singletonList(ColumnUtility.makeImmediateColumn(type, name, defaultValue)::apply), () -> 0);
     }
 
     @Override

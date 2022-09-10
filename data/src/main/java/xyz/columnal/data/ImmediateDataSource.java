@@ -21,25 +21,21 @@
 package xyz.columnal.data;
 
 import annotation.qual.Value;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableAndColumnRenames;
+import xyz.columnal.id.TableId;
 import xyz.columnal.log.ErrorHandler;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.i18n.qual.Localized;
 import xyz.columnal.data.TableOperations.DeleteColumn;
-import xyz.columnal.data.datatype.DataType;
-import xyz.columnal.error.InternalException;
-import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.FormatLexer;
 import xyz.columnal.grammar.MainLexer;
 import xyz.columnal.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.TranslationUtility;
-import xyz.columnal.utility.Workers;
-import xyz.columnal.utility.Workers.Priority;
 
 import java.io.File;
-import java.util.Optional;
 
 /**
  * Created by neil on 09/11/2016.

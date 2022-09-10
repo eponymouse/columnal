@@ -27,16 +27,16 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.formula.functions.T;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.Column;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.KnownLengthRecordSet;
 import xyz.columnal.data.RecordSet;
-import xyz.columnal.data.TableId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.DataTypeValue;
@@ -44,9 +44,7 @@ import xyz.columnal.data.datatype.ListExDTV;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import xyz.columnal.grammar.DataLexer;
 import xyz.columnal.grammar.DataLexer2;
-import xyz.columnal.grammar.DataParser;
 import xyz.columnal.grammar.DataParser2;
 import xyz.columnal.jellytype.JellyType;
 import xyz.columnal.transformations.expression.ErrorAndTypeRecorderStorer;
@@ -197,7 +195,7 @@ public class TestFromDoc
                         else if (length != loadedValues.size())
                             throw new InternalException("Column length mismatch in table data for " + tableName);
                             
-                        columns.add(dataType.makeImmediateColumn(new ColumnId(columnNames[c]),
+                        columns.add(ColumnUtility.makeImmediateColumn(dataType, new ColumnId(columnNames[c]),
                             loadedValues,
                             loadedValues.get(0).getRight("No error")    
                         ));

@@ -23,16 +23,17 @@ package xyz.columnal.gui.table;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.Column;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.ImmediateDataSource;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.Table;
-import xyz.columnal.data.TableAndColumnRenames;
+import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.data.TableManager.TableMaker;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
@@ -51,7 +52,7 @@ import xyz.columnal.transformations.Aggregate;
 import xyz.columnal.transformations.Calculate;
 import xyz.columnal.data.RenameOnEdit;
 import xyz.columnal.transformations.expression.Expression;
-import xyz.columnal.transformations.expression.Expression.MultipleTableLookup;
+import xyz.columnal.transformations.MultipleTableLookup;
 import xyz.columnal.transformations.expression.IdentExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -246,7 +247,7 @@ public class TransformationEdits
                                     newValues.add(columnDetails.dataType.loadSingleItem(stringVersion.trim()));
                                 }
                                 
-                                return columnDetails.dataType.makeImmediateColumn(c.getName(), newValues.build(), columnDetails.defaultValue);
+                                return ColumnUtility.makeImmediateColumn(columnDetails.dataType, c.getName(), newValues.build(), columnDetails.defaultValue);
                             }
                             else
                                 return EditableRecordSet.copyColumn(c);

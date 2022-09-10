@@ -21,6 +21,7 @@
 package xyz.columnal.data;
 
 import com.google.common.collect.ImmutableMap;
+import xyz.columnal.id.SaveTag;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;

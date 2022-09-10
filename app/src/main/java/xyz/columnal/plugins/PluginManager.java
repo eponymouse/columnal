@@ -22,10 +22,9 @@ package xyz.columnal.plugins;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import xyz.columnal.log.Log;
 import xyz.columnal.data.PluggedContentHandler;
-import xyz.columnal.data.SaveTag;
+import xyz.columnal.id.SaveTag;
 import xyz.columnal.styled.StyledString;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.SimulationConsumer;

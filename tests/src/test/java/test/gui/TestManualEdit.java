@@ -40,6 +40,9 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.DataItemPosition;
+import xyz.columnal.id.TableId;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -98,8 +101,6 @@ import java.util.Random;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 

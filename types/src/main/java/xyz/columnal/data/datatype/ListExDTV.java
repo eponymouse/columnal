@@ -21,7 +21,6 @@
 package xyz.columnal.data.datatype;
 
 import annotation.qual.Value;
-import xyz.columnal.data.Column;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
@@ -37,11 +36,13 @@ public class ListExDTV extends ListEx
     private final int length;
     private final DataTypeValue columnType;
 
+    /*
     public ListExDTV(Column column) throws UserException, InternalException
     {
         this.length = column.getLength();
         this.columnType = column.getType();
     }
+    */
     
     public ListExDTV(int length, DataTypeValue values)
     {

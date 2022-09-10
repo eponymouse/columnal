@@ -34,7 +34,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.CellPosition;
-import xyz.columnal.data.DataItemPosition;
+import xyz.columnal.id.DataItemPosition;
 import xyz.columnal.data.Table;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.gui.table.TableDisplay;

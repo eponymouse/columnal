@@ -20,12 +20,12 @@
 
 package xyz.columnal.data;
 
-import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.datatype.DataType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableId;
 
 import java.util.function.Function;
 

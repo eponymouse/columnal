@@ -17,39 +17,27 @@
  * You should have received a copy of the GNU General Public License along 
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
-
-package xyz.columnal.data;
+package xyz.columnal.id;
 
 import annotation.identifier.qual.ExpressionIdentifier;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Utility;
-
-import java.io.Serializable;
 
 /**
  * Created by neil on 14/11/2016.
- *
- * Serializable for interface reasons, for not saving to file
  */
 @OnThread(Tag.Any)
-public class ColumnId implements Comparable<ColumnId>, Serializable, StyledShowable
+public class TableId implements Comparable<TableId>, StyledShowable
 {
-    private static final long serialVersionUID = -6813720608766860501L;
-    private final @ExpressionIdentifier String columnId;
+    private final @ExpressionIdentifier String tableId;
 
-    public ColumnId(@ExpressionIdentifier String columnId)
+    public TableId(@ExpressionIdentifier String tableId)
     {
-        this.columnId = columnId;
-    }
-
-    public static boolean validCharacter(int codePoint, boolean start)
-    {
-        return Character.isLetter(codePoint) || ((codePoint == ' ' || Character.isDigit(codePoint)) && !start);
+        this.tableId = tableId;
     }
 
     @Override
@@ -58,44 +46,43 @@ public class ColumnId implements Comparable<ColumnId>, Serializable, StyledShowa
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ColumnId tableId1 = (ColumnId) o;
+        TableId tableId1 = (TableId) o;
 
-        return columnId.equals(tableId1.columnId);
+        return tableId.equals(tableId1.tableId);
 
     }
 
     @Override
     public int hashCode()
     {
-        return columnId.hashCode();
+        return tableId.hashCode();
     }
 
     @Override
     public String toString()
     {
-        return columnId;
+        return tableId;
     }
 
     public String getOutput()
     {
-        return columnId;
+        return tableId;
     }
 
-    @SuppressWarnings("i18n")
-    public @Localized @ExpressionIdentifier String getRaw()
+    public @ExpressionIdentifier String getRaw()
     {
-        return columnId;
+        return tableId;
     }
 
     @Override
-    public int compareTo(ColumnId o)
+    public int compareTo(@NonNull TableId o)
     {
-        return columnId.compareTo(o.columnId);
+        return tableId.compareTo(o.tableId);
     }
 
     @Override
     public StyledString toStyledString()
     {
-        return StyledString.s(columnId);
+        return StyledString.s(tableId);
     }
 }

@@ -34,26 +34,6 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import xyz.columnal.data.ArrayColumnStorage;
-import xyz.columnal.data.BooleanColumnStorage;
-import xyz.columnal.data.CachedCalculatedColumn;
-import xyz.columnal.data.Column;
-import xyz.columnal.data.ColumnId;
-import xyz.columnal.data.ColumnStorage.BeforeGet;
-import xyz.columnal.data.EditableColumn;
-import xyz.columnal.data.MemoryArrayColumn;
-import xyz.columnal.data.MemoryBooleanColumn;
-import xyz.columnal.data.MemoryNumericColumn;
-import xyz.columnal.data.MemoryStringColumn;
-import xyz.columnal.data.MemoryTaggedColumn;
-import xyz.columnal.data.MemoryTemporalColumn;
-import xyz.columnal.data.MemoryRecordColumn;
-import xyz.columnal.data.NumericColumnStorage;
-import xyz.columnal.data.RecordSet;
-import xyz.columnal.data.StringColumnStorage;
-import xyz.columnal.data.TaggedColumnStorage;
-import xyz.columnal.data.TemporalColumnStorage;
-import xyz.columnal.data.RecordColumnStorage;
 import xyz.columnal.data.datatype.DataTypeValue.GetValue;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
@@ -136,83 +116,6 @@ import static xyz.columnal.data.datatype.DataType.DateTimeInfo.F.*;
  */
 public abstract class DataType implements StyledShowable
 {
-    @OnThread(Tag.Simulation)
-    public Column makeCalculatedColumn(RecordSet rs, ColumnId name, ExFunction<Integer, @Value Object> getItem, FunctionInt<DataTypeValue, DataTypeValue> addManualEdit) throws InternalException
-    {
-        return apply(new DataTypeVisitorEx<Column, InternalException>()
-        {
-            @SuppressWarnings("valuetype")
-            private <T> @Value T castTo(Class<T> cls, @Value Object value) throws InternalException
-            {
-                if (!cls.isAssignableFrom(value.getClass()))
-                    throw new InternalException("Type inconsistency: should be " + cls + " but is " + value.getClass() + " for column: " + name);
-                return cls.cast(value);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Column number(NumberInfo displayInfo) throws InternalException
-            {
-                return new CachedCalculatedColumn<Number, NumericColumnStorage>(rs, name, (BeforeGet<NumericColumnStorage> g) -> new NumericColumnStorage(displayInfo, g, false), i -> {
-                    return castTo(Number.class, getItem.apply(i));
-                }, addManualEdit);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Column text() throws InternalException
-            {
-                return new CachedCalculatedColumn<String, StringColumnStorage>(rs, name, (BeforeGet<StringColumnStorage> g) -> new StringColumnStorage(g, false), i -> {
-                    return castTo(String.class, getItem.apply(i));
-                }, addManualEdit);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Column date(DateTimeInfo dateTimeInfo) throws InternalException
-            {
-                return new CachedCalculatedColumn<TemporalAccessor, TemporalColumnStorage>(rs, name, (BeforeGet<TemporalColumnStorage> g) -> new TemporalColumnStorage(dateTimeInfo, g, false), i -> {
-                    return castTo(TemporalAccessor.class, getItem.apply(i));
-                }, addManualEdit);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Column bool() throws InternalException
-            {
-                return new CachedCalculatedColumn<Boolean, BooleanColumnStorage>(rs, name, (BeforeGet<BooleanColumnStorage> g) -> new BooleanColumnStorage(g, false), i -> {
-                    return castTo(Boolean.class, getItem.apply(i));
-                }, addManualEdit);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Column tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
-            {
-                return new CachedCalculatedColumn<@Value TaggedValue, TaggedColumnStorage>(rs, name, (BeforeGet<TaggedColumnStorage> g) -> new TaggedColumnStorage(typeName, typeVars, tags, g, false), i -> {
-                    return castTo(TaggedValue.class, getItem.apply(i));
-                }, addManualEdit);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Column record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException
-            {
-                return new CachedCalculatedColumn<@Value Record, RecordColumnStorage>(rs, name, (BeforeGet<RecordColumnStorage> g) -> new RecordColumnStorage(fields, g, false), i -> {
-                    return castTo(Record.class, getItem.apply(i));
-                }, addManualEdit);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Column array(DataType inner) throws InternalException
-            {
-                return new CachedCalculatedColumn<ListEx, ArrayColumnStorage>(rs, name, (BeforeGet<ArrayColumnStorage> g) -> new ArrayColumnStorage(inner, g, false), i -> {
-                    return castTo(ListEx.class, getItem.apply(i));
-                }, addManualEdit);
-            }
-        });
-    }
 
     public final DataTypeValue fromCollapsed(GetValue<@Value Object> get) throws InternalException
     {
@@ -224,7 +127,7 @@ public abstract class DataType implements StyledShowable
                 return new GetValue<T>()
                 {
                     @Override
-                    public @NonNull @Value T getWithProgress(int i,  Column.@Nullable ProgressListener prog) throws UserException, InternalException
+                    public @NonNull @Value T getWithProgress(int i,  @Nullable ProgressListener prog) throws UserException, InternalException
                     {
                         Object value = get.getWithProgress(i, prog);
                         if (!cls.isAssignableFrom(value.getClass()))
@@ -685,172 +588,6 @@ public abstract class DataType implements StyledShowable
 
     @Override
     public abstract int hashCode();
-    
-    public static class ColumnMaker<C extends EditableColumn, V> implements SimulationFunctionInt<RecordSet, EditableColumn>
-    {
-        private final ExBiConsumer<C, Either<String, V>> addToColumn;
-        private final ExFunction<DataParser, Either<String, V>> parseValue1;
-        private final ExFunction<DataParser2, Either<String, V>> parseValue;
-        private final BiFunctionInt<RecordSet, @Value V, C> makeColumn;
-        private final @Value V defaultValue;
-        private @MonotonicNonNull C column;
-
-        private ColumnMaker(@Value Object defaultValue, Class<V> valueClass, BiFunctionInt<RecordSet, @Value V, C> makeColumn, ExBiConsumer<C, Either<String, V>> addToColumn,  ExFunction<DataParser, Either<String, V>> parseValue1, ExFunction<DataParser2, Either<String, V>> parseValue) throws UserException, InternalException
-        {
-            this.makeColumn = makeColumn;
-            this.addToColumn = addToColumn;
-            this.parseValue1 = parseValue1;
-            this.parseValue = parseValue;
-            this.defaultValue = Utility.cast(defaultValue, valueClass);
-        }
-
-        public final EditableColumn apply(RecordSet rs) throws InternalException
-        {
-            column = makeColumn.apply(rs, defaultValue);
-            return column;
-        }
-
-        // Only valid to call after apply:
-        public void loadRow1(DataParser p) throws InternalException, UserException
-        {
-            if (column == null)
-                throw new InternalException("Calling loadRow before column creation");
-            addToColumn.accept(column, parseValue1.apply(p));
-        }
-
-        // Only valid to call after apply:
-        public void loadRow(DataParser2 p) throws InternalException, UserException
-        {
-            if (column == null)
-                throw new InternalException("Calling loadRow before column creation");
-            addToColumn.accept(column, parseValue.apply(p));
-        }
-    }
-
-    @OnThread(Tag.Simulation)
-    public SimulationFunction<RecordSet, EditableColumn> makeImmediateColumn(ColumnId columnId, List<Either<String, @Value Object>> value, @Value Object defaultValue) throws InternalException, UserException
-    {
-        return apply(new DataTypeVisitor<SimulationFunction<RecordSet, EditableColumn>>()
-        {
-            @SuppressWarnings("valuetype")
-            private <T> List<Either<String, T>> listValue(List<Either<String, @Value Object>> values, FunctionInt<@Value Object, @Value T> applyValue) throws InternalException
-            {
-                return Utility.mapListInt(values, x -> x.<@Value T>mapInt(applyValue));
-            }
-            
-            @Override
-            @OnThread(Tag.Simulation)
-            public SimulationFunction<RecordSet, EditableColumn> number(NumberInfo displayInfo) throws InternalException, UserException
-            {
-                return rs -> new MemoryNumericColumn(rs, columnId, displayInfo, listValue(value, Utility::valueNumber), Utility.cast(defaultValue, Number.class));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public SimulationFunction<RecordSet, EditableColumn> text() throws InternalException, UserException
-            {
-                return rs -> new MemoryStringColumn(rs, columnId, listValue(value, Utility::valueString), Utility.cast(defaultValue, String.class));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public SimulationFunction<RecordSet, EditableColumn> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-            {
-                return rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, listValue(value, Utility::valueTemporal), Utility.cast(defaultValue, TemporalAccessor.class));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public SimulationFunction<RecordSet, EditableColumn> bool() throws InternalException, UserException
-            {
-                return rs -> new MemoryBooleanColumn(rs, columnId, listValue(value, Utility::valueBoolean), Utility.cast(defaultValue, Boolean.class));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public SimulationFunction<RecordSet, EditableColumn> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                return rs -> new MemoryTaggedColumn(rs, columnId, typeName, typeVars, tags, listValue(value, Utility::valueTagged), Utility.cast(defaultValue, TaggedValue.class));
-            }
-            
-            @Override
-            @OnThread(Tag.Simulation)
-            public SimulationFunction<RecordSet, EditableColumn> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
-            {
-                return rs -> new MemoryRecordColumn(rs, columnId, fields, this.<@Value Record>listValue(value, (@Value Object t) -> Utility.valueRecord(t)), Utility.valueRecord(defaultValue));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public SimulationFunction<RecordSet, EditableColumn> array(@Nullable DataType inner) throws InternalException, UserException
-            {
-                if (inner == null)
-                    throw new UserException("Cannot create column with empty array type");
-                DataType innerFinal = inner;
-                return rs -> new MemoryArrayColumn(rs, columnId, innerFinal, listValue(value, Utility::valueList), Utility.cast(defaultValue, ListEx.class));
-            }
-        });
-    }
-
-    @OnThread(Tag.Simulation)
-    public ColumnMaker<?, ?> makeImmediateColumn(ColumnId columnId, @Value Object defaultValue) throws InternalException, UserException
-    {
-        return apply(new DataTypeVisitor<ColumnMaker<?, ?>>()
-        {
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnMaker<?, ?> number(NumberInfo displayInfo) throws InternalException, UserException
-            {
-                return new ColumnMaker<MemoryNumericColumn, Number>(defaultValue, Number.class, (rs, defaultValue) -> new MemoryNumericColumn(rs, columnId, displayInfo, Collections.emptyList(), defaultValue), (c, n) -> c.add(n), p -> loadNumber(p), p -> loadNumber(p));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnMaker<?, ?> text() throws InternalException, UserException
-            {
-                return new ColumnMaker<MemoryStringColumn, String>(defaultValue, String.class, (rs, defaultValue) -> new MemoryStringColumn(rs, columnId, Collections.emptyList(), defaultValue), (c, s) -> c.add(s), p -> loadString(p), p -> loadString(p));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnMaker<?, ?> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-            {
-                return new ColumnMaker<MemoryTemporalColumn, TemporalAccessor>(defaultValue, TemporalAccessor.class, (rs, defaultValue) -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), p -> dateTimeInfo.parse(p), p -> dateTimeInfo.parse(p));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnMaker<?, ?> bool() throws InternalException, UserException
-            {
-                return new ColumnMaker<MemoryBooleanColumn, Boolean>(defaultValue, Boolean.class, (rs, defaultValue) -> new MemoryBooleanColumn(rs, columnId, Collections.emptyList(), defaultValue), (c, b) -> c.add(b), p -> loadBool(p), p -> loadBool(p));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnMaker<?, ?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                return new ColumnMaker<MemoryTaggedColumn, TaggedValue>(defaultValue, TaggedValue.class, (rs, defaultValue) -> new MemoryTaggedColumn(rs, columnId, typeName, typeVars, tags, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), p -> loadTaggedValue(tags, p), p -> loadTaggedValue(tags, p));
-            }
-            
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnMaker<?, ?> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
-            {
-                return new ColumnMaker<MemoryRecordColumn, @Value Record>(defaultValue, (Class<@Value Record>)Record.class, (RecordSet rs, @Value Record defaultValue) -> new MemoryRecordColumn(rs, columnId, fields, defaultValue), (MemoryRecordColumn c, Either<String, @Value Record> t) -> c.add(t), p -> loadRecord(fields, p, false), p -> loadRecord(fields, p, false));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnMaker<?, ?> array(@Nullable DataType inner) throws InternalException, UserException
-            {
-                if (inner == null)
-                    throw new UserException("Cannot have column with type of empty array");
-
-                DataType innerFinal = inner;
-                return new ColumnMaker<MemoryArrayColumn, ListEx>(defaultValue, ListEx.class, (rs, defaultValue) -> new MemoryArrayColumn(rs, columnId, innerFinal, Collections.emptyList(), defaultValue), (c, v) -> c.add(v), p -> loadArray(innerFinal, p), p -> loadArray(innerFinal, p));
-            }
-        });
-    }
 
     // Tries a parse and if it fails, returns null.  Should only be used for single-token parses,
     // or those where you stop trying after failure, because I'm not sure what happens if you're partway
@@ -913,7 +650,7 @@ public abstract class DataType implements StyledShowable
         }
     }
 
-    private static Either<String, @Value ListEx> loadArray(DataType innerFinal, DataParser p) throws UserException, InternalException
+    public static Either<String, @Value ListEx> loadArray(DataType innerFinal, DataParser p) throws UserException, InternalException
     {
         Either<String, OpenSquareContext> openSquare = tryParse(p, DataParser::openSquareOrInvalid, OpenSquareOrInvalidContext::invalidItem, OpenSquareOrInvalidContext::openSquare);
         if (openSquare == null)
@@ -934,7 +671,7 @@ public abstract class DataType implements StyledShowable
         });
     }
 
-    private static Either<String, @Value ListEx> loadArray(DataType innerFinal, DataParser2 p) throws UserException, InternalException
+    public static Either<String, @Value ListEx> loadArray(DataType innerFinal, DataParser2 p) throws UserException, InternalException
     {
         Either<String, DataParser2.OpenSquareContext> openSquare = tryParse(p, DataParser2::openSquareOrInvalid, DataParser2.OpenSquareOrInvalidContext::invalidItem, DataParser2.OpenSquareOrInvalidContext::openSquare);
         if (openSquare == null)
@@ -955,7 +692,7 @@ public abstract class DataType implements StyledShowable
         });
     }
 
-    private static Either<String, @Value Record> loadRecord(ImmutableMap<@ExpressionIdentifier String, DataType> fields, DataParser p, boolean consumedRoundBrackets) throws UserException, InternalException
+    public static Either<String, @Value Record> loadRecord(ImmutableMap<@ExpressionIdentifier String, DataType> fields, DataParser p, boolean consumedRoundBrackets) throws UserException, InternalException
     {
         @Nullable Either<String, Object> openRound;
         if (consumedRoundBrackets)
@@ -996,7 +733,7 @@ public abstract class DataType implements StyledShowable
         });
     }
 
-    private static Either<String, @Value Record> loadRecord(ImmutableMap<@ExpressionIdentifier String, DataType> fields, DataParser2 p, boolean consumedRoundBrackets) throws UserException, InternalException
+    public static Either<String, @Value Record> loadRecord(ImmutableMap<@ExpressionIdentifier String, DataType> fields, DataParser2 p, boolean consumedRoundBrackets) throws UserException, InternalException
     {
         @Nullable Either<String, Object> openRound;
         if (consumedRoundBrackets)
@@ -1037,7 +774,7 @@ public abstract class DataType implements StyledShowable
         });
     }
 
-    private static Either<String, @Value Boolean> loadBool(DataParser p) throws UserException
+    public static Either<String, @Value Boolean> loadBool(DataParser p) throws UserException
     {
         Either<String, BoolContext> boolContext = tryParse(p, DataParser::boolOrInvalid, BoolOrInvalidContext::invalidItem, BoolOrInvalidContext::bool);
         if (boolContext == null)
@@ -1045,7 +782,7 @@ public abstract class DataType implements StyledShowable
         return boolContext.<@Value Boolean>map(b -> DataTypeUtility.value(b.getText().trim().toLowerCase().equals("true")));
     }
 
-    private static Either<String, @Value Boolean> loadBool(DataParser2 p) throws UserException
+    public static Either<String, @Value Boolean> loadBool(DataParser2 p) throws UserException
     {
         Either<String, DataParser2.BoolContext> boolContext = tryParse(p, DataParser2::boolOrInvalid, DataParser2.BoolOrInvalidContext::invalidItem, DataParser2.BoolOrInvalidContext::bool);
         if (boolContext == null)
@@ -1053,7 +790,7 @@ public abstract class DataType implements StyledShowable
         return boolContext.<@Value Boolean>map(b -> DataTypeUtility.value(b.getText().trim().toLowerCase().equals("true")));
     }
 
-    private static Either<String, @Value String> loadString(DataParser p) throws UserException
+    public static Either<String, @Value String> loadString(DataParser p) throws UserException
     {
         Either<String, StringContext> stringContext = tryParse(p, DataParser::stringOrInvalid, StringOrInvalidContext::invalidItem, StringOrInvalidContext::string);
         if (stringContext == null)
@@ -1061,7 +798,7 @@ public abstract class DataType implements StyledShowable
         return stringContext.<@Value String>map(string -> DataTypeUtility.value(string.STRING().getText()));
     }
 
-    private static Either<String, @Value String> loadString(DataParser2 p) throws UserException
+    public static Either<String, @Value String> loadString(DataParser2 p) throws UserException
     {
         Either<String, DataParser2.StringContext> stringContext = tryParse(p, DataParser2::stringOrInvalid, DataParser2.StringOrInvalidContext::invalidItem, DataParser2.StringOrInvalidContext::string);
         if (stringContext == null)
@@ -1069,7 +806,7 @@ public abstract class DataType implements StyledShowable
         return stringContext.<@Value String>map(string -> DataTypeUtility.value(string.STRING().getText()));
     }
 
-    private static Either<String, @Value Number> loadNumber(DataParser p) throws UserException, InternalException
+    public static Either<String, @Value Number> loadNumber(DataParser p) throws UserException, InternalException
     {
         Either<String, NumberContext> numberContext = tryParse(p, DataParser::numberOrInvalid, NumberOrInvalidContext::invalidItem, NumberOrInvalidContext::number);
         if (numberContext == null)
@@ -1077,7 +814,7 @@ public abstract class DataType implements StyledShowable
         return numberContext.<@Value Number>mapEx(number -> Utility.parseNumber(number.getText().trim()));
     }
 
-    private static Either<String, @Value Number> loadNumber(DataParser2 p) throws UserException, InternalException
+    public static Either<String, @Value Number> loadNumber(DataParser2 p) throws UserException, InternalException
     {
         Either<String, DataParser2.NumberContext> numberContext = tryParse(p, DataParser2::numberOrInvalid, DataParser2.NumberOrInvalidContext::invalidItem, DataParser2.NumberOrInvalidContext::number);
         if (numberContext == null)
@@ -1085,7 +822,7 @@ public abstract class DataType implements StyledShowable
         return numberContext.<@Value Number>mapEx(number -> Utility.parseNumber(number.getText().trim()));
     }
 
-    private static Either<String, TaggedValue> loadTaggedValue(ImmutableList<TagType<DataType>> tags, DataParser p) throws UserException, InternalException
+    public static Either<String, TaggedValue> loadTaggedValue(ImmutableList<TagType<DataType>> tags, DataParser p) throws UserException, InternalException
     {
         Either<String, TagContext> tagContext = tryParse(p, DataParser::tagOrInvalid, TagOrInvalidContext::invalidItem, TagOrInvalidContext::tag);
         if (tagContext == null)
@@ -1116,7 +853,7 @@ public abstract class DataType implements StyledShowable
         });
     }
 
-    private static Either<String, TaggedValue> loadTaggedValue(ImmutableList<TagType<DataType>> tags, DataParser2 p) throws UserException, InternalException
+    public static Either<String, TaggedValue> loadTaggedValue(ImmutableList<TagType<DataType>> tags, DataParser2 p) throws UserException, InternalException
     {
         Either<String, DataParser2.TagContext> tagContext = tryParse(p, DataParser2::tagOrInvalid, DataParser2.TagOrInvalidContext::invalidItem, DataParser2.TagOrInvalidContext::tag);
         if (tagContext == null)

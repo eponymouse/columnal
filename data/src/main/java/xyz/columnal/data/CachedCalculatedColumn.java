@@ -20,6 +20,7 @@
 
 package xyz.columnal.data;
 
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import xyz.columnal.data.ColumnStorage.BeforeGet;
@@ -33,7 +34,6 @@ import xyz.columnal.utility.ExFunction;
 import xyz.columnal.utility.FunctionInt;
 import xyz.columnal.utility.Utility;
 
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**

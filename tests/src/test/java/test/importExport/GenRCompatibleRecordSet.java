@@ -26,7 +26,8 @@ import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.DataTestUtil;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.KnownLengthRecordSet;
@@ -88,7 +89,7 @@ public class GenRCompatibleRecordSet extends Generator<RCompatibleRecordSet>
                 DataTypeAndValueMaker type = dataTypeMaker.makeType();
                 @SuppressWarnings("identifier")
                 @ExpressionIdentifier String columnId = "Col " + nextCol[0]++;
-                return type.getDataType().makeImmediateColumn(new ColumnId(columnId), DataTestUtil.<Either<String, @Value Object>>makeList(random, numRows, numRows, () -> Either.<String, @Value Object>right(type.makeValue())), type.makeValue());
+                return ColumnUtility.makeImmediateColumn(type.getDataType(), new ColumnId(columnId), DataTestUtil.<Either<String, @Value Object>>makeList(random, numRows, numRows, () -> Either.<String, @Value Object>right(type.makeValue())), type.makeValue());
             }), numRows), dataTypeMaker.getTypeManager(), tibbleOnly ? ImmutableSet.of(TableType.TIBBLE) : ImmutableSet.of(TableType.DATA_FRAME, TableType.TIBBLE));
         }
         catch (Exception e)

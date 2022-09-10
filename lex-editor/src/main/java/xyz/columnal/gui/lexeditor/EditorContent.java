@@ -31,7 +31,6 @@ import javafx.scene.Node;
 import javafx.scene.text.Text;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.Table.Display;
 import xyz.columnal.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
 import xyz.columnal.gui.lexeditor.Lexer.LexerResult;
 import xyz.columnal.gui.lexeditor.Lexer.LexerResult.CaretPos;

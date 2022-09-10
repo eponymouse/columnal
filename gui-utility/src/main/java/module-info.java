@@ -4,7 +4,7 @@ module xyz.columnal.utility.gui
 
     requires static anns;
     requires static annsthreadchecker;
-    requires parsers;
+    requires xyz.columnal.parsers;
     requires xyz.columnal.utility;
 
     requires com.google.common;

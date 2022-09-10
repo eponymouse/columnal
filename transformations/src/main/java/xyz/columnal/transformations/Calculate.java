@@ -38,14 +38,16 @@ import xyz.columnal.grammar.TransformationParser;
 import xyz.columnal.grammar.TransformationParser.TransformContext;
 import xyz.columnal.grammar.TransformationParser.TransformItemContext;
 import xyz.columnal.grammar.Versions.ExpressionVersion;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableAndColumnRenames;
+import xyz.columnal.id.TableId;
 import xyz.columnal.loadsave.OutputBuilder;
 import xyz.columnal.transformations.expression.BracketedStatus;
 import xyz.columnal.transformations.expression.ErrorAndTypeRecorderStorer;
 import xyz.columnal.transformations.expression.EvaluateState;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.Expression.ColumnLookup;
-import xyz.columnal.transformations.expression.Expression.MultipleTableLookup;
-import xyz.columnal.transformations.expression.Expression.MultipleTableLookup.CalculationEditor;
+import xyz.columnal.transformations.MultipleTableLookup.CalculationEditor;
 import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.expression.ExpressionUtil;
 import xyz.columnal.transformations.expression.TypeState;
@@ -221,7 +223,7 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
                 throw new UserException(StyledString.concat(StyledString.s("Error in " + columnId.getRaw() + " expression: "), checkErrors.toPlain().isEmpty() ? StyledString.s("Invalid expression") : checkErrors)); // A bit redundant to throw and catch again below, but control flow will pan out right
             }
             @NonNull DataType typeFinal = concrete;
-            return rs -> typeFinal.makeCalculatedColumn(rs, columnId, index -> expression.calculateValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index))).value, t -> addManualEditSet(columnId, t));
+            return rs -> ColumnUtility.makeCalculatedColumn(typeFinal, rs, columnId, index -> expression.calculateValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index))).value, t -> addManualEditSet(columnId, t));
         }
         catch (UserException e)
         {

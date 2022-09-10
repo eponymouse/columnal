@@ -23,7 +23,7 @@ package xyz.columnal.data;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.Column.ProgressListener;
+import xyz.columnal.data.datatype.ProgressListener;;
 import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;

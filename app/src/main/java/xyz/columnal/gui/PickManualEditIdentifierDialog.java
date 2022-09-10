@@ -32,7 +32,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.ColumnId;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.gui.AutoComplete.Completion;
 import xyz.columnal.gui.AutoComplete.CompletionListener;
 import xyz.columnal.gui.AutoComplete.WhitespacePolicy;
