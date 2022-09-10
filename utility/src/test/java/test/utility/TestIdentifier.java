@@ -20,7 +20,6 @@
 
 package test.utility;
 
-import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import xyz.columnal.utility.IdentifierUtility;

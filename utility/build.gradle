@@ -9,5 +9,24 @@ dependencies {
     implementation libs.log4j.api
     implementation libs.log4j.core
     implementation libs.stringsimilarity
+    
+    testImplementation libs.junit
 }
 description = 'utility'
+
+test {
+    checkerFramework {
+        checkers = []
+        extraJavacArgs = []
+    }
+    
+    useJUnit()
+
+    scanForTestClasses = false
+    filter {
+        includeTestsMatching "Test*"
+        includeTestsMatching "Prop*"
+        excludeTestsMatching "*\$*"
+    }
+    maxParallelForks = Runtime.runtime.availableProcessors() / 2
+}

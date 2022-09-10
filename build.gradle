@@ -65,6 +65,13 @@ subprojects { subproject ->
       compileOnly project(':anns-threadchecker')
       annotationProcessor project(':threadchecker')
       compileOnly project(':threadchecker')
+
+      testAnnotationProcessor project(':anns')
+      testCompileOnly project(':anns')
+      testAnnotationProcessor project(':anns-threadchecker')
+      testCompileOnly project(':anns-threadchecker')
+      testAnnotationProcessor project(':threadchecker')
+      testCompileOnly project(':threadchecker')
     }
     build.dependsOn ':xml:build'
 
