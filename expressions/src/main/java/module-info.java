@@ -8,7 +8,7 @@ module xyz.columnal.expressions
     
     requires static anns;
     requires static annsthreadchecker;
-    //requires xyz.columnal.data;
+    requires xyz.columnal.identifiers;
     requires xyz.columnal.parsers;
     requires xyz.columnal.types;
     requires xyz.columnal.utility;

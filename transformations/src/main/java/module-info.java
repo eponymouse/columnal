@@ -8,6 +8,7 @@ module xyz.columnal.transformations
     requires xyz.columnal.data;
     requires xyz.columnal.expressions;
     requires xyz.columnal.functions;
+    requires xyz.columnal.identifiers;
     requires xyz.columnal.utility.gui;
     requires xyz.columnal.parsers;
     requires xyz.columnal.rinterop;

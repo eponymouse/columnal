@@ -1,6 +1,7 @@
 dependencies {
     implementation project(':parsers')
     implementation project(':utility')
+    implementation project(':identifiers')
     implementation libs.guava
     implementation libs.commons.io
     implementation libs.javaSMT

@@ -5,6 +5,7 @@ module xyz.columnal.rinterop
     requires static anns;
     requires static annsthreadchecker;
     requires xyz.columnal.data;
+    requires xyz.columnal.identifiers;
     requires xyz.columnal.types;
     requires xyz.columnal.utility;
     

@@ -1,7 +1,8 @@
 dependencies {
+    implementation project(':identifiers')
     implementation project(':parsers')
-    implementation project(':utility')
     implementation project(':types')
+    implementation project(':utility')
     implementation libs.guava
     implementation libs.antlr
     implementation libs.commons.lang3

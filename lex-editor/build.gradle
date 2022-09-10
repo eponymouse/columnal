@@ -2,6 +2,7 @@ dependencies {
     implementation project(':utility')
     implementation project(':gui-utility')
     implementation project(':expressions')
+    implementation project(':identifiers')
     implementation project(':types')
     implementation project(':data')
     implementation project(':parsers')
@@ -9,9 +10,6 @@ dependencies {
     implementation libs.commons.lang3
     implementation libs.controlsfx
     implementation libs.stringsimilarity
-    compileOnly project(':anns')
-    compileOnly project(':anns-threadchecker')
-    compileOnly project(':threadchecker')
 }
 
 description = 'lex-editor'

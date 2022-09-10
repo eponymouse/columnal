@@ -1,4 +1,5 @@
 dependencies {
+    implementation project(':identifiers')
     implementation project(':utility')
     implementation project(':gui-utility')
     implementation project(':data')

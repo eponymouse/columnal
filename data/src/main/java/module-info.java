@@ -5,9 +5,11 @@ module xyz.columnal.data
 
     requires static anns;
     requires static annsthreadchecker;
+    requires xyz.columnal.identifiers;
     requires xyz.columnal.parsers;
-    requires xyz.columnal.utility;
     requires xyz.columnal.types;
+    requires xyz.columnal.utility;
+    
 
     requires antlr4.runtime;
     requires com.google.common;

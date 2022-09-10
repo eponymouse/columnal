@@ -4,6 +4,7 @@ dependencies {
     implementation project(':parsers')
     implementation project(':data')
     implementation project(':expressions')
+    implementation project(':identifiers')
     implementation project(':functions')
     implementation project(':r-interop')
     implementation project(':types')

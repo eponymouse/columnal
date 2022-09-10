@@ -1,7 +1,8 @@
 dependencies {
-    implementation project(':utility')
     implementation project(':data')
+    implementation project(':identifiers')
     implementation project(':types')
+    implementation project(':utility')
     implementation libs.guava
     implementation libs.commons.io
     implementation libs.commons.lang3

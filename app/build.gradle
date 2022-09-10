@@ -13,6 +13,7 @@ dependencies {
     implementation project(':stf')
     implementation project(':expressions')
     implementation project(':functions')
+    implementation project(':identifiers')
     implementation project(':lex-editor')
     implementation project(':transformations')
     implementation project(':r-interop')

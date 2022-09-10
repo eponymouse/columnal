@@ -2,7 +2,6 @@ module xyz.columnal.types
 {
     exports xyz.columnal.data.datatype;
     exports xyz.columnal.data.unit;
-    exports xyz.columnal.id;
     exports xyz.columnal.jellytype;
     exports xyz.columnal.loadsave;
     exports xyz.columnal.typeExp;
@@ -12,6 +11,7 @@ module xyz.columnal.types
     requires static annsthreadchecker;
     requires xyz.columnal.parsers;
     requires xyz.columnal.utility;
+    requires xyz.columnal.identifiers;
 
     requires antlr4.runtime;
     requires com.google.common;
