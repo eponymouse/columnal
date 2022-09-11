@@ -19,5 +19,6 @@ module xyz.columnal.transformations
     requires javafx.base;
     requires javafx.controls;
     requires javafx.graphics;
-    //requires static org.checkerframework.checker;
+    requires static org.checkerframework.checker.qual;
+    requires antlr4.runtime;
 }

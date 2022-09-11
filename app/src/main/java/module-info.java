@@ -25,8 +25,9 @@ module xyz.columnal.app
     
     requires controlsfx;
     requires com.google.common;
-    //requires static org.checkerframework.checker;
+    requires static org.checkerframework.checker.qual;
     requires org.jsoup;
     requires poi;
     requires poi.ooxml;
+    requires antlr4.runtime;
 }

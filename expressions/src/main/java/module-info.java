@@ -13,8 +13,8 @@ module xyz.columnal.expressions
     requires xyz.columnal.types;
     requires xyz.columnal.utility;
 
-    //requires common;
+    requires common;
     requires com.google.common;
     requires javafx.graphics;
-    //requires static org.checkerframework.checker;
+    requires static org.checkerframework.checker.qual;
 }

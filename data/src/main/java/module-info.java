@@ -16,5 +16,5 @@ module xyz.columnal.data
     //requires common;
     requires javafx.graphics;
     requires one.util.streamex;
-    //requires static org.checkerframework.checker;
+    requires static org.checkerframework.checker.qual;
 }

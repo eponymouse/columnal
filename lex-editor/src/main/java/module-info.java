@@ -19,5 +19,6 @@ module xyz.columnal.lexeditor
     requires javafx.controls;
     requires javafx.graphics;
     requires javafx.web;
-    //requires static org.checkerframework.checker;
+    requires static org.checkerframework.checker.qual;
+    requires controlsfx;
 }

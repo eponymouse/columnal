@@ -16,7 +16,7 @@ def projectsToJavaFX = [
 ]
 
 subprojects { subproject ->
-  if (!subproject.name.startsWith("ann") && !subproject.name.equals("threadchecker") && !subproject.name.endsWith("tests") && !subproject.name.equals("xml")) {
+  if (!subproject.name.startsWith("ann") && !subproject.name.contains("checker") && !subproject.name.endsWith("tests") && !subproject.name.equals("xml")) {
     apply plugin: 'java-library'
     apply plugin: 'org.checkerframework'
     apply plugin: 'org.openjfx.javafxplugin'
@@ -63,6 +63,8 @@ subprojects { subproject ->
       compileOnly project(':anns')
       annotationProcessor project(':anns-threadchecker')
       compileOnly project(':anns-threadchecker')
+      annotationProcessor project(':checkers')
+      compileOnly project(':checkers')
       annotationProcessor project(':threadchecker')
       compileOnly project(':threadchecker')
 

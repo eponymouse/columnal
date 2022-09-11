@@ -9,14 +9,13 @@ module xyz.columnal.types
 
     requires static anns;
     requires static annsthreadchecker;
+    requires static org.checkerframework.checker.qual;
     requires xyz.columnal.parsers;
     requires xyz.columnal.utility;
     requires xyz.columnal.identifiers;
 
     requires antlr4.runtime;
     requires com.google.common;
-    //requires common;
     requires javafx.graphics;
     requires one.util.streamex;
-    //requires static org.checkerframework.checker;
 }

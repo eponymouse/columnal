@@ -1,0 +1,24 @@
+repositories {
+  mavenCentral()
+}
+
+apply plugin: 'java-library'
+
+configurations {
+    // Solve issue with XOM exporting duplicate package to JDK:
+    all {
+        exclude group: 'xml-apis', module: 'xml-apis'
+        //exclude group: 'org.checkerframework', module: 'org.objectweb.asm'
+    }
+}
+
+dependencies {
+    implementation project(':anns')
+    implementation libs.xom
+    // We must make this dependencies explicit because we're actually compiling
+    // against the checkerframework in this module:
+    implementation libs.checkerframework
+    implementation libs.checkerframework.qual
+}
+
+description = 'checkers'

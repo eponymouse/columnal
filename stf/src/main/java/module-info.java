@@ -17,6 +17,6 @@ module xyz.columnal.stf
     requires com.google.common;
     requires javafx.controls;
     requires javafx.graphics;
-    //requires static org.checkerframework.checker;
     requires wellbehavedfx;
+    requires static org.checkerframework.checker.qual;
 }
