@@ -6,6 +6,7 @@ dependencies {
     testImplementation project(":transformations")
     testImplementation project(":types")
     testImplementation project(":utility")
+    testImplementation project(":xml")
     testImplementation libs.guava
     testImplementation libs.streamex
 
@@ -27,6 +28,8 @@ dependencies {
 }
 
 description = 'tests-data'
+
+sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/resources/main')
 
 test {
     maxParallelForks = Runtime.runtime.availableProcessors() / 2
