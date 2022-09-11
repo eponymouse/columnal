@@ -109,7 +109,8 @@ public class MultipleTableLookup implements ColumnLookup
                     columnsInUs = ourTable.getData().getColumnIds();
                 else
                     columnsInUs = ImmutableList.of();
-            } else
+            }
+            else
                 columnsInUs = ImmutableList.of();
 
             columnsFromSrc = srcTable == null ? ImmutableList.of() : srcTable.getData().getColumnIds();
@@ -126,7 +127,8 @@ public class MultipleTableLookup implements ColumnLookup
                     }
                 });
             }
-        } catch (InternalException | UserException e)
+        }
+        catch (InternalException | UserException e)
         {
             if (e instanceof InternalException)
                 Log.log(e);
@@ -160,7 +162,8 @@ public class MultipleTableLookup implements ColumnLookup
                         return IdentExpression.column(getColumnId());
                     }
                 });
-            } catch (InternalException | UserException e)
+            }
+            catch (InternalException | UserException e)
             {
                 if (e instanceof InternalException)
                     Log.log(e);
@@ -182,7 +185,8 @@ public class MultipleTableLookup implements ColumnLookup
                         return IdentExpression.column(getColumnId());
                     }
                 });
-            } catch (InternalException | UserException e)
+            }
+            catch (InternalException | UserException e)
             {
                 if (e instanceof InternalException)
                     Log.log(e);
@@ -217,10 +221,12 @@ public class MultipleTableLookup implements ColumnLookup
                 {
                     boolean isUsOrSrc = Objects.equals(us, t.getId()) || (srcTable != null && Objects.equals(t.getId(), srcTable.getId()));
                     return t.getData().getColumns().stream().<Pair<@Nullable TableId, ColumnId>>map(c -> new Pair<@Nullable TableId, ColumnId>(isUsOrSrc ? null : t.getId(), c.getName()));
-                } catch (UserException e)
+                }
+                catch (UserException e)
                 {
                     return Stream.<Pair<@Nullable TableId, ColumnId>>empty();
-                } catch (InternalException e)
+                }
+                catch (InternalException e)
                 {
                     Log.log(e);
                     return Stream.<Pair<@Nullable TableId, ColumnId>>empty();
@@ -253,7 +259,8 @@ public class MultipleTableLookup implements ColumnLookup
             {
                 if (srcTable != null)
                     rs = new Pair<>(srcTable.getId(), srcTable.getData());
-            } else
+            }
+            else
             {
                 Table table = tableManager.getSingleTableOrNull(tableId);
                 if (table != null)
@@ -268,7 +275,8 @@ public class MultipleTableLookup implements ColumnLookup
                 DataTypeValue columnType = column.getType();
                 return new FoundColumn(rs.getFirst(), srcTable != null && srcTable.getId().equals(rs.getFirst()), columnType, checkRedefined(expression, tableId, columnId));
             }
-        } catch (InternalException | UserException e)
+        }
+        catch (InternalException | UserException e)
         {
             Log.log(e);
         }
@@ -292,7 +300,8 @@ public class MultipleTableLookup implements ColumnLookup
                 {
                     return new Pair<>(StyledString.concat(StyledString.s("Note: column "), StyledString.styled(c.getName().getRaw(), new StyledCSS("column-reference")), StyledString.s(" is re-calculated in this table, but this reference will use the value from the source table.")), getFixForIdent("column", ImmutableList.of(columnId.getRaw()), expression));
                 }
-            } catch (InternalException | UserException e)
+            }
+            catch (InternalException | UserException e)
             {
                 if (e instanceof InternalException)
                     Log.log(e);

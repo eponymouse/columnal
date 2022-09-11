@@ -590,7 +590,10 @@ public class Utility
         {
             return Optional.of(Long.valueOf(number));
         }
-        catch (NumberFormatException ex) { }
+        catch (NumberFormatException ex)
+        {
+            // Not a long, then
+        }
         // Last try: big decimal (and re-throw if not)
         try
         {

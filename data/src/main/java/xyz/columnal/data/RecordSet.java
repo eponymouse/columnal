@@ -269,10 +269,16 @@ public abstract class RecordSet
 
     public String debugGetVals(int i)
     {
-        return columns.stream().map(c -> { try
-        {
-            return c.getName().getRaw() + ":\"" + c.getType().getCollapsed(i).toString() + "\"";
-        }catch (Exception e) { return "ERR:" + e.getLocalizedMessage(); }}).collect(Collectors.joining(", "));
+        return columns.stream().map(c -> { 
+            try
+            {
+                return c.getName().getRaw() + ":\"" + c.getType().getCollapsed(i).toString() + "\"";
+            }
+            catch (Exception e)
+            {
+                return "ERR:" + e.getLocalizedMessage();
+            }
+        }).collect(Collectors.joining(", "));
     }
 
     @OnThread(Tag.Any)

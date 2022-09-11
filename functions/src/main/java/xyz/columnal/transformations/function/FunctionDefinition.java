@@ -182,7 +182,7 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
                     TypeClassRequirements typeClassRequirements = TypeClassRequirements.empty();
                     for (String constraint : constraints)
                     {
-                        if (constraint.endsWith(" " + typeArg));
+                        if (constraint.endsWith(" " + typeArg))
                         {
                             typeClassRequirements = TypeClassRequirements.union(typeClassRequirements,
                                 TypeClassRequirements.require(StringUtils.removeEnd(constraint, " " + typeArg), functionName));

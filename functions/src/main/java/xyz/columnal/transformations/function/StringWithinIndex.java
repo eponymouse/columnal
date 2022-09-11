@@ -63,6 +63,7 @@ public class StringWithinIndex //extends FunctionDefinition
                 {
                     while (calcNext())
                     {
+                        // Processing is done in calcNext()
                     }
                     return charIndexes.size();
                 }
@@ -86,6 +87,7 @@ public class StringWithinIndex //extends FunctionDefinition
                 {
                     while (index < codepointIndexes.size() && calcNext())
                     {
+                        // Processing is done in calcNext()
                     }
                     return DataTypeUtility.value(codepointIndexes.get(index));
                 }

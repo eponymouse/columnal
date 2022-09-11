@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<!--
+  ~ Columnal: Safer, smoother data table processing.
+  ~ Copyright (c) Neil Brown, 2016-2020, 2022.
+  ~
+  ~ This file is part of Columnal.
+  ~
+  ~ Columnal is free software: you can redistribute it and/or modify it under
+  ~ the terms of the GNU General Public License as published by the Free
+  ~ Software Foundation, either version 3 of the License, or (at your option)
+  ~ any later version.
+  ~
+  ~ Columnal is distributed in the hope that it will be useful, but WITHOUT 
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
+  ~ more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License along 
+  ~ with Columnal. If not, see <https://www.gnu.org/licenses/>.
+  -->
+<!DOCTYPE module PUBLIC
+        "-//Puppy Crawl//DTD Check Configuration 1.2//EN"
+        "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+<module name="Checker">
+    <module name="SuppressWarningsFilter"/>
+    <module name="TreeWalker">
+        <module name="SuppressWarningsHolder"/>
+        <module name="SuppressWarnings">
+            <property name="id" value="checkstyle:suppresswarnings"/>
+        </module>
+
+        <module name="AvoidNestedBlocks">
+            <property name="allowInSwitchCase" value="true"/>
+        </module>
+        <module name="AvoidStarImport"/>
+        <!-- <module name="ClassTypeParameterName"/> -->
+        <!-- Not everything static and final is to my mind a constant: -->
+        <!-- <module name="ConstantName"/> -->
+        <module name="EmptyBlock">
+            <property name="id" value="checkstyle:emptyblock"/>
+            <property name="option" value="text"/>
+        </module>
+        <module name="EmptyCatchBlock"/>
+        <!-- We should activate this before upgrading to Java 17: -->
+        <!-- <module name="IllegalIdentifierName"> -->
+            <!-- Remove case insensitivity.  Why is it a problem to have a name Record? -->
+            <!-- <property name="format" value="^(?!(record|yield|var|permits|sealed|_)$).+$"/>
+        </module> -->
+        <!-- <module name="InterfaceTypeParameterName"/> -->
+        <!-- <module name="MemberName"/> -->
+        <!-- <module name="MethodName"/> -->
+        <!-- <module name="MethodTypeParameterName"/> -->
+        <module name="PackageName"/>
+        <module name="RightCurly">
+            <property name="option" value="alone"/>
+        </module>
+        <!-- <module name="StaticVariableName"/> -->
+        <!-- <module name="TypeName"/> -->
+    </module>
+</module>

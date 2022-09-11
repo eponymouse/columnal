@@ -38,6 +38,10 @@ import javafx.scene.text.TextFlow;
 import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Window;
+import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.DataSource;
+import xyz.columnal.data.ImmediateDataSource;
+import xyz.columnal.data.TableManager;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -50,7 +54,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
-import xyz.columnal.data.*;
 import xyz.columnal.gui.grid.GridAreaCellPosition;
 import xyz.columnal.importers.GuessFormat.ImportInfo;
 import xyz.columnal.importers.GuessFormat.TrimChoice;
@@ -381,7 +384,8 @@ public class HTMLImporter implements Importer
                         }
                     };
                     return makeDataSource;
-                } else
+                }
+                else
                     return null;
             }
         });

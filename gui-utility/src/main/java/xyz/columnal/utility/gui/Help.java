@@ -36,7 +36,8 @@ import xyz.columnal.utility.ResourceUtility;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.*;
+import java.util.List;
+import java.util.ResourceBundle;
 import java.util.concurrent.ExecutionException;
 
 /**

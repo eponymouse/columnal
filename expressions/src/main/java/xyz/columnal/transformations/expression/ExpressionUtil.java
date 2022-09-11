@@ -25,6 +25,46 @@ import annotation.recorded.qual.Recorded;
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import xyz.columnal.grammar.ExpressionParser.AddSubtractExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.AndExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.AnyContext;
+import xyz.columnal.grammar.ExpressionParser.ArrayExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.BooleanLiteralContext;
+import xyz.columnal.grammar.ExpressionParser.BracketedExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.CallExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.ColumnRefContext;
+import xyz.columnal.grammar.ExpressionParser.ConstructorContext;
+import xyz.columnal.grammar.ExpressionParser.CustomLiteralExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.DefineExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.DefinitionContext;
+import xyz.columnal.grammar.ExpressionParser.DivideExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.ExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.FieldAccessExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.GreaterThanExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.HasTypeExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.IfThenElseExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.ImplicitLambdaParamContext;
+import xyz.columnal.grammar.ExpressionParser.InvalidOpExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.InvalidOpItemContext;
+import xyz.columnal.grammar.ExpressionParser.LambdaExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.LessThanExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.MatchClauseContext;
+import xyz.columnal.grammar.ExpressionParser.MatchContext;
+import xyz.columnal.grammar.ExpressionParser.NotEqualExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.NumericLiteralContext;
+import xyz.columnal.grammar.ExpressionParser.OrExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.PatternContext;
+import xyz.columnal.grammar.ExpressionParser.PlusMinusPatternContext;
+import xyz.columnal.grammar.ExpressionParser.RaisedExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.RecordExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.StandardFunctionContext;
+import xyz.columnal.grammar.ExpressionParser.StringConcatExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.StringLiteralContext;
+import xyz.columnal.grammar.ExpressionParser.TableIdContext;
+import xyz.columnal.grammar.ExpressionParser.TimesExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.TopLevelExpressionContext;
+import xyz.columnal.grammar.ExpressionParser.UnfinishedContext;
+import xyz.columnal.grammar.ExpressionParser.VarRefContext;
 import xyz.columnal.log.Log;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
@@ -43,7 +83,6 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.ExpressionLexer;
 import xyz.columnal.grammar.ExpressionLexer2;
 import xyz.columnal.grammar.ExpressionParser;
-import xyz.columnal.grammar.ExpressionParser.*;
 import xyz.columnal.grammar.ExpressionParser2;
 import xyz.columnal.grammar.ExpressionParser2.NamespaceContext;
 import xyz.columnal.grammar.ExpressionParser2.SingleIdentContext;
@@ -216,7 +255,7 @@ public class ExpressionUtil
                     }
                     catch (UnitLookupException e)
                     {
-                        
+                        // Could not find unit, leave it as null
                     }
                 }
                 literals.add(new Pair<NumericLiteral, @Nullable Unit>(n, unit));

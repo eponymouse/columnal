@@ -25,6 +25,16 @@ import annotation.units.AbsRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import xyz.columnal.grammar.DisplayLexer;
+import xyz.columnal.grammar.DisplayParser;
+import xyz.columnal.grammar.GrammarUtility;
+import xyz.columnal.grammar.MainLexer;
+import xyz.columnal.grammar.MainLexer2;
+import xyz.columnal.grammar.MainParser;
+import xyz.columnal.grammar.MainParser2;
+import xyz.columnal.grammar.TableLexer2;
+import xyz.columnal.grammar.TableParser2;
+import xyz.columnal.grammar.Versions;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.SaveTag;
 import xyz.columnal.id.TableAndColumnRenames;
@@ -45,7 +55,6 @@ import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import xyz.columnal.grammar.*;
 import xyz.columnal.grammar.DisplayParser.ColumnWidthContext;
 import xyz.columnal.grammar.DisplayParser.GlobalDisplayDetailsContext;
 import xyz.columnal.grammar.MainParser.CommentContext;
@@ -71,8 +80,21 @@ import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -240,7 +262,7 @@ public class TableManager
                     }
                     catch (NumberFormatException e)
                     {
-                        
+                        // Not a number, fall through to error
                     }
                 }
             }

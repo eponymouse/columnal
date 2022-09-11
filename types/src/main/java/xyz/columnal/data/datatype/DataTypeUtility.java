@@ -283,6 +283,7 @@ public class DataTypeUtility
         }
         catch (DateTimeException e)
         {
+            // Just return null, then
         }
         return null;
     }
@@ -371,7 +372,8 @@ public class DataTypeUtility
                 @SuppressWarnings("valuetype") // Number is always ImmediateValue
                 @ImmediateValue Number cast = Utility.cast(item, Number.class);
                 number = truncater.truncateNumber(cast);
-            } else if (item instanceof BigDecimal)
+            }
+            else if (item instanceof BigDecimal)
             {
                 if (Utility.isIntegral(item))
                 {

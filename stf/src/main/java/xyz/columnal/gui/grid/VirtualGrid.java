@@ -110,8 +110,16 @@ import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.GUI;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 

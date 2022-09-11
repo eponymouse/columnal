@@ -24,6 +24,16 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.Column;
+import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.data.ErrorColumn;
+import xyz.columnal.data.RecordSet;
+import xyz.columnal.data.SingleSourceTransformation;
+import xyz.columnal.data.Table;
+import xyz.columnal.data.TableManager;
+import xyz.columnal.data.Transformation;
+import xyz.columnal.data.TransformationRecordSet;
 import xyz.columnal.data.datatype.ProgressListener;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.TableAndColumnRenames;
@@ -34,7 +44,6 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import xyz.columnal.data.*;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.DataTypeUtility.ComparableValue;
@@ -346,7 +355,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
             //if (fastDistinct.isPresent())
             //    splits.add(new SingleSplit(c, fastDistinct.get()));
             //else
-            {
+            //{
                 // A bit is set if the value occurred at a particular index:
                 TreeMap<ComparableValue, BitSet> r = new TreeMap<>();
                 try
@@ -372,7 +381,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
                         throw (InternalException) e.getCause();
                     throw new InternalException("Unexpected Runtime exception", e);
                 }
-            }
+            //}
 
         }
         // Now form cross-product:
@@ -1040,6 +1049,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
                                 }
                                 catch (UserException e)
                                 {
+                                    // Just return empty stream
                                 }
                                 catch (InternalException e)
                                 {

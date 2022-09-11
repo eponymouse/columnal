@@ -260,6 +260,7 @@ public class ImporterManager
         }
         catch (Exception e)
         {
+            // Not a file, then
         }
 
         // Most likely issue is that it needs http:// on the front:
@@ -269,6 +270,7 @@ public class ImporterManager
         }
         catch (Exception e)
         {
+            // Not a URL, either
         }
 
         // Return first exception:

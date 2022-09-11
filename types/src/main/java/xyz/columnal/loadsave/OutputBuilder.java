@@ -46,7 +46,11 @@ import threadchecker.Tag;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.SaveTag;
 import xyz.columnal.id.TableId;
-import xyz.columnal.utility.*;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.ExBiFunction;
+import xyz.columnal.utility.TaggedValue;
+import xyz.columnal.utility.UnitType;
+import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Utility.ListEx;
 import xyz.columnal.utility.Utility.Record;
 

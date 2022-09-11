@@ -64,7 +64,12 @@ import xyz.columnal.utility.gui.Clickable;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.SmallDeleteButton;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 @OnThread(Tag.FXPlatform)

@@ -156,7 +156,10 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
             // We may fall out of here if it parsed as a long
             // but is Long.MIN_VALUE or close by, as they are special values.
         }
-        catch (NumberFormatException ex) { }
+        catch (NumberFormatException ex)
+        {
+            // Not a valid long
+        }
         // Ok, last try: big decimal (and add text if not)
         try
         {

@@ -36,9 +36,18 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.MouseButton;
@@ -47,6 +56,16 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
+import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.Column;
+import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.data.ImmediateDataSource;
+import xyz.columnal.data.RecordSet;
+import xyz.columnal.data.RenameOnEdit;
+import xyz.columnal.data.Table;
+import xyz.columnal.data.TableManager;
+import xyz.columnal.data.TableOperations;
+import xyz.columnal.data.Transformation;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.TableId;
 import xyz.columnal.log.ErrorHandler.RunOrError;
@@ -59,7 +78,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import xyz.columnal.apputility.AppUtility;
-import xyz.columnal.data.*;
 import xyz.columnal.data.Column.AlteredState;
 import xyz.columnal.data.RecordSet.RecordSetListener;
 import xyz.columnal.data.Table.Display;
@@ -112,11 +130,34 @@ import xyz.columnal.gui.stable.SimpleColumnOperation;
 import xyz.columnal.gui.table.PickTypeTransformDialog.TypeTransform;
 import xyz.columnal.importers.ClipboardUtils;
 import xyz.columnal.importers.ClipboardUtils.RowRange;
-import xyz.columnal.transformations.*;
+import xyz.columnal.transformations.Aggregate;
+import xyz.columnal.transformations.Calculate;
+import xyz.columnal.transformations.Check;
+import xyz.columnal.transformations.Concatenate;
+import xyz.columnal.transformations.Filter;
+import xyz.columnal.transformations.HideColumns;
+import xyz.columnal.transformations.Join;
+import xyz.columnal.transformations.ManualEdit;
 import xyz.columnal.transformations.ManualEdit.ColumnReplacementValues;
-import xyz.columnal.transformations.Sort.Direction;
-import xyz.columnal.transformations.expression.*;
 import xyz.columnal.transformations.MultipleTableLookup;
+import xyz.columnal.transformations.RTransformation;
+import xyz.columnal.transformations.Sort;
+import xyz.columnal.transformations.Sort.Direction;
+import xyz.columnal.transformations.TransformationVisitor;
+import xyz.columnal.transformations.VisitableTransformation;
+import xyz.columnal.transformations.MultipleTableLookup;
+import xyz.columnal.transformations.expression.ArrayExpression;
+import xyz.columnal.transformations.expression.CallExpression;
+import xyz.columnal.transformations.expression.EqualExpression;
+import xyz.columnal.transformations.expression.EvaluateState;
+import xyz.columnal.transformations.expression.EvaluationException;
+import xyz.columnal.transformations.expression.Expression;
+import xyz.columnal.transformations.expression.IdentExpression;
+import xyz.columnal.transformations.expression.IfThenElseExpression;
+import xyz.columnal.transformations.expression.NumericLiteral;
+import xyz.columnal.transformations.expression.StringLiteral;
+import xyz.columnal.transformations.expression.TypeLiteralExpression;
+import xyz.columnal.transformations.expression.TypeState;
 import xyz.columnal.transformations.expression.explanation.Explanation;
 import xyz.columnal.transformations.expression.function.FunctionLookup;
 import xyz.columnal.transformations.expression.function.ValueFunction;
@@ -138,9 +179,21 @@ import xyz.columnal.transformations.function.text.StringLowerCase;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.*;
+import xyz.columnal.utility.Either;
+import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.IdentifierUtility;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.SimulationEx;
+import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.SimulationSupplier;
+import xyz.columnal.utility.TaggedValue;
+import xyz.columnal.utility.TranslationUtility;
+import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Utility.ListEx;
 import xyz.columnal.utility.Utility.Record;
+import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.Workers.Priority;
 import xyz.columnal.utility.gui.Clickable;
 import xyz.columnal.utility.gui.FXUtility;
@@ -148,7 +201,17 @@ import xyz.columnal.utility.gui.GUI;
 import xyz.columnal.utility.gui.ScrollPaneFill;
 
 import java.time.temporal.TemporalAccessor;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -224,7 +287,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                         });
                     } else
                         */
-                    {
+                    //{
                         // Just a matter of working out where it ends.  Since we know end is close,
                         // just force with getLength:
                         @SuppressWarnings("units")
@@ -235,7 +298,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                             currentKnownRowsIsFinal = true;
                             updateSizeAndPositions.run();
                         });
-                    }
+                    //}
                 }
                 catch (InternalException | UserException e)
                 {

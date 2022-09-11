@@ -303,6 +303,7 @@ final class LexCompletionList extends Region
                 y += ITEM_HEIGHT * DisplayPixels.ONE;
             }
 
+            if (true) // for checkstyle
             {
                 Node fade = Utility.get(visible, Either.<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>>right(new Pair<LexCompletionGroup, GroupNodeType>(group, GroupNodeType.FADE)));
                 // Should always be non-null, but need to guard
@@ -373,7 +374,8 @@ final class LexCompletionList extends Region
                 toKeep.add(key);
                 y += ITEM_HEIGHT * DisplayPixels.ONE;
             }
-
+            
+            if (true) // for checkstyle
             {
                 Either<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>> key = Either.right(new Pair<>(group, GroupNodeType.FADE));
                 Node fade = visible.computeIfAbsent(key, k -> {

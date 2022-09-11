@@ -25,11 +25,19 @@ import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import javafx.stage.Window;
+import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.Column;
+import xyz.columnal.data.DataSource;
+import xyz.columnal.data.EditableRecordSet;
+import xyz.columnal.data.ImmediateDataSource;
+import xyz.columnal.data.KnownLengthRecordSet;
+import xyz.columnal.data.RecordSet;
+import xyz.columnal.data.TableManager;
+import xyz.columnal.data.TextFileColumn;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.*;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.columntype.BlankColumnType;
 import xyz.columnal.data.columntype.CleanDateColumnType;
@@ -261,7 +269,8 @@ public class TextImporter implements Importer
                     try
                     {
                         rowCount = Utility.countLines(textFile, format.initialTextFormat.charset) - format.trimChoice.trimFromTop - format.trimChoice.trimFromBottom;
-                    } catch (IOException e)
+                    }
+                    catch (IOException e)
                     {
                         throw new FetchException("Error counting rows", e);
                     }

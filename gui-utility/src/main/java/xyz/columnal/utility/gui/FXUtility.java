@@ -63,8 +63,22 @@ import javafx.geometry.VerticalDirection;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Control;
+import javafx.scene.control.DialogPane;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.PopupControl;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Skin;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -114,14 +128,33 @@ import xyz.columnal.grammar.AcceleratorParser;
 import xyz.columnal.grammar.AcceleratorParser.AcceleratorContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.*;
+import xyz.columnal.utility.ExRunnable;
+import xyz.columnal.utility.FXPlatformBiConsumer;
+import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.FXPlatformFunction;
+import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.ResourceUtility;
+import xyz.columnal.utility.TranslationUtility;
+import xyz.columnal.utility.Utility;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -167,6 +200,7 @@ public class FXUtility
                 }
                 catch (ClassCastException ex)
                 {
+                    // Shouldn't happen but not much else we can do than ignore
                 }
                 e.consume();
             }
@@ -660,7 +694,8 @@ public class FXUtility
         if (nodeMaxY < scrollBoundsInScene.getMinY()) {
             // currently located above (remember, top left is (0,0))
             vValueDelta = (nodeMinY - viewport.getHeight()) / scrollPane.getContent().getBoundsInLocal().getHeight();
-        } else if (nodeMinY > scrollBoundsInScene.getMaxY()) {
+        }
+        else if (nodeMinY > scrollBoundsInScene.getMaxY()) {
             // currently located below
             vValueDelta = (nodeMinY + viewport.getHeight()) / scrollPane.getContent().getBoundsInLocal().getHeight();
         }
@@ -1470,6 +1505,7 @@ public class FXUtility
                         }
                         catch (InterruptedException e)
                         {
+                            // Just exit now, then
                         }
                         Log.debug("Performing failsafe exit");
                         System.exit(2); });

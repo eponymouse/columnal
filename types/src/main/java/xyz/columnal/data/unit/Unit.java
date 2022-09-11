@@ -51,7 +51,7 @@ public class Unit
     {
     }
 
-    public static Unit SCALAR = new Unit();
+    public static final Unit SCALAR = new Unit();
 
     public Unit times(Unit rhs)
     {

@@ -129,7 +129,8 @@ public class ExcelImporter implements Importer
                                     setValue(vals, row, col, val);
                                 }
                             }
-                        } else
+                        }
+                        else
                         {
                             setValue(vals, currentCell.getRowIndex(), currentCell.getColumnIndex(), val);
                         }
@@ -174,7 +175,7 @@ public class ExcelImporter implements Importer
         }
         catch (IOException | InvalidFormatException e)
         {
-
+            // TODO report an error
         }
     }
 

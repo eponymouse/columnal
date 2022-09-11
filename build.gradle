@@ -20,6 +20,16 @@ subprojects { subproject ->
     apply plugin: 'java-library'
     apply plugin: 'org.checkerframework'
     apply plugin: 'org.openjfx.javafxplugin'
+    if (!subproject.name.equals("parsers")) {
+      apply plugin: 'checkstyle'
+
+      checkstyle {
+        toolVersion = "10.3.3"
+      }
+      tasks.withType(Checkstyle) {
+        exclude "**/module-info.java"
+      }
+    }
 
     def stubs = ["JavaGeneral", "Values"]
     stubs += projectsToJavaFX.getOrDefault(subproject.name, [])

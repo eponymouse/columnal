@@ -152,7 +152,7 @@ public class Workers
             }
             catch (InterruptedException e)
             {
-
+                // Just loop again
             }
 
         }
@@ -334,6 +334,7 @@ public class Workers
                             }
                             catch (InterruptedException e)
                             {
+                                // Just loop again
                             }
                         }
                         else

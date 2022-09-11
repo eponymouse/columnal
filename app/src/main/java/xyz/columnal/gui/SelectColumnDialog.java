@@ -83,7 +83,8 @@ public class SelectColumnDialog extends ErrorableLightDialog<ImmutableList<Colum
                     try
                     {
                         return t.getData().getColumns().stream();
-                    } catch (UserException | InternalException e)
+                    }
+                    catch (UserException | InternalException e)
                     {
                         Log.log(e);
                         return Stream.empty();
