@@ -30,4 +30,6 @@ module xyz.columnal.app
     requires poi;
     requires poi.ooxml;
     requires antlr4.runtime;
+    requires commons.io;
+    requires common;
 }
