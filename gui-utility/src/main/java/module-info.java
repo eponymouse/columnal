@@ -14,7 +14,9 @@ module xyz.columnal.utility.gui
     requires javafx.base;
     requires javafx.controls;
     requires javafx.graphics;
-    //requires static org.checkerframework.checker;
     requires thumbnailator;
     requires wellbehavedfx;
+    requires static org.checkerframework.checker.qual;
+    requires commons.lang3;
+    requires antlr4.runtime;
 }

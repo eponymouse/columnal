@@ -18,4 +18,6 @@ module xyz.columnal.types
     requires com.google.common;
     requires javafx.graphics;
     requires one.util.streamex;
+    requires commons.io;
+    requires common;
 }

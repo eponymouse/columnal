@@ -17,4 +17,6 @@ module xyz.columnal.expressions
     requires com.google.common;
     requires javafx.graphics;
     requires static org.checkerframework.checker.qual;
+    requires antlr4.runtime;
+    requires commons.lang3;
 }

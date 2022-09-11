@@ -18,5 +18,6 @@ module xyz.columnal.functions
     requires big.math;
     requires com.google.common;
     requires commons.lang3;
+    requires static org.checkerframework.checker.qual;
     //requires static org.checkerframework.checker;
 }
