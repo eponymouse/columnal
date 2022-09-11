@@ -28,7 +28,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.KnownLengthRecordSet;
 import xyz.columnal.data.RecordSet;
@@ -85,11 +85,11 @@ public class GenRCompatibleRecordSet extends Generator<RCompatibleRecordSet>
         try
         {
             DataTypeMaker dataTypeMaker = gen.generate(random, status);
-            return new RCompatibleRecordSet(new KnownLengthRecordSet(DataTestUtil.<SimulationFunction<RecordSet, EditableColumn>>makeList(random, numColumns, numColumns, () -> {
+            return new RCompatibleRecordSet(new KnownLengthRecordSet(TBasicUtil.<SimulationFunction<RecordSet, EditableColumn>>makeList(random, numColumns, numColumns, () -> {
                 DataTypeAndValueMaker type = dataTypeMaker.makeType();
                 @SuppressWarnings("identifier")
                 @ExpressionIdentifier String columnId = "Col " + nextCol[0]++;
-                return ColumnUtility.makeImmediateColumn(type.getDataType(), new ColumnId(columnId), DataTestUtil.<Either<String, @Value Object>>makeList(random, numRows, numRows, () -> Either.<String, @Value Object>right(type.makeValue())), type.makeValue());
+                return ColumnUtility.makeImmediateColumn(type.getDataType(), new ColumnId(columnId), TBasicUtil.<Either<String, @Value Object>>makeList(random, numRows, numRows, () -> Either.<String, @Value Object>right(type.makeValue())), type.makeValue());
             }), numRows), dataTypeMaker.getTypeManager(), tibbleOnly ? ImmutableSet.of(TableType.TIBBLE) : ImmutableSet.of(TableType.DATA_FRAME, TableType.TIBBLE));
         }
         catch (Exception e)

@@ -29,10 +29,12 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.DataTestUtil;
+import test.gen.GenZoneId;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DataTypeVisitor;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
+import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.data.datatype.DataType.TagType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.NumberInfo;
@@ -87,14 +89,14 @@ public abstract class GenValueBase<T> extends Generator<T>
                 if (numberOnlyInt)
                     return genInt();
                 else
-                    return DataTestUtil.generateNumberV(r, gs);
+                    return TBasicUtil.generateNumberV(r, gs);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public @Value Object text() throws InternalException, UserException
             {
-                return DataTestUtil.makeStringV(r, gs);
+                return TBasicUtil.makeStringV(r, gs);
             }
 
             @Override
@@ -104,21 +106,21 @@ public abstract class GenValueBase<T> extends Generator<T>
                 switch (dateTimeInfo.getType())
                 {
                     case YEARMONTHDAY:
-                        return DataTestUtil.generateDate(r, gs);
+                        return TBasicUtil.generateDate(r, gs);
                     case YEARMONTH:
                         return YearMonth.of(r.nextInt(1, 9999), r.nextInt(1, 12));
                     case TIMEOFDAY:
-                        return DataTestUtil.generateTime(r, gs);
+                        return TBasicUtil.generateTime(r, gs);
                     //case TIMEOFDAYZONED:
                         //return OffsetTime.of(TestUtil.generateTime(r, gs), ZoneOffset.ofTotalSeconds(60 * r.nextInt(-18*60, 18*60)));
                     case DATETIME:
-                        return DataTestUtil.generateDateTime(r, gs);
+                        return TBasicUtil.generateDateTime(r, gs);
                     case DATETIMEZONED:
                         // Can be geographical or pure offset:
-                        return ZonedDateTime.of(DataTestUtil.generateDateTime(r, gs),
+                        return ZonedDateTime.of(TBasicUtil.generateDateTime(r, gs),
                             r.nextBoolean() ?
                                 new GenZoneId().generate(r, gs) :
-                                ZoneId.ofOffset("", DataTestUtil.generateZoneOffset(r, gs))
+                                ZoneId.ofOffset("", TBasicUtil.generateZoneOffset(r, gs))
                         );
                     default:
                         throw new InternalException("Unknown date type: " + dateTimeInfo.getType());
@@ -161,7 +163,7 @@ public abstract class GenValueBase<T> extends Generator<T>
                 if (inner == null)
                     return DataTypeUtility.<@Value Object>value(Collections.<@Value Object>emptyList());
                 @NonNull DataType innerFinal = inner;
-                return DataTypeUtility.value(DataTestUtil.<@Value Object>makeList(r, 1, 4, () -> makeValue(innerFinal)));
+                return DataTypeUtility.value(TBasicUtil.<@Value Object>makeList(r, 1, 4, () -> makeValue(innerFinal)));
             }
 
             @Override
@@ -250,7 +252,7 @@ public abstract class GenValueBase<T> extends Generator<T>
         @Value Number n;
         do
         {
-            n = DataTestUtil.generateNumberV(r, gs);
+            n = TBasicUtil.generateNumberV(r, gs);
         }
         while (n instanceof BigDecimal);
         return DataTypeUtility.value(n.longValue());

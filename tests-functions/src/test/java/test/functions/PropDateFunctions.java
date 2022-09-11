@@ -40,7 +40,6 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.function.FunctionDefinition;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenDate;
 import test.gen.GenZoneId;
 import threadchecker.OnThread;
@@ -234,7 +233,7 @@ public class PropDateFunctions
     {
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, srcType);
+            @Nullable Pair<ValueFunction, DataType> instance = TFunctionUtil.typeCheckFunction(function, srcType);
             assertNotNull(instance);
             return instance.getFirst().call(src.toArray(new @Value Object[0]));
         }

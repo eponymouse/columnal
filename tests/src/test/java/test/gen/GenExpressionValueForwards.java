@@ -26,11 +26,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import test.utility.gen.GenNumberAsString;
+import test.gen.GenNumberAsString;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.KnownLengthRecordSet;
 import xyz.columnal.data.MemoryBooleanColumn;
 import xyz.columnal.data.RecordSet;
@@ -181,7 +181,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     columnRef(type),
                     () ->
                     {
-                        @Value Number number = DataTestUtil.generateNumberV(r, gs);
+                        @Value Number number = TBasicUtil.generateNumberV(r, gs);
                         return literal(number, new NumericLiteral(number, makeUnitExpression(displayInfo.getUnit())));
                     }
                 ), l(fix(maxLevels - 1, type), () -> {
@@ -320,7 +320,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     columnRef(type),
                     () ->
                     {
-                        @Value String value = DataTestUtil.makeStringV(r, gs);
+                        @Value String value = TBasicUtil.makeStringV(r, gs);
                         return literal(value, TestUtil.makeStringLiteral(value, r));
                     }
                 ), l(fix(maxLevels - 1, type), () -> {
@@ -427,7 +427,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
                             Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
-                            ZoneOffset zone = DataTestUtil.generateZoneOffset(r, gs);
+                            ZoneOffset zone = TBasicUtil.generateZoneOffset(r, gs);
                             return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> call("datetimezoned from dtz", dateE, timeE, TestUtil.makeStringLiteral(zone.toString(), r)));
                         });
                         break;
@@ -519,7 +519,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     {
                         DataType t = makeType(r);
 
-                        List<Pair<List<@Value Object>, Expression>> args = DataTestUtil.<Pair<List<@Value Object>, Expression>>makeList(r, 2, 4, () -> make(t, maxLevels - 1));
+                        List<Pair<List<@Value Object>, Expression>> args = TBasicUtil.<Pair<List<@Value Object>, Expression>>makeList(r, 2, 4, () -> make(t, maxLevels - 1));
                         boolean lt = r.nextBoolean();
                         List<ComparisonOperator> ops = new ArrayList<>();
                         List<Boolean> result = replicate(true);
@@ -660,22 +660,22 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
         switch (dateTimeInfo.getType())
         {
             case YEARMONTHDAY:
-                value = DataTestUtil.generateDate(r, gs);
+                value = TBasicUtil.generateDate(r, gs);
                 break;
             case YEARMONTH:
-                value = YearMonth.from(DataTestUtil.generateDate(r, gs));
+                value = YearMonth.from(TBasicUtil.generateDate(r, gs));
                 break;
             case TIMEOFDAY:
-                value = DataTestUtil.generateTime(r, gs);
+                value = TBasicUtil.generateTime(r, gs);
                 break;
             //case TIMEOFDAYZONED:
                 //@Value OffsetTime timez = OffsetTime.from(TestUtil.generateDateTimeZoned(r, gs));
                 //return literal(timez, call("timezoned.from.string", new StringLiteral(timez.toString())));
             case DATETIME:
-                value = DataTestUtil.generateDateTime(r, gs);
+                value = TBasicUtil.generateDateTime(r, gs);
                 break;
             case DATETIMEZONED:
-                value = DataTestUtil.generateDateTimeZoned(r, gs);
+                value = TBasicUtil.generateDateTimeZoned(r, gs);
                 break;
             default:
                 throw new RuntimeException("No date generator for " + dateTimeInfo.getType());

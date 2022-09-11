@@ -30,14 +30,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.function.*;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.type.GenTypeAndValueGen;
 import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
@@ -59,7 +58,7 @@ public class PropStringFunctions
     public void propTextLength(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringLength function = new StringLength();
-        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, ImmutableList.of(DataType.TEXT));
+        @Nullable Pair<ValueFunction, DataType> checked = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.TEXT));
         if (checked == null)
         {
             fail("Type check failure");
@@ -85,7 +84,7 @@ public class PropStringFunctions
 
 
         StringTrim function = new StringTrim();
-        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, ImmutableList.of(DataType.TEXT));
+        @Nullable Pair<ValueFunction, DataType> checked = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.TEXT));
         if (checked == null)
         {
             fail("Type check failure");
@@ -270,8 +269,8 @@ public class PropStringFunctions
         FunctionDefinition toString = new ToString();
         @SuppressWarnings("nullness") // Will throw if null
         @NonNull FunctionDefinition fromString = FunctionList.lookup(DummyManager.make().getUnitManager(), "from text");
-        @Nullable Pair<ValueFunction, DataType> checkedToString = TestUtil.typeCheckFunction(toString, ImmutableList.of(typeAndValueGen.getType()), typeAndValueGen.getTypeManager());
-        @Nullable Pair<ValueFunction, DataType> checkedFromString = TestUtil.typeCheckFunction(fromString, typeAndValueGen.getType(), ImmutableList.of(DataType.TEXT), typeAndValueGen.getTypeManager());
+        @Nullable Pair<ValueFunction, DataType> checkedToString = TFunctionUtil.typeCheckFunction(toString, ImmutableList.of(typeAndValueGen.getType()), typeAndValueGen.getTypeManager());
+        @Nullable Pair<ValueFunction, DataType> checkedFromString = TFunctionUtil.typeCheckFunction(fromString, typeAndValueGen.getType(), ImmutableList.of(DataType.TEXT), typeAndValueGen.getTypeManager());
         if (checkedToString == null || checkedFromString == null)
         {
             fail("Type check failure");
@@ -286,7 +285,7 @@ public class PropStringFunctions
                 @Value Object value = typeAndValueGen.makeValue();
                 @Value Object asString = checkedToString.getFirst().call(new @Value Object[] {value});
                 @Value Object roundTripped = checkedFromString.getFirst().call(new @Value Object[] {asString});
-                DataTestUtil.assertValueEqual(asString.toString(), value, roundTripped);
+                TBasicUtil.assertValueEqual(asString.toString(), value, roundTripped);
             }
         }
     }
@@ -298,7 +297,7 @@ public class PropStringFunctions
         @SuppressWarnings("nullness") // Will throw if null
         @NonNull FunctionDefinition toString = FunctionList.lookup(DummyManager.make().getUnitManager(), "to text");
 
-        @Nullable Pair<ValueFunction, DataType> checkedToString = TestUtil.typeCheckFunction(toString, DataType.TEXT, ImmutableList.of(DataType.TEXT), null);
+        @Nullable Pair<ValueFunction, DataType> checkedToString = TFunctionUtil.typeCheckFunction(toString, DataType.TEXT, ImmutableList.of(DataType.TEXT), null);
         assertNotNull(checkedToString);
         if (checkedToString == null)
             return;

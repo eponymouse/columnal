@@ -2,8 +2,10 @@ dependencies {
     testImplementation project(":utility")
     testImplementation libs.javaSMT
 
+    testFixturesImplementation project(":parsers")
     testFixturesImplementation project(":types") // For DataTypeUtility
     testFixturesImplementation project(":utility")
+    testFixturesImplementation libs.guava
     testFixturesImplementation libs.javaSMT
 }
 

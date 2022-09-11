@@ -27,8 +27,9 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import test.functions.TFunctionUtil;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.id.TableId;
 import xyz.columnal.data.datatype.DataType;
@@ -65,7 +66,7 @@ public class GenNonsenseManualEdit extends Generator<Transformation_Mgr>
             GenTypeAndValueGen genTypeAndValueGen = new GenTypeAndValueGen();
             
             Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(random);
-            DummyManager mgr = TestUtil.managerWithTestTypes().getFirst();
+            DummyManager mgr = TFunctionUtil.managerWithTestTypes().getFirst();
             HashMap<ColumnId, ColumnReplacementValues> replacements = new HashMap<>();
             
             
@@ -90,7 +91,7 @@ public class GenNonsenseManualEdit extends Generator<Transformation_Mgr>
                     continue;
                 }
               
-                ImmutableList<Pair<@Value Object, Either<String, @Value Object>>> ps = DataTestUtil.<Pair<@Value Object, Either<String, @Value Object>>>makeList(random, 1, 5, () -> new Pair<>(keyColumn == null ? DataTypeUtility.value(random.nextInt()) : keyColumn.makeValue(), random.nextInt(5) == 1 ? Either.<String, @Value Object>left("#" + random.nextInt()) : Either.<String, @Value Object>right(typeAndValueGen.makeValue())));
+                ImmutableList<Pair<@Value Object, Either<String, @Value Object>>> ps = TBasicUtil.<Pair<@Value Object, Either<String, @Value Object>>>makeList(random, 1, 5, () -> new Pair<>(keyColumn == null ? DataTypeUtility.value(random.nextInt()) : keyColumn.makeValue(), random.nextInt(5) == 1 ? Either.<String, @Value Object>left("#" + random.nextInt()) : Either.<String, @Value Object>right(typeAndValueGen.makeValue())));
                 
                 replacements.put(columnId, new ColumnReplacementValues(typeAndValueGen.getType(), ps));
             }

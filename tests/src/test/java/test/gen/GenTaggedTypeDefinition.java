@@ -27,7 +27,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.TaggedTypeDefinition;
 import xyz.columnal.data.datatype.TaggedTypeDefinition.TypeVariableKind;
@@ -59,7 +59,7 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
             if (r.nextInt(3) == 1)
             {
                 // Must use distinct to make sure no duplicate names:
-                typeVars = DataTestUtil.makeList(r, 1, 4, () -> "" + r.nextChar('a', 'z')).stream().distinct().map(name -> new Pair<>(r.nextInt(3) == 1 ? TypeVariableKind.UNIT : TypeVariableKind.TYPE, name)).collect(ImmutableList.toImmutableList());
+                typeVars = TBasicUtil.makeList(r, 1, 4, () -> "" + r.nextChar('a', 'z')).stream().distinct().map(name -> new Pair<>(r.nextInt(3) == 1 ? TypeVariableKind.UNIT : TypeVariableKind.TYPE, name)).collect(ImmutableList.toImmutableList());
             }
             else
             {
@@ -71,7 +71,7 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
             
             // Outside type variables are not visible in a new tagged type:
             boolean noInner = r.nextInt() % 3 == 1;
-            ArrayList<@Nullable JellyType> types = noInner ? new ArrayList<@Nullable JellyType>() : new ArrayList<@Nullable JellyType>(DataTestUtil.makeList(r, 1, 10, () -> genDataType.generate(r, status).makeType()));
+            ArrayList<@Nullable JellyType> types = noInner ? new ArrayList<@Nullable JellyType>() : new ArrayList<@Nullable JellyType>(TBasicUtil.makeList(r, 1, 10, () -> genDataType.generate(r, status).makeType()));
             int extraNulls = r.nextInt(5) + (types.isEmpty() ? 1 : 0);
             for (int i = 0; i < extraNulls; i++)
             {

@@ -1,0 +1,30 @@
+dependencies {
+    testImplementation project(":data")
+    testImplementation project(":expressions")
+    testImplementation project(":functions")
+    testImplementation project(":types")
+    testImplementation project(":utility")
+    testImplementation libs.guava
+
+    testFixturesImplementation project(":data")
+    testFixturesImplementation project(":expressions")
+    testFixturesImplementation project(":identifiers")
+    testFixturesImplementation project(":functions")
+    testFixturesImplementation project(":parsers")
+    testFixturesImplementation project(":types")
+    testFixturesImplementation project(":utility")
+    testFixturesImplementation libs.guava
+    testFixturesImplementation libs.javaSMT
+
+    // From https://stackoverflow.com/questions/5644011/multi-project-test-dependencies-with-gradle/60138176#60138176
+    testImplementation(testFixtures(project(":tests-basic")))
+    testImplementation(testFixtures(project(":tests-tables")))
+    testFixturesImplementation(testFixtures(project(":tests-basic")))
+    testFixturesImplementation(testFixtures(project(":tests-tables")))
+}
+
+description = 'tests-functions'
+
+test {
+    maxParallelForks = Runtime.runtime.availableProcessors() / 2
+}

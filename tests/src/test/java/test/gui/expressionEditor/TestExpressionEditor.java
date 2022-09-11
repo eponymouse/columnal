@@ -32,6 +32,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
+import test.functions.TFunctionUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Ignore;
@@ -41,7 +42,7 @@ import org.testfx.api.FxRobot;
 import org.testfx.util.WaitForAsyncUtils;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.KnownLengthRecordSet;
 import xyz.columnal.data.MemoryBooleanColumn;
 import xyz.columnal.id.TableId;
@@ -183,7 +184,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             // Need to fish out first column from clip, then compare item:
             //TestUtil.checkType(expressionValue.type, clip.get().get(0));
             List<Either<String, @Value Object>> actual = clip.get().stream().filter((LoadedColumnInfo p) -> Objects.equals(p.columnName, new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).dataValues;
-            DataTestUtil.assertValueListEitherEqual("Transformed", Utility.<@Value Object, Either<String, @Value Object>>mapList(expressionValue.value, x -> Either.<String, @Value Object>right(x)), actual);
+            TBasicUtil.assertValueListEitherEqual("Transformed", Utility.<@Value Object, Either<String, @Value Object>>mapList(expressionValue.value, x -> Either.<String, @Value Object>right(x)), actual);
             
             // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
             // Shouldn't really need this code but test is flaky without it due to some JavaFX animation-related exceptions:
@@ -254,8 +255,8 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
 
     private void testSimpleQ(String expressionSrc, String... qualifiedIdentsToEnterInFull) throws Exception
     {
-        DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
-        Expression expression = TestUtil.parseExpression(expressionSrc, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        DummyManager dummyManager = TFunctionUtil.managerWithTestTypes().getFirst();
+        Expression expression = TFunctionUtil.parseExpression(expressionSrc, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         
         // Check once using structured entry:
         testEntry_Impl(new ExpressionValue(
@@ -276,8 +277,8 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
 
     private void testSimple(String expressionSrc, String plainEntry) throws Exception
     {
-        DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
-        Expression expression = TestUtil.parseExpression(expressionSrc, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        DummyManager dummyManager = TFunctionUtil.managerWithTestTypes().getFirst();
+        Expression expression = TFunctionUtil.parseExpression(expressionSrc, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
 
         assertEquals(expression, plainEntry(plainEntry, dummyManager.getTypeManager()));
     }

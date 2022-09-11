@@ -29,7 +29,7 @@ import org.junit.runner.RunWith;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;
@@ -72,7 +72,7 @@ public class TestSetValue
         // Check initial store worked:
         for (int i = 0; i < length; i++)
         {
-            DataTestUtil.assertValueEitherEqual("Value " + i, originals.get(i), collapseErr(col.getType(), i));
+            TBasicUtil.assertValueEitherEqual("Value " + i, originals.get(i), collapseErr(col.getType(), i));
             pendingReplacements.add(new Pair<>(i, replacements.get(i)));
         }
 
@@ -86,7 +86,7 @@ public class TestSetValue
         // Check replacement worked:
         for (int i = 0; i < length; i++)
         {
-            DataTestUtil.assertValueEitherEqual("Value " + i, replacements.get(i), collapseErr(col.getType(), i));
+            TBasicUtil.assertValueEitherEqual("Value " + i, replacements.get(i), collapseErr(col.getType(), i));
         }
     }
 

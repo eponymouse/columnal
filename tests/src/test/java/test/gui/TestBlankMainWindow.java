@@ -48,7 +48,7 @@ import org.testfx.robot.Motion;
 import org.testfx.service.query.impl.NodeQueryImpl;
 import org.testfx.util.WaitForAsyncUtils;
 import xyz.columnal.data.CellPosition;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.id.TableId;
 import xyz.columnal.data.TableManager;
@@ -70,7 +70,7 @@ import xyz.columnal.gui.dtf.DocumentTextField;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.transformations.expression.type.TypeExpression;
 import test.TestUtil;
-import test.utility.gen.GenNumber;
+import test.gen.GenNumber;
 import test.gen.GenRandom;
 import test.gen.type.GenDataTypeMaker;
 import test.gen.type.GenDataTypeMaker.MustHaveValues;
@@ -343,7 +343,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             assertEquals(latest.size(), recordSet.getLength());
             for (int j = 0; j < latest.size(); j++)
             {
-                DataTestUtil.assertValueEqual("Index " + j, latest.get(j), recordSet.getColumns().get(0).getType().getCollapsed(j));
+                TBasicUtil.assertValueEqual("Index " + j, latest.get(j), recordSet.getColumns().get(0).getType().getCollapsed(j));
             }
             
             dataHistory.add(latest);
@@ -430,7 +430,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 for (int j = 0; j < values.size(); j++)
                 {
                     int jFinal = j;
-                    DataTestUtil.assertValueEqual("Index " + j, values.get(j), TestUtil.<@Value Object>sim(() -> column.getCollapsed(jFinal)));
+                    TBasicUtil.assertValueEqual("Index " + j, values.get(j), TestUtil.<@Value Object>sim(() -> column.getCollapsed(jFinal)));
                 }
             }
         });
@@ -498,7 +498,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         for (int i = 0; i < values.size(); i++)
         {
             int iFinal = i;
-            DataTestUtil.assertValueEitherEqual("Index " + i, values.get(i), TestUtil.<Either<String, @Value Object>>sim(() -> {
+            TBasicUtil.assertValueEitherEqual("Index " + i, values.get(i), TestUtil.<Either<String, @Value Object>>sim(() -> {
                 try
                 {
                     return Either.right(column.getCollapsed(iFinal));

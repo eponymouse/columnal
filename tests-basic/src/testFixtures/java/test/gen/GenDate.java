@@ -23,26 +23,23 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import test.TestUtil;
-import test.utility.gen.GenNumber;
+import xyz.columnal.data.TBasicUtil;
 
-import java.util.List;
+import java.time.LocalDate;
 
 /**
- * Created by neil on 09/12/2016.
+ * Created by neil on 15/12/2016.
  */
-public class GenNumbers extends Generator<List<Number>>
+public class GenDate extends Generator<LocalDate>
 {
-    @SuppressWarnings("unchecked")
-    public GenNumbers()
+    public GenDate()
     {
-        super((Class<List<Number>>) (Class<?>) List.class);
+        super(LocalDate.class);
     }
 
     @Override
-    public List<Number> generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+    public LocalDate generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        int length = sourceOfRandomness.nextInt(0, 100);
-        return TestUtil.makeList(length, new GenNumber(true), sourceOfRandomness, generationStatus);
+        return TBasicUtil.generateDate(sourceOfRandomness, generationStatus);
     }
 }

@@ -33,6 +33,7 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.SubstringMatcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
@@ -218,7 +219,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     {        
         try
         {
-            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, TestUtil.managerWithTestTypes().getFirst()).get();
+            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, TFunctionUtil.managerWithTestTypes().getFirst()).get();
 
             Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(1));

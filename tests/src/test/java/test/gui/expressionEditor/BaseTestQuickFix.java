@@ -27,6 +27,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Window;
+import test.functions.TFunctionUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -97,7 +98,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
     String dotCssClassFor(String expression) throws InternalException, UserException
     {
         TypeManager typeManager = DummyManager.make().getTypeManager();
-        return "." + ExpressionUtil.makeCssClass(TestUtil.parseExpression(expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
+        return "." + ExpressionUtil.makeCssClass(TFunctionUtil.parseExpression(expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
     }
 
     /**
@@ -209,7 +210,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             assertEquals(1, calculate.getCalculatedColumns().size());
             Expression actual = calculate.getCalculatedColumns().values().iterator().next();
             assertEquals(
-                TestUtil.parseExpression(result, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())),
+                TFunctionUtil.parseExpression(result, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())),
                 actual);
         }
         catch (Exception e)

@@ -34,7 +34,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.Column;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.KnownLengthRecordSet;
 import xyz.columnal.data.MemoryArrayColumn;
@@ -75,7 +75,7 @@ public class TestRExecution
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
         Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("c(6, 8)"), false).get(0).getSecond().getColumns().get(0);
-        DataTestUtil.assertValueListEqual("Column", ImmutableList.of(6, 8), DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
+        TBasicUtil.assertValueListEqual("Column", ImmutableList.of(6, 8), TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
     
     @Test
@@ -83,7 +83,7 @@ public class TestRExecution
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
         Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("seq(1,10,2)"), false).get(0).getSecond().getColumns().get(0);
-        DataTestUtil.assertValueListEqual("Column", ImmutableList.of(1, 3, 5, 7, 9), DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
+        TBasicUtil.assertValueListEqual("Column", ImmutableList.of(1, 3, 5, 7, 9), TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
 
     @Test
@@ -91,7 +91,7 @@ public class TestRExecution
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
         Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("\"Möøõsę!\""), false).get(0).getSecond().getColumns().get(0);
-        DataTestUtil.assertValueListEqual("Column", ImmutableList.of("Möøõsę!"), DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
+        TBasicUtil.assertValueListEqual("Column", ImmutableList.of("Möøõsę!"), TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
 
     @Test
@@ -99,7 +99,7 @@ public class TestRExecution
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
         Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("4611686018427387904L"), false).get(0).getSecond().getColumns().get(0);
-        DataTestUtil.assertValueListEqual("Column", ImmutableList.of(new BigDecimal("4611686018427387900")), DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
+        TBasicUtil.assertValueListEqual("Column", ImmutableList.of(new BigDecimal("4611686018427387900")), TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
 
     @SuppressWarnings("valuetype")
@@ -108,7 +108,7 @@ public class TestRExecution
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
         Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("list(x=5, y= 7)"), false).get(0).getSecond().getColumns().get(0);
-        DataTestUtil.assertValueListEqual("Column", ImmutableList.of(new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", 5, "y", 7))), DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
+        TBasicUtil.assertValueListEqual("Column", ImmutableList.of(new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", 5, "y", 7))), TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
 
     @SuppressWarnings("valuetype")
@@ -118,7 +118,7 @@ public class TestRExecution
         TypeManager typeManager = new TypeManager(new UnitManager());
         ImmutableList<@Value Object> expected = ImmutableList.of(new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", 5, "y", 7)), new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", new BigDecimal("1.2"), "y", -3)));
         Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("list(list(x=5, y= 7), list(x=1.2, y= -3))"), false).get(0).getSecond().getColumns().get(0);
-        DataTestUtil.assertValueListEqual("Column", expected, DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
+        TBasicUtil.assertValueListEqual("Column", expected, TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
     
     @SuppressWarnings("valuetype")
@@ -128,7 +128,7 @@ public class TestRExecution
         TypeManager typeManager = new TypeManager(new UnitManager());
         ImmutableList<@Value Object> expected = ImmutableList.of(new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", 5, "y", typeManager.maybePresent(7), "z", typeManager.maybeMissing())), new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", new BigDecimal("1.2"), "y", typeManager.maybeMissing(), "z", typeManager.maybePresent(-3))));
         Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("list(list(x=5, y= 7), list(x=1.2, z = -3))"), false).get(0).getSecond().getColumns().get(0);
-        DataTestUtil.assertValueListEqual("Column", expected, DataTestUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
+        TBasicUtil.assertValueListEqual("Column", expected, TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
     
     @Test
@@ -147,7 +147,7 @@ public class TestRExecution
                 "AIC(lm1, lm2)"
         , ImmutableList.of("stats"), ImmutableMap.of()), false).get(0).getSecond();
         assertEquals(ImmutableList.of(new ColumnId("df"), new ColumnId("AIC")), recordSet.getColumnIds());
-        assertEquals(ImmutableList.of(new BigDecimal("326.0715684405487"), new BigDecimal("325.2408440639819")), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumn(new ColumnId("AIC")).getType(), recordSet.getLength()));
+        assertEquals(ImmutableList.of(new BigDecimal("326.0715684405487"), new BigDecimal("325.2408440639819")), TBasicUtil.getAllCollapsedDataValid(recordSet.getColumn(new ColumnId("AIC")).getType(), recordSet.getLength()));
     }
 
     @Test
@@ -155,7 +155,7 @@ public class TestRExecution
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
         RecordSet recordSet = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("foo$bar[2:3]", ImmutableList.of(), ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5"))), 3))), false).get(0).getSecond();
-        DataTestUtil.assertValueListEqual("Column", ImmutableList.of(4, 5), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
+        TBasicUtil.assertValueListEqual("Column", ImmutableList.of(4, 5), TBasicUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
     }
 
     @SuppressWarnings("valuetype")
@@ -168,7 +168,7 @@ public class TestRExecution
                 rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5")),
                 rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, @Value String>right("A"), Either.<String, @Value String>right("B"), Either.<String, @Value String>right("C")), "Z")
             ), 3))), false).get(0).getSecond();
-        DataTestUtil.assertValueListEqual("Column", ImmutableList.of("B", "C"), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
+        TBasicUtil.assertValueListEqual("Column", ImmutableList.of("B", "C"), TBasicUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
     }
 
     @SuppressWarnings("valuetype")
@@ -181,7 +181,7 @@ public class TestRExecution
                 rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5")),
                 rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, @Value String>right("A"), Either.<String, @Value String>right("B"), Either.<String, @Value String>right("C")), "Z")
             ), 3))), false).get(0).getSecond();
-        DataTestUtil.assertValueListEqual("Column", ImmutableList.of("B", "C"), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
+        TBasicUtil.assertValueListEqual("Column", ImmutableList.of("B", "C"), TBasicUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
     }
 
     // Test tibble features: spaces in column names, lists in cells
@@ -195,7 +195,7 @@ public class TestRExecution
                 rs -> new MemoryArrayColumn(rs, new ColumnId("bar bar black sheep"), DataType.NUMBER, ImmutableList.of(numberList("3"), numberList("4", "4.1"), numberList("5", "5.2", "5.21")), DataTypeUtility.value(ImmutableList.<@Value Object>of())),
                 rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, @Value String>right("A"), Either.<String, @Value String>right("B"), Either.<String, @Value String>right("C")), "Z")
             ), 3))), false).get(0).getSecond();
-        DataTestUtil.assertValueListEqual("Column", ImmutableList.of(DataTypeUtility.value(ImmutableList.of(new BigDecimal("4"), new BigDecimal("4.1"))), DataTypeUtility.value(ImmutableList.of(new BigDecimal("5.0"), new BigDecimal("5.2"), new BigDecimal("5.21")))), DataTestUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
+        TBasicUtil.assertValueListEqual("Column", ImmutableList.of(DataTypeUtility.value(ImmutableList.of(new BigDecimal("4"), new BigDecimal("4.1"))), DataTypeUtility.value(ImmutableList.of(new BigDecimal("5.0"), new BigDecimal("5.2"), new BigDecimal("5.21")))), TBasicUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
     }
 
     @Test

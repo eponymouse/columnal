@@ -32,7 +32,7 @@ import org.junit.runner.RunWith;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeValue;
@@ -145,7 +145,7 @@ public class PropStorageSet
                 DataTypeValue columnType = c.getType();
                 Either<String, @Value Object> valueOrErr = r.nextInt(5) == 1 ? Either.left(("Err " + i)) : Either.right(value);
                 columnType.setCollapsed(rowIndex, valueOrErr);
-                DataTestUtil.assertValueEitherEqual("Type: " + typeAndValueGen.getType() + " index " + rowIndex, valueOrErr, collapseErr(c.getType(), rowIndex));
+                TBasicUtil.assertValueEitherEqual("Type: " + typeAndValueGen.getType() + " index " + rowIndex, valueOrErr, collapseErr(c.getType(), rowIndex));
                 vals.put(rowIndex, valueOrErr);
                 
                 //Log.debug("Set value at " + rowIndex);
@@ -161,7 +161,7 @@ public class PropStorageSet
     {
         for (Entry<@KeyFor("vals") Integer, Either<String, @Value Object>> entry : vals.entrySet())
         {
-            DataTestUtil.assertValueEitherEqual("Type: " + dataType + " index " + entry.getKey(), entry.getValue(), collapseErr(c.getType(), entry.getKey()));
+            TBasicUtil.assertValueEitherEqual("Type: " + dataType + " index " + entry.getKey(), entry.getValue(), collapseErr(c.getType(), entry.getKey()));
         }
     }
 

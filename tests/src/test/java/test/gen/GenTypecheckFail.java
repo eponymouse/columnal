@@ -27,6 +27,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.id.TableId;
@@ -42,7 +43,6 @@ import test.TestUtil.SingleTableLookup;
 import xyz.columnal.transformations.expression.Expression._test_TypeVary;
 import xyz.columnal.typeExp.TypeExp;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenTypecheckFail.TypecheckInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -111,7 +111,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         Expression expression = valid.expression;
         try
         {
-            if (null == expression.checkExpression(valid, TestUtil.createTypeState(valid.typeManager), TestUtil.excOnError()))
+            if (null == expression.checkExpression(valid, TFunctionUtil.createTypeState(valid.typeManager), TFunctionUtil.excOnError()))
                 throw new RuntimeException("Original did not type check: " + expression);
         }
         catch (InternalException | UserException | RuntimeException e)

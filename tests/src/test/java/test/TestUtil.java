@@ -21,13 +21,10 @@
 package test;
 
 import annotation.identifier.qual.ExpressionIdentifier;
-import annotation.identifier.qual.UnitIdentifier;
 import annotation.qual.Value;
-import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
-import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.sun.javafx.PlatformUtil;
 import com.sun.javafx.tk.Toolkit;
@@ -47,6 +44,16 @@ import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import test.functions.TFunctionUtil;
+import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.Column;
+import xyz.columnal.data.TBasicUtil;
+import xyz.columnal.data.EditableRecordSet;
+import xyz.columnal.data.ImmediateDataSource;
+import xyz.columnal.data.RecordSet;
+import xyz.columnal.data.Table;
+import xyz.columnal.data.TableManager;
+import xyz.columnal.data.Transformation;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.TableId;
 import xyz.columnal.log.Log;
@@ -60,24 +67,17 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.sosy_lab.common.rationals.Rational;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.util.WaitForAsyncUtils;
-import xyz.columnal.data.*;
 import xyz.columnal.data.Table.FullSaver;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.Table.TableDisplayBase;
-import xyz.columnal.data.datatype.DataType.SpecificDataTypeVisitor;
 import xyz.columnal.data.datatype.TaggedTypeDefinition;
 import xyz.columnal.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.data.datatype.TypeManager.TagInfo;
-import xyz.columnal.data.unit.SingleUnit;
-import xyz.columnal.data.unit.Unit;
-import xyz.columnal.data.unit.UnitDeclaration;
 import xyz.columnal.error.InvalidImmediateValueException;
 import xyz.columnal.grammar.GrammarUtility;
-import xyz.columnal.grammar.Versions.ExpressionVersion;
 import xyz.columnal.gui.MainWindow;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.gui.grid.VirtualGrid;
@@ -86,26 +86,20 @@ import xyz.columnal.jellytype.JellyType;
 import xyz.columnal.jellytype.JellyType.JellyTypeVisitorEx;
 import xyz.columnal.jellytype.JellyTypeRecord.Field;
 import xyz.columnal.jellytype.JellyUnit;
-import xyz.columnal.transformations.expression.*;
+import xyz.columnal.transformations.expression.CallExpression;
+import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.Expression.ColumnLookup;
-import xyz.columnal.transformations.expression.function.FunctionLookup;
-import xyz.columnal.transformations.expression.function.ValueFunction;
+import xyz.columnal.transformations.expression.IdentExpression;
+import xyz.columnal.transformations.expression.StringLiteral;
+import xyz.columnal.transformations.expression.TypeLiteralExpression;
+import xyz.columnal.transformations.expression.TypeState;
 import xyz.columnal.transformations.expression.type.TypeExpression;
 import xyz.columnal.transformations.function.FunctionDefinition;
 import xyz.columnal.transformations.function.FunctionList;
-import xyz.columnal.typeExp.MutVar;
-import xyz.columnal.typeExp.TypeCons;
-import xyz.columnal.typeExp.TypeExp;
-import xyz.columnal.typeExp.units.MutUnitVar;
-import xyz.columnal.styled.StyledShowable;
-import xyz.columnal.styled.StyledString;
 import test.gui.trait.PopupTrait;
 import xyz.columnal.utility.*;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
-import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import xyz.columnal.data.datatype.NumberInfo;
-import xyz.columnal.data.datatype.DataType.TagType;
 import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.UnitManager;
@@ -176,7 +170,7 @@ public class TestUtil
 
     public static TableId generateTableId(SourceOfRandomness sourceOfRandomness)
     {
-        return new TableId(IdentifierUtility.fixExpressionIdentifier(DataTestUtil.generateIdent(sourceOfRandomness), "Table"));
+        return new TableId(IdentifierUtility.fixExpressionIdentifier(TBasicUtil.generateIdent(sourceOfRandomness), "Table"));
     }
 
     // Generates a pair of different ids
@@ -194,7 +188,7 @@ public class TestUtil
 
     public static ColumnId generateColumnId(SourceOfRandomness sourceOfRandomness)
     {
-        return new ColumnId(IdentifierUtility.fixExpressionIdentifier(DataTestUtil.generateIdent(sourceOfRandomness), "Column"));
+        return new ColumnId(IdentifierUtility.fixExpressionIdentifier(TBasicUtil.generateIdent(sourceOfRandomness), "Column"));
     }
 
 
@@ -276,11 +270,6 @@ public class TestUtil
         }.stream();
     }
 
-    public static <T> ImmutableList<T> makeList(int len, Generator<? extends T> gen, SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
-    {
-        return Stream.generate(() -> gen.generate(sourceOfRandomness, generationStatus)).limit(len).collect(ImmutableList.toImmutableList());
-    }
-
     @OnThread(Tag.Simulation)
     @SuppressWarnings("nullness")
     public static Map<List<@Value Object>, Long> getRowFreq(RecordSet src)
@@ -333,7 +322,7 @@ public class TestUtil
         String s;
         do
         {
-            s = DataTestUtil.makeString(r, gs);
+            s = TBasicUtil.makeString(r, gs);
         }
         while (s.trim().isEmpty());
         return s;
@@ -351,81 +340,6 @@ public class TestUtil
         return columnIds;
     }
 
-    public static Pair<DummyManager, List<DataType>> managerWithTestTypes()
-    {
-        try
-        {
-            DummyManager dummyManager = new DummyManager();
-            
-            dummyManager.getUnitManager().addUserUnit(new Pair<>("myUnit", Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit("myUnit", "Custom unit for testing", "", ""), null, "New Category"))));
-            dummyManager.getUnitManager().addUserUnit(new Pair<>("myAlias", Either.<@UnitIdentifier String, UnitDeclaration>left("myUnit")));
-            dummyManager.getUnitManager().addUserUnit(new Pair<>("hogshead", Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit("hogshead", "An English wine cask hogshead", "", ""), new Pair<>(Rational.ofLongs(2387, 10), dummyManager.getUnitManager().loadUse("l")), "Volume"))));
-            
-            // TODO add more higher-order types
-            TypeManager typeManager = dummyManager.getTypeManager();
-            @SuppressWarnings("nullness")
-            DataType a = typeManager.registerTaggedType("A", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Single", null))).instantiate(ImmutableList.of(), typeManager);
-            @SuppressWarnings("nullness")
-            DataType c = typeManager.registerTaggedType("C", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Blank", null), new TagType<JellyType>("Num", JellyType.fromConcrete(DataType.NUMBER)))).instantiate(ImmutableList.of(), typeManager);
-            @SuppressWarnings("nullness")
-            DataType b = typeManager.registerTaggedType("B", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Single", null))).instantiate(ImmutableList.of(), typeManager);
-            @SuppressWarnings({"nullness", "identifier"})
-            DataType nested = typeManager.registerTaggedType("Nested", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("A", JellyType.tagged(new TypeId("A"), ImmutableList.of())), new TagType<JellyType>("C", JellyType.tagged(new TypeId("C"), ImmutableList.of())))).instantiate(ImmutableList.of(), typeManager);
-            DataType maybeMaybe = typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(
-                typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.TEXT)), typeManager)
-            )), typeManager);
-            
-            @SuppressWarnings({"nullness", "identifier"})
-            DataType eitherUnits = typeManager.registerTaggedType("EitherNumUnit",
-                    ImmutableList.of(new Pair<>(TypeVariableKind.UNIT, "a"), new Pair<>(TypeVariableKind.UNIT, "b")),
-                    ImmutableList.of(new TagType<>("Left", JellyType.number(JellyUnit.unitVariable("a"))),
-                            new TagType<>("Right", JellyType.number(JellyUnit.unitVariable("b"))))
-            ).instantiate(ImmutableList.of(Either.left(Unit.SCALAR), Either.left(typeManager.getUnitManager().loadUse("m"))), typeManager);
-
-            @SuppressWarnings("nullness")
-            DataType eitherUnits2 = typeManager.registerTaggedType("EitherMyOrHogshead",
-                ImmutableList.of(),
-                ImmutableList.of(new TagType<>("Left", JellyType.number(JellyUnit.fromConcrete(typeManager.getUnitManager().loadUse("myUnit")))),
-                    new TagType<>("Right", JellyType.number(JellyUnit.fromConcrete(typeManager.getUnitManager().loadUse("hogshead")))))
-            ).instantiate(ImmutableList.of(), typeManager);
-            
-            return new Pair<>(dummyManager, Arrays.<DataType>asList(
-                DataType.BOOLEAN,
-                DataType.TEXT,
-                DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
-                DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)),
-                DataType.date(new DateTimeInfo(DateTimeType.DATETIME)),
-                DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)),
-                DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)),
-                //DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)),
-                DataType.NUMBER,
-                DataType.number(new NumberInfo(typeManager.getUnitManager().loadUse("GBP"))),
-                DataType.number(new NumberInfo(typeManager.getUnitManager().loadUse("m"))),
-                DataType.number(new NumberInfo(typeManager.getUnitManager().loadUse("m^2"))),
-                DataType.number(new NumberInfo(typeManager.getUnitManager().loadUse("m^3/s^3"))),
-                DataType.number(new NumberInfo(typeManager.getUnitManager().loadUse("cm"))),
-                DataType.number(new NumberInfo(typeManager.getUnitManager().loadUse("(USD*m)/s^2"))),
-                a,
-                b,
-                c,
-                nested,
-                maybeMaybe,
-                eitherUnits,
-                eitherUnits2,
-                DataType.record(ImmutableMap.of("a", DataType.NUMBER, "b", DataType.NUMBER)),
-                DataType.record(ImmutableMap.of("bool", DataType.BOOLEAN, "Text", DataType.TEXT, "dtz", DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "c", c)),
-                DataType.record(ImmutableMap.of("z", DataType.NUMBER, "inner", DataType.record(ImmutableMap.of("t 1", DataType.TEXT, "t 2", DataType.NUMBER)))),
-                DataType.array(DataType.TEXT),
-                DataType.array(DataType.NUMBER),
-                DataType.array(DataType.record(ImmutableMap.of("a", DataType.NUMBER, "nested", DataType.record(ImmutableMap.of("the text 0 item", DataType.TEXT, "num num", DataType.NUMBER))))),
-                DataType.array(DataType.array(DataType.record(ImmutableMap.of("key", DataType.NUMBER, "value", DataType.record(ImmutableMap.of("a", DataType.TEXT, "c", DataType.NUMBER))))))
-            ));
-        }
-        catch (UserException | InternalException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
     private static Pair<@Nullable String, DataType> t(DataType type)
     {
         return new Pair<>(null, type);
@@ -445,7 +359,7 @@ public class TestUtil
                 typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), ImmutableList.of(), Utility.mapListInt(t.getTagTypes(), t2 -> t2.mapInt(JellyType::fromConcrete)));
             }
             */
-            return createTypeState(typeManager);
+            return TFunctionUtil.createTypeState(typeManager);
         }
         catch (InternalException | UserException e)
         {
@@ -458,7 +372,7 @@ public class TestUtil
         @ExpressionIdentifier String s;
         do
         {
-            s = IdentifierUtility.asExpressionIdentifier(DataTestUtil.generateIdent(r));
+            s = IdentifierUtility.asExpressionIdentifier(TBasicUtil.generateIdent(r));
         }
         while (s == null);
         return s;
@@ -782,26 +696,6 @@ public class TestUtil
         return s.toString();
     }
 
-    @OnThread(Tag.Simulation)
-    public static void assertUserException(SimulationEx simulationRunnable)
-    {
-        try
-        {
-            simulationRunnable.run();
-            // If we reach here, didn't throw:
-            fail("Expected UserException but no exception thrown");
-        }
-        catch (UserException e)
-        {
-            // As expected:
-            return;
-        }
-        catch (InternalException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
     // Wait.  Useful to stop multiple consecutive clicks turning into double clicks
     public static void delay(int millis)
     {
@@ -834,99 +728,6 @@ public class TestUtil
     {
         return str.chars().mapToObj(c -> Integer.toHexString(c) + (c == 10 ? "\n" : "")).collect(Collectors.joining(" "));
     }
-    
-    public static ErrorAndTypeRecorder excOnError()
-    {
-        return new ErrorAndTypeRecorder()
-        {
-            @Override
-            public <E> void recordError(E src, StyledString error)
-            {
-                throw new RuntimeException(error.toPlain());
-            }
-
-            @Override
-            public <EXPRESSION extends StyledShowable> void recordInformation(EXPRESSION src, Pair<StyledString, @Nullable QuickFix<EXPRESSION>> informaton)
-            {
-            }
-
-            @Override
-            public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
-            {
-            }
-
-            @SuppressWarnings("recorded")
-            @Override
-            public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
-            {
-                return typeExp;
-            }
-        };
-    }
-
-    @OnThread(Tag.Simulation)
-    public static @Nullable Pair<ValueFunction, DataType> typeCheckFunction(FunctionDefinition function, ImmutableList<DataType> paramTypes) throws InternalException, UserException
-    {
-        return typeCheckFunction(function, paramTypes, null);
-    }
-
-    // Returns the function and the return type of the function
-    @OnThread(Tag.Simulation)
-    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, ImmutableList<DataType> paramTypes, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
-    {
-        ErrorAndTypeRecorder onError = excOnError();
-        TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : TestUtil.managerWithTestTypes().getFirst().getTypeManager();
-        Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> functionType = function.getType(typeManager);
-        MutVar returnTypeVar = new MutVar(null);
-        @SuppressWarnings("nullness") // For null src
-        TypeExp paramTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, Utility.mapListInt(paramTypes, p -> TypeExp.fromDataType(null, p)), returnTypeVar), functionType.getFirst()));
-        if (paramTypeExp == null)
-            return null;
-        
-        @SuppressWarnings("nullness") // For null src
-        @Nullable DataType returnType = onError.recordLeftError(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()), null, returnTypeVar.toConcreteType(typeManager));
-        if (returnType != null)
-            return new Pair<>(function.getInstance(typeManager, s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
-        return null;
-    }
-
-    private static Either<Unit, DataType> getConcrete(String s, Map<String, Either<MutUnitVar, MutVar>> vars, TypeManager typeManager) throws InternalException, UserException
-    {
-        Either<MutUnitVar, MutVar> var = vars.get(s);
-        if (var == null)
-            throw new InternalException("Var " + s + " not found");
-        return var.mapBothEx(
-            u -> {
-                @Nullable Unit concrete = u.toConcreteUnit();
-                if (concrete == null)
-                    throw new InternalException("Could not concrete unit: " + u);
-                return concrete;
-            },
-            v -> v.toConcreteType(typeManager).getRight(""));
-    }
-
-    @OnThread(Tag.Simulation)
-    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType expectedReturnType, ImmutableList<DataType> paramTypes, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
-    {
-        ErrorAndTypeRecorder onError = excOnError();
-        TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.make().getTypeManager();
-        Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> functionType = function.getType(typeManager);
-        MutVar returnTypeVar = new MutVar(null);
-        @SuppressWarnings("nullness") // For null src
-        @Nullable TypeExp unifiedReturn = onError.recordError(null, TypeExp.unifyTypes(returnTypeVar, TypeExp.fromDataType(null, expectedReturnType)));
-        if (null == unifiedReturn)
-            return null;
-        @SuppressWarnings("nullness") // For null src
-        TypeExp funcTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, Utility.mapListInt(paramTypes, p -> TypeExp.fromDataType(null, p)), returnTypeVar), functionType.getFirst()));
-        if (funcTypeExp == null)
-            return null;
-            
-        @SuppressWarnings("nullness") // For null src
-        @Nullable DataType returnType = onError.recordLeftError(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()), null, returnTypeVar.toConcreteType(typeManager));
-        if (returnType != null)
-            return new Pair<>(function.getInstance(typeManager, s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
-        return null;
-    }
 
     // If null, assertion failure.  Otherwise returns as non-null.
     @SuppressWarnings("nullness")
@@ -946,51 +747,6 @@ public class TestUtil
     public static KeyCode ctrlCmd()
     {
         return SystemUtils.IS_OS_MAC_OSX ? KeyCode.COMMAND : KeyCode.CONTROL;
-    }
-
-    @OnThread(Tag.Simulation)
-    public static @Value Object runExpression(String expressionSrc) throws UserException, InternalException
-    {
-        DummyManager mgr = managerWithTestTypes().getFirst();
-        Expression expression = TestUtil.parseExpression(expressionSrc, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()));
-        assertNotNull(expression.checkExpression(TestUtil.dummyColumnLookup(), createTypeState(mgr.getTypeManager()), excOnError()));
-        return expression.calculateValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty())).value;
-    }
-
-    public static ColumnLookup dummyColumnLookup()
-    {
-        return new ColumnLookup()
-        {
-            @Override
-            public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId)
-            {
-                return null;
-            }
-
-            @Override
-            public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
-            {
-                return null;
-            }
-
-            @Override
-            public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
-            {
-                return Stream.empty();
-            }
-
-            @Override
-            public Stream<TableId> getAvailableTableReferences()
-            {
-                return Stream.empty();
-            }
-
-            @Override
-            public Stream<ClickedReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId)
-            {
-                return Stream.empty();
-            }
-        };
     }
 
 
@@ -1224,27 +980,6 @@ public class TestUtil
             });
         }
         fx_(() -> virtualGrid.redoLayoutAfterScroll());
-    }
-
-    public static TypeState createTypeState(TypeManager typeManager) throws InternalException
-    {
-        return TypeState.withRowNumber(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
-    }
-
-    public static Unit getUnit(DataType numberType) throws InternalException
-    {
-        return numberType.apply(new SpecificDataTypeVisitor<Unit>() {
-            @Override
-            public Unit number(NumberInfo displayInfo) throws InternalException
-            {
-                return displayInfo.getUnit();
-            }
-        });
-    }
-
-    public static Expression parseExpression(String expressionSrc, TypeManager typeManager, FunctionLookup functionLookup) throws InternalException, UserException
-    {
-        return ExpressionUtil.parse(null, expressionSrc, ExpressionVersion.latest(), typeManager, functionLookup);
     }
 
     public static interface TestRunnable

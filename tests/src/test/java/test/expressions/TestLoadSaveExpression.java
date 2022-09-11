@@ -22,6 +22,7 @@ package test.expressions;
 
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
+import test.functions.TFunctionUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.data.datatype.TypeManager;
@@ -33,7 +34,6 @@ import xyz.columnal.transformations.expression.AddSubtractExpression.AddSubtract
 import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
-import test.TestUtil;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -65,7 +65,7 @@ public class TestLoadSaveExpression
         TypeManager typeManager = DummyManager.make().getTypeManager();
         assertEquals(
             IdentExpression.column(new ColumnId("Card")),
-            TestUtil.parseExpression("column\\\\Card", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
+            TFunctionUtil.parseExpression("column\\\\Card", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
         );
     }
     @Test
@@ -78,7 +78,7 @@ public class TestLoadSaveExpression
         TypeManager typeManager = DummyManager.make().getTypeManager();
         assertEquals(
             new NotEqualExpression(IdentExpression.column(new ColumnId("Card")), new StringLiteral("xxx")),
-            TestUtil.parseExpression("column\\\\Card <> \"xxx\"", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
+            TFunctionUtil.parseExpression("column\\\\Card <> \"xxx\"", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
         );
         assertBothWays(
             new NotEqualExpression(IdentExpression.column(new ColumnId("Card")), new StringLiteral("xxx")),
@@ -137,7 +137,7 @@ public class TestLoadSaveExpression
     private static void assertBothWays(Expression expression, String src) throws InternalException, UserException
     {
         TypeManager typeManager = DummyManager.make().getTypeManager();
-        assertEquals(expression, TestUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
+        assertEquals(expression, TFunctionUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
         assertEquals(src, expression.save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));
     }
 }

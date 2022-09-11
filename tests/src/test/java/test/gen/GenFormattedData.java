@@ -26,7 +26,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.apache.commons.lang3.StringEscapeUtils;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.columntype.BlankColumnType;
 import xyz.columnal.data.columntype.CleanDateColumnType;
 import xyz.columnal.data.columntype.NumericColumnType;
@@ -141,7 +141,7 @@ public class GenFormattedData extends Generator<FormatAndData>
                     }
                     else
                     {
-                        str = DataTestUtil.makeString(r, generationStatus).replace("\n", "").replace("\r", "");
+                        str = TBasicUtil.makeString(r, generationStatus).replace("\n", "").replace("\r", "");
                         // Get rid of any characters which can't be saved in that encoding:
                         str = str.chars().filter(ch -> format.initialTextFormat.charset.newEncoder().canEncode((char) ch)).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
                         // TODO quote separators instead of removing them:

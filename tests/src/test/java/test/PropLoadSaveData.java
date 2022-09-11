@@ -29,7 +29,7 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.*;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.TableManager.Loaded;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -72,7 +72,7 @@ public class PropLoadSaveData
     {
         SourceOfRandomness sourceOfRandomness = new SourceOfRandomness(r);
         int[] next = new int[] {1};
-        ImmutableList<GridComment> comments = DataTestUtil.makeList(sourceOfRandomness, 0, 5, () -> {
+        ImmutableList<GridComment> comments = TBasicUtil.makeList(sourceOfRandomness, 0, 5, () -> {
             String content = IntStream.range(0, r.nextInt(3)).mapToObj(_n -> TestUtil.generateColumnIds(sourceOfRandomness, r.nextInt(12)).stream().map(c -> c.getRaw()).collect(Collectors.joining(" "))).collect(Collectors.joining("\n"));
             
             return new GridComment(SaveTag.generateRandom(), content, new CellPosition(r.nextInt(100) * AbsRowIndex.ONE, (next[0]++ * 1000) * AbsColIndex.ONE), 1 + r.nextInt(20), 1 + r.nextInt(20));

@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import test.functions.TFunctionUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.id.TableId;
@@ -56,7 +57,7 @@ public class GenNonsenseTransform extends Generator<Transformation_Mgr>
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
         try
         {
-            DummyManager mgr = TestUtil.managerWithTestTypes().getFirst();
+            DummyManager mgr = TFunctionUtil.managerWithTestTypes().getFirst();
             GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
             genNonsenseExpression.setTableManager(mgr);
 

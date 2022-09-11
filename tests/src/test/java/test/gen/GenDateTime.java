@@ -23,10 +23,8 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import xyz.columnal.data.DataTestUtil;
-import test.TestUtil;
+import xyz.columnal.data.TBasicUtil;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -42,6 +40,6 @@ public class GenDateTime extends Generator<LocalDateTime>
     @Override
     public LocalDateTime generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        return DataTestUtil.generateDateTime(sourceOfRandomness, generationStatus);
+        return TBasicUtil.generateDateTime(sourceOfRandomness, generationStatus);
     }
 }

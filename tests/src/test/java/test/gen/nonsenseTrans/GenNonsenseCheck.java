@@ -23,6 +23,7 @@ package test.gen.nonsenseTrans;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
@@ -53,7 +54,7 @@ public class GenNonsenseCheck extends Generator<Transformation_Mgr>
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
         try
         {
-            DummyManager mgr = TestUtil.managerWithTestTypes().getFirst();
+            DummyManager mgr = TFunctionUtil.managerWithTestTypes().getFirst();
             GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
             genNonsenseExpression.setTableManager(mgr);
             Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);

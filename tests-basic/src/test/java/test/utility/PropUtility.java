@@ -23,13 +23,11 @@ package test.utility;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
-import org.sosy_lab.common.rationals.Rational;
 import xyz.columnal.error.UserException;
-import test.utility.gen.GenNumber;
+import test.gen.GenNumber;
 import xyz.columnal.utility.Utility;
 
 import static org.hamcrest.MatcherAssert.assertThat;

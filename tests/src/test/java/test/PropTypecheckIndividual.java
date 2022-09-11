@@ -32,6 +32,7 @@ import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sosy_lab.common.rationals.Rational;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.KnownLengthRecordSet;
 import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.data.datatype.DataType;
@@ -195,7 +196,7 @@ public class PropTypecheckIndividual
         boolean same = a.equals(b);
         Assume.assumeThat(same, Matchers.<Boolean>equalTo(false));
 
-        ColumnLookup columnLookup = TestUtil.dummyColumnLookup();
+        ColumnLookup columnLookup = TFunctionUtil.dummyColumnLookup();
         assertEquals(null, new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(b)), false).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(a)), false).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(b), new DummyExpression(b)), false).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
@@ -207,12 +208,12 @@ public class PropTypecheckIndividual
     @Property
     public void propDivide(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
     {
-        ColumnLookup columnLookup = TestUtil.dummyColumnLookup();
+        ColumnLookup columnLookup = TFunctionUtil.dummyColumnLookup();
         if (DataTypeUtility.isNumber(a) && DataTypeUtility.isNumber(b))
         {
             // Will actually type-check
-            Unit aOverB = TestUtil.getUnit(a).divideBy(TestUtil.getUnit(b));
-            Unit bOverA = TestUtil.getUnit(b).divideBy(TestUtil.getUnit(a));
+            Unit aOverB = TFunctionUtil.getUnit(a).divideBy(TFunctionUtil.getUnit(b));
+            Unit bOverA = TFunctionUtil.getUnit(b).divideBy(TFunctionUtil.getUnit(a));
             assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(aOverB)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
             assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(bOverA)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         }
@@ -255,8 +256,8 @@ public class PropTypecheckIndividual
     public void propRaiseNonNumeric(@From(GenDataType.class) DataType a) throws UserException, InternalException
     {
         Assume.assumeFalse(DataTypeUtility.isNumber(a));
-        assertNull(new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).checkExpression(TestUtil.dummyColumnLookup(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertNull(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).checkExpression(TestUtil.dummyColumnLookup(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertNull(new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).checkExpression(TFunctionUtil.dummyColumnLookup(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertNull(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).checkExpression(TFunctionUtil.dummyColumnLookup(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
     }
 
     @Property
@@ -370,7 +371,7 @@ public class PropTypecheckIndividual
 
     private static @Nullable TypeExp check(Expression e) throws UserException, InternalException
     {
-        return e.checkExpression(TestUtil.dummyColumnLookup(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer());
+        return e.checkExpression(TFunctionUtil.dummyColumnLookup(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer());
     }
 
     private static @Nullable DataType checkConcrete(Expression e) throws UserException, InternalException
@@ -380,7 +381,7 @@ public class PropTypecheckIndividual
 
     private static @Nullable DataType checkConcrete(TypeManager typeManager, Expression e) throws UserException, InternalException
     {
-        TypeExp typeExp = e.checkExpression(TestUtil.dummyColumnLookup(), TestUtil.createTypeState(typeManager), new ErrorAndTypeRecorderStorer());
+        TypeExp typeExp = e.checkExpression(TFunctionUtil.dummyColumnLookup(), TFunctionUtil.createTypeState(typeManager), new ErrorAndTypeRecorderStorer());
         if (typeExp == null)
             return null;
         else
@@ -489,14 +490,14 @@ public class PropTypecheckIndividual
 
     private void checkConcreteType(@Nullable DataType dataType, String expression) throws InternalException, UserException
     {
-        TypeManager typeManager = TestUtil.managerWithTestTypes().getFirst().getTypeManager();
-        assertEquals(expression, dataType, checkConcrete(typeManager, TestUtil.parseExpression(expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
+        TypeManager typeManager = TFunctionUtil.managerWithTestTypes().getFirst().getTypeManager();
+        assertEquals(expression, dataType, checkConcrete(typeManager, TFunctionUtil.parseExpression(expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
     }
 
     private void checkConcreteType(ExFunction<TypeManager, DataType> dataType, String expression) throws InternalException, UserException
     {
-        TypeManager typeManager = TestUtil.managerWithTestTypes().getFirst().getTypeManager();
-        assertEquals(expression, dataType.apply(typeManager), checkConcrete(typeManager, TestUtil.parseExpression(expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
+        TypeManager typeManager = TFunctionUtil.managerWithTestTypes().getFirst().getTypeManager();
+        assertEquals(expression, dataType.apply(typeManager), checkConcrete(typeManager, TFunctionUtil.parseExpression(expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
     }
 
     @Test

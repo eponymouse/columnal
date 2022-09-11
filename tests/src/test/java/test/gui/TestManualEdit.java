@@ -643,7 +643,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         if (sortBy != null)
         {
             DataTypeValue sortByColumn = original.getColumn(sortBy).getType();
-            List<ComparableEither<String, ComparableValue>> sortByData = Utility.mapList(DataTestUtil.getAllCollapsedData(sortByColumn, original.getLength()), x -> ComparableEither.fromEither(x.map(ComparableValue::new)));
+            List<ComparableEither<String, ComparableValue>> sortByData = Utility.mapList(TBasicUtil.getAllCollapsedData(sortByColumn, original.getLength()), x -> ComparableEither.fromEither(x.map(ComparableValue::new)));
             Collections.sort(sortMap, Comparator.<Integer, ComparableEither<String, ComparableValue>>comparing(i -> sortByData.get(i)));
         }
         
@@ -681,7 +681,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             
             assertEquals(expCol.columnName, actCol.columnName);
             assertEquals(expCol.dataType, actCol.dataType);
-            DataTestUtil.assertValueListEitherEqual("Column " + expCol.columnName + " (" + colIndex + ")", expCol.dataValues, actCol.dataValues);
+            TBasicUtil.assertValueListEitherEqual("Column " + expCol.columnName + " (" + colIndex + ")", expCol.dataValues, actCol.dataValues);
         }
     }
 

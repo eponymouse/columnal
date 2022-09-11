@@ -23,10 +23,8 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import xyz.columnal.data.DataTestUtil;
-import test.TestUtil;
+import xyz.columnal.data.TBasicUtil;
 
-import java.time.LocalDateTime;
 import java.time.OffsetTime;
 
 /**
@@ -42,6 +40,6 @@ public class GenOffsetTime extends Generator<OffsetTime>
     @Override
     public OffsetTime generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
-        return OffsetTime.of(r.nextInt(24), r.nextInt(60), r.nextInt(60), r.nextInt(1000000000), DataTestUtil.generateZoneOffset(r, generationStatus));
+        return OffsetTime.of(r.nextInt(24), r.nextInt(60), r.nextInt(60), r.nextInt(1000000000), TBasicUtil.generateZoneOffset(r, generationStatus));
     }
 }

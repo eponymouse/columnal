@@ -1,0 +1,20 @@
+dependencies {
+    testImplementation project(":data")
+    testImplementation project(":transformations")
+    testImplementation project(":types")
+    testImplementation project(":utility")
+    testImplementation libs.guava
+
+    testFixturesImplementation project(":data")
+    testFixturesImplementation project(":identifiers")
+    testFixturesImplementation project(":transformations")
+    testFixturesImplementation project(":types")
+    testFixturesImplementation project(":utility")
+    testFixturesImplementation libs.guava
+}
+
+description = 'tests-data'
+
+test {
+    maxParallelForks = Runtime.runtime.availableProcessors() / 2
+}

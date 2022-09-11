@@ -24,7 +24,8 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import xyz.columnal.data.DataTestUtil;
+import test.functions.TFunctionUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.transformations.RTransformation;
@@ -50,10 +51,10 @@ public class GenNonsenseRTransform extends Generator<Transformation_Mgr>
     {
         try
         {
-            DummyManager mgr = TestUtil.managerWithTestTypes().getFirst();
+            DummyManager mgr = TFunctionUtil.managerWithTestTypes().getFirst();
 
-            ImmutableList<TableId> srcIds = DataTestUtil.makeList(sourceOfRandomness, 0, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
-            ImmutableList<String> pkgs = DataTestUtil.makeList(sourceOfRandomness, 0, 10, () -> DataTestUtil.generateIdent(sourceOfRandomness));
+            ImmutableList<TableId> srcIds = TBasicUtil.makeList(sourceOfRandomness, 0, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
+            ImmutableList<String> pkgs = TBasicUtil.makeList(sourceOfRandomness, 0, 10, () -> TBasicUtil.generateIdent(sourceOfRandomness));
             String rExpression = TestUtil.makeNonEmptyString(sourceOfRandomness, generationStatus);
             
             return new Transformation_Mgr(mgr, new RTransformation(mgr, TestUtil.ILD, srcIds, pkgs, rExpression));

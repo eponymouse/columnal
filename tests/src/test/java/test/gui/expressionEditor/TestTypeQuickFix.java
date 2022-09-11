@@ -30,6 +30,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Window;
+import test.functions.TFunctionUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -38,16 +39,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.util.WaitForAsyncUtils;
 import xyz.columnal.data.CellPosition;
-import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.ImmediateDataSource;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.data.datatype.NumberInfo;
 import xyz.columnal.data.datatype.TypeId;
-import xyz.columnal.data.datatype.TypeManager;
-import xyz.columnal.data.unit.SingleUnit;
-import xyz.columnal.data.unit.Unit;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -99,7 +96,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
     @Test
     public void testTypo4() throws Exception
     {
-        DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
+        DummyManager dummyManager = TFunctionUtil.managerWithTestTypes().getFirst();
         testSimpleFix("Optionl(Text)", "Optionl", dummyManager.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.TEXT)), dummyManager.getTypeManager()));
     }
 
@@ -130,21 +127,21 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
     @Test
     public void testUnitNameMixup() throws Exception
     {
-        DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
+        DummyManager dummyManager = TFunctionUtil.managerWithTestTypes().getFirst();
         testFix("Number{second}", "second", dotCssClassFor("s"), DataType.number(new NumberInfo(dummyManager.getUnitManager().loadUse("s"))));
     }
 
     @Test
     public void testUnitNameMixup2() throws Exception
     {
-        DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
+        DummyManager dummyManager = TFunctionUtil.managerWithTestTypes().getFirst();
         testFix("EitherNumUnit({second})({m})", "second", dotCssClassFor("s"), TestUtil.checkNonNull(dummyManager.getTypeManager().lookupType(new TypeId("EitherNumUnit"), ImmutableList.of(Either.left(dummyManager.getUnitManager().loadUse("s")), Either.left(dummyManager.getUnitManager().loadUse("m"))))));
     }
 
     @Test
     public void testUnitNameMixup3() throws Exception
     {
-        DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
+        DummyManager dummyManager = TFunctionUtil.managerWithTestTypes().getFirst();
         UnitManager um = dummyManager.getUnitManager();
         testFix("Number{(s^6*meter)/kg}", "meter", dotCssClassFor("m"), DataType.number(new NumberInfo(um.loadUse("s").raisedTo(6).times(um.loadUse("m").divideBy(um.loadUse("kg"))))));
     }
@@ -183,7 +180,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
     {
         try
         {
-            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, TestUtil.managerWithTestTypes().getFirst()).get();
+            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, TFunctionUtil.managerWithTestTypes().getFirst()).get();
 
             Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(1));

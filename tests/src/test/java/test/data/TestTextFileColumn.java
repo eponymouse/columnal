@@ -28,7 +28,7 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.KnownLengthRecordSet;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.TextFileColumn;
@@ -66,7 +66,7 @@ public class TestTextFileColumn
         {
             for (int line = 0; line < generatedTextFile.getLineCount(); line++)
             {
-                DataTestUtil.assertValueEqual("Col " + column + " index " + line, generatedTextFile.getExpectedValue(column, line), recordSet.getColumns().get(column).getType().getCollapsed(line));
+                TBasicUtil.assertValueEqual("Col " + column + " index " + line, generatedTextFile.getExpectedValue(column, line), recordSet.getColumns().get(column).getType().getCollapsed(line));
             }
         }
     }

@@ -28,7 +28,8 @@ import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.DataTestUtil;
+import test.functions.TFunctionUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DataTypeVisitor;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
@@ -130,7 +131,7 @@ public class BackwardsMatch extends BackwardsProvider
                 IdentExpression varRef = IdentExpression.load(numVar.name);
                 return ImmutableList.of(() -> {
                     return new AddSubtractExpression(ImmutableList.of(
-                        new TimesExpression(ImmutableList.of(varRef, new NumericLiteral(1, parent.makeUnitExpression(numberInfo.getUnit().divideBy(TestUtil.getUnit(numVarFinal.type)))))),
+                        new TimesExpression(ImmutableList.of(varRef, new NumericLiteral(1, parent.makeUnitExpression(numberInfo.getUnit().divideBy(TFunctionUtil.getUnit(numVarFinal.type)))))),
                             new NumericLiteral(Utility.addSubtractNumbers((Number)targetValue, Utility.cast(numVarFinal.value, Number.class), false), parent.makeUnitExpression(numberInfo.getUnit()))
                     ), ImmutableList.of(AddSubtractOp.ADD));
                 });
@@ -214,7 +215,7 @@ public class BackwardsMatch extends BackwardsProvider
         DataType t = parent.makeType();
         @Value Object actual = parent.makeValue(t);
         // Make a bunch of guards which won't fire:
-        List<Pair<PatternInfo, Expression>> clauses = new ArrayList<>(Utility.filterOptional(DataTestUtil.<Optional<Pair<PatternInfo, Expression>>>makeList(r, 0, 4, () -> {
+        List<Pair<PatternInfo, Expression>> clauses = new ArrayList<>(Utility.filterOptional(TBasicUtil.<Optional<Pair<PatternInfo, Expression>>>makeList(r, 0, 4, () -> {
             @Nullable PatternInfo nonMatch = makeNonMatchingPattern(maxLevels - 1, t, actual);
             return nonMatch == null ? Optional.empty() : Optional.of(new Pair<>(nonMatch,
                     parent.make(targetType, parent.makeValue(targetType), maxLevels - 1)));
@@ -301,7 +302,7 @@ public class BackwardsMatch extends BackwardsProvider
         DataType t = parent.makeType();
         @Value Object actual = parent.makeValue(t);
         // Make a bunch of guards which won't fire:
-        ArrayList<MatchClause> clauses = new ArrayList<>(DataTestUtil.makeList(r, 0, 4, (ExSupplier<Optional<MatchClause>>)() -> {
+        ArrayList<MatchClause> clauses = new ArrayList<>(TBasicUtil.makeList(r, 0, 4, (ExSupplier<Optional<MatchClause>>)() -> {
             // Generate a bunch which can't match the item:
             List<PatternInfo> patterns = makeNonMatchingPatterns(maxLevels - 1, t, actual);
             Expression outcome = parent.make(targetType, parent.makeValue(targetType), maxLevels - 1);
@@ -503,7 +504,7 @@ public class BackwardsMatch extends BackwardsProvider
     @OnThread(Tag.Simulation)
     private List<PatternInfo> makeNonMatchingPatterns(final int maxLevels, final DataType t, @Value Object actual) throws InternalException, UserException
     {
-        return Utility.filterOptional(DataTestUtil.<Optional<PatternInfo>>makeList(r, 1, 3, () -> Optional.ofNullable(makeNonMatchingPattern(maxLevels, t, actual))).stream()).collect(ImmutableList.toImmutableList());
+        return Utility.filterOptional(TBasicUtil.<Optional<PatternInfo>>makeList(r, 1, 3, () -> Optional.ofNullable(makeNonMatchingPattern(maxLevels, t, actual))).stream()).collect(ImmutableList.toImmutableList());
     }
 
     @OnThread(Tag.Simulation)

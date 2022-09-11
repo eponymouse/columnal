@@ -25,12 +25,11 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.FieldAccessExpression;
-import test.TestUtil;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility.RecordMap;
 
@@ -58,10 +57,10 @@ public class BackwardsRecord extends BackwardsProvider
         return ImmutableList.of(() -> {
             // Make a record then access its field:
             ArrayList<Pair<@ExpressionIdentifier String, DataType>> fields = new ArrayList<>();
-            @ExpressionIdentifier String ourField = DataTestUtil.generateExpressionIdentifier(r);
+            @ExpressionIdentifier String ourField = TBasicUtil.generateExpressionIdentifier(r);
             fields.add(new Pair<>(ourField, targetType));
             // Add a few more:
-            fields.addAll(DataTestUtil.<Pair<@ExpressionIdentifier String, DataType>>makeList(r, 1, 3, () -> new Pair<>(DataTestUtil.generateExpressionIdentifier(r), parent.makeType())));
+            fields.addAll(TBasicUtil.<Pair<@ExpressionIdentifier String, DataType>>makeList(r, 1, 3, () -> new Pair<>(TBasicUtil.generateExpressionIdentifier(r), parent.makeType())));
 
             ImmutableMap<@ExpressionIdentifier String, DataType> fieldMap = fields.stream().collect(ImmutableMap.toImmutableMap(p -> p.getFirst(), p -> p.getSecond(), (a, b) -> a));
             DataType recordType = DataType.record(fieldMap);

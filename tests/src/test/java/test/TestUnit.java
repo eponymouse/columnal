@@ -30,6 +30,7 @@ import org.hamcrest.MatcherAssert;
 import org.junit.Before;
 import org.junit.Test;
 import org.sosy_lab.common.rationals.Rational;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.NumberInfo;
 import xyz.columnal.data.datatype.DataTypeUtility;
@@ -201,7 +202,7 @@ public class TestUnit
     {
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(new AsUnit(),
+            @Nullable Pair<ValueFunction, DataType> instance = TFunctionUtil.typeCheckFunction(new AsUnit(),
                 ImmutableList.of(
                     DummyManager.make().getTypeManager().unitGADTFor(mgr.loadUse(destUnit)),
                     DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))

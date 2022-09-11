@@ -23,11 +23,11 @@ package test.gen;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import test.TestUtil;
 import test.gen.GenValueList.ListAndType;
 import xyz.columnal.utility.Utility.ListEx;
 
@@ -66,7 +66,7 @@ public class GenValueList extends GenValueBase<ListAndType>
     {
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
-        DataType t = r.choose(TestUtil.managerWithTestTypes().getSecond());
+        DataType t = r.choose(TFunctionUtil.managerWithTestTypes().getSecond());
         int length = r.nextInt(0, 100);
         @Value Object[] values = new @Value Object[length];
         for (int i = 0; i < length; i++)

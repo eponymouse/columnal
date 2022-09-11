@@ -176,7 +176,7 @@ public class GenDataAndTransforms extends Generator<TableManager>
         for (int i = 0; i < numCols; i++)
         {
             DataTypeAndValueMaker t = dataTypeMaker.makeType();
-            cols.add(ColumnUtility.makeImmediateColumn(t.getDataType(), new ColumnId(IdentifierUtility.identNum("Col", i)), DataTestUtil.makeList(r, numRows, numRows, () -> Either.right(t.makeValue())), t.makeValue()));
+            cols.add(ColumnUtility.makeImmediateColumn(t.getDataType(), new ColumnId(IdentifierUtility.identNum("Col", i)), TBasicUtil.makeList(r, numRows, numRows, () -> Either.right(t.makeValue())), t.makeValue()));
         }
         
         mgr.record(new ImmediateDataSource(mgr, TestUtil.ILD,new EditableRecordSet(cols.build(), () -> numRows)));

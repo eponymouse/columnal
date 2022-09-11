@@ -29,7 +29,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -160,7 +160,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
         if (maxDepth > 1 && typeKinds.contains(TypeKinds.RECORD))
         {
             options.add(
-                    () -> JellyType.record(DataTestUtil.<Pair<@ExpressionIdentifier String, JellyType>>makeList(r, 2, 5, () -> new Pair<>(DataTestUtil.generateExpressionIdentifier(r), genDepth(typeManager, r, maxDepth - 1, gs, typeKinds))).stream().collect(ImmutableMap.<Pair<@ExpressionIdentifier String, JellyType>, @ExpressionIdentifier String, Field>toImmutableMap((Pair<@ExpressionIdentifier String, JellyType> p) -> p.getFirst(), p -> new Field(p.getSecond(), true), (Field a, Field b) -> a)))
+                    () -> JellyType.record(TBasicUtil.<Pair<@ExpressionIdentifier String, JellyType>>makeList(r, 2, 5, () -> new Pair<>(TBasicUtil.generateExpressionIdentifier(r), genDepth(typeManager, r, maxDepth - 1, gs, typeKinds))).stream().collect(ImmutableMap.<Pair<@ExpressionIdentifier String, JellyType>, @ExpressionIdentifier String, Field>toImmutableMap((Pair<@ExpressionIdentifier String, JellyType> p) -> p.getFirst(), p -> new Field(p.getSecond(), true), (Field a, Field b) -> a)))
             );
         }
         if (maxDepth > 1 && typeKinds.contains(TypeKinds.LIST))
@@ -225,7 +225,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
             if (r.nextBoolean() && typeKinds.contains(TypeKinds.NEW_TAGGED_INNER))
             {
                 // Must use distinct to make sure no duplicates:
-                typeVars = DataTestUtil.<@ExpressionIdentifier String>makeList(r, 1, 4, () -> {
+                typeVars = TBasicUtil.<@ExpressionIdentifier String>makeList(r, 1, 4, () -> {
                     @SuppressWarnings("identifier")
                     @ExpressionIdentifier String az = "" + r.nextChar('a', 'z');
                     return az;
@@ -241,7 +241,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
             if (r.nextInt(3) == 1 || !typeKinds.contains(TypeKinds.NEW_TAGGED_INNER))
                 types = new ArrayList<>();
             else
-                types = new ArrayList<>(DataTestUtil.makeList(r, 1, 10, () -> genDepth(typeManager, r, maxDepth - 1, gs, typeKinds)));
+                types = new ArrayList<>(TBasicUtil.makeList(r, 1, 10, () -> genDepth(typeManager, r, maxDepth - 1, gs, typeKinds)));
             // Then those with inner types, making sure we have at least one:
             int extraNulls = r.nextInt(5) + (types.isEmpty() ? 1 : 0);
             for (int i = 0; i < extraNulls; i++)

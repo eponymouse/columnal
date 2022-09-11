@@ -32,7 +32,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import xyz.columnal.data.DataTestUtil;
+import test.functions.TFunctionUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
 import xyz.columnal.data.datatype.DataTypeUtility;
@@ -82,7 +83,7 @@ public class PropTypecheck
     @Test
     public void testTypeComparison() throws InternalException, UserException
     {
-        List<DataType> types = TestUtil.managerWithTestTypes().getSecond();
+        List<DataType> types = TFunctionUtil.managerWithTestTypes().getSecond();
         for (DataType a : types)
         {
             for (DataType b : types)
@@ -130,7 +131,7 @@ public class PropTypecheck
         for (Expression expression : src.expressionFailures)
         {
             AtomicBoolean errorReported = new AtomicBoolean(false);
-            assertNull(src.getDisplay(expression), expression.checkExpression(src, TestUtil.createTypeState(src.typeManager), new ErrorAndTypeRecorder()
+            assertNull(src.getDisplay(expression), expression.checkExpression(src, TFunctionUtil.createTypeState(src.typeManager), new ErrorAndTypeRecorder()
             {
                 @Override
                 public <E> void recordError(E src, StyledString error)
@@ -165,7 +166,7 @@ public class PropTypecheck
     public void propTypeCheckSucceed(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         ErrorAndTypeRecorderStorer storer = new ErrorAndTypeRecorderStorer();
-        @Nullable TypeExp checked = src.expression.checkExpression(src, TestUtil.createTypeState(src.typeManager), storer);
+        @Nullable TypeExp checked = src.expression.checkExpression(src, TFunctionUtil.createTypeState(src.typeManager), storer);
         TypeExp srcTypeExp = TypeExp.fromDataType(null, src.type);
         assertEquals(src.expression.toString() + "\n" + storer.getAllErrors().map(StyledString::toPlain).collect(Collectors.joining("\n")) + "\nCol types: " + src.recordSet.getColumns().stream().map(c -> {
             try
@@ -228,12 +229,12 @@ public class PropTypecheck
     @Property
     public void checkTuple(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker, @From(GenRandom.class) Random r) throws InternalException, UserException
     {
-        List<DataType> types = DataTestUtil.makeList(new SourceOfRandomness(r), 1, 10, () -> typeMaker.makeType().getDataType());
+        List<DataType> types = TBasicUtil.makeList(new SourceOfRandomness(r), 1, 10, () -> typeMaker.makeType().getDataType());
         
-        List<@ExpressionIdentifier String> namesA = Utility.<@ExpressionIdentifier String>replicateM(types.size(), () -> DataTestUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
+        List<@ExpressionIdentifier String> namesA = Utility.<@ExpressionIdentifier String>replicateM(types.size(), () -> TBasicUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
         if (namesA.stream().distinct().count() != namesA.size())
             return;
-        List<@ExpressionIdentifier String> namesB = r.nextInt(4) == 1 ? namesA : Utility.<@ExpressionIdentifier String>replicateM(types.size(), () -> DataTestUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
+        List<@ExpressionIdentifier String> namesB = r.nextInt(4) == 1 ? namesA : Utility.<@ExpressionIdentifier String>replicateM(types.size(), () -> TBasicUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
         if (namesB.stream().distinct().count() != namesB.size())
             return;
         

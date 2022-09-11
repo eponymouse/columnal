@@ -23,7 +23,7 @@ package test.gen.backwards;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -82,7 +82,7 @@ public class BackwardsBooleans extends BackwardsProvider
             // First form a valid set of values and sort them into order
             boolean ascending = r.nextBoolean();
             DataType dataType = parent.makeType();
-            List<Pair<@Value Object, Expression>> operands = new ArrayList<>(DataTestUtil.<Pair<@Value Object, Expression>>makeList(r, 2, 5, () -> {
+            List<Pair<@Value Object, Expression>> operands = new ArrayList<>(TBasicUtil.<Pair<@Value Object, Expression>>makeList(r, 2, 5, () -> {
                 @Value Object value = parent.makeValue(dataType);
                 return new Pair<>(value, parent.make(dataType, value, maxLevels - 1));
             }));
@@ -210,7 +210,7 @@ public class BackwardsBooleans extends BackwardsProvider
     {
         // If target is false, all must be false:
         if (b == false)
-            return new OrExpression(DataTestUtil.makeList(r, 2, 5, () -> parent.make(DataType.BOOLEAN, false, maxLevels - 1)));
+            return new OrExpression(TBasicUtil.makeList(r, 2, 5, () -> parent.make(DataType.BOOLEAN, false, maxLevels - 1)));
             // Otherwise they can take on random values, but one must be false:
         else
         {
@@ -227,7 +227,7 @@ public class BackwardsBooleans extends BackwardsProvider
     {
         // If target is true, all must be true:
         if (b)
-            return new AndExpression(DataTestUtil.makeList(r, 2, 5, () -> parent.make(DataType.BOOLEAN, true, maxLevels - 1)));
+            return new AndExpression(TBasicUtil.makeList(r, 2, 5, () -> parent.make(DataType.BOOLEAN, true, maxLevels - 1)));
             // Otherwise they can take on random values, but one must be false:
         else
         {

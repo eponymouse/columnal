@@ -34,7 +34,7 @@ import org.junit.runner.RunWith;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.ImmediateDataSource;
@@ -276,7 +276,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                     // Try flexibly parsing then compare:
                     try
                     {
-                        DataTestUtil.assertValueEqual("Flexible", FromString.convertEntireString(DataTypeUtility.value(first), dataType), FromString.convertEntireString(DataTypeUtility.value(value), dataType));
+                        TBasicUtil.assertValueEqual("Flexible", FromString.convertEntireString(DataTypeUtility.value(first), dataType), FromString.convertEntireString(DataTypeUtility.value(value), dataType));
                         return;
                     }
                     catch (Throwable t)

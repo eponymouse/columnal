@@ -32,6 +32,9 @@ include(':transformations')
 include(':types')
 include(':utility')
 include(':tests-basic')
+include(':tests-data')
+include(':tests-functions')
+include(':tests-tables')
 include(':xml')
 
 dependencyResolutionManagement {

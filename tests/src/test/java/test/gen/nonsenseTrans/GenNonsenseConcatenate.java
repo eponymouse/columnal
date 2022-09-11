@@ -23,7 +23,8 @@ package test.gen.nonsenseTrans;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import xyz.columnal.data.DataTestUtil;
+import test.functions.TFunctionUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
@@ -55,10 +56,10 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
 
-        DummyManager mgr = TestUtil.managerWithTestTypes().getFirst();
+        DummyManager mgr = TFunctionUtil.managerWithTestTypes().getFirst();
 
         TableId ourId = TestUtil.generateTableId(sourceOfRandomness);
-        ImmutableList<TableId> srcIds = DataTestUtil.makeList(sourceOfRandomness, 1, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
+        ImmutableList<TableId> srcIds = TBasicUtil.makeList(sourceOfRandomness, 1, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
 
         IncompleteColumnHandling incompleteColumnHandling = IncompleteColumnHandling.values()[sourceOfRandomness.nextInt(IncompleteColumnHandling.values().length)];
 

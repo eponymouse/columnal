@@ -42,6 +42,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import test.functions.TFunctionUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.DataItemPosition;
 import xyz.columnal.id.TableId;
@@ -178,7 +179,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             ;
         try
         {
-            return TestUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+            return TFunctionUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         }
         catch (InternalException | UserException e)
         {
@@ -537,7 +538,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             // Check that the third column has right details:
             assertEquals(columnDetails.columnId, columns.get(2).getName());
             assertEquals(columnDetails.dataType, columns.get(2).getType().getType());
-            DataTestUtil.assertValueEqual("", columns.get(2) instanceof EditableColumn ? columnDetails.defaultValue : null, columns.get(2).getDefaultValue());
+            TBasicUtil.assertValueEqual("", columns.get(2) instanceof EditableColumn ? columnDetails.defaultValue : null, columns.get(2).getDefaultValue());
         }
     }
 
@@ -599,7 +600,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             // Check that the new column has right details:
             assertEquals(columnDetails.columnId, columns.get(newPosition).getName());
             assertEquals(columnDetails.dataType, columns.get(newPosition).getType().getType());
-            DataTestUtil.assertValueEqual("", columns.get(newPosition) instanceof EditableColumn ? columnDetails.defaultValue : null, columns.get(newPosition).getDefaultValue());
+            TBasicUtil.assertValueEqual("", columns.get(newPosition) instanceof EditableColumn ? columnDetails.defaultValue : null, columns.get(newPosition).getDefaultValue());
         }
     }
     
@@ -828,7 +829,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         expectedAfterChange = new ArrayList<>(expectedAfterChange);
         expectedAfterChange.set(swappedValueIndex, Either.right(swappedValue));
         
-        DataTestUtil.assertValueListEitherEqual("After first type change", expectedAfterChange, DataTestUtil.getAllCollapsedData(findOriginal.get().getData().getColumn(changedColumnId).getType(), originalRows));
+        TBasicUtil.assertValueListEitherEqual("After first type change", expectedAfterChange, TBasicUtil.getAllCollapsedData(findOriginal.get().getData().getColumn(changedColumnId).getType(), originalRows));
         
         // Now change type back:
         TestUtil.collapseAllTableHats(tableManager, virtualGrid);
@@ -852,6 +853,6 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         // Now check the values:
         List<@NonNull Either<String, @Value Object>> expectedAtEnd = new ArrayList<>(changeBoolean ? Utility.<Boolean, Either<String, @Value Object>>mapList(booleans, b -> Either.right(DataTypeUtility.value(b))) : Utility.<Integer, Either<String, @Value Object>>mapList(numbers, n -> Either.right(DataTypeUtility.value(n))));
         expectedAtEnd.set(swappedValueIndex, sameTypeAfterSwap ? Either.<String, @Value Object>right(swappedValue) : Either.<String, @Value Object>left(DataTypeUtility.valueToString(swappedValue)));
-        DataTestUtil.assertValueListEitherEqual("", expectedAtEnd, DataTestUtil.getAllCollapsedData(findOriginal.get().getData().getColumn(changedColumnId).getType(), booleans.size()));
+        TBasicUtil.assertValueListEitherEqual("", expectedAtEnd, TBasicUtil.getAllCollapsedData(findOriginal.get().getData().getColumn(changedColumnId).getType(), booleans.size()));
     }
 }

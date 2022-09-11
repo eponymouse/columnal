@@ -24,6 +24,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.NumberInfo;
@@ -35,7 +36,6 @@ import xyz.columnal.transformations.expression.AddSubtractExpression.AddSubtract
 import xyz.columnal.transformations.expression.DivideExpression;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.NumericLiteral;
-import test.TestUtil;
 import xyz.columnal.utility.Utility;
 
 import java.math.BigDecimal;
@@ -63,7 +63,7 @@ public class BackwardsNumbers extends BackwardsProvider
     {
         if (!DataTypeUtility.isNumber(type))
             return ImmutableList.of();
-        Unit unit = TestUtil.getUnit(type);
+        Unit unit = TFunctionUtil.getUnit(type);
         return ImmutableList.of(
             () -> {
                 // We just make up a bunch of numbers, and at the very end we add one more to correct the difference

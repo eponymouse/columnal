@@ -30,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.id.ColumnId;
@@ -40,7 +41,6 @@ import xyz.columnal.id.TableId;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.DataTypeValue;
-import xyz.columnal.data.datatype.ListExDTV;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -59,7 +59,6 @@ import xyz.columnal.typeExp.TypeClassRequirements;
 import xyz.columnal.typeExp.TypeConcretisationError;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.units.MutUnitVar;
-import test.TestUtil;
 import test.gen.type.GenTypeAndValueGen;
 import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
 import test.gen.GenValueSpecifiedType;
@@ -204,9 +203,9 @@ public class TestFromDoc
                     tables.put(new TableId(tableName), new KnownLengthRecordSet(columns, length));
                 }
 
-                Expression expression = TestUtil.parseExpression(line, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+                Expression expression = TFunctionUtil.parseExpression(line, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
                 ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-                TypeState typeState = TestUtil.createTypeState(typeManager);
+                TypeState typeState = TFunctionUtil.createTypeState(typeManager);
                 for (Entry<String, TypeExp> e : variables.entrySet())
                 {
                     typeState = typeState.add(e.getKey(), e.getValue(), s -> {throw new RuntimeException(e.toString());});

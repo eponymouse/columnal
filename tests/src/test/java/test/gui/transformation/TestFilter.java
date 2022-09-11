@@ -30,7 +30,7 @@ import javafx.scene.input.MouseButton;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.gui.grid.RectangleBounds;
@@ -123,6 +123,6 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         assertTrue(clip.isPresent());
         // Need to fish out first column from clip, then compare item:
         List<Either<String, @Value Object>> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TestUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers((Number)x, cutOff) > 0).map(x -> Either.<String, Object>right(x)).collect(Collectors.toList());
-        DataTestUtil.assertValueListEitherEqual("Filtered", expected, clip.get().stream().filter(c -> Objects.equals(c.columnName, srcColumn.getName())).findFirst().<ImmutableList<Either<String, @Value Object>>>map(c -> c.dataValues).orElse(null));
+        TBasicUtil.assertValueListEitherEqual("Filtered", expected, clip.get().stream().filter(c -> Objects.equals(c.columnName, srcColumn.getName())).findFirst().<ImmutableList<Either<String, @Value Object>>>map(c -> c.dataValues).orElse(null));
     }
 }

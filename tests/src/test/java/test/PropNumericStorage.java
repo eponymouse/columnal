@@ -30,7 +30,7 @@ import xyz.columnal.data.NumericColumnStorage;
 import xyz.columnal.data.datatype.NumberInfo;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import test.utility.gen.GenNumber;
+import test.gen.GenNumber;
 import test.gen.GenNumbers;
 import test.gen.GenNumbersAsString;
 import threadchecker.OnThread;

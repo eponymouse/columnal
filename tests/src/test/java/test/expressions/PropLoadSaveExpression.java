@@ -28,6 +28,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import test.functions.TFunctionUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.Table;
 import xyz.columnal.id.TableAndColumnRenames;
@@ -117,7 +118,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
     public void testNoOpEdit(String src) throws UserException, InternalException
     {
         TypeManager typeManager = DummyManager.make().getTypeManager();
-        testNoOpEdit(TestUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
+        testNoOpEdit(TFunctionUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
     }
 
     @OnThread(Tag.FXPlatform)
@@ -160,7 +161,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
         };
         
         
-        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(columnLookup), null, null, typeManager, () -> TestUtil.createTypeState(typeManager), FunctionList.getFunctionLookup(typeManager.getUnitManager()), e -> {
+        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(columnLookup), null, null, typeManager, () -> TFunctionUtil.createTypeState(typeManager), FunctionList.getFunctionLookup(typeManager.getUnitManager()), e -> {
         }).save(false);
         assertEquals(expression, edited);
         assertEquals(expression.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY), edited.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY));
@@ -184,8 +185,8 @@ public class PropLoadSaveExpression extends FXApplicationTest
     {
         String saved = expression.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY);
         // Use same manager to load so that types are preserved:
-        TypeManager typeManager = TestUtil.managerWithTestTypes().getFirst().getTypeManager();
-        Expression reloaded = TestUtil.parseExpression(saved, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        TypeManager typeManager = TFunctionUtil.managerWithTestTypes().getFirst().getTypeManager();
+        Expression reloaded = TFunctionUtil.parseExpression(saved, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         assertEquals("Saved version: " + saved, expression, reloaded);
         String resaved = reloaded.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY);
         assertEquals(saved, resaved);

@@ -32,6 +32,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Window;
+import test.functions.TFunctionUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.BaseMatcher;
@@ -42,7 +43,7 @@ import org.junit.runner.RunWith;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.Table;
 import xyz.columnal.id.TableId;
@@ -199,7 +200,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             {
                 LoadedColumnInfo copiedColumn = clip.get(i);
                 assertEquals(copiedColumn.columnName, columns.get(i).name);
-                DataTestUtil.assertValueListEitherEqual("" + i, columns.get(i).data, copiedColumn.dataValues);
+                TBasicUtil.assertValueListEitherEqual("" + i, columns.get(i).data, copiedColumn.dataValues);
             }
 
             // Now add the actual aggregate:
@@ -295,7 +296,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
 
                     assertEquals(calculation.columnName.getRaw(), calculation.dataType, calcCol.dataType);
 
-                    DataTestUtil.assertValueListEitherEqual(calculation.columnName.getRaw(),
+                    TBasicUtil.assertValueListEitherEqual(calculation.columnName.getRaw(),
                             calculation.expectedResult.stream().<Either<String, @Value Object>>map(x -> x == null ? Either.<String, @Value Object>left("") : Either.<String, @Value Object>right(x)).collect(ImmutableList.toImmutableList()),
                             calcCol.dataValues
                     );
@@ -570,7 +571,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         
         final Expression checkExpression;
         final boolean expectedPass = checkType == CheckType.ANY_ROW || (checkType == CheckType.ALL_ROWS && allEqualToContained);
-        Expression containedItemExpression = TestUtil.parseExpression(DataTypeUtility.valueToString(containedItem, srcColumn.getType().getType(), false, null), tableManager.getTypeManager(), FunctionList.getFunctionLookup(tableManager.getUnitManager()));
+        Expression containedItemExpression = TFunctionUtil.parseExpression(DataTypeUtility.valueToString(containedItem, srcColumn.getType().getType(), false, null), tableManager.getTypeManager(), FunctionList.getFunctionLookup(tableManager.getUnitManager()));
         if (r.nextInt(3) == 0)
         {
             // Fake it using a stand-alone check

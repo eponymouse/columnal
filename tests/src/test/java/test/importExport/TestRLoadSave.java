@@ -39,7 +39,7 @@ import org.junit.runner.RunWith;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.datatype.ProgressListener;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.datatype.DataType;
@@ -116,9 +116,9 @@ public class TestRLoadSave
                 
         assertEquals(ImmutableList.of(new ColumnId("Sepal Length"), new ColumnId("Sepal Width"), new ColumnId("Petal Length"), new ColumnId("Petal Width"), new ColumnId("Species")), rs.getColumnIds());
         
-        DataTestUtil.assertValueListEqual("Row 0", ImmutableList.of(d("5.1"), d("3.5"), d("1.4"), d("0.2"), typeManager.lookupTag("setosa 3", "setosa").getRight("Tag not found").makeTag(null)), DataTestUtil.getRowVals(rs, 0));
+        TBasicUtil.assertValueListEqual("Row 0", ImmutableList.of(d("5.1"), d("3.5"), d("1.4"), d("0.2"), typeManager.lookupTag("setosa 3", "setosa").getRight("Tag not found").makeTag(null)), getRowVals(rs, 0));
 
-        DataTestUtil.assertValueListEqual("Row 149", ImmutableList.of(d("5.9"), d("3.0"), d("5.1"), d("1.8"), typeManager.lookupTag("setosa 3", "virginica").getRight("Tag not found").makeTag(null)), DataTestUtil.getRowVals(rs, 149));
+        TBasicUtil.assertValueListEqual("Row 149", ImmutableList.of(d("5.9"), d("3.0"), d("5.1"), d("1.8"), typeManager.lookupTag("setosa 3", "virginica").getRight("Tag not found").makeTag(null)), getRowVals(rs, 149));
     }
 
     @Test
@@ -138,7 +138,7 @@ public class TestRLoadSave
 
         assertEquals(ImmutableList.of(new ColumnId("mpg"), new ColumnId("cyl"), new ColumnId("disp"), new ColumnId("hp"), new ColumnId("drat"), new ColumnId("wt"), new ColumnId("qsec"), new ColumnId("vs"), new ColumnId("am"), new ColumnId("gear"), new ColumnId("carb")), rs.getColumnIds());
 
-        DataTestUtil.assertValueListEqual("Row 0", ImmutableList.of(d("21.0"), d("6"), d("160.0"), d("110"), d("3.90"), d("2.620"), d("16.46"), d("0"), d("1"), d("4"), d("4")), DataTestUtil.getRowVals(rs, 0));
+        TBasicUtil.assertValueListEqual("Row 0", ImmutableList.of(d("21.0"), d("6"), d("160.0"), d("110"), d("3.90"), d("2.620"), d("16.46"), d("0"), d("1"), d("4"), d("4")), getRowVals(rs, 0));
 
         //DataTestUtil.assertValueListEqual("Row 149", ImmutableList.of(d("5.9"), d("3.0"), d("5.1"), d("1.8"), typeManager.lookupTag("setosa 3", "virginica").getRight("Tag not found").makeTag(null)), DataTestUtil.getRowVals(rs, 149));
     }
@@ -169,7 +169,7 @@ public class TestRLoadSave
         System.out.println(RPrettyPrint.prettyPrint(loaded));
         Pair<DataType, ImmutableList<@Value Object>> r = ConvertFromR.convertRToTypedValueList(new TypeManager(new UnitManager()), loaded);
         assertEquals(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), r.getFirst());
-        DataTestUtil.assertValueEqual("Date", LocalDate.of(1950, 2, 1), r.getSecond().get(0));
+        TBasicUtil.assertValueEqual("Date", LocalDate.of(1950, 2, 1), r.getSecond().get(0));
     }
 
     @Test
@@ -183,7 +183,7 @@ public class TestRLoadSave
         assertEquals(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), r.getFirst());
         @SuppressWarnings("valuetype")
         @Value ZonedDateTime zdt = ZonedDateTime.of(2005, 10, 21, 18, 47, 22, 0, ZoneId.of("America/New_York"));
-        DataTestUtil.assertValueEqual("DateTimeZoned", zdt, r.getSecond().get(0));
+        TBasicUtil.assertValueEqual("DateTimeZoned", zdt, r.getSecond().get(0));
         assertEquals(zdt, r.getSecond().get(0));
     }
 
@@ -200,21 +200,21 @@ public class TestRLoadSave
         // df <- data.frame(c(TRUE, NA, FALSE), c(36, NA, -35.2), c(1, NA, 2), factor(c("A", NA, "B")), as.character(c("Hello", NA, "Bye")), c(ISOdate(2005,10,21,18,47,22,tz="America/New_York"), NA, NA), stringsAsFactors=FALSE)
         
         assertEquals(maybeType(typeManager, DataType.BOOLEAN), r.getColumns().get(0).getType().getType());
-        DataTestUtil.assertValueListEqual("Bool column", ImmutableList.of(new TaggedValue(1, true, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, false, typeManager.getMaybeType())), asList(r.getColumns().get(0)));
+        TBasicUtil.assertValueListEqual("Bool column", ImmutableList.of(new TaggedValue(1, true, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, false, typeManager.getMaybeType())), asList(r.getColumns().get(0)));
 
         assertEquals(maybeType(typeManager, DataType.NUMBER), r.getColumns().get(1).getType().getType());
-        DataTestUtil.assertValueListEqual("Double column", ImmutableList.of(new TaggedValue(1, 36, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, new BigDecimal("-35.2"), typeManager.getMaybeType())), asList(r.getColumns().get(1)));
+        TBasicUtil.assertValueListEqual("Double column", ImmutableList.of(new TaggedValue(1, 36, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, new BigDecimal("-35.2"), typeManager.getMaybeType())), asList(r.getColumns().get(1)));
 
         assertEquals(maybeType(typeManager, DataType.NUMBER), r.getColumns().get(2).getType().getType());
-        DataTestUtil.assertValueListEqual("Int column", ImmutableList.of(new TaggedValue(1, 1, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, new BigDecimal(2), typeManager.getMaybeType())), asList(r.getColumns().get(2)));
+        TBasicUtil.assertValueListEqual("Int column", ImmutableList.of(new TaggedValue(1, 1, typeManager.getMaybeType()), new TaggedValue(0, null, typeManager.getMaybeType()), new TaggedValue(1, new BigDecimal(2), typeManager.getMaybeType())), asList(r.getColumns().get(2)));
 
         @SuppressWarnings("nullness")
         @NonNull TaggedTypeDefinition taggedTypeDefinition = typeManager.lookupDefinition(new TypeId("A 2"));
         assertEquals(maybeType(typeManager, taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager)), r.getColumns().get(3).getType().getType());
-        DataTestUtil.assertValueListEqual("Factor column", ImmutableList.of(typeManager.maybePresent(new TaggedValue(0, null, taggedTypeDefinition)), typeManager.maybeMissing(), typeManager.maybePresent(new TaggedValue(1, null, taggedTypeDefinition))), asList(r.getColumns().get(3)));
+        TBasicUtil.assertValueListEqual("Factor column", ImmutableList.of(typeManager.maybePresent(new TaggedValue(0, null, taggedTypeDefinition)), typeManager.maybeMissing(), typeManager.maybePresent(new TaggedValue(1, null, taggedTypeDefinition))), asList(r.getColumns().get(3)));
 
         assertEquals(maybeType(typeManager, DataType.date(new DateTimeInfo(DateTimeType.DATETIME))), r.getColumns().get(5).getType().getType());
-        DataTestUtil.assertValueListEqual("Date column", ImmutableList.of(typeManager.maybePresent(LocalDateTime.of(2005, 10, 21, 22, 47, 22, 0)), typeManager.maybeMissing(), typeManager.maybeMissing()), asList(r.getColumns().get(5)));
+        TBasicUtil.assertValueListEqual("Date column", ImmutableList.of(typeManager.maybePresent(LocalDateTime.of(2005, 10, 21, 22, 47, 22, 0)), typeManager.maybeMissing(), typeManager.maybeMissing()), asList(r.getColumns().get(5)));
     }
 
     @Test
@@ -257,8 +257,8 @@ public class TestRLoadSave
         assertEquals(ImmutableList.of(new ColumnId("x"), new ColumnId("nested lists")), rs.getColumnIds());
 
         // t <- tibble(x = 1:3, "nested lists" = list(1:5, 1:10, 20:5))
-        DataTestUtil.assertValueListEqual("Row 0", ImmutableList.<@Value Object>of(DataTypeUtility.value(1), ints(1,2,3,4,5)), DataTestUtil.getRowVals(rs, 0));
-        DataTestUtil.assertValueListEqual("Row 2", ImmutableList.<@Value Object>of(DataTypeUtility.value(3), ints(20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5)), DataTestUtil.getRowVals(rs, 2));
+        TBasicUtil.assertValueListEqual("Row 0", ImmutableList.<@Value Object>of(DataTypeUtility.value(1), ints(1,2,3,4,5)), getRowVals(rs, 0));
+        TBasicUtil.assertValueListEqual("Row 2", ImmutableList.<@Value Object>of(DataTypeUtility.value(3), ints(20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5)), getRowVals(rs, 2));
     }
 
     private Object ints(int... values)
@@ -343,7 +343,7 @@ public class TestRLoadSave
                         final @Value Object reloadedVal = reloadedColumn.getType().getCollapsed(i);
                         // Not all date types survive, so need to coerce:
                         @Value Object reloadedValCoerced = column.getType().getType().apply(new CoerceValueToThisType(reloadedVal, typeManager));
-                        DataTestUtil.assertValueEqual("Row " + i + " column " + column.getName(), column.getType().getCollapsed(i), reloadedValCoerced);
+                        TBasicUtil.assertValueEqual("Row " + i + " column " + column.getName(), column.getType().getCollapsed(i), reloadedValCoerced);
                     }
                 }
             }
@@ -649,5 +649,20 @@ public class TestRLoadSave
                 throw new InternalException("UserEx", e);
             }
         }
+    }
+
+    @OnThread(Tag.Simulation)
+    public static ImmutableList<@Value Object> getRowVals(RecordSet recordSet, int targetRow)
+    {
+        return recordSet.getColumns().stream().<@Value Object>map(c -> {
+            try
+            {
+                return c.getType().getCollapsed(targetRow);
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }).collect(ImmutableList.<@Value Object>toImmutableList());
     }
 }

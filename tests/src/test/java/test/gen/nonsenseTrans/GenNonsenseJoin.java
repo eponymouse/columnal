@@ -23,8 +23,9 @@ package test.gen.nonsenseTrans;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import test.functions.TFunctionUtil;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
@@ -56,12 +57,12 @@ public class GenNonsenseJoin extends GenValueBase<Transformation_Mgr>
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
 
-        DummyManager mgr = TestUtil.managerWithTestTypes().getFirst();
+        DummyManager mgr = TFunctionUtil.managerWithTestTypes().getFirst();
 
         TableId ourId = TestUtil.generateTableId(sourceOfRandomness);
         TableId srcIdA = TestUtil.generateTableId(sourceOfRandomness);
         TableId srcIdB = TestUtil.generateTableId(sourceOfRandomness);
-        ImmutableList<Pair<ColumnId, ColumnId>> columns = DataTestUtil.makeList(r, 0, 5, () -> new Pair<>(TestUtil.generateColumnId(r), TestUtil.generateColumnId(r)));
+        ImmutableList<Pair<ColumnId, ColumnId>> columns = TBasicUtil.makeList(r, 0, 5, () -> new Pair<>(TestUtil.generateColumnId(r), TestUtil.generateColumnId(r)));
 
         try
         {

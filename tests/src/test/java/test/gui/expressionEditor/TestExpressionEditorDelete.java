@@ -24,17 +24,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Before;
 import org.junit.runner.RunWith;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
@@ -54,7 +53,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import java.util.Random;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
@@ -202,7 +200,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testPaste(String original, int caretPos, String paste, String expected, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression originalExp = TestUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        Expression originalExp = TFunctionUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         EditorDisplay expressionEditor = enter(originalExp, r);
 
         TestUtil.fx_(() -> {
@@ -213,7 +211,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
 
         Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save(false));
 
-        assertEquals(TestUtil.parseExpression(expected, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), after);
+        assertEquals(TFunctionUtil.parseExpression(expected, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), after);
 
         moveAndDismissPopupsAtPos(point(".cancel-button"));
         clickOn();
@@ -222,7 +220,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testBackspaceRetype(String original, int deleteBefore, int deleteCount, String retype, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression originalExp = TestUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        Expression originalExp = TFunctionUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         EditorDisplay expressionEditor = enter(originalExp, r);
 
         TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteBefore));
@@ -270,8 +268,8 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testBackspace(String original, int deleteBefore, int deleteCount, String expectedStr, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression expectedExp = TestUtil.parseExpression(expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
-        Expression originalExp = TestUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        Expression expectedExp = TFunctionUtil.parseExpression(expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        Expression originalExp = TFunctionUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         EditorDisplay expressionEditor = enter(originalExp, r);
         
         assertEquals(originalExp, TestUtil.fx(() -> expressionEditor._test_getEditor().save(false)));
@@ -296,8 +294,8 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testDelete(String original, int deleteAfter, int deleteCount, String expectedStr, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression expectedExp = TestUtil.parseExpression(expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
-        EditorDisplay expressionEditor = enter(TestUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
+        Expression expectedExp = TFunctionUtil.parseExpression(expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        EditorDisplay expressionEditor = enter(TFunctionUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
 
         TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteAfter));
 
@@ -317,8 +315,8 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     private void testCut(String original, int deleteAfter, int deleteCount, String expectedStr, Random r) throws Exception
     {
         DummyManager dummyManager = new DummyManager();
-        Expression expectedExp = TestUtil.parseExpression(expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
-        EditorDisplay expressionEditor = enter(TestUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
+        Expression expectedExp = TFunctionUtil.parseExpression(expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+        EditorDisplay expressionEditor = enter(TFunctionUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
 
         TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteAfter));
 

@@ -42,8 +42,7 @@ import xyz.columnal.transformations.function.FunctionDefinition;
 import xyz.columnal.transformations.function.Mean;
 import xyz.columnal.transformations.function.number.Round;
 import xyz.columnal.transformations.function.Sum;
-import test.TestUtil;
-import test.utility.gen.GenNumber;
+import test.gen.GenNumber;
 import test.gen.GenNumbers;
 import test.gen.GenUnit;
 import threadchecker.OnThread;
@@ -147,12 +146,12 @@ public class PropNumericFunctions
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, ImmutableList.of(DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))));
+            @Nullable Pair<ValueFunction, DataType> instance = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
             assertTrue(DataTypeUtility.isNumber(instance.getSecond()));
-            assertEquals(mgr.loadUse(expectedUnit), TestUtil.getUnit(instance.getSecond()));
+            assertEquals(mgr.loadUse(expectedUnit), TFunctionUtil.getUnit(instance.getSecond()));
             @Value Object num = instance.getFirst().call(new @Value Object[] {src});
             return Utility.cast(num, Number.class);
         }
@@ -173,12 +172,12 @@ public class PropNumericFunctions
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, ImmutableList.of(DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit))))));
+            @Nullable Pair<ValueFunction, DataType> instance = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit))))));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
             assertTrue(DataTypeUtility.isNumber(instance.getSecond()));
-            assertEquals(mgr.loadUse(expectedUnit), TestUtil.getUnit(instance.getSecond()));
+            assertEquals(mgr.loadUse(expectedUnit), TFunctionUtil.getUnit(instance.getSecond()));
             @Value Object num = instance.getFirst().call(new @Value Object[] {DataTypeUtility.value(Utility.<@Value Number, @Value Object>mapList(src, s -> s))});
             return Utility.cast(num, Number.class);
         }

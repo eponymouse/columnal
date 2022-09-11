@@ -31,7 +31,7 @@ import org.hamcrest.MatcherAssert;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.Column;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.id.TableId;
 import xyz.columnal.data.datatype.DataTypeUtility;
@@ -220,7 +220,7 @@ public class PropRunTransformation
         assertEquals(srcData.size(), destData.size());
         for (int i = 0; i < srcData.size(); i++)
         {
-            DataTestUtil.assertValueListEqual("Row " + i, srcData.get(i).getKey(), destData.get(i).getKey());
+            TBasicUtil.assertValueListEqual("Row " + i, srcData.get(i).getKey(), destData.get(i).getKey());
             assertEquals("Row " + i, srcData.get(i).getValue(), destData.get(i).getValue());
         }
     }

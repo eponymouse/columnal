@@ -24,11 +24,17 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
+import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
+import test.gen.GenString;
+import test.gen.GenZoneId;
+import test.gen.GenNumber;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;
@@ -37,14 +43,10 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.FormatLexer;
 import xyz.columnal.grammar.GrammarUtility;
 import xyz.columnal.grammar.MainLexer;
-import test.utility.gen.GenNumber;
-import test.gen.GenString;
-import test.gen.GenZoneId;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.ExSupplier;
 import xyz.columnal.utility.IdentifierUtility;
+import xyz.columnal.utility.SimulationEx;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.Workers.Priority;
@@ -61,12 +63,11 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
-public class DataTestUtil
+public class TBasicUtil
 {
     @OnThread(Tag.Any)
     public static void assertValueEitherEqual(String prefix, @Nullable Either<String, @Value Object> a, @Nullable Either<String, @Value Object> b) throws UserException, InternalException
@@ -159,21 +160,6 @@ public class DataTestUtil
         {
             return Either.left(e);
         }
-    }
-
-    @OnThread(Tag.Simulation)
-    public static ImmutableList<@Value Object> getRowVals(RecordSet recordSet, int targetRow)
-    {
-        return recordSet.getColumns().stream().<@Value Object>map(c -> {
-            try
-            {
-                return c.getType().getCollapsed(targetRow);
-            }
-            catch (InternalException | UserException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }).collect(ImmutableList.<@Value Object>toImmutableList());
     }
 
     public static @Value Number generateNumberV(SourceOfRandomness r, GenerationStatus gs)
@@ -284,7 +270,7 @@ public class DataTestUtil
         else
         {
             // These should be escaped, but would be blown away on load: "\n", "\r", "\t"
-            String trimmed = GrammarUtility.collapseSpaces("" + sourceOfRandomness.nextChar('a', 'z') + DataTestUtil.<@NonNull String>makeList(sourceOfRandomness, 1, 10, () -> sourceOfRandomness.<@NonNull String>choose(Arrays.<String>asList(
+            String trimmed = GrammarUtility.collapseSpaces("" + sourceOfRandomness.nextChar('a', 'z') + TBasicUtil.<@NonNull String>makeList(sourceOfRandomness, 1, 10, () -> sourceOfRandomness.<@NonNull String>choose(Arrays.<String>asList(
                     "a", "r", "n", " ", "Z", "0", "9"
             ))).stream().collect(Collectors.joining()));
             if (trimmed.isEmpty())
@@ -376,5 +362,30 @@ public class DataTestUtil
             r.add(type.getCollapsed(i));
         }
         return r;
+    }
+
+    @OnThread(Tag.Simulation)
+    public static void assertUserException(SimulationEx simulationRunnable)
+    {
+        try
+        {
+            simulationRunnable.run();
+            // If we reach here, didn't throw:
+            fail("Expected UserException but no exception thrown");
+        }
+        catch (UserException e)
+        {
+            // As expected:
+            return;
+        }
+        catch (InternalException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static <T> ImmutableList<T> makeList(int len, Generator<? extends T> gen, SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+    {
+        return Stream.generate(() -> gen.generate(sourceOfRandomness, generationStatus)).limit(len).collect(ImmutableList.toImmutableList());
     }
 }

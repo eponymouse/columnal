@@ -26,12 +26,11 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
+import test.functions.TFunctionUtil;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.ErrorAndTypeRecorderStorer;
 import xyz.columnal.transformations.expression.EvaluateState;
-import xyz.columnal.transformations.expression.Expression.CheckedExp;
-import xyz.columnal.transformations.expression.Expression.LocationInfo;
 import xyz.columnal.typeExp.TypeExp;
 import test.DummyManager;
 import test.TestUtil;
@@ -64,9 +63,9 @@ public class PropRunExpression
     {
         try
         {
-            DummyManager dummyManager = TestUtil.managerWithTestTypes().getFirst();
+            DummyManager dummyManager = TFunctionUtil.managerWithTestTypes().getFirst();
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-            @Nullable TypeExp checked = src.expression.checkExpression(src, TestUtil.createTypeState(dummyManager.getTypeManager()), errors);
+            @Nullable TypeExp checked = src.expression.checkExpression(src, TFunctionUtil.createTypeState(dummyManager.getTypeManager()), errors);
             assertEquals("Checked iff error", checked == null, errors.getAllErrors().count() != 0);
             errors.withFirst(s -> {throw new InternalException(s.toPlain());});
             for (int row = 0; row < src.value.size(); row++)

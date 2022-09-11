@@ -32,7 +32,6 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.function.FunctionDefinition;
 import xyz.columnal.transformations.function.Not;
 import xyz.columnal.transformations.function.Xor;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
@@ -61,7 +60,7 @@ public class TestBooleanFunctions
     public void testNot() throws UserException, InternalException
     {
         FunctionDefinition function = new Not();
-        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, ImmutableList.of(DataType.BOOLEAN));
+        @Nullable Pair<ValueFunction, DataType> checked = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.BOOLEAN));
         if (checked == null)
         {
             fail("Type check failure");
@@ -80,7 +79,7 @@ public class TestBooleanFunctions
     public void testXor() throws InternalException, UserException
     {
         FunctionDefinition function = new Xor();
-        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, ImmutableList.of(DataType.BOOLEAN, DataType.BOOLEAN));
+        @Nullable Pair<ValueFunction, DataType> checked = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.BOOLEAN, DataType.BOOLEAN));
         if (checked == null)
         {
             fail("Type check failure");

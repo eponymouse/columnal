@@ -31,6 +31,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import test.functions.TFunctionUtil;
 import xyz.columnal.log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -340,7 +341,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
         {
             UnitManager u = new UnitManager();
             TypeManager typeManager = new TypeManager(u);
-            typeManager._test_copyTaggedTypesFrom(TestUtil.managerWithTestTypes().getFirst().getTypeManager());
+            typeManager._test_copyTaggedTypesFrom(TFunctionUtil.managerWithTestTypes().getFirst().getTypeManager());
             List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
             for (int i = 1; i <= 3; i++)
             {
@@ -501,7 +502,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
         {
             UnitManager u = new UnitManager();
             TypeManager typeManager = new TypeManager(u);
-            typeManager._test_copyTaggedTypesFrom(TestUtil.managerWithTestTypes().getFirst().getTypeManager());
+            typeManager._test_copyTaggedTypesFrom(TFunctionUtil.managerWithTestTypes().getFirst().getTypeManager());
             List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
             for (int i = 1; i <= 3; i++)
             {

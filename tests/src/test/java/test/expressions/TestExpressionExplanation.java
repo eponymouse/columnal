@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Booleans;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.*;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.datatype.DataTypeUtility;
@@ -258,8 +259,8 @@ public class TestExpressionExplanation
     private Pattern pattern(String patternSrc, @Nullable String guardSrc) throws InternalException, UserException
     {
         TypeManager typeManager = tableManager.getTypeManager();
-        Expression pattern = TestUtil.parseExpression(patternSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
-        Expression guard = guardSrc == null ? null : TestUtil.parseExpression(guardSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        Expression pattern = TFunctionUtil.parseExpression(patternSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        Expression guard = guardSrc == null ? null : TFunctionUtil.parseExpression(guardSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         return new Pattern(pattern, guard);
     }
 
@@ -310,7 +311,7 @@ public class TestExpressionExplanation
     private Explanation clause(ImmutableList<Pattern> patterns, String outcomeSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, boolean result, Explanation... children) throws InternalException, UserException
     {
         TypeManager typeManager = tableManager.getTypeManager();
-        Expression outcomeExpression = TestUtil.parseExpression(outcomeSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        Expression outcomeExpression = TFunctionUtil.parseExpression(outcomeSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         return new Explanation(MatchClause.unrecorded(patterns, outcomeExpression), ExecutionType.MATCH, makeEvaluateState(rowIndexAndVars, typeManager), DataTypeUtility.value(result), ImmutableList.of(), null)
         {
             @Override
@@ -341,7 +342,7 @@ public class TestExpressionExplanation
     private Explanation explanation(String expressionSrc, ExecutionType executionType, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, boolean locationIsResult, Explanation... children) throws InternalException, UserException
     {
         TypeManager typeManager = tableManager.getTypeManager();
-        Expression expression = TestUtil.parseExpression(expressionSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        Expression expression = TFunctionUtil.parseExpression(expressionSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         EvaluateState evaluateState = makeEvaluateState(rowIndexAndVars, typeManager);
         return new Explanation(expression, executionType, evaluateState, result, Utility.streamNullable(location).collect(ImmutableList.<ExplanationLocation>toImmutableList()), locationIsResult ? location : null)
         {
@@ -390,10 +391,10 @@ public class TestExpressionExplanation
     private void testExplanation(String src, Explanation expectedExplanation) throws Exception
     {
         TypeManager typeManager = tableManager.getTypeManager();
-        Expression expression = TestUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        Expression expression = TFunctionUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
 
         ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer = new ErrorAndTypeRecorderStorer();
-        TypeExp typeCheck = expression.checkExpression(new MultipleTableLookup(null, tableManager, null, null), TestUtil.createTypeState(typeManager), errorAndTypeRecorderStorer);
+        TypeExp typeCheck = expression.checkExpression(new MultipleTableLookup(null, tableManager, null, null), TFunctionUtil.createTypeState(typeManager), errorAndTypeRecorderStorer);
         assertNotNull(errorAndTypeRecorderStorer.getAllErrors().collect(StyledString.joining("\n")).toPlain(), typeCheck);
         Explanation actual;
         try
@@ -410,7 +411,7 @@ public class TestExpressionExplanation
     private void testCheckExplanation(@ExpressionIdentifier String srcTable, String src, CheckType checkType, @Nullable Explanation expectedExplanation) throws Exception
     {
         TypeManager typeManager = tableManager.getTypeManager();
-        Expression expression = TestUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+        Expression expression = TFunctionUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         
         Check check = new Check(tableManager, TestUtil.ILD, new TableId(srcTable), checkType, expression);
         boolean result = Utility.cast(check.getData().getColumns().get(0).getType().getCollapsed(0), Boolean.class);

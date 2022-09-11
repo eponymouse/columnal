@@ -25,7 +25,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
@@ -58,7 +58,7 @@ public class GenNonsenseSort extends Generator<Transformation_Mgr>
     public Transformation_Mgr generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
-        ImmutableList<Pair<ColumnId, Direction>> cols = DataTestUtil.makeList(sourceOfRandomness, 1, 10, () -> new Pair<>(TestUtil.generateColumnId(sourceOfRandomness), sourceOfRandomness.nextBoolean() ? Direction.ASCENDING : Direction.DESCENDING));
+        ImmutableList<Pair<ColumnId, Direction>> cols = TBasicUtil.makeList(sourceOfRandomness, 1, 10, () -> new Pair<>(TestUtil.generateColumnId(sourceOfRandomness), sourceOfRandomness.nextBoolean() ? Direction.ASCENDING : Direction.DESCENDING));
 
         try
         {

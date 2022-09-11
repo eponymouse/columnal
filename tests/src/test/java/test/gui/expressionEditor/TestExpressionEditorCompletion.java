@@ -30,6 +30,7 @@ import javafx.scene.text.Text;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.id.ColumnId;
@@ -84,7 +85,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
                 new EditableRecordSet(
                     ImmutableList.of(rs -> ColumnUtility.makeImmediateColumn(DataType.NUMBER, new ColumnId("My Number"), DataTypeUtility.value(0)).apply(rs)),
                     (SimulationSupplier<Integer>)() -> 0)));
-        toLoad.record(new Calculate(toLoad, new InitialLoadDetails(new TableId("Calc"), null, new CellPosition(CellPosition.row(1), CellPosition.col(6)), null), new TableId("IDS"), ImmutableMap.of(new ColumnId("My Calc"), TestUtil.parseExpression(expressionSrc, toLoad.getTypeManager(), FunctionList.getFunctionLookup(toLoad.getUnitManager())))));
+        toLoad.record(new Calculate(toLoad, new InitialLoadDetails(new TableId("Calc"), null, new CellPosition(CellPosition.row(1), CellPosition.col(6)), null), new TableId("IDS"), ImmutableMap.of(new ColumnId("My Calc"), TFunctionUtil.parseExpression(expressionSrc, toLoad.getTypeManager(), FunctionList.getFunctionLookup(toLoad.getUnitManager())))));
 
         mainWindowActions = TestUtil.openDataAsTable(windowToUse, toLoad).get();
         sleep(1000);
@@ -531,6 +532,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         FunctionLookup functionLookup = FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager());
         IdentExpression fromTextTo = IdentExpression.function(TestUtil.checkNonNull(functionLookup.lookup("from text to")).getFullName());
         // Should still have trailing x:
-        assertEquals(TestUtil.parseExpression("@invalidops(@call function\\\\conversion\\from text to(1), x)", mainWindowActions._test_getTableManager().getTypeManager(), functionLookup), finish());
+        assertEquals(TFunctionUtil.parseExpression("@invalidops(@call function\\\\conversion\\from text to(1), x)", mainWindowActions._test_getTableManager().getTypeManager(), functionLookup), finish());
     }
 }

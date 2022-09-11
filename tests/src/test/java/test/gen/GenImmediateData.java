@@ -27,6 +27,7 @@ import com.pholser.junit.quickcheck.generator.GeneratorConfiguration;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.EditableRecordSet;
@@ -40,7 +41,6 @@ import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenImmediateData.ImmediateData_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -93,7 +93,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
     {
         try
         {
-            Pair<DummyManager, List<DataType>> mgrAndTypes = TestUtil.managerWithTestTypes();
+            Pair<DummyManager, List<DataType>> mgrAndTypes = TFunctionUtil.managerWithTestTypes();
 
             List<ImmediateDataSource> tables = new ArrayList<>();
 

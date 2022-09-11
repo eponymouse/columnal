@@ -27,6 +27,7 @@ import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.junit.Test;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableRecordSet;
@@ -58,7 +59,7 @@ public class TestExpressionEditorResolution extends FXApplicationTest implements
         TableManager orig = new DummyManager();
         Table data = new ImmediateDataSource(orig, TestUtil.ILD, new EditableRecordSet(ImmutableList.of(rs -> new MemoryNumericColumn(rs, new ColumnId("round"), NumberInfo.DEFAULT, ImmutableList.of(), 0L)), () -> 0));
         orig.record(data);
-        Table calc = new Calculate(orig, new InitialLoadDetails(new CellPosition(CellPosition.row(4), CellPosition.col(4))), data.getId(), ImmutableMap.of(new ColumnId("Calc Col"), TestUtil.parseExpression(expressionSrc, orig.getTypeManager(), FunctionList.getFunctionLookup(orig.getUnitManager()))));
+        Table calc = new Calculate(orig, new InitialLoadDetails(new CellPosition(CellPosition.row(4), CellPosition.col(4))), data.getId(), ImmutableMap.of(new ColumnId("Calc Col"), TFunctionUtil.parseExpression(expressionSrc, orig.getTypeManager(), FunctionList.getFunctionLookup(orig.getUnitManager()))));
         orig.record(calc);
         
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, orig).get();

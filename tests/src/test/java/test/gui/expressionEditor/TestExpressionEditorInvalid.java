@@ -30,8 +30,8 @@ import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.Table;
-import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.lexeditor.ExpressionEditor;
@@ -71,6 +71,6 @@ public class TestExpressionEditorInvalid extends FXApplicationTest implements En
     @OnThread(Tag.Any)
     private ExpressionEditor makeExpressionEditor(DummyManager dummyManager, @Nullable Expression initial)
     {
-        return TestUtil.fx(() -> new ExpressionEditor(initial, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<ColumnLookup>(TestUtil.dummyColumnLookup()), null, null, dummyManager.getTypeManager(), () -> TestUtil.createTypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
+        return TestUtil.fx(() -> new ExpressionEditor(initial, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<ColumnLookup>(TFunctionUtil.dummyColumnLookup()), null, null, dummyManager.getTypeManager(), () -> TFunctionUtil.createTypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
     }
 }

@@ -26,6 +26,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.sosy_lab.common.rationals.Rational;
+import test.gen.GenString;
 import xyz.columnal.data.unit.SingleUnit;
 import xyz.columnal.data.unit.UnitDeclaration;
 import test.gen.GenUnitDefinition.UnitDetails;

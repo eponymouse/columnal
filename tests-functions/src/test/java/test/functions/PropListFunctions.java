@@ -28,7 +28,7 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
-import xyz.columnal.data.DataTestUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.SpecificDataTypeVisitor;
 import xyz.columnal.data.datatype.DataTypeUtility;
@@ -39,7 +39,6 @@ import xyz.columnal.transformations.function.FunctionDefinition;
 import xyz.columnal.transformations.function.list.GetElement;
 import xyz.columnal.transformations.function.comparison.Max;
 import xyz.columnal.transformations.function.comparison.Min;
-import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.GenValueList;
 import threadchecker.OnThread;
@@ -66,8 +65,8 @@ public class PropListFunctions
     {
         FunctionDefinition minFunction = new Min();
         FunctionDefinition maxFunction = new Max();
-        @Nullable Pair<ValueFunction, DataType> minChecked = TestUtil.typeCheckFunction(minFunction, ImmutableList.of(src.type));
-        @Nullable Pair<ValueFunction, DataType> maxChecked = TestUtil.typeCheckFunction(maxFunction, ImmutableList.of(src.type));
+        @Nullable Pair<ValueFunction, DataType> minChecked = TFunctionUtil.typeCheckFunction(minFunction, ImmutableList.of(src.type));
+        @Nullable Pair<ValueFunction, DataType> maxChecked = TFunctionUtil.typeCheckFunction(maxFunction, ImmutableList.of(src.type));
 
         if (minChecked == null || maxChecked == null)
         {
@@ -77,8 +76,8 @@ public class PropListFunctions
         {
             @NonNull Pair<ValueFunction, DataType> minFinal = minChecked;
             @NonNull Pair<ValueFunction, DataType> maxFinal = maxChecked;
-            TestUtil.assertUserException(() -> minFinal.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)}));
-            TestUtil.assertUserException(() -> maxFinal.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)}));
+            TBasicUtil.assertUserException(() -> minFinal.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)}));
+            TBasicUtil.assertUserException(() -> maxFinal.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)}));
         }
         else
         {
@@ -97,8 +96,8 @@ public class PropListFunctions
             assertEquals(getInnerType(src.type), maxChecked.getSecond());
             @Value Object minActual = minChecked.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)});
             @Value Object maxActual = maxChecked.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)});
-            DataTestUtil.assertValueEqual("", expectedMin, minActual);
-            DataTestUtil.assertValueEqual("", expectedMax, maxActual);
+            TBasicUtil.assertValueEqual("", expectedMin, minActual);
+            TBasicUtil.assertValueEqual("", expectedMax, maxActual);
         }
     }
 
@@ -108,7 +107,7 @@ public class PropListFunctions
     public void propCount(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
     {
         Count function = new Count();
-        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, ImmutableList.of(src.type));
+        @Nullable Pair<ValueFunction, DataType> checked = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(src.type));
         if (checked == null)
         {
             fail("Type check failure");
@@ -129,7 +128,7 @@ public class PropListFunctions
         @Nullable Pair<ValueFunction, DataType> checked = null;
         try
         {
-            checked = TestUtil.typeCheckFunction(function, ImmutableList.of(src.type, DataType.NUMBER));
+            checked = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(src.type, DataType.NUMBER));
         }
         catch (Exception e)
         {
@@ -176,7 +175,7 @@ public class PropListFunctions
         {
             // Check that random element is found:
             @Value Object elem = src.list.get(r.nextInt(src.list.size()));
-            assertTrue("" + src.type, Utility.cast(TestUtil.runExpression("@call function\\\\any(" + DataTypeUtility.valueToString(src.list, src.type, false, null) + ", (? = " + DataTypeUtility.valueToString(elem, getInnerType(src.type), false, null) + "))"), Boolean.class));
+            assertTrue("" + src.type, Utility.cast(TFunctionUtil.runExpression("@call function\\\\any(" + DataTypeUtility.valueToString(src.list, src.type, false, null) + ", (? = " + DataTypeUtility.valueToString(elem, getInnerType(src.type), false, null) + "))"), Boolean.class));
         }
     }
 

@@ -236,9 +236,9 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
                 {
                     joinColName = new ColumnId(tableB.getId().getRaw() + " " + joinColName.getRaw());
                 }
-                DataTestUtil.assertValueListEitherEqual("Values for " + srcColName.getFirst().getId().getRaw() + " -> " + joinColName.getRaw(),
+                TBasicUtil.assertValueListEitherEqual("Values for " + srcColName.getFirst().getId().getRaw() + " -> " + joinColName.getRaw(),
                     expected,
-                    DataTestUtil.getAllCollapsedData(join.getData().getColumn(joinColName).getType(), expected.size()));
+                    TBasicUtil.getAllCollapsedData(join.getData().getColumn(joinColName).getType(), expected.size()));
             }
         }
 

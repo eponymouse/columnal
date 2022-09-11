@@ -23,11 +23,8 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.TableManager;
-import xyz.columnal.error.InternalException;
-import xyz.columnal.error.UserException;
-import test.DummyManager;
-import test.TestUtil;
 
 /**
  * No randomness involved; this is just an easy way to pass a fresh table manager to
@@ -43,6 +40,6 @@ public class GenTableManager extends Generator<TableManager>
     @Override
     public TableManager generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        return TestUtil.managerWithTestTypes().getFirst();
+        return TFunctionUtil.managerWithTestTypes().getFirst();
     }
 }

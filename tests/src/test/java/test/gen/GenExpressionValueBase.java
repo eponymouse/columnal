@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.javaruntype.type.TypeParameter;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.error.InternalException;
@@ -33,7 +33,6 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
@@ -62,7 +61,7 @@ public abstract class GenExpressionValueBase extends GenValueBaseE<ExpressionVal
     {
         this.r = r;
         this.gs = generationStatus;
-        Pair<DummyManager, List<DataType>> p = TestUtil.managerWithTestTypes();
+        Pair<DummyManager, List<DataType>> p = TFunctionUtil.managerWithTestTypes();
         dummyManager = p.getFirst();
         distinctTypes = p.getSecond();
         expressionValues.clear();
@@ -119,7 +118,7 @@ public abstract class GenExpressionValueBase extends GenValueBaseE<ExpressionVal
     {
         try
         {
-            return TestUtil.parseExpression(DataTypeUtility.valueToString(object, dataType, false, null), dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
+            return TFunctionUtil.parseExpression(DataTypeUtility.valueToString(object, dataType, false, null), dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         }
         catch (InternalException | UserException e)
         {
