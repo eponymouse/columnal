@@ -83,6 +83,7 @@ import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.temporal.TemporalAccessor;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -610,7 +611,7 @@ public class Utility
         // First try as an integer:
         try
         {
-            return OptionalInt.of(Integer.valueOf(number));
+            return OptionalInt.of(Integer.valueOf(number).intValue());
         }
         catch (NumberFormatException ex)
         {
@@ -623,7 +624,7 @@ public class Utility
         // First try as a double:
         try
         {
-            return OptionalDouble.of(Double.valueOf(number));
+            return OptionalDouble.of(Double.valueOf(number).doubleValue());
         }
         catch (NumberFormatException ex)
         {
@@ -2118,9 +2119,9 @@ public class Utility
     {
         Properties props = getPropertiesFile(fileName);
         props.setProperty(propertyName, value);
-        try
+        try (FileWriter w = new FileWriter(new File(Utility.getStorageDirectory(), fileName), StandardCharsets.UTF_8))
         {
-            props.store(new FileWriter(new File(Utility.getStorageDirectory(), fileName)), "");
+            props.store(w, "");
         }
         catch (IOException e)
         {
@@ -2136,7 +2137,12 @@ public class Utility
             {
                 File propFile = new File(Utility.getStorageDirectory(), fileName);
                 if (propFile.exists())
-                    p.load(new FileReader(propFile));
+                {
+                    try (FileReader r = new FileReader(propFile, StandardCharsets.UTF_8))
+                    {
+                        p.load(r);
+                    }
+                }
             }
             catch (IOException e)
             {

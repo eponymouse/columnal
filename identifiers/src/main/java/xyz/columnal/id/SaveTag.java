@@ -33,6 +33,7 @@ import java.util.Random;
  */
 public class SaveTag
 {
+    private static Random RANDOM = new Random();
     private final String tag;
 
     public SaveTag(String tag)
@@ -47,7 +48,7 @@ public class SaveTag
 
     public static SaveTag generateRandom()
     {
-        int index = new Random().nextInt(26 * 26 * 26);
+        int index = RANDOM.nextInt(26 * 26 * 26);
         char[] cs = new char[3];
         for (int i = 0; i < cs.length; i++)
         {
