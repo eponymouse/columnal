@@ -33,6 +33,7 @@ import org.junit.runner.RunWith;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.KnownLengthRecordSet;
@@ -44,7 +45,6 @@ import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.NumberInfo;
 import xyz.columnal.data.datatype.TypeManager;
-import xyz.columnal.data.unit.SingleUnit;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
@@ -94,7 +94,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
         
         // Find the numeric column and scroll to it:
         Table table = mainWindowActions._test_getTableManager().getAllTables().get(0);
-        Column srcColumn = table.getData().getColumns().stream().filter(c -> TestUtil.checkedToRuntime(() -> DataTypeUtility.isNumber(c.getType().getType()))).findFirst().orElseGet((Supplier<Column>)(() -> {throw new AssertionError("No numeric column");}));
+        Column srcColumn = table.getData().getColumns().stream().filter(c -> TBasicUtil.checkedToRuntime(() -> DataTypeUtility.isNumber(c.getType().getType()))).findFirst().orElseGet((Supplier<Column>)(() -> {throw new AssertionError("No numeric column");}));
         
         CellPosition title = keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), table.getId(), srcColumn.getName(), TableDataRowIndex.ZERO).offsetByRowCols(-2, 0);
         

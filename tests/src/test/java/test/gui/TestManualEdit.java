@@ -132,7 +132,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         public @Value Object makeValue() throws InternalException, UserException
         {
             // Can't ever be null because initialised when first object is created
-            return genValue.generate(TestUtil.checkNonNull(sourceOfRandomness), TestUtil.checkNonNull(generationStatus)).makeValue(dataType);
+            return genValue.generate(TBasicUtil.checkNonNull(sourceOfRandomness), TBasicUtil.checkNonNull(generationStatus)).makeValue(dataType);
         }
     }
     
@@ -268,7 +268,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
                 CellPosition cellPos = keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), srcTableId, row, col);
 
-                VersionedSTF oldCell = TestUtil.checkNonNull(TestUtil.<@Nullable VersionedSTF>fx(() -> mainWindowActions._test_getDataCell(cellPos)));
+                VersionedSTF oldCell = TBasicUtil.checkNonNull(TestUtil.<@Nullable VersionedSTF>fx(() -> mainWindowActions._test_getDataCell(cellPos)));
                 String oldContent = TestUtil.fx(() -> oldCell._test_getGraphicalText());
                 //if (!oldContent.contains("\u2026"))
                     //assertEquals(oldContent, TestUtil.getSingleCollapsedData(findSrc.get().getData().getColumns().get(col).getType(), row));
@@ -284,7 +284,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 assertFalse("Alert should be dismissed", lookup(".alert").tryQuery().isPresent());
 
                 sleep(1000);
-                VersionedSTF newCell = TestUtil.checkNonNull(TestUtil.<@Nullable VersionedSTF>fx(() -> mainWindowActions._test_getDataCell(cellPos)));
+                VersionedSTF newCell = TBasicUtil.checkNonNull(TestUtil.<@Nullable VersionedSTF>fx(() -> mainWindowActions._test_getDataCell(cellPos)));
                 //if (!oldContent.contains("\u2026"))
                     //assertEquals(oldContent, TestUtil.getSingleCollapsedData(findSrc.get().getData().getColumns().get(col).getType(), row));
                 assertEquals("Cell: " + newCell, oldContent, TestUtil.fx(() -> newCell._test_getGraphicalText()));
@@ -332,7 +332,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         TableId manualEditId = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof ManualEdit).findFirst().orElseThrow(() -> new RuntimeException("No edit")).getId();
         ExSupplier<ManualEdit> findManualEdit = () -> (ManualEdit) mainWindowActions._test_getTableManager().getSingleTableOrThrow(manualEditId);
-        TableDisplay manualEditDisplay = TestUtil.checkNonNull((TableDisplay)TestUtil.<@Nullable TableDisplayBase>fx(() -> findManualEdit.get().getDisplay()));
+        TableDisplay manualEditDisplay = TBasicUtil.checkNonNull((TableDisplay)TestUtil.<@Nullable TableDisplayBase>fx(() -> findManualEdit.get().getDisplay()));
 
         ImmutableSet<TableId> idsBeforeNewSort = getTableIdSet(mainWindowActions);
         // Add a sort transformation, sorting the edit transformation by a random column:
@@ -500,7 +500,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         
         // Copy the values from the resulting sort:
         Sort secondSort = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort && t.getId().equals(sortId)).map(t -> (Sort)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
-        TableDisplay secondSortDisplay = (TableDisplay) TestUtil.checkNonNull(TestUtil.<@Nullable TableDisplayBase>fx(() -> secondSort.getDisplay()));
+        TableDisplay secondSortDisplay = (TableDisplay) TBasicUtil.checkNonNull(TestUtil.<@Nullable TableDisplayBase>fx(() -> secondSort.getDisplay()));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), secondSortDisplay.getMostRecentPosition());
         showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(secondSortDisplay.getMostRecentPosition(), secondSortDisplay.getMostRecentPosition()), (n, p) -> {}), null)
                 .clickOn(".id-tableDisplay-menu-copyValues");
@@ -520,7 +520,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         // it will occupy the start of the last line...
         clickOn(point(".manual-edit-entries").atPosition(Pos.BOTTOM_LEFT).query().add(4, -4));
         sleep(500);
-        FancyList<ManualEditEntriesDialog.Entry, ?> listEntries = TestUtil.checkNonNull(lookup(".fancy-list").<FancyList<ManualEditEntriesDialog.Entry, ?>.FancyListScrollPane>tryQuery().orElse(null))._test_getList();
+        FancyList<ManualEditEntriesDialog.Entry, ?> listEntries = TBasicUtil.checkNonNull(lookup(".fancy-list").<FancyList<ManualEditEntriesDialog.Entry, ?>.FancyListScrollPane>tryQuery().orElse(null))._test_getList();
         
         Supplier<List<ManualEditEntriesDialog.Entry>> getEntries = () -> replacementsSoFar.entrySet().stream().flatMap(e -> e.getValue().entrySet().stream().map(e2 -> new ManualEditEntriesDialog.Entry(e2.getKey(), e.getKey(), e2.getValue()))).collect(ImmutableList.toImmutableList());
         
@@ -531,10 +531,10 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             
             ManualEditEntriesDialog.Entry toDelete = possibleItems.get(r.nextInt(possibleItems.size()));
 
-            @NonNull Node cell = TestUtil.checkNonNull(TestUtil.fx(() -> listEntries._test_scrollToItem(toDelete)));
+            @NonNull Node cell = TBasicUtil.checkNonNull(TestUtil.fx(() -> listEntries._test_scrollToItem(toDelete)));
             clickOn(TestUtil.fx(() -> cell.lookup(".small-delete")));
 
-            TreeMap<ComparableValue, ComparableEither<String, ComparableValue>> map = TestUtil.checkNonNull(replacementsSoFar.get(toDelete.getReplacementColumn()));
+            TreeMap<ComparableValue, ComparableEither<String, ComparableValue>> map = TBasicUtil.checkNonNull(replacementsSoFar.get(toDelete.getReplacementColumn()));
             map.remove(toDelete.getIdentifierValue());
             if (map.isEmpty())
                 replacementsSoFar.remove(toDelete.getReplacementColumn());
@@ -545,7 +545,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             // Try using the hyperlink functionality to close the dialog, on random chance:
             List<Entry> entries = getEntries.get();
             Entry toClick = entries.get(r.nextInt(entries.size()));
-            @NonNull Node cell = TestUtil.checkNonNull(TestUtil.fx(() -> listEntries._test_scrollToItem(toClick)));
+            @NonNull Node cell = TBasicUtil.checkNonNull(TestUtil.fx(() -> listEntries._test_scrollToItem(toClick)));
             clickOn(TestUtil.fx(() -> cell.lookup(".jump-to-link")));
             sleep(700);
             assertNull(lookup(".fancy-list").tryQuery().orElse(null));
@@ -697,7 +697,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         try
         {
             return Optional.of(Utility.mapListExI_Index(tableData.getColumns(), (colIndex, column) -> {
-                TableDisplay tableDisplay = TestUtil.checkNonNull(TestUtil.<@Nullable TableDisplay>fx(() -> (TableDisplay) table.getDisplay()));
+                TableDisplay tableDisplay = TBasicUtil.checkNonNull(TestUtil.<@Nullable TableDisplay>fx(() -> (TableDisplay) table.getDisplay()));
                 ImmutableList.Builder<Either<String, @Value Object>> values = ImmutableList.builder();
                 for (int row = 0; row < tableData.getLength(); row++)
                 {

@@ -30,8 +30,7 @@ import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.transformations.RTransformation;
 import test.DummyManager;
-import test.TestUtil;
-import test.TestUtil.Transformation_Mgr;
+import test.Transformation_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -53,11 +52,11 @@ public class GenNonsenseRTransform extends Generator<Transformation_Mgr>
         {
             DummyManager mgr = TFunctionUtil.managerWithTestTypes().getFirst();
 
-            ImmutableList<TableId> srcIds = TBasicUtil.makeList(sourceOfRandomness, 0, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
+            ImmutableList<TableId> srcIds = TBasicUtil.makeList(sourceOfRandomness, 0, 5, () -> TBasicUtil.generateTableId(sourceOfRandomness));
             ImmutableList<String> pkgs = TBasicUtil.makeList(sourceOfRandomness, 0, 10, () -> TBasicUtil.generateIdent(sourceOfRandomness));
-            String rExpression = TestUtil.makeNonEmptyString(sourceOfRandomness, generationStatus);
+            String rExpression = TBasicUtil.makeNonEmptyString(sourceOfRandomness, generationStatus);
             
-            return new Transformation_Mgr(mgr, new RTransformation(mgr, TestUtil.ILD, srcIds, pkgs, rExpression));
+            return new Transformation_Mgr(mgr, new RTransformation(mgr, TFunctionUtil.ILD, srcIds, pkgs, rExpression));
         }
         catch (InternalException e)
         {

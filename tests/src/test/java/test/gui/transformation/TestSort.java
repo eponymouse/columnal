@@ -36,8 +36,8 @@ import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
@@ -117,7 +117,7 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
                 sleep(300);
             }
             needToAdd = true;
-            TextField focused = TestUtil.checkNonNull(getFocusOwner(TextField.class));
+            TextField focused = TBasicUtil.checkNonNull(getFocusOwner(TextField.class));
             assertNotEquals(prevFocus, focused);
             prevFocus = focused;
             
@@ -125,8 +125,8 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
             // All columns start ascending.  We click n * 2 times, + 1 if descending
             int numClicks = 2 * r.nextInt(3) + (pickedColumn.getSecond() == Direction.DESCENDING ? 1 : 0);
             // Bit of a hack to find the matching button
-            Parent sortPane = TestUtil.checkNonNull(TestUtil.<@Nullable Parent>fx(() -> TestUtil.findParent(focused.getParent(), p -> p.getStyleClass().contains("sort-pane"))));
-            Node button = TestUtil.checkNonNull(TestUtil.fx(() -> sortPane.lookup(".sort-direction-button")));
+            Parent sortPane = TBasicUtil.checkNonNull(TestUtil.<@Nullable Parent>fx(() -> TestUtil.findParent(focused.getParent(), p -> p.getStyleClass().contains("sort-pane"))));
+            Node button = TBasicUtil.checkNonNull(TestUtil.fx(() -> sortPane.lookup(".sort-direction-button")));
             for (int i = 0; i < numClicks; i++)
             {
                 clickOn(button);
@@ -172,8 +172,8 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
 
                 for (Pair<ColumnId, Direction> pickedColumn : sortBy)
                 {
-                    Either<String, @Value Object> prevVal = TestUtil.checkNonNull(prev.get(pickedColumn.getFirst()));
-                    Either<String, @Value Object> curVal = TestUtil.checkNonNull(cur.get(pickedColumn.getFirst()));
+                    Either<String, @Value Object> prevVal = TBasicUtil.checkNonNull(prev.get(pickedColumn.getFirst()));
+                    Either<String, @Value Object> curVal = TBasicUtil.checkNonNull(cur.get(pickedColumn.getFirst()));
                     // If both errors, sort by error text:
                     if (prevVal.isLeft() && curVal.isLeft())
                     {
@@ -211,6 +211,6 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
 
     private Map<ColumnId, Either<String, @Value Object>> getRow(ImmutableList<LoadedColumnInfo> loadedColumnInfos, int row)
     {
-        return loadedColumnInfos.stream().collect(Collectors.toMap(c -> TestUtil.checkNonNull(c.columnName), c -> c.dataValues.get(row)));
+        return loadedColumnInfos.stream().collect(Collectors.toMap(c -> TBasicUtil.checkNonNull(c.columnName), c -> c.dataValues.get(row)));
     }
 }

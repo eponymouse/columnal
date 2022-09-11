@@ -181,9 +181,9 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
         }
         clickOn(".ok-button");
 
-        Table tableA = TestUtil.checkNonNull(mainWindowActions._test_getTableManager().getSingleTableOrThrow(new TableId("Table A")));
-        Table tableB = TestUtil.checkNonNull(mainWindowActions._test_getTableManager().getSingleTableOrThrow(new TableId("Table B")));
-        Join join = (Join)TestUtil.checkNonNull(mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Join).findFirst().orElse(null));
+        Table tableA = TBasicUtil.checkNonNull(mainWindowActions._test_getTableManager().getSingleTableOrThrow(new TableId("Table A")));
+        Table tableB = TBasicUtil.checkNonNull(mainWindowActions._test_getTableManager().getSingleTableOrThrow(new TableId("Table B")));
+        Join join = (Join) TBasicUtil.checkNonNull(mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Join).findFirst().orElse(null));
         assertEquals(ImmutableSet.of(new TableId("Table A"), new TableId("Table B")), join.getSources());
         assertEquals(leftJoin, join.isKeepPrimaryWithNoMatch());
         assertEquals(expJoin, join.getColumnsToMatch());

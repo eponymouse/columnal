@@ -27,6 +27,7 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.NumericColumnStorage;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.datatype.NumberInfo;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -69,7 +70,7 @@ public class PropNumericStorage
             .map(s -> s.replaceAll("\\.((?:0*[1-9])+)0+$", "\\.$1"))
             .collect(ImmutableList.toImmutableList());
         
-        TestUtil.assertEqualList(inputLessTrailingZeroes, out);
+        TBasicUtil.assertEqualList(inputLessTrailingZeroes, out);
     }
 
     @Property
@@ -85,7 +86,7 @@ public class PropNumericStorage
         List<Number> out = new ArrayList<>();
         for (int i = 0; i < input.size(); i++)
             out.add(Utility.toBigDecimal(Utility.cast(storage.getType().getCollapsed(i), Number.class)));
-        TestUtil.assertEqualList(Utility.<@Value Number, @Value BigDecimal>mapList(input, Utility::toBigDecimal), out);
+        TBasicUtil.assertEqualList(Utility.<@Value Number, @Value BigDecimal>mapList(input, Utility::toBigDecimal), out);
     }
 
     @Property(trials = 1000)
@@ -119,7 +120,7 @@ public class PropNumericStorage
         List<Number> out = new ArrayList<>();
         for (int i = 0; i < input.size(); i++)
             out.add(Utility.toBigDecimal(Utility.cast(storage.getType().getCollapsed(i), Number.class)));
-        TestUtil.assertEqualList(Utility.mapList(expected, Utility::toBigDecimal), out);
+        TBasicUtil.assertEqualList(Utility.mapList(expected, Utility::toBigDecimal), out);
     }
 
     @Property(trials = 1000)

@@ -20,53 +20,68 @@
 
 package test.functions;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.identifier.qual.UnitIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import test.DummyManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.data.datatype.DataType.SpecificDataTypeVisitor;
 import xyz.columnal.data.datatype.DataType.TagType;
 import xyz.columnal.data.datatype.NumberInfo;
+import xyz.columnal.data.datatype.TaggedTypeDefinition;
 import xyz.columnal.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.data.datatype.TypeManager;
+import xyz.columnal.data.datatype.TypeManager.TagInfo;
 import xyz.columnal.data.unit.SingleUnit;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.data.unit.UnitDeclaration;
+import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
+import xyz.columnal.grammar.GrammarUtility;
 import xyz.columnal.grammar.Versions.ExpressionVersion;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.TableId;
 import xyz.columnal.jellytype.JellyType;
+import xyz.columnal.jellytype.JellyType.JellyTypeVisitorEx;
+import xyz.columnal.jellytype.JellyTypeRecord.Field;
 import xyz.columnal.jellytype.JellyUnit;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
+import xyz.columnal.transformations.expression.CallExpression;
 import xyz.columnal.transformations.expression.ErrorAndTypeRecorder;
 import xyz.columnal.transformations.expression.EvaluateState;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.Expression.ColumnLookup;
 import xyz.columnal.transformations.expression.ExpressionUtil;
+import xyz.columnal.transformations.expression.IdentExpression;
 import xyz.columnal.transformations.expression.QuickFix;
+import xyz.columnal.transformations.expression.StringLiteral;
+import xyz.columnal.transformations.expression.TypeLiteralExpression;
 import xyz.columnal.transformations.expression.TypeState;
 import xyz.columnal.transformations.expression.function.FunctionLookup;
 import xyz.columnal.transformations.expression.function.ValueFunction;
+import xyz.columnal.transformations.expression.type.TypeExpression;
 import xyz.columnal.transformations.function.FunctionDefinition;
 import xyz.columnal.transformations.function.FunctionList;
 import xyz.columnal.typeExp.MutVar;
 import xyz.columnal.typeExp.TypeCons;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.units.MutUnitVar;
+import xyz.columnal.utility.ComparableEither;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
@@ -81,6 +96,8 @@ import static org.junit.Assert.assertNotNull;
 
 public class TFunctionUtil
 {
+    public static final InitialLoadDetails ILD = new InitialLoadDetails(null, null, null, null);
+
     @OnThread(Tag.Simulation)
     public static @Nullable Pair<ValueFunction, DataType> typeCheckFunction(FunctionDefinition function, ImmutableList<DataType> paramTypes) throws InternalException, UserException
     {
@@ -314,5 +331,165 @@ public class TFunctionUtil
     public static TypeState createTypeState(TypeManager typeManager) throws InternalException
     {
         return TypeState.withRowNumber(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
+    }
+
+    // Used for testing
+    // Creates a call to a tag constructor
+    @SuppressWarnings("recorded")
+    public static Expression tagged(UnitManager unitManager, TagInfo constructor, @Nullable Expression arg, DataType destType, boolean canAddAsType) throws InternalException
+    {
+        IdentExpression constructorExpression = IdentExpression.tag(constructor.getTypeName().getRaw(), constructor.getTagInfo().getName());
+        Expression r;
+        if (arg == null)
+        {
+            r = constructorExpression;
+        }
+        else
+        {
+            r = new CallExpression(constructorExpression, ImmutableList.of(arg));
+        }
+        
+        if (!canAddAsType)
+            return r;
+        
+        // Need to avoid having an ambiguous type:
+        TaggedTypeDefinition wholeType = constructor.wholeType;
+        for (Pair<TypeVariableKind, String> var : wholeType.getTypeArguments())
+        {
+            // If any type variables aren't mentioned, wrap in asType:
+            if (!TFunctionUtil.containsTypeVar(wholeType.getTags().get(constructor.tagIndex).getInner(), var))
+            {
+                FunctionDefinition asType = FunctionList.lookup(unitManager, "as type");
+                if (asType == null)
+                    throw new RuntimeException("Could not find as type");
+                return new CallExpression(IdentExpression.function(asType.getFullName()),ImmutableList.of(new TypeLiteralExpression(TypeExpression.fromDataType(destType)), r));
+            }
+        }
+        return r;
+    }
+
+    public static StringLiteral makeStringLiteral(String target, SourceOfRandomness r)
+    {
+        StringBuilder b = new StringBuilder();
+        
+        target.codePoints().forEach(n -> {
+            if (r.nextInt(8) == 1)
+                b.append("^{" + Integer.toHexString(n) + "}");
+            else
+                b.append(GrammarUtility.escapeChars(Utility.codePointToString(n)));
+        });
+        return new StringLiteral(b.toString());
+    }
+
+    public static boolean containsTypeVar(JellyUnit unit, Pair<TypeVariableKind, String> var)
+    {
+        if (var.getFirst() == TypeVariableKind.UNIT)
+            return unit.getDetails().containsKey(ComparableEither.left(var.getSecond()));
+        return false;
+    }
+
+    private static boolean containsTypeVar(@Nullable JellyType jellyType, Pair<TypeVariableKind, String> var)
+    {
+        if (jellyType == null)
+            return false;
+
+        try
+        {
+            return jellyType.apply(new JellyTypeVisitorEx<Boolean, InternalException>()
+            {
+                @Override
+                public Boolean number(JellyUnit unit) throws InternalException
+                {
+                    return containsTypeVar(unit, var);
+                }
+    
+                @Override
+                public Boolean text() throws InternalException
+                {
+                    return false;
+                }
+    
+                @Override
+                public Boolean date(DateTimeInfo dateTimeInfo) throws InternalException
+                {
+                    return false;
+                }
+    
+                @Override
+                public Boolean bool() throws InternalException
+                {
+                    return false;
+                }
+    
+                @Override
+                public Boolean applyTagged(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeParams) throws InternalException
+                {
+                    return typeParams.stream().anyMatch(p -> p.<Boolean>either(u -> containsTypeVar(u, var), t -> containsTypeVar(t, var)));
+                }
+
+                @Override
+                public Boolean record(ImmutableMap<@ExpressionIdentifier String, Field> fields, boolean complete) throws InternalException, InternalException
+                {
+                    return fields.values().stream().anyMatch(t -> containsTypeVar(t.getJellyType(), var));
+                }
+    
+                @Override
+                public Boolean array(JellyType inner) throws InternalException
+                {
+                    return containsTypeVar(inner, var);
+                }
+    
+                @Override
+                public Boolean function(ImmutableList<JellyType> argTypes, JellyType resultType) throws InternalException
+                {
+                    return argTypes.stream().anyMatch(a -> containsTypeVar(a, var)) || containsTypeVar(resultType, var);
+                }
+    
+                @Override
+                public Boolean ident(String name) throws InternalException
+                {
+                    return var.equals(new Pair<>(TypeVariableKind.TYPE, name));
+                }
+            });
+        }
+        catch (InternalException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // Makes something which could be an unfinished expression.  Can't have operators, can't start with a number.
+    public static String makeUnfinished(SourceOfRandomness r)
+    {
+        StringBuilder s = new StringBuilder();
+        s.append(r.nextChar('a', 'z'));
+        int len = r.nextInt(0, 10);
+        for (int i = 0; i < len; i++)
+        {
+            s.append(r.nextBoolean() ? r.nextChar('a', 'z') : r.nextChar('0', '9'));
+        }
+        return s.toString();
+    }
+
+    @SuppressWarnings("nullness")
+    public static TypeState typeState()
+    {
+        try
+        {
+            UnitManager unitManager = new UnitManager();
+            TypeManager typeManager = new TypeManager(unitManager);
+            /*
+            List<DataType> taggedTypes = distinctTypes.stream().filter(p -> p.isTagged()).collect(Collectors.toList());
+            for (DataType t : taggedTypes)
+            {
+                typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), ImmutableList.of(), Utility.mapListInt(t.getTagTypes(), t2 -> t2.mapInt(JellyType::fromConcrete)));
+            }
+            */
+            return createTypeState(typeManager);
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }

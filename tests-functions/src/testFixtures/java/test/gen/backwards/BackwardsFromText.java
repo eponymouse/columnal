@@ -23,17 +23,15 @@ package test.gen.backwards;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
-import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.CallExpression;
-import xyz.columnal.transformations.expression.StringLiteral;
 import xyz.columnal.transformations.expression.TypeLiteralExpression;
 import xyz.columnal.transformations.expression.type.TypeExpression;
 import xyz.columnal.transformations.function.FunctionList;
-import test.TestUtil;
 
 import java.util.List;
 
@@ -52,7 +50,7 @@ public class BackwardsFromText extends BackwardsProvider
         return ImmutableList.of(
             () -> new CallExpression(FunctionList.getFunctionLookup(parent.getTypeManager().getUnitManager()), "from text to",
                 new TypeLiteralExpression(TypeExpression.fromDataType(targetType)),
-                TestUtil.makeStringLiteral(val, r)
+                TFunctionUtil.makeStringLiteral(val, r)
             )
         );
     }

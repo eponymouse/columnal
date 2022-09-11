@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.*;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -39,7 +40,6 @@ import xyz.columnal.transformations.expression.BooleanLiteral;
 import xyz.columnal.transformations.expression.IdentExpression;
 import xyz.columnal.transformations.expression.TypeState;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.type.GenDataTypeMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeAndValueMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeMaker;
@@ -108,12 +108,12 @@ public class GenDataAndTransforms extends Generator<TableManager>
             {
                 sortBy.add(new Pair<>(possibles.remove(r.nextInt(possibles.size())), r.nextBoolean() ? Direction.ASCENDING : Direction.DESCENDING));
             }
-            return new Sort(mgr, TestUtil.ILD, src.getId(), sortBy.build());
+            return new Sort(mgr, TFunctionUtil.ILD, src.getId(), sortBy.build());
         },
         // Filter:
         () -> {
             Table src = pickSrc(mgr, r);
-            return new Filter(mgr, TestUtil.ILD, src.getId(), new BooleanLiteral(true));
+            return new Filter(mgr, TFunctionUtil.ILD, src.getId(), new BooleanLiteral(true));
         },
         // Join:
         /* TODO avoid issue with duplicate column names from merging with self
@@ -126,12 +126,12 @@ public class GenDataAndTransforms extends Generator<TableManager>
         // Hide:
         () -> {
             Table src = pickSrc(mgr, r);
-            return new HideColumns(mgr, TestUtil.ILD, src.getId(), ImmutableList.of());
+            return new HideColumns(mgr, TFunctionUtil.ILD, src.getId(), ImmutableList.of());
         },
         // Calculate:
         () -> {
             Table src = pickSrc(mgr, r);
-            return new Calculate(mgr, TestUtil.ILD, src.getId(), ImmutableMap.of());
+            return new Calculate(mgr, TFunctionUtil.ILD, src.getId(), ImmutableMap.of());
         },
         // Concatenate:
         /* TODO fix issues with columns having different types
@@ -144,7 +144,7 @@ public class GenDataAndTransforms extends Generator<TableManager>
         // Aggregate:
         () -> {
             Table src = pickSrc(mgr, r);
-            return new Aggregate(mgr, TestUtil.ILD, src.getId(), ImmutableList.of(new Pair<>(new ColumnId("Count"), IdentExpression.load(TypeState.GROUP_COUNT))), ImmutableList.of());
+            return new Aggregate(mgr, TFunctionUtil.ILD, src.getId(), ImmutableList.of(new Pair<>(new ColumnId("Count"), IdentExpression.load(TypeState.GROUP_COUNT))), ImmutableList.of());
         }//,
         // R:
                 /*
@@ -179,6 +179,6 @@ public class GenDataAndTransforms extends Generator<TableManager>
             cols.add(ColumnUtility.makeImmediateColumn(t.getDataType(), new ColumnId(IdentifierUtility.identNum("Col", i)), TBasicUtil.makeList(r, numRows, numRows, () -> Either.right(t.makeValue())), t.makeValue()));
         }
         
-        mgr.record(new ImmediateDataSource(mgr, TestUtil.ILD,new EditableRecordSet(cols.build(), () -> numRows)));
+        mgr.record(new ImmediateDataSource(mgr, TFunctionUtil.ILD,new EditableRecordSet(cols.build(), () -> numRows)));
     }
 }

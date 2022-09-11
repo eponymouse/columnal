@@ -57,7 +57,7 @@ public class TestExpressionEditorResolution extends FXApplicationTest implements
     private void testLoadNameResolution(String expressionSrc, String expectedLoaded) throws Exception
     {
         TableManager orig = new DummyManager();
-        Table data = new ImmediateDataSource(orig, TestUtil.ILD, new EditableRecordSet(ImmutableList.of(rs -> new MemoryNumericColumn(rs, new ColumnId("round"), NumberInfo.DEFAULT, ImmutableList.of(), 0L)), () -> 0));
+        Table data = new ImmediateDataSource(orig, TFunctionUtil.ILD, new EditableRecordSet(ImmutableList.of(rs -> new MemoryNumericColumn(rs, new ColumnId("round"), NumberInfo.DEFAULT, ImmutableList.of(), 0L)), () -> 0));
         orig.record(data);
         Table calc = new Calculate(orig, new InitialLoadDetails(new CellPosition(CellPosition.row(4), CellPosition.col(4))), data.getId(), ImmutableMap.of(new ColumnId("Calc Col"), TFunctionUtil.parseExpression(expressionSrc, orig.getTypeManager(), FunctionList.getFunctionLookup(orig.getUnitManager()))));
         orig.record(calc);

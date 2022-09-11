@@ -24,27 +24,27 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import test.functions.TFunctionUtil;
+import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
-import xyz.columnal.transformations.Concatenate;
-import xyz.columnal.transformations.Concatenate.IncompleteColumnHandling;
+import xyz.columnal.transformations.Join;
 import test.DummyManager;
-import test.TestUtil;
-import test.TestUtil.Transformation_Mgr;
+import test.Transformation_Mgr;
 import test.gen.GenValueBase;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.utility.Pair;
 
 import static org.junit.Assume.assumeNoException;
 
 /**
  * Created by neil on 02/02/2017.
  */
-public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
+public class GenNonsenseJoin extends GenValueBase<Transformation_Mgr>
 {
-    public GenNonsenseConcatenate()
+    public GenNonsenseJoin()
     {
         super(Transformation_Mgr.class);
     }
@@ -58,14 +58,14 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
 
         DummyManager mgr = TFunctionUtil.managerWithTestTypes().getFirst();
 
-        TableId ourId = TestUtil.generateTableId(sourceOfRandomness);
-        ImmutableList<TableId> srcIds = TBasicUtil.makeList(sourceOfRandomness, 1, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
-
-        IncompleteColumnHandling incompleteColumnHandling = IncompleteColumnHandling.values()[sourceOfRandomness.nextInt(IncompleteColumnHandling.values().length)];
+        TableId ourId = TBasicUtil.generateTableId(sourceOfRandomness);
+        TableId srcIdA = TBasicUtil.generateTableId(sourceOfRandomness);
+        TableId srcIdB = TBasicUtil.generateTableId(sourceOfRandomness);
+        ImmutableList<Pair<ColumnId, ColumnId>> columns = TBasicUtil.makeList(r, 0, 5, () -> new Pair<>(TBasicUtil.generateColumnId(r), TBasicUtil.generateColumnId(r)));
 
         try
         {
-            return new Transformation_Mgr(mgr, new Concatenate(mgr, new InitialLoadDetails(ourId, null, null, null), srcIds, incompleteColumnHandling, r.nextBoolean()));
+            return new Transformation_Mgr(mgr, new Join(mgr, new InitialLoadDetails(ourId, null, null, null), srcIdA, srcIdB, r.nextBoolean(), columns));
         }
         catch (InternalException e)
         {

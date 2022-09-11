@@ -50,7 +50,6 @@ import xyz.columnal.transformations.expression.MatchExpression.MatchClause;
 import xyz.columnal.transformations.expression.MatchExpression.Pattern;
 import xyz.columnal.transformations.expression.type.TypeExpression;
 import xyz.columnal.transformations.function.FunctionList;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
@@ -404,12 +403,12 @@ public class BackwardsMatch extends BackwardsProvider
                                 if (typeDefinition == null)
                                     throw new InternalException("Looked up type but null definition: " + typeName);
                                 if (inner == null)
-                                    return new PatternInfo(TestUtil.tagged(parent.getTypeManager().getUnitManager(), new TagInfo(typeDefinition, p.getTagIndex()), null, t, false), null);
+                                    return new PatternInfo(TFunctionUtil.tagged(parent.getTypeManager().getUnitManager(), new TagInfo(typeDefinition, p.getTagIndex()), null, t, false), null);
                                 @Nullable @Value Object innerValue = p.getInner();
                                 if (innerValue == null)
                                     throw new InternalException("Type says inner value but is null");
                                 PatternInfo subPattern = makePatternMatch(maxLevels, inner, innerValue, canMatchMore);
-                                return new PatternInfo(TestUtil.tagged(parent.getTypeManager().getUnitManager(), new TagInfo(typeDefinition, p.getTagIndex()), subPattern.pattern, t, false), subPattern.guard);
+                                return new PatternInfo(TFunctionUtil.tagged(parent.getTypeManager().getUnitManager(), new TagInfo(typeDefinition, p.getTagIndex()), subPattern.pattern, t, false), subPattern.guard);
                             }
                         });
                     }

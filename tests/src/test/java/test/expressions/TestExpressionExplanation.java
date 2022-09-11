@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Booleans;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
+import test.TTableUtil;
 import test.functions.TFunctionUtil;
 import xyz.columnal.data.*;
 import xyz.columnal.data.Table.InitialLoadDetails;
@@ -59,7 +60,6 @@ import xyz.columnal.transformations.function.FunctionList;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.styled.StyledString;
 import test.DummyManager;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
@@ -160,7 +160,7 @@ public class TestExpressionExplanation
 
     protected Explanation entire(@ExpressionIdentifier String table, @ExpressionIdentifier String column, Object... values) throws InternalException, UserException
     {
-        return e("table\\\\" + table + "#" + column, null, new ListExList(TestUtil.streamFlattened(tableManager.getSingleTableOrThrow(new TableId(table)).getData().getColumn(new ColumnId(column))).collect(ImmutableList.toImmutableList())), l(table, column), e("table\\\\" + table, null, null, new ExplanationLocation(new TableId(table))));
+        return e("table\\\\" + table + "#" + column, null, new ListExList(TTableUtil.streamFlattened(tableManager.getSingleTableOrThrow(new TableId(table)).getData().getColumn(new ColumnId(column))).collect(ImmutableList.toImmutableList())), l(table, column), e("table\\\\" + table, null, null, new ExplanationLocation(new TableId(table))));
     }
 
     @Test
@@ -413,7 +413,7 @@ public class TestExpressionExplanation
         TypeManager typeManager = tableManager.getTypeManager();
         Expression expression = TFunctionUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         
-        Check check = new Check(tableManager, TestUtil.ILD, new TableId(srcTable), checkType, expression);
+        Check check = new Check(tableManager, TFunctionUtil.ILD, new TableId(srcTable), checkType, expression);
         boolean result = Utility.cast(check.getData().getColumns().get(0).getType().getCollapsed(0), Boolean.class);
         // null explanation means we expect a pass:
         assertEquals(expectedExplanation == null, result);

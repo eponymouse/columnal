@@ -25,10 +25,10 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DataTypeVisitor;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
-import xyz.columnal.data.datatype.DataType.FlatDataTypeVisitor;
 import xyz.columnal.data.datatype.DataType.TagType;
 import xyz.columnal.data.datatype.NumberInfo;
 import xyz.columnal.data.datatype.TaggedTypeDefinition;
@@ -38,7 +38,6 @@ import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.*;
-import test.TestUtil;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.TaggedValue;
@@ -78,7 +77,7 @@ public class BackwardsLiteral extends BackwardsProvider
             @Override
             public List<ExpressionMaker> text() throws InternalException, UserException
             {
-                return ImmutableList.of(() -> TestUtil.makeStringLiteral((String)targetValue, r));
+                return ImmutableList.of(() -> TFunctionUtil.makeStringLiteral((String)targetValue, r));
             }
 
             @Override
@@ -111,9 +110,9 @@ public class BackwardsLiteral extends BackwardsProvider
                     DataType inner = tag.getInner();
                     @Value Object innerValue = taggedValue.getInner();
                     if (inner == null || innerValue == null)
-                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, null, targetType, true);
+                        return TFunctionUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, null, targetType, true);
                     else
-                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, r.choose(terminals(inner, innerValue)).make(), targetType, true);
+                        return TFunctionUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, r.choose(terminals(inner, innerValue)).make(), targetType, true);
                 });
             }
 
@@ -192,9 +191,9 @@ public class BackwardsLiteral extends BackwardsProvider
                     DataType inner = tag.getInner();
                     @Value Object innerValue = taggedValue.getInner();
                     if (inner == null || innerValue == null)
-                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, null, targetType, true);
+                        return TFunctionUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, null, targetType, true);
                     else
-                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, parent.make(inner, innerValue, maxLevels - 1), targetType, true);
+                        return TFunctionUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, parent.make(inner, innerValue, maxLevels - 1), targetType, true);
                 });
             }
 

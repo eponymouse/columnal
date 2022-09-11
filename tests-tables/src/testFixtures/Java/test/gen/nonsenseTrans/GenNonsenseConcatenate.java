@@ -22,32 +22,28 @@ package test.gen.nonsenseTrans;
 
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
-import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import xyz.columnal.id.ColumnId;
+import test.Transformation_Mgr;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
-import xyz.columnal.error.UserException;
-import xyz.columnal.transformations.HideColumns;
+import xyz.columnal.transformations.Concatenate;
+import xyz.columnal.transformations.Concatenate.IncompleteColumnHandling;
 import test.DummyManager;
-import test.TestUtil;
-import test.TestUtil.Transformation_Mgr;
+import test.gen.GenValueBase;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
-
-import java.util.List;
 
 import static org.junit.Assume.assumeNoException;
 
 /**
  * Created by neil on 02/02/2017.
  */
-public class GenNonsenseHideColumns extends Generator<Transformation_Mgr>
+public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
 {
-    public GenNonsenseHideColumns()
+    public GenNonsenseConcatenate()
     {
         super(Transformation_Mgr.class);
     }
@@ -56,18 +52,25 @@ public class GenNonsenseHideColumns extends Generator<Transformation_Mgr>
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public Transformation_Mgr generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
-        List<ColumnId> cols = TBasicUtil.makeList(sourceOfRandomness, 0, 10, () -> TestUtil.generateColumnId(sourceOfRandomness));
+        this.r = sourceOfRandomness;
+        this.gs = generationStatus;
+
+        DummyManager mgr = TFunctionUtil.managerWithTestTypes().getFirst();
+
+        TableId ourId = TBasicUtil.generateTableId(sourceOfRandomness);
+        ImmutableList<TableId> srcIds = TBasicUtil.makeList(sourceOfRandomness, 1, 5, () -> TBasicUtil.generateTableId(sourceOfRandomness));
+
+        IncompleteColumnHandling incompleteColumnHandling = IncompleteColumnHandling.values()[sourceOfRandomness.nextInt(IncompleteColumnHandling.values().length)];
 
         try
         {
-            DummyManager mgr = new DummyManager();
-            return new Transformation_Mgr(mgr, new HideColumns(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), ImmutableList.copyOf(cols)));
+            return new Transformation_Mgr(mgr, new Concatenate(mgr, new InitialLoadDetails(ourId, null, null, null), srcIds, incompleteColumnHandling, r.nextBoolean()));
         }
-        catch (InternalException | UserException e)
+        catch (InternalException e)
         {
             assumeNoException(e);
             throw new RuntimeException(e);
         }
     }
+
 }

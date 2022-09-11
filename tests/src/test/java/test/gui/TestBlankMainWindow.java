@@ -355,7 +355,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     @OnThread(Tag.Any)
     public void propAddColumnToEntryTable(@From(GenDataTypeMaker.class) @MustHaveValues GenDataTypeMaker.DataTypeMaker dataTypeMaker) throws UserException, InternalException, Exception
     {
-        TestUtil.printSeedOnFail(() -> {
+        TBasicUtil.printSeedOnFail(() -> {
             addColumnToEntryTable(dataTypeMaker.getTypeManager(), dataTypeMaker.makeType().getDataType());
         });
     }
@@ -414,7 +414,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     @OnThread(Tag.Any)
     public void propDefaultValue(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
-        TestUtil.printSeedOnFail(() -> {
+        TBasicUtil.printSeedOnFail(() -> {
             mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
             @Value Object initialVal = typeAndValueGen.makeValue();
             addNewTableWithColumn(typeAndValueGen.getType(), initialVal);

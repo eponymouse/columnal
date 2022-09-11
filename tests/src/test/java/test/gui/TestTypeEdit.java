@@ -23,7 +23,6 @@ package test.gui;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.geometry.Orientation;
 import javafx.geometry.VerticalDirection;
@@ -32,6 +31,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Window;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.log.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -80,7 +80,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     @OnThread(Tag.Simulation)
     public void testNewType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception
     {
-        TestUtil.printSeedOnFail(() -> {
+        TBasicUtil.printSeedOnFail(() -> {
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, new DummyManager()).get();
             TestUtil.sleep(1000);
 
@@ -257,7 +257,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     @OnThread(Tag.Simulation)
     public void testNoOpEditType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception
     {
-        TestUtil.printSeedOnFail(() -> {
+        TBasicUtil.printSeedOnFail(() -> {
 
             DummyManager initial = new DummyManager();
             initial.getTypeManager().registerTaggedType(typeDefinition.getTaggedTypeName().getRaw(), typeDefinition.getTypeArguments(), typeDefinition.getTags());
@@ -289,7 +289,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     @OnThread(Tag.Simulation)
     public void testEditType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition before, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition after, @From(GenRandom.class) Random random) throws Exception
     {
-        TestUtil.printSeedOnFail(() -> {
+        TBasicUtil.printSeedOnFail(() -> {
             DummyManager initial = new DummyManager();
             initial.getTypeManager().registerTaggedType(before.getTaggedTypeName().getRaw(), before.getTypeArguments(), before.getTags());
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, initial).get();
@@ -322,7 +322,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     @OnThread(Tag.Simulation)
     public void testDeleteType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionA, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionB, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionC, int whichToDelete) throws Exception
     {
-        TestUtil.printSeedOnFail(() -> {
+        TBasicUtil.printSeedOnFail(() -> {
             DummyManager prevManager = new DummyManager();
             prevManager.getTypeManager().registerTaggedType(typeDefinitionA.getTaggedTypeName().getRaw(), typeDefinitionA.getTypeArguments(), typeDefinitionA.getTags());
             prevManager.getTypeManager().registerTaggedType(typeDefinitionB.getTaggedTypeName().getRaw(), typeDefinitionB.getTypeArguments(), typeDefinitionB.getTags());

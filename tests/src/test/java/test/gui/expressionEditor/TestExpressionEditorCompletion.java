@@ -33,6 +33,7 @@ import org.junit.Test;
 import test.functions.TFunctionUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.ImmediateDataSource;
@@ -99,7 +100,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
     {
         TestUtil.doubleOk(this);
         sleep(500);
-        return TestUtil.checkNonNull(((Calculate)mainWindowActions._test_getTableManager().getSingleTableOrThrow(new TableId("Calc"))).getCalculatedColumns().get(new ColumnId("My Calc")));
+        return TBasicUtil.checkNonNull(((Calculate)mainWindowActions._test_getTableManager().getSingleTableOrThrow(new TableId("Calc"))).getCalculatedColumns().get(new ColumnId("My Calc")));
     }
     
     private String finishExternal() throws UserException
@@ -199,7 +200,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         write("My Nu");
         checkPosition();
         // Click first cell:
-        Node cell = TestUtil.checkNonNull(lookup(".lex-completion").<Node>queryAll().stream().min(Comparator.comparing(c -> TestUtil.fx(() -> c.localToScreen(c.getBoundsInLocal()).getMinY()))).orElse(null));
+        Node cell = TBasicUtil.checkNonNull(lookup(".lex-completion").<Node>queryAll().stream().min(Comparator.comparing(c -> TestUtil.fx(() -> c.localToScreen(c.getBoundsInLocal()).getMinY()))).orElse(null));
         // Doesn't matter if registered as double click or two single:
         clickOn(point(cell).atOffset(5, 0));
         clickOn(point(cell).atOffset(5, 0));
@@ -515,7 +516,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         scrollLexAutoCompleteToOption("from text to()");
         push(KeyCode.ENTER);
         write("1");
-        IdentExpression fromTextTo = IdentExpression.function(TestUtil.checkNonNull(FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager()).lookup("from text to")).getFullName());
+        IdentExpression fromTextTo = IdentExpression.function(TBasicUtil.checkNonNull(FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager()).lookup("from text to")).getFullName());
         assertEquals(new CallExpression(fromTextTo, ImmutableList.of(new NumericLiteral(1, null))), finish());
     }
 
@@ -530,7 +531,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         push(KeyCode.ENTER);
         write("1");
         FunctionLookup functionLookup = FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager());
-        IdentExpression fromTextTo = IdentExpression.function(TestUtil.checkNonNull(functionLookup.lookup("from text to")).getFullName());
+        IdentExpression fromTextTo = IdentExpression.function(TBasicUtil.checkNonNull(functionLookup.lookup("from text to")).getFullName());
         // Should still have trailing x:
         assertEquals(TFunctionUtil.parseExpression("@invalidops(@call function\\\\conversion\\from text to(1), x)", mainWindowActions._test_getTableManager().getTypeManager(), functionLookup), finish());
     }

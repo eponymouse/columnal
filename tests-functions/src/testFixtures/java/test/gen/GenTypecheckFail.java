@@ -39,7 +39,7 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.ArrayExpression;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.Expression.ColumnLookup;
-import test.TestUtil.SingleTableLookup;
+import test.SingleTableLookup;
 import xyz.columnal.transformations.expression.Expression._test_TypeVary;
 import xyz.columnal.typeExp.TypeExp;
 import test.DummyManager;

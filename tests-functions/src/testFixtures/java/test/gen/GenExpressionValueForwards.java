@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import test.gen.GenNumberAsString;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.id.ColumnId;
@@ -78,7 +78,6 @@ import xyz.columnal.transformations.expression.TypeLiteralExpression;
 import xyz.columnal.transformations.expression.function.FunctionLookup;
 import xyz.columnal.transformations.expression.type.TypePrimitiveLiteral;
 import xyz.columnal.transformations.function.FunctionList;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
@@ -321,7 +320,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     () ->
                     {
                         @Value String value = TBasicUtil.makeStringV(r, gs);
-                        return literal(value, TestUtil.makeStringLiteral(value, r));
+                        return literal(value, TFunctionUtil.makeStringLiteral(value, r));
                     }
                 ), l(fix(maxLevels - 1, type), () -> {
                     int numOperands = r.nextInt(2, 5);
@@ -428,7 +427,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                             Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
                             Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             ZoneOffset zone = TBasicUtil.generateZoneOffset(r, gs);
-                            return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> call("datetimezoned from dtz", dateE, timeE, TestUtil.makeStringLiteral(zone.toString(), r)));
+                            return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> call("datetimezoned from dtz", dateE, timeE, TFunctionUtil.makeStringLiteral(zone.toString(), r)));
                         });
                         break;
                 }
@@ -585,7 +584,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
-                    terminals.add(() -> literal(new TaggedValue(tagIndex, null, DataTypeUtility.fromTags(tags)), TestUtil.tagged(dummyManager.getUnitManager(), tagInfo, null, type, true)));
+                    terminals.add(() -> literal(new TaggedValue(tagIndex, null, DataTypeUtility.fromTags(tags)), TFunctionUtil.tagged(dummyManager.getUnitManager(), tagInfo, null, type, true)));
                 }
                 else
                 {
@@ -593,7 +592,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     nonTerm.add(() ->
                     {
                         Pair<List<@Value Object>, Expression> innerVal = make(nonNullInner, maxLevels - 1);
-                        return map(innerVal, v -> new TaggedValue(tagIndex, v, DataTypeUtility.fromTags(tags)), e -> TestUtil.tagged(dummyManager.getUnitManager(), tagInfo, e, type, true));
+                        return map(innerVal, v -> new TaggedValue(tagIndex, v, DataTypeUtility.fromTags(tags)), e -> TFunctionUtil.tagged(dummyManager.getUnitManager(), tagInfo, e, type, true));
                     });
                 }
                 return termDeep(maxLevels, type, terminals, nonTerm);

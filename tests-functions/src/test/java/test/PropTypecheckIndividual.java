@@ -34,6 +34,7 @@ import org.junit.runner.RunWith;
 import org.sosy_lab.common.rationals.Rational;
 import test.functions.TFunctionUtil;
 import xyz.columnal.data.KnownLengthRecordSet;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
@@ -197,12 +198,12 @@ public class PropTypecheckIndividual
         Assume.assumeThat(same, Matchers.<Boolean>equalTo(false));
 
         ColumnLookup columnLookup = TFunctionUtil.dummyColumnLookup();
-        assertEquals(null, new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(b)), false).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(a)), false).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(b), new DummyExpression(b)), false).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(null, new NotEqualExpression(new DummyExpression(a), new DummyExpression(b)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.bool(null), new NotEqualExpression(new DummyExpression(a), new DummyExpression(a)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.bool(null), new NotEqualExpression(new DummyExpression(b), new DummyExpression(b)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(null, new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(b)), false).checkExpression(columnLookup, TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(a)), false).checkExpression(columnLookup, TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(b), new DummyExpression(b)), false).checkExpression(columnLookup, TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(null, new NotEqualExpression(new DummyExpression(a), new DummyExpression(b)).checkExpression(columnLookup, TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new NotEqualExpression(new DummyExpression(a), new DummyExpression(a)).checkExpression(columnLookup, TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new NotEqualExpression(new DummyExpression(b), new DummyExpression(b)).checkExpression(columnLookup, TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
     }
 
     @Property
@@ -214,13 +215,13 @@ public class PropTypecheckIndividual
             // Will actually type-check
             Unit aOverB = TFunctionUtil.getUnit(a).divideBy(TFunctionUtil.getUnit(b));
             Unit bOverA = TFunctionUtil.getUnit(b).divideBy(TFunctionUtil.getUnit(a));
-            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(aOverB)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(bOverA)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(aOverB)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).checkExpression(columnLookup, TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(bOverA)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).checkExpression(columnLookup, TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         }
         else
         {
-            assertEquals(null, new DivideExpression(new DummyExpression(a), new DummyExpression(b)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-            assertEquals(null, new DivideExpression(new DummyExpression(b), new DummyExpression(a)).checkExpression(columnLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+            assertEquals(null, new DivideExpression(new DummyExpression(a), new DummyExpression(b)).checkExpression(columnLookup, TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+            assertEquals(null, new DivideExpression(new DummyExpression(b), new DummyExpression(a)).checkExpression(columnLookup, TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         }
     }
 
@@ -256,8 +257,8 @@ public class PropTypecheckIndividual
     public void propRaiseNonNumeric(@From(GenDataType.class) DataType a) throws UserException, InternalException
     {
         Assume.assumeFalse(DataTypeUtility.isNumber(a));
-        assertNull(new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).checkExpression(TFunctionUtil.dummyColumnLookup(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertNull(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).checkExpression(TFunctionUtil.dummyColumnLookup(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertNull(new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).checkExpression(TFunctionUtil.dummyColumnLookup(), TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertNull(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).checkExpression(TFunctionUtil.dummyColumnLookup(), TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
     }
 
     @Property
@@ -371,7 +372,7 @@ public class PropTypecheckIndividual
 
     private static @Nullable TypeExp check(Expression e) throws UserException, InternalException
     {
-        return e.checkExpression(TFunctionUtil.dummyColumnLookup(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer());
+        return e.checkExpression(TFunctionUtil.dummyColumnLookup(), TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer());
     }
 
     private static @Nullable DataType checkConcrete(Expression e) throws UserException, InternalException
@@ -509,13 +510,13 @@ public class PropTypecheckIndividual
     @Test
     public void checkFromTextFunctions2() throws UserException, InternalException
     {
-        checkConcreteType(m -> TestUtil.checkNonNull(m.lookupType(new TypeId("A"), ImmutableList.of())), "@call function\\\\from text to(type{A}, \"Hello\")");
+        checkConcreteType(m -> TBasicUtil.checkNonNull(m.lookupType(new TypeId("A"), ImmutableList.of())), "@call function\\\\from text to(type{A}, \"Hello\")");
     }
     
     @Test
     public void checkNestedFunctions() throws UserException, InternalException
     {
-        checkConcreteType(m -> TestUtil.checkNonNull(m.lookupType(new TypeId("A"), ImmutableList.of())), "@call function\\\\from text to(type{A}, @call function\\\\from text to(type{Text}, \"Hello\"))");
+        checkConcreteType(m -> TBasicUtil.checkNonNull(m.lookupType(new TypeId("A"), ImmutableList.of())), "@call function\\\\from text to(type{A}, @call function\\\\from text to(type{Text}, \"Hello\"))");
     }
 
     @Test

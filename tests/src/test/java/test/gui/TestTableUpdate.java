@@ -96,7 +96,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
             @From(GenTypeAndValueGen.class) TypeAndValueGen colB,
             @From(GenRandom.class) Random r) throws Exception
     {
-        TestUtil.printSeedOnFail(() -> {
+        TBasicUtil.printSeedOnFail(() -> {
             final @Initialized int tableLength = 1 + r.nextInt(20);
             MainWindowActions details = createTables(colA, colB, r, tableLength);
             
@@ -129,7 +129,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
         @From(GenTypeAndValueGen.class) TypeAndValueGen colB,
         @From(GenRandom.class) Random r) throws Exception
     {
-        TestUtil.printSeedOnFail(() -> {
+        TBasicUtil.printSeedOnFail(() -> {
             final @Initialized int tableLength = 1 + r.nextInt(20);
             MainWindowActions details = createTables(colA, colB, r, tableLength);
 

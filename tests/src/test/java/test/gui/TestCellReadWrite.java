@@ -30,6 +30,7 @@ import javafx.scene.Node;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -157,7 +158,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             Column col = table.getData().getColumns().get(column);
             DataTypeValue columnDTV = col.getType();
-            String valueFromData = DataTypeUtility.valueToString(TestUtil.checkNonNull(col.getDefaultValue()));
+            String valueFromData = DataTypeUtility.valueToString(TBasicUtil.checkNonNull(col.getDefaultValue()));
             assertEquals("Location " + pos + " row : " + row + " col: " + column,valueFromData, copiedFromTable);
         }
     }

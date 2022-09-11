@@ -79,7 +79,7 @@ public class TestSetValue
         // Do replacements:
         while (!pendingReplacements.isEmpty())
         {
-            Pair<Integer, Either<String, @Value Object>> repl = TestUtil.removeRandom(r, pendingReplacements);
+            Pair<Integer, Either<String, @Value Object>> repl = TBasicUtil.removeRandom(r, pendingReplacements);
             col.getType().setCollapsed(repl.getFirst(), repl.getSecond());
         }
 

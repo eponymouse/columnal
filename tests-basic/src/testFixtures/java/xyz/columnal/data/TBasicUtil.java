@@ -43,9 +43,13 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.FormatLexer;
 import xyz.columnal.grammar.GrammarUtility;
 import xyz.columnal.grammar.MainLexer;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.TableId;
 import xyz.columnal.utility.Either;
+import xyz.columnal.utility.ExRunnable;
 import xyz.columnal.utility.ExSupplier;
 import xyz.columnal.utility.IdentifierUtility;
+import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.SimulationEx;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Workers;
@@ -60,11 +64,14 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 public class TBasicUtil
@@ -387,5 +394,145 @@ public class TBasicUtil
     public static <T> ImmutableList<T> makeList(int len, Generator<? extends T> gen, SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         return Stream.generate(() -> gen.generate(sourceOfRandomness, generationStatus)).limit(len).collect(ImmutableList.toImmutableList());
+    }
+
+    public static ColumnId generateColumnId(SourceOfRandomness sourceOfRandomness)
+    {
+        return new ColumnId(IdentifierUtility.fixExpressionIdentifier(generateIdent(sourceOfRandomness), "Column"));
+    }
+
+    public static List<ColumnId> generateColumnIds(SourceOfRandomness r, int numColumns)
+    {
+        List<ColumnId> columnIds = new ArrayList<>();
+        while (columnIds.size() < numColumns)
+        {
+            ColumnId c = generateColumnId(r);
+            if (!columnIds.contains(c))
+                columnIds.add(c);
+        }
+        return columnIds;
+    }
+
+    public static void assertEqualList(List<?> a, List<?> b)
+    {
+        if (a.size() != b.size())
+            System.err.println("Different lengths");
+        try
+        {
+            assertEquals(a, b);
+        }
+        catch (AssertionError e)
+        {
+            System.err.println("Content:");
+            for (int i = 0; i < a.size(); i++)
+            {
+                System.err.println(((a.get(i) == null ? b.get(i) == null : a.get(i).equals(b.get(i))) ? "    " : "!!  ") + a.get(i) + "  " + b.get(i));
+            }
+            throw e;
+        }
+
+    }
+
+    public static TableId generateTableId(SourceOfRandomness sourceOfRandomness)
+    {
+        return new TableId(IdentifierUtility.fixExpressionIdentifier(generateIdent(sourceOfRandomness), "Table"));
+    }
+
+    // Generates a pair of different ids
+    public static Pair<TableId, TableId> generateTableIdPair(SourceOfRandomness r)
+    {
+        TableId us = generateTableId(r);
+        TableId src;
+        do
+        {
+            src = generateTableId(r);
+        }
+        while (src.equals(us));
+        return new Pair<>(us, src);
+    }
+
+    public static @ExpressionIdentifier String generateVarName(SourceOfRandomness r)
+    {
+        @ExpressionIdentifier String s;
+        do
+        {
+            s = IdentifierUtility.asExpressionIdentifier(generateIdent(r));
+        }
+        while (s == null);
+        return s;
+    }
+
+    public static String makeNonEmptyString(SourceOfRandomness r, GenerationStatus gs)
+    {
+        String s;
+        do
+        {
+            s = makeString(r, gs);
+        }
+        while (s.trim().isEmpty());
+        return s;
+    }
+
+    // If null, assertion failure.  Otherwise returns as non-null.
+    @SuppressWarnings("nullness")
+    public static <T> @NonNull T checkNonNull(@Nullable T t)
+    {
+        assertNotNull(t);
+        return t;
+    }
+
+    // Needed until IntelliJ bug IDEA-198613 is fixed
+    public static void printSeedOnFail(TestRunnable r) throws Exception
+    {
+        try
+        {
+            r.run();
+        }
+        catch (AssertionError assertionError)
+        {
+            String message = assertionError.getMessage();
+            message = message == null ? "" :
+                    message.replace("expected:", "should be").replace("but was:", "alas found");
+            throw new AssertionError(message, assertionError);
+        }
+    }
+
+    public static <T> T checkedToRuntime(ExSupplier<T> supplier)
+    {
+        try
+        {
+            return supplier.get();
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void checkedToRuntime_(ExRunnable runnable)
+    {
+        try
+        {
+            runnable.run();
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Removes a random item from the given list and returns it.
+     * Note that the list is modified!
+     */
+    public static <T> T removeRandom(Random r, List<T> list)
+    {
+        int index = r.nextInt(list.size());
+        return list.remove(index);
+    }
+
+    public static interface TestRunnable
+    {
+        public void run() throws Exception;
     }
 }

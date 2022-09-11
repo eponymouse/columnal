@@ -30,26 +30,24 @@ import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import xyz.columnal.transformations.Aggregate;
-import xyz.columnal.transformations.expression.CallExpression;
-import xyz.columnal.transformations.expression.Expression;
-import xyz.columnal.transformations.expression.IdentExpression;
-import xyz.columnal.transformations.function.FunctionList;
+import xyz.columnal.transformations.Sort;
+import xyz.columnal.transformations.Sort.Direction;
 import test.DummyManager;
-import test.TestUtil;
-import test.TestUtil.Transformation_Mgr;
+import test.Transformation_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
 
-import java.util.List;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assume.assumeNoException;
+import static org.junit.Assume.assumeThat;
 
 /**
  * Created by neil on 16/11/2016.
  */
-public class GenNonsenseSummaryStats extends Generator<Transformation_Mgr>
+public class GenNonsenseSort extends Generator<Transformation_Mgr>
 {
-    public GenNonsenseSummaryStats()
+    public GenNonsenseSort()
     {
         super(Transformation_Mgr.class);
     }
@@ -58,18 +56,17 @@ public class GenNonsenseSummaryStats extends Generator<Transformation_Mgr>
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public Transformation_Mgr generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
-        List<ColumnId> splitBy = TBasicUtil.makeList(sourceOfRandomness, 0, 4, () -> TestUtil.generateColumnId(sourceOfRandomness));
-        
+        Pair<TableId, TableId> ids = TBasicUtil.generateTableIdPair(sourceOfRandomness);
+        ImmutableList<Pair<ColumnId, Direction>> cols = TBasicUtil.makeList(sourceOfRandomness, 1, 10, () -> new Pair<>(TBasicUtil.generateColumnId(sourceOfRandomness), sourceOfRandomness.nextBoolean() ? Direction.ASCENDING : Direction.DESCENDING));
+
         try
         {
             DummyManager mgr = new DummyManager();
-            List<Pair<ColumnId, Expression>> summaries = TBasicUtil.makeList(sourceOfRandomness, 1, 5, () -> new Pair<>(TestUtil.generateColumnId(sourceOfRandomness),
-                new CallExpression(FunctionList.getFunctionLookup(mgr.getUnitManager()),"count", IdentExpression.makeEntireColumnReference(TestUtil.generateTableId(sourceOfRandomness), TestUtil.generateColumnId(sourceOfRandomness)))));
-            return new Transformation_Mgr(mgr, new Aggregate(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), ImmutableList.copyOf(summaries), ImmutableList.copyOf(splitBy)));
+            return new Transformation_Mgr(mgr, new Sort(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), cols));
         }
         catch (InternalException | UserException e)
         {
+            assumeNoException(e);
             throw new RuntimeException(e);
         }
     }

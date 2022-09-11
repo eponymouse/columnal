@@ -35,6 +35,7 @@ import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import org.testfx.service.query.NodeQuery;
 import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.EditableRecordSet;
@@ -107,7 +108,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
                 return new MemoryBooleanColumn(rs, columnId, ImmutableList.of(), false);
             case YM:
             case YM_LOWER:
-                return new MemoryTemporalColumn(rs, columnId, new DateTimeInfo(DateTimeType.YEARMONTH), ImmutableList.of(), TestUtil.checkNonNull(DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTH), DateTimeInfo.DEFAULT_VALUE)));
+                return new MemoryTemporalColumn(rs, columnId, new DateTimeInfo(DateTimeType.YEARMONTH), ImmutableList.of(), TBasicUtil.checkNonNull(DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTH), DateTimeInfo.DEFAULT_VALUE)));
             case BOOT_SIZE:
                 return new MemoryNumericColumn(rs, columnId, new NumberInfo(Unit.SCALAR), Stream.empty());
         }
@@ -226,14 +227,14 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         assertFalse("Exp Editor should be hidden, after: " + clickedExistingForName + " and " + clickedExistingForExpression, lookup(".expression-editor").tryQuery().isPresent());
         sleep(500);
         Calculate calculate = getCalculate(mainWindowActions);
-        Expression expression = TestUtil.checkNonNull(calculate.getCalculatedColumns().get(new ColumnId(columnNameToReplace)));
+        Expression expression = TBasicUtil.checkNonNull(calculate.getCalculatedColumns().get(new ColumnId(columnNameToReplace)));
         MatcherAssert.assertThat(expression, Matchers.is(Matchers.in(ImmutableList.of(IdentExpression.column(new TableId("Table1"), new ColumnId(columnNameToReplace)), IdentExpression.column(new ColumnId(columnNameToReplace))))));
         
     }
 
     private Calculate getCalculate(MainWindowActions mainWindowActions)
     {
-        return TestUtil.checkNonNull(Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), Calculate.class).findFirst().orElse(null));
+        return TBasicUtil.checkNonNull(Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), Calculate.class).findFirst().orElse(null));
     }
 
     private NodeQuery findColumnTitle(@ExpressionIdentifier String columnNameToReplace)

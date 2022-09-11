@@ -26,6 +26,7 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
+import test.TTableUtil;
 import test.functions.TFunctionUtil;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -33,7 +34,6 @@ import xyz.columnal.transformations.expression.ErrorAndTypeRecorderStorer;
 import xyz.columnal.transformations.expression.EvaluateState;
 import xyz.columnal.typeExp.TypeExp;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
@@ -71,7 +71,7 @@ public class PropRunExpression
             for (int row = 0; row < src.value.size(); row++)
             {
                 @Value Object actualValue = src.expression.calculateValue(new EvaluateState(dummyManager.getTypeManager(), OptionalInt.of(row))).value;
-                assertTrue("{{{" + src.expression.toString() + "}}} should have been " + TestUtil.toString(src.value.get(row)) + " but was " + TestUtil.toString(actualValue) + " columns: " + src.recordSet.getColumnIds().stream().map(Object::toString).collect(Collectors.joining(", ")) + " " + src.recordSet.debugGetVals(row),
+                assertTrue("{{{" + src.expression.toString() + "}}} should have been " + TTableUtil.toString(src.value.get(row)) + " but was " + TTableUtil.toString(actualValue) + " columns: " + src.recordSet.getColumnIds().stream().map(Object::toString).collect(Collectors.joining(", ")) + " " + src.recordSet.debugGetVals(row),
                     Utility.compareValues(src.value.get(row), actualValue, new Pair<>(EpsilonType.RELATIVE, new BigDecimal("0.000000001"))) == 0);
             }
         }

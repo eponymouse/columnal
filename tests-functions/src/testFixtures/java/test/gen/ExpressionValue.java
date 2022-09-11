@@ -28,7 +28,7 @@ import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.Expression.ColumnLookup;
-import test.TestUtil.SingleTableLookup;
+import test.SingleTableLookup;
 
 import java.util.List;
 

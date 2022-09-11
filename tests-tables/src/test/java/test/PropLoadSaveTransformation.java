@@ -23,6 +23,7 @@ package test;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.junit.Assert;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.Table;
 import xyz.columnal.data.Table.FullSaver;
@@ -47,7 +48,7 @@ public class PropLoadSaveTransformation
 {
     @Property(trials = 200)
     @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public void testLoadSaveTransformation(@From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original)
+    public void testLoadSaveTransformation(@From(GenNonsenseTransformation.class) Transformation_Mgr original)
         throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         TableManager mgr1 = new DummyManager();
@@ -63,7 +64,7 @@ public class PropLoadSaveTransformation
 
 
             assertEquals(saved, savedAgain);
-            assertEquals(original.transformation, loaded);
+            Assert.assertEquals(original.transformation, loaded);
             assertEquals(loaded, loadedAgain);
         }
         catch (Throwable t)

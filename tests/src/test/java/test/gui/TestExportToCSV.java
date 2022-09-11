@@ -26,6 +26,7 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.Column;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableRecordSet;
@@ -71,7 +72,7 @@ public class TestExportToCSV extends FXApplicationTest implements ScrollToTrait,
         Table srcData = new ImmediateDataSource(manager, new InitialLoadDetails(expressionValue.tableId, null, null, null), new EditableRecordSet(expressionValue.recordSet));
         manager.record(srcData);
 
-        Table calculated = new Calculate(manager, TestUtil.ILD, srcData.getId(), ImmutableMap.of(new ColumnId("Result"), expressionValue.expression));
+        Table calculated = new Calculate(manager, TFunctionUtil.ILD, srcData.getId(), ImmutableMap.of(new ColumnId("Result"), expressionValue.expression));
         manager.record(calculated);
 
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, manager).get();

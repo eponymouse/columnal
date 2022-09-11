@@ -27,9 +27,16 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.junit.Assert;
 import org.junit.runner.RunWith;
-import xyz.columnal.data.*;
+import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.Column;
+import xyz.columnal.data.GridComment;
+import xyz.columnal.data.ImmediateDataSource;
 import xyz.columnal.data.TBasicUtil;
+import xyz.columnal.data.TBasicUtil;
+import xyz.columnal.data.Table;
+import xyz.columnal.data.TableManager;
 import xyz.columnal.data.TableManager.Loaded;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -73,7 +80,7 @@ public class PropLoadSaveData
         SourceOfRandomness sourceOfRandomness = new SourceOfRandomness(r);
         int[] next = new int[] {1};
         ImmutableList<GridComment> comments = TBasicUtil.makeList(sourceOfRandomness, 0, 5, () -> {
-            String content = IntStream.range(0, r.nextInt(3)).mapToObj(_n -> TestUtil.generateColumnIds(sourceOfRandomness, r.nextInt(12)).stream().map(c -> c.getRaw()).collect(Collectors.joining(" "))).collect(Collectors.joining("\n"));
+            String content = IntStream.range(0, r.nextInt(3)).mapToObj(_n -> TBasicUtil.generateColumnIds(sourceOfRandomness, r.nextInt(12)).stream().map(c -> c.getRaw()).collect(Collectors.joining(" "))).collect(Collectors.joining("\n"));
             
             return new GridComment(SaveTag.generateRandom(), content, new CellPosition(r.nextInt(100) * AbsRowIndex.ONE, (next[0]++ * 1000) * AbsColIndex.ONE), 1 + r.nextInt(20), 1 + r.nextInt(20));
         });
@@ -81,23 +88,23 @@ public class PropLoadSaveData
         {
             original.mgr.addComment(comment);
         }
-        String saved = TestUtil.save(original.mgr);
+        String saved = TTableUtil.save(original.mgr);
         try
         {
             //Assume users destroy leading whitespace:
             String savedMangled = saved.replaceAll("\n +", "\n");
             Pair<Map<TableId, Table>, List<GridComment>> loaded = toMap(mgr1.loadAll(savedMangled, w -> {}));
-            String savedAgain = TestUtil.save(mgr1);
+            String savedAgain = TTableUtil.save(mgr1);
             Pair<Map<TableId, Table>, List<GridComment>> loadedAgain = toMap(mgr2.loadAll(savedAgain, w -> {}));
 
 
             assertEquals(saved, savedAgain);
             assertEquals(toMap(new Loaded(ImmutableList.of(), original.data, comments)), loaded);
             assertEquals(loaded, loadedAgain);
-            assertEquals(original.mgr.getTypeManager().getKnownTaggedTypes(), mgr1.getTypeManager().getKnownTaggedTypes());
-            assertEquals(original.mgr.getTypeManager().getKnownTaggedTypes(), mgr2.getTypeManager().getKnownTaggedTypes());
-            assertEquals(original.mgr.getUnitManager().getAllDeclared(), mgr1.getUnitManager().getAllDeclared());
-            assertEquals(original.mgr.getUnitManager().getAllDeclared(), mgr2.getUnitManager().getAllDeclared());
+            Assert.assertEquals(original.mgr.getTypeManager().getKnownTaggedTypes(), mgr1.getTypeManager().getKnownTaggedTypes());
+            Assert.assertEquals(original.mgr.getTypeManager().getKnownTaggedTypes(), mgr2.getTypeManager().getKnownTaggedTypes());
+            Assert.assertEquals(original.mgr.getUnitManager().getAllDeclared(), mgr1.getUnitManager().getAllDeclared());
+            Assert.assertEquals(original.mgr.getUnitManager().getAllDeclared(), mgr2.getUnitManager().getAllDeclared());
         }
         catch (Throwable t)
         {
@@ -125,7 +132,7 @@ public class PropLoadSaveData
             @From(GenRandom.class) Random r)
             throws Exception
     {
-        TestUtil.printSeedOnFail(() -> {
+        TBasicUtil.printSeedOnFail(() -> {
             // Introduce some errors:
             for (int i = 0; i < 20; i++)
             {

@@ -29,6 +29,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import test.functions.TFunctionUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.TableManager;
@@ -45,7 +46,6 @@ import xyz.columnal.transformations.expression.ComparisonExpression.ComparisonOp
 import xyz.columnal.transformations.expression.MatchExpression.MatchClause;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenUnit;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.ExSupplier;
@@ -133,7 +133,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                         try
                         {
                             Pair<DataType, TagInfo> tag = genTag(r);
-                            return TestUtil.tagged(tableManager.getUnitManager(), tag.getSecond(), genDepth(r, depth + 1, gs), tag.getFirst(), true);
+                            return TFunctionUtil.tagged(tableManager.getUnitManager(), tag.getSecond(), genDepth(r, depth + 1, gs), tag.getFirst(), true);
                         }
                         catch (InternalException | UserException e)
                         {
@@ -178,7 +178,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> {
                     while (true)
                     {
-                        @ExpressionIdentifier String ident = TestUtil.generateVarName(r);
+                        @ExpressionIdentifier String ident = TBasicUtil.generateVarName(r);
                         if (columnReferences.getOrDefault(ident, false))
                         {
                             if (!onlyCallTargets)
@@ -198,12 +198,12 @@ public class GenNonsenseExpression extends Generator<Expression>
             if (!onlyCallTargets)
             {
                 items.addAll(Arrays.<ExSupplier<Expression>>asList(
-                    () -> InvalidIdentExpression.identOrUnfinished(TestUtil.makeUnfinished(r)),
+                    () -> InvalidIdentExpression.identOrUnfinished(TFunctionUtil.makeUnfinished(r)),
                     () -> new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), r.nextBoolean() ? null : genUnit(r, gs)),
                     () -> new BooleanLiteral(r.nextBoolean()),
-                    () -> TestUtil.makeStringLiteral(TBasicUtil.makeStringV(r, gs), r),
+                    () -> TFunctionUtil.makeStringLiteral(TBasicUtil.makeStringV(r, gs), r),
                     () -> {
-                        ColumnId columnId = TestUtil.generateColumnId(r);
+                        ColumnId columnId = TBasicUtil.generateColumnId(r);
                         if (columnReferences.getOrDefault(columnId.getRaw(), true))
                         {
                             columnReferences.put(columnId.getRaw(), true);
@@ -215,7 +215,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                         }
                     },
                     () -> {
-                        return IdentExpression.table(TestUtil.generateTableId(r).getRaw());
+                        return IdentExpression.table(TBasicUtil.generateTableId(r).getRaw());
                     }
                 ));
             }
@@ -269,7 +269,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 // Variable name for pattern match:
                 while (true)
                 {
-                    @ExpressionIdentifier String ident = TestUtil.generateVarName(r);
+                    @ExpressionIdentifier String ident = TBasicUtil.generateVarName(r);
                     if (!columnReferences.getOrDefault(ident, false))
                     {
                         columnReferences.put(ident, false);
@@ -282,7 +282,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 try
                 {
                     Pair<DataType, TagInfo> tag = genTag(r);
-                    return TestUtil.tagged(tableManager.getUnitManager(), tag.getSecond(), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(r, gs, depth + 1), tag.getFirst(), true);
+                    return TFunctionUtil.tagged(tableManager.getUnitManager(), tag.getSecond(), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(r, gs, depth + 1), tag.getFirst(), true);
                 }
                 catch (InternalException | UserException ex)
                 {

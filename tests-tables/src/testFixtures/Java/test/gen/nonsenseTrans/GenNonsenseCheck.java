@@ -20,35 +20,29 @@
 
 package test.gen.nonsenseTrans;
 
-import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import xyz.columnal.id.ColumnId;
+import test.Transformation_Mgr;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
-import xyz.columnal.error.UserException;
-import xyz.columnal.transformations.Sort;
-import xyz.columnal.transformations.Sort.Direction;
+import xyz.columnal.transformations.Check;
+import xyz.columnal.transformations.Check.CheckType;
+import xyz.columnal.transformations.expression.Expression;
 import test.DummyManager;
-import test.TestUtil;
-import test.TestUtil.Transformation_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
 
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assume.assumeNoException;
-import static org.junit.Assume.assumeThat;
-
 /**
- * Created by neil on 16/11/2016.
+ * Created by neil on 27/11/2016.
  */
-public class GenNonsenseSort extends Generator<Transformation_Mgr>
+public class GenNonsenseCheck extends Generator<Transformation_Mgr>
 {
-    public GenNonsenseSort()
+    public GenNonsenseCheck()
     {
         super(Transformation_Mgr.class);
     }
@@ -57,17 +51,17 @@ public class GenNonsenseSort extends Generator<Transformation_Mgr>
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public Transformation_Mgr generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
-        ImmutableList<Pair<ColumnId, Direction>> cols = TBasicUtil.makeList(sourceOfRandomness, 1, 10, () -> new Pair<>(TestUtil.generateColumnId(sourceOfRandomness), sourceOfRandomness.nextBoolean() ? Direction.ASCENDING : Direction.DESCENDING));
-
+        Pair<TableId, TableId> ids = TBasicUtil.generateTableIdPair(sourceOfRandomness);
         try
         {
-            DummyManager mgr = new DummyManager();
-            return new Transformation_Mgr(mgr, new Sort(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), cols));
+            DummyManager mgr = TFunctionUtil.managerWithTestTypes().getFirst();
+            GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
+            genNonsenseExpression.setTableManager(mgr);
+            Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
+            return new Transformation_Mgr(mgr, new Check(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), CheckType.values()[sourceOfRandomness.nextInt(CheckType.values().length)], nonsenseExpression));
         }
-        catch (InternalException | UserException e)
+        catch (InternalException e)
         {
-            assumeNoException(e);
             throw new RuntimeException(e);
         }
     }

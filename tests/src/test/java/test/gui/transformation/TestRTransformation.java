@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.ColumnUtility;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.KnownLengthRecordSet;
 import xyz.columnal.data.RecordSet;
@@ -89,7 +90,7 @@ public class TestRTransformation extends FXApplicationTest implements ScrollToTr
         
         // Now check table exists, with correct output
         assertEquals(2, mainWindowActions._test_getTableManager().getAllTables().size());
-        RTransformation rTransformation = (RTransformation)TestUtil.checkNonNull(mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof RTransformation).findFirst().orElse(null));
+        RTransformation rTransformation = (RTransformation) TBasicUtil.checkNonNull(mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof RTransformation).findFirst().orElse(null));
         assertEquals(ImmutableList.of(new ColumnId("Result")), rTransformation.getData().getColumnIds());
         assertEquals("497859090e5f950944a1e8cf3989dd8d", rTransformation.getData().getColumns().get(0).getType().getCollapsed(0));
     }

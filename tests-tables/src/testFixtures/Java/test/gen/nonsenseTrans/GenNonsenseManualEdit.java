@@ -38,8 +38,7 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.transformations.ManualEdit;
 import xyz.columnal.transformations.ManualEdit.ColumnReplacementValues;
 import test.DummyManager;
-import test.TestUtil;
-import test.TestUtil.Transformation_Mgr;
+import test.Transformation_Mgr;
 import test.gen.type.GenTypeAndValueGen;
 import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
@@ -65,7 +64,7 @@ public class GenNonsenseManualEdit extends Generator<Transformation_Mgr>
         {
             GenTypeAndValueGen genTypeAndValueGen = new GenTypeAndValueGen();
             
-            Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(random);
+            Pair<TableId, TableId> ids = TBasicUtil.generateTableIdPair(random);
             DummyManager mgr = TFunctionUtil.managerWithTestTypes().getFirst();
             HashMap<ColumnId, ColumnReplacementValues> replacements = new HashMap<>();
             
@@ -73,12 +72,12 @@ public class GenNonsenseManualEdit extends Generator<Transformation_Mgr>
             @Nullable TypeAndValueGen keyColumn = random.nextInt(4) == 1 ? null : genTypeAndValueGen.generate(random, status);
             if (keyColumn != null)
                 mgr.getTypeManager()._test_copyTaggedTypesFrom(keyColumn.getTypeManager());
-            @Nullable Pair<ColumnId, DataType> replacementKey = keyColumn == null ? null : new Pair<>(TestUtil.generateColumnId(random), keyColumn.getType());
+            @Nullable Pair<ColumnId, DataType> replacementKey = keyColumn == null ? null : new Pair<>(TBasicUtil.generateColumnId(random), keyColumn.getType());
             
             int columnsAffected = random.nextInt(0, 5);
             for (int i = 0; i < columnsAffected; i++)
             {
-                ColumnId columnId = TestUtil.generateColumnId(random);
+                ColumnId columnId = TBasicUtil.generateColumnId(random);
 
                 TypeAndValueGen typeAndValueGen = genTypeAndValueGen.generate(random, status);
                 try

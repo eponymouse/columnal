@@ -36,6 +36,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.service.query.NodeQuery;
 import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.DataItemPosition;
 import xyz.columnal.data.Table;
@@ -219,7 +220,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
     default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, ColumnId columnId, @TableDataRowIndex int row) throws UserException
     {
         Table table = tableManager.getSingleTableOrThrow(tableId);
-        TableDisplay display = (TableDisplay) TestUtil.checkNonNull(TestUtil.fx(() -> table.getDisplay()));
+        TableDisplay display = (TableDisplay) TBasicUtil.checkNonNull(TestUtil.fx(() -> table.getDisplay()));
         return keyboardMoveTo(virtualGrid, tableManager, tableId, row, DataItemPosition.col(Utility.findFirstIndex(TestUtil.fx(() -> display.getDisplayColumns()), c -> c.getColumnId().equals(columnId)).orElseThrow(RuntimeException::new)));
     }
     

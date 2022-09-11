@@ -20,32 +20,33 @@
 
 package test.gen.nonsenseTrans;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import test.functions.TFunctionUtil;
 import xyz.columnal.id.ColumnId;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.id.TableId;
 import xyz.columnal.error.InternalException;
-import xyz.columnal.transformations.Calculate;
-import xyz.columnal.transformations.expression.Expression;
+import xyz.columnal.error.UserException;
+import xyz.columnal.transformations.HideColumns;
 import test.DummyManager;
-import test.TestUtil;
-import test.TestUtil.Transformation_Mgr;
+import test.Transformation_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
 
-import java.util.HashMap;
+import java.util.List;
+
+import static org.junit.Assume.assumeNoException;
 
 /**
- * Created by neil on 27/11/2016.
+ * Created by neil on 02/02/2017.
  */
-public class GenNonsenseTransform extends Generator<Transformation_Mgr>
+public class GenNonsenseHideColumns extends Generator<Transformation_Mgr>
 {
-    public GenNonsenseTransform()
+    public GenNonsenseHideColumns()
     {
         super(Transformation_Mgr.class);
     }
@@ -54,27 +55,17 @@ public class GenNonsenseTransform extends Generator<Transformation_Mgr>
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public Transformation_Mgr generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
+        Pair<TableId, TableId> ids = TBasicUtil.generateTableIdPair(sourceOfRandomness);
+        List<ColumnId> cols = TBasicUtil.makeList(sourceOfRandomness, 0, 10, () -> TBasicUtil.generateColumnId(sourceOfRandomness));
+
         try
         {
-            DummyManager mgr = TFunctionUtil.managerWithTestTypes().getFirst();
-            GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
-            genNonsenseExpression.setTableManager(mgr);
-
-            HashMap<ColumnId, Expression> columns = new HashMap<>();
-            int numColumns = sourceOfRandomness.nextInt(0, 5);
-            for (int i = 0; i < numColumns; i++)
-            {
-                Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
-                ColumnId columnId = TestUtil.generateColumnId(sourceOfRandomness);
-                while (columns.containsKey(columnId))
-                    columnId = TestUtil.generateColumnId(sourceOfRandomness);
-                columns.put(columnId, nonsenseExpression);
-            }
-            return new Transformation_Mgr(mgr, new Calculate(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), ImmutableMap.copyOf(columns)));
+            DummyManager mgr = new DummyManager();
+            return new Transformation_Mgr(mgr, new HideColumns(mgr, new InitialLoadDetails(ids.getFirst(), null, null, null), ids.getSecond(), ImmutableList.copyOf(cols)));
         }
-        catch (InternalException e)
+        catch (InternalException | UserException e)
         {
+            assumeNoException(e);
             throw new RuntimeException(e);
         }
     }

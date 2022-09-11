@@ -28,7 +28,9 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.hamcrest.MatcherAssert;
+import org.junit.Assert;
 import org.junit.runner.RunWith;
+import test.functions.TFunctionUtil;
 import xyz.columnal.data.Column;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.TBasicUtil;
@@ -99,11 +101,11 @@ public class PropRunTransformation
         Column sortBy = src.getColumns().get(r.nextInt(src.getColumns().size()));
         Direction direction = r.nextBoolean() ? Direction.ASCENDING : Direction.DESCENDING;
 
-        Sort sort = new Sort(srcTable.mgr, TestUtil.ILD, srcTable.data().getId(), ImmutableList.of(new Pair<>(sortBy.getName(), direction)));
+        Sort sort = new Sort(srcTable.mgr, TFunctionUtil.ILD, srcTable.data().getId(), ImmutableList.of(new Pair<>(sortBy.getName(), direction)));
 
         // TODO sort by multiple columns, too
 
-        assertTrue("Sorting by " + sortBy.getName() + " " + direction + ":\n" + src.debugGetVals(), !TestUtil.streamFlattened(sort.getData().getColumn(sortBy.getName()))
+        assertTrue("Sorting by " + sortBy.getName() + " " + direction + ":\n" + src.debugGetVals(), !TTableUtil.streamFlattened(sort.getData().getColumn(sortBy.getName()))
             .pairMap((a, b) ->
             {
                 try
@@ -126,7 +128,7 @@ public class PropRunTransformation
             })
             .has(false));
         // Check that the same set of rows is present:
-        assertEquals(TestUtil.getRowFreq(src), TestUtil.getRowFreq(sort.getData()));
+        Assert.assertEquals(TTableUtil.getRowFreq(src), TTableUtil.getRowFreq(sort.getData()));
     }
 
     @Property
@@ -167,7 +169,7 @@ public class PropRunTransformation
         }
 
         // Then filter on <= that:
-        Filter filter = new Filter(srcTable.mgr, TestUtil.ILD, srcTable.data().getId(),
+        Filter filter = new Filter(srcTable.mgr, TFunctionUtil.ILD, srcTable.data().getId(),
             new ComparisonExpression(
                 Arrays.asList(
                     IdentExpression.column(target.getName()),
@@ -181,7 +183,7 @@ public class PropRunTransformation
         }
         
 
-        Filter invertedFilter = new Filter(srcTable.mgr, TestUtil.ILD, srcTable.data().getId(),
+        Filter invertedFilter = new Filter(srcTable.mgr, TFunctionUtil.ILD, srcTable.data().getId(),
             new ComparisonExpression(
                 Arrays.asList(
                     IdentExpression.column(target.getName()),
@@ -192,12 +194,12 @@ public class PropRunTransformation
         // Lengths should equal original:
         @TableDataRowIndex int filterLength = filter.getData().getLength();
         @TableDataRowIndex int invertedFilterLength = invertedFilter.getData().getLength();
-        assertEquals(srcTable.data().getData().getLength(), filterLength + invertedFilterLength);
+        Assert.assertEquals(srcTable.data().getData().getLength(), filterLength + invertedFilterLength);
 
         
 
         boolean includeSourceColumn = r.nextBoolean();
-        Concatenate concatFilters = new Concatenate(srcTable.mgr, TestUtil.ILD, ImmutableList.of(filter.getId(), invertedFilter.getId()), IncompleteColumnHandling.DEFAULT, includeSourceColumn);
+        Concatenate concatFilters = new Concatenate(srcTable.mgr, TFunctionUtil.ILD, ImmutableList.of(filter.getId(), invertedFilter.getId()), IncompleteColumnHandling.DEFAULT, includeSourceColumn);
 
         List<ColumnId> srcColNames = srcTable.data().getData().getColumnIds();
         if (includeSourceColumn)
@@ -206,17 +208,17 @@ public class PropRunTransformation
         assertEquals(srcColNames, concatFilters.getData().getColumnIds());;
 
         // Check that the same set of rows is present:
-        Stream<List<@Value Object>> srcWithSrc = TestUtil.streamFlattened(srcTable.data().getData()).<List<@Value Object>>map(p -> {
+        Stream<List<@Value Object>> srcWithSrc = TTableUtil.streamFlattened(srcTable.data().getData()).<List<@Value Object>>map(p -> {
             if (!includeSourceColumn)
                 return p.getSecond();
             else
-                return TestUtil.<List<@Value Object>>checkedToRuntime(() -> {
+                return TBasicUtil.<List<@Value Object>>checkedToRuntime(() -> {
                     boolean matchesFilter = check.test(Utility.compareValues(p.getSecond().get(targetColumnIndex), targetValue));
                     return Utility.prependToList(DataTypeUtility.value(matchesFilter ? filter.getId().getRaw() : invertedFilter.getId().getRaw()), p.getSecond());
                 });
         });
-        ImmutableList<Entry<List<@Value Object>, Long>> srcData = TestUtil.getRowFreq(srcWithSrc).entrySet().stream().collect(ImmutableList.toImmutableList());
-        ImmutableList<Entry<List<@Value Object>, Long>> destData = TestUtil.getRowFreq(concatFilters.getData()).entrySet().stream().collect(ImmutableList.toImmutableList());
+        ImmutableList<Entry<List<@Value Object>, Long>> srcData = TTableUtil.getRowFreq(srcWithSrc).entrySet().stream().collect(ImmutableList.toImmutableList());
+        ImmutableList<Entry<List<@Value Object>, Long>> destData = TTableUtil.getRowFreq(concatFilters.getData()).entrySet().stream().collect(ImmutableList.toImmutableList());
         assertEquals(srcData.size(), destData.size());
         for (int i = 0; i < srcData.size(); i++)
         {
@@ -258,18 +260,18 @@ public class PropRunTransformation
         assumeTrue(numericColumn.isPresent());
 
         Expression countExpression = new CallExpression(FunctionList.getFunctionLookup(original.mgr.getUnitManager()), "list length", IdentExpression.makeEntireColumnReference(original.data().getId(), original.data().getData().getColumns().get(0).getName()));
-        Aggregate aggregate = new Aggregate(original.mgr, TestUtil.ILD, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("COUNT"), countExpression)), ImmutableList.of());
+        Aggregate aggregate = new Aggregate(original.mgr, TFunctionUtil.ILD, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("COUNT"), countExpression)), ImmutableList.of());
         RecordSet summaryRS = aggregate.getData();
         assertEquals(1, summaryRS.getLength());
         assertEquals(1, summaryRS.getColumns().size());
-        assertEquals(original.data().getData().getLength(), DataTypeUtility.requireInteger(summaryRS.getColumns().get(0).getType().getCollapsed(0)));
+        Assert.assertEquals(original.data().getData().getLength(), DataTypeUtility.requireInteger(summaryRS.getColumns().get(0).getType().getCollapsed(0)));
 
         Expression sumExpression = new CallExpression(FunctionList.getFunctionLookup(original.mgr.getUnitManager()), "sum", IdentExpression.makeEntireColumnReference(original.data().getId(), numericColumn.get().getName()));
-        aggregate = new Aggregate(original.mgr, TestUtil.ILD, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("SUM"), sumExpression)), ImmutableList.of());
+        aggregate = new Aggregate(original.mgr, TFunctionUtil.ILD, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("SUM"), sumExpression)), ImmutableList.of());
         summaryRS = aggregate.getData();
         assertEquals(1, summaryRS.getLength());
         assertEquals(1, summaryRS.getColumns().size());
-        MatcherAssert.assertThat(TestUtil.toString(numericColumn.get()), Utility.toBigDecimal(Utility.valueNumber(summaryRS.getColumns().get(0).getType().getCollapsed(0))), comparesEqualTo(bdSum(numericColumn.get().getLength(), numericColumn.get().getType())));
+        MatcherAssert.assertThat(TTableUtil.toString(numericColumn.get()), Utility.toBigDecimal(Utility.valueNumber(summaryRS.getColumns().get(0).getType().getCollapsed(0))), comparesEqualTo(bdSum(numericColumn.get().getLength(), numericColumn.get().getType())));
     }
 
     @OnThread(Tag.Simulation)
@@ -291,7 +293,7 @@ public class PropRunTransformation
         {
             // Add once each time round the loop:
             ids.add(original.data().getId());
-            Concatenate concatenate = new Concatenate(original.mgr, TestUtil.ILD, ImmutableList.copyOf(ids), IncompleteColumnHandling.DEFAULT, includeSource);
+            Concatenate concatenate = new Concatenate(original.mgr, TFunctionUtil.ILD, ImmutableList.copyOf(ids), IncompleteColumnHandling.DEFAULT, includeSource);
             for (Column column : concatenate.getData().getColumns())
             {
                 // Compare each value from the original set with the corresponding later repeated values:
@@ -394,7 +396,7 @@ public class PropRunTransformation
         // Test zero:
         {
             List<ColumnId> expected = new ArrayList<>(originalIds);
-            HideColumns hidden = new HideColumns(original.mgr, TestUtil.ILD, original.data().getId(), ImmutableList.of());
+            HideColumns hidden = new HideColumns(original.mgr, TFunctionUtil.ILD, original.data().getId(), ImmutableList.of());
             assertEquals(expected, hidden.getData().getColumnIds());
             assertDataSame(hidden.getData(), original.data().getData(), Function.identity());
         }
@@ -404,7 +406,7 @@ public class PropRunTransformation
         {
             List<ColumnId> expected = new ArrayList<>(originalIds);
             expected.remove(single);
-            HideColumns hidden = new HideColumns(original.mgr, TestUtil.ILD, original.data().getId(), ImmutableList.of(single));
+            HideColumns hidden = new HideColumns(original.mgr, TFunctionUtil.ILD, original.data().getId(), ImmutableList.of(single));
             assertEquals(expected, hidden.getData().getColumnIds());
             assertDataSame(hidden.getData(), original.data().getData(), Function.identity());
         }
@@ -433,7 +435,7 @@ public class PropRunTransformation
         }
 
 
-        Calculate calculate = new Calculate(original.mgr, TestUtil.ILD, original.data().getId(), newCols.build());
+        Calculate calculate = new Calculate(original.mgr, TFunctionUtil.ILD, original.data().getId(), newCols.build());
 
         assertDataSame(calculate.getData(), original.data().getData(), c -> columnMapping.getOrDefault(c, new ColumnId("TEST_UNKNOWN")));
     }
@@ -464,7 +466,7 @@ public class PropRunTransformation
         // Hiding all should be invalid:
         try
         {
-            new HideColumns(original.mgr, TestUtil.ILD, original.data().getId(), ImmutableList.copyOf(original.data().getData().getColumnIds())).getData();
+            new HideColumns(original.mgr, TFunctionUtil.ILD, original.data().getId(), ImmutableList.copyOf(original.data().getData().getColumnIds())).getData();
             fail("Hide all");
         }
         catch (UserException e)
@@ -479,7 +481,7 @@ public class PropRunTransformation
         {
             try
             {
-                new HideColumns(original.mgr, TestUtil.ILD, original.data().getId(), ImmutableList.copyOf(toRemove)).getData();
+                new HideColumns(original.mgr, TFunctionUtil.ILD, original.data().getId(), ImmutableList.copyOf(toRemove)).getData();
                 fail("Hide non-existing");
             }
             catch (UserException e)

@@ -31,6 +31,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Window;
 import test.functions.TFunctionUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -135,7 +136,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
     public void testUnitNameMixup2() throws Exception
     {
         DummyManager dummyManager = TFunctionUtil.managerWithTestTypes().getFirst();
-        testFix("EitherNumUnit({second})({m})", "second", dotCssClassFor("s"), TestUtil.checkNonNull(dummyManager.getTypeManager().lookupType(new TypeId("EitherNumUnit"), ImmutableList.of(Either.left(dummyManager.getUnitManager().loadUse("s")), Either.left(dummyManager.getUnitManager().loadUse("m"))))));
+        testFix("EitherNumUnit({second})({m})", "second", dotCssClassFor("s"), TBasicUtil.checkNonNull(dummyManager.getTypeManager().lookupType(new TypeId("EitherNumUnit"), ImmutableList.of(Either.left(dummyManager.getUnitManager().loadUse("s")), Either.left(dummyManager.getUnitManager().loadUse("m"))))));
     }
 
     @Test

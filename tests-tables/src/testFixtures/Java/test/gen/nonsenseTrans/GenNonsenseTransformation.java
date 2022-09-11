@@ -23,7 +23,7 @@ package test.gen.nonsenseTrans;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import test.TestUtil.Transformation_Mgr;
+import test.Transformation_Mgr;
 
 import java.util.Arrays;
 import java.util.List;

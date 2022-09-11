@@ -481,7 +481,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         Table picked = tableManager.getAllTables().get(r.nextInt(tableManager.getAllTables().size()));
         assertNotNull(tableManager.getSingleTableOrNull(picked.getId()));
         // Scroll to it
-        keyboardMoveTo(virtualGrid, TestUtil.checkNonNull(picked.getDisplay()).getMostRecentPosition());
+        keyboardMoveTo(virtualGrid, TBasicUtil.checkNonNull(picked.getDisplay()).getMostRecentPosition());
         // Either keyboard or context menu:
         if (r.nextBoolean())
         {

@@ -23,8 +23,8 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.id.TableId;
-import test.TestUtil;
 
 public class GenTableId extends Generator<TableId>
 {
@@ -36,6 +36,6 @@ public class GenTableId extends Generator<TableId>
     @Override
     public TableId generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        return TestUtil.generateTableId(sourceOfRandomness);
+        return TBasicUtil.generateTableId(sourceOfRandomness);
     }
 }
