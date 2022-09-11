@@ -34,6 +34,7 @@ include(':utility')
 include(':tests-basic')
 include(':tests-data')
 include(':tests-functions')
+include(':tests-r')
 include(':tests-tables')
 include(':xml')
 
