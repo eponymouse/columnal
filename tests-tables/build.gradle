@@ -1,5 +1,6 @@
 dependencies {
     testImplementation project(":data")
+    testImplementation project(":identifiers")
     testImplementation project(":transformations")
     testImplementation project(":types")
     testImplementation project(":utility")
@@ -11,6 +12,10 @@ dependencies {
     testFixturesImplementation project(":types")
     testFixturesImplementation project(":utility")
     testFixturesImplementation libs.guava
+
+    // From https://stackoverflow.com/questions/5644011/multi-project-test-dependencies-with-gradle/60138176#60138176
+    testImplementation(testFixtures(project(":tests-basic")))
+    testImplementation(testFixtures(project(":tests-functions")))
 }
 
 description = 'tests-data'
