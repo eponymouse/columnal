@@ -36,7 +36,7 @@ dependencies {
     testCompileOnly project(':threadchecker')
 
     // From https://stackoverflow.com/questions/5644011/multi-project-test-dependencies-with-gradle/60138176#60138176
-    testImplementation(testFixtures(project(":utility-tests")))
+    testImplementation(testFixtures(project(":tests-basic")))
 }
 
 javafx {

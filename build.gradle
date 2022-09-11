@@ -16,7 +16,7 @@ def projectsToJavaFX = [
 ]
 
 subprojects { subproject ->
-  if (!subproject.name.startsWith("ann") && !subproject.name.contains("checker") && !subproject.name.endsWith("tests") && !subproject.name.equals("xml")) {
+  if (!subproject.name.startsWith("ann") && !subproject.name.contains("checker") && !subproject.name.contains("tests") && !subproject.name.equals("xml")) {
     apply plugin: 'java-library'
     apply plugin: 'org.checkerframework'
     apply plugin: 'org.openjfx.javafxplugin'
@@ -90,7 +90,7 @@ subprojects { subproject ->
     sourceCompatibility = 11
     targetCompatibility = 11
   }
-  else if (subproject.name.endsWith("tests")) {
+  else if (subproject.name.contains("tests")) {
     apply plugin: 'java-library'
     apply plugin: 'org.openjfx.javafxplugin'
     apply plugin: 'java-test-fixtures'

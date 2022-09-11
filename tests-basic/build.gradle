@@ -7,7 +7,7 @@ dependencies {
     testFixturesImplementation libs.javaSMT
 }
 
-description = 'utility-tests'
+description = 'tests-basic'
 
 test {
     maxParallelForks = Runtime.runtime.availableProcessors() / 2
