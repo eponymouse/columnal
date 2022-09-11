@@ -76,5 +76,5 @@ test {
 
 description = 'tests'
 
-sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/resources/main')
+sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/resources/main', 'src/test/resources')
 
