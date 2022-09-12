@@ -114,7 +114,7 @@ public class RExecution
             }
             
             Process p = Runtime.getRuntime().exec(new String[]{rExec, "--vanilla", "--slave"});
-            PrintStream cmdStream = new PrintStream(p.getOutputStream());
+            PrintStream cmdStream = new PrintStream(p.getOutputStream(), false, StandardCharsets.UTF_8);
             
             for (String pkg : Utility.prependToList("tibble", packages))
             {
