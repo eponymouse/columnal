@@ -29,5 +29,5 @@ dependencies {
 
 description = 'tests-data'
 
-sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/main/resources', '../test/src/test/resources')
+sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/main/resources', '../tests/src/test/resources')
 

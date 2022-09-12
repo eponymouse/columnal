@@ -25,7 +25,7 @@ dependencies {
     testFixturesImplementation(testFixtures(project(":tests-basic")))
 }
 
-sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/main/resources', '../test/src/test/resources')
+sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/main/resources', '../tests/src/test/resources')
 
 description = 'tests-functions'
 
