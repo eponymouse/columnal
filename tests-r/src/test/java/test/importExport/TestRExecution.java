@@ -148,11 +148,12 @@ public class TestRExecution
         , ImmutableList.of("stats"), ImmutableMap.of()), false).get(0).getSecond();
         assertEquals(ImmutableList.of(new ColumnId("df"), new ColumnId("AIC")), recordSet.getColumnIds());
         // I see a different result on Linux and on Windows in the last digit, we'll allow both:
-        assertEquals(
+        MatcherAssert.assertThat(
+            TBasicUtil.getAllCollapsedDataValid(recordSet.getColumn(new ColumnId("AIC")).getType(), recordSet.getLength()),
             Matchers.oneOf(
                 Matchers.equalTo(ImmutableList.of(new BigDecimal("326.0715684405487"), new BigDecimal("325.24084406398185"))),
                 Matchers.equalTo(ImmutableList.of(new BigDecimal("326.0715684405487"), new BigDecimal("325.2408440639819")))
-            ), TBasicUtil.getAllCollapsedDataValid(recordSet.getColumn(new ColumnId("AIC")).getType(), recordSet.getLength()));
+            ));
     }
 
     @Test
