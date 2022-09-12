@@ -30,10 +30,15 @@ import org.gradle.workers.WorkAction
 
 @SuppressWarnings('AbstractClassWithoutAbstractMethod')
 abstract class XsltTransformation implements WorkAction<XsltWorkParameters> {
+    static Transform transform;
     @Override
     void execute() {
-        // println("Using Saxon version ${net.sf.saxon.Version.productVersion}")
-        println("Arguments: " + parameters.arguments.get().join("\n"))
-        new Transform().doTransform(parameters.arguments.get() as String[], '')
+        synchronized (XsltTransformation.class) {
+            if (transform == null)
+                transform = new Transform();
+            // println("Using Saxon version ${net.sf.saxon.Version.productVersion}")
+            println("Arguments: " + parameters.arguments.get().join("\n"))
+            transform.doTransform(parameters.arguments.get() as String[], '')
+        }
     }
 }
