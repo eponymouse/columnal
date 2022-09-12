@@ -151,8 +151,8 @@ public class TestRExecution
         MatcherAssert.assertThat(
             TBasicUtil.getAllCollapsedDataValid(recordSet.getColumn(new ColumnId("AIC")).getType(), recordSet.getLength()),
             Matchers.oneOf(
-                Matchers.equalTo(ImmutableList.of(new BigDecimal("326.0715684405487"), new BigDecimal("325.24084406398185"))),
-                Matchers.equalTo(ImmutableList.of(new BigDecimal("326.0715684405487"), new BigDecimal("325.2408440639819")))
+                ImmutableList.of(new BigDecimal("326.0715684405487"), new BigDecimal("325.24084406398185")),
+                ImmutableList.of(new BigDecimal("326.0715684405487"), new BigDecimal("325.2408440639819"))
             ));
     }
 
@@ -262,13 +262,13 @@ public class TestRExecution
         long start = System.currentTimeMillis();
         try
         {
-            RExecution.runRExpression("Sys.sleep(60)");
+            RExecution.runRExpression("Sys.sleep(240)");
             Assert.fail("Should have thrown timeout exception");
         }
         catch (UserException e)
         {
             // This is the expected outcome.  Check it did actually cut off, and give the right reason:
-            MatcherAssert.assertThat(System.currentTimeMillis(), Matchers.<Long>lessThan(start + 20 * 1000));
+            MatcherAssert.assertThat(System.currentTimeMillis(), Matchers.<Long>lessThan(start + 260 * 1000));
             MatcherAssert.assertThat(e.getLocalizedMessage(), CoreMatchers.containsString("too long"));
         }
     }
