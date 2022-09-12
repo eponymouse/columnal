@@ -94,7 +94,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
     {
 
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
         tableManager = details._test_getTableManager();
         virtualGrid = details._test_getVirtualGrid();
         List<Table> allTables = tableManager.getAllTables();
@@ -112,11 +112,11 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(tableLen));
             CellPosition pos = keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
             // Clear clipboard to prevent tests interfering:
-            TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
+            TFXUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
             pushCopy();
             // Need to wait for hop to simulation thread and back:
-            TestUtil.delay(2000);
-            String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
+            TFXUtil.sleep(2000);
+            String copiedFromTable = TFXUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
             String valueFromData = DataTypeUtility.valueToString(columnDTV.getCollapsed(row));
             assertEquals("Location " + pos + " row : " + row + " col: " + column, valueFromData, copiedFromTable);
@@ -131,7 +131,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
     {
 
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
         tableManager = details._test_getTableManager();
         virtualGrid = details._test_getVirtualGrid();
         List<Table> allTables = tableManager.getAllTables();
@@ -149,13 +149,13 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(tableLen));
             CellPosition pos = keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
             // Clear clipboard to prevent tests interfering:
-            TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
+            TFXUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
             push(r.nextBoolean() ? KeyCode.BACK_SPACE : KeyCode.DELETE);
             sleep(200);
             pushCopy();
             // Need to wait for hop to simulation thread and back:
-            TestUtil.delay(2000);
-            String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
+            TFXUtil.sleep(2000);
+            String copiedFromTable = TFXUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             Column col = table.getData().getColumns().get(column);
             DataTypeValue columnDTV = col.getType();
             String valueFromData = DataTypeUtility.valueToString(TBasicUtil.checkNonNull(col.getDefaultValue()));
@@ -172,7 +172,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
     {
 
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
-        TestUtil.sleep(3000);
+        TFXUtil.sleep(3000);
         tableManager = details._test_getTableManager();
         virtualGrid = details._test_getVirtualGrid();
         List<Table> allTables = tableManager.getAllTables();
@@ -259,11 +259,11 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
 
             Log.debug("Intending to copy column " + table.getData().getColumns().get(column).getName() + " from position " + row + ", " + column);
             // Clear clipboard to prevent tests interfering:
-            TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
+            TFXUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
             pushCopy();
             // Need to wait for hop to simulation thread and back:
-            TestUtil.delay(10000);
-            String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
+            TFXUtil.sleep(10000);
+            String copiedFromTable = TFXUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             
             String valueEntered = value.eitherEx(s -> "@INVALID\"" + s + "\"", v -> DataTypeUtility.valueToString(v));
             assertEquals(valueEntered, copiedFromTable);
@@ -277,11 +277,11 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             {
                 CellPosition cellPos = keyboardMoveTo(virtualGrid, tableManager, target.tableId, target.row, target.col);
                 assertErrorShowing(cellPos, written.getSecond());
-                TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
+                TFXUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
                 pushCopy();
                 // Need to wait for hop to simulation thread and back:
-                TestUtil.delay(2000);
-                String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
+                TFXUtil.sleep(2000);
+                String copiedFromTable = TFXUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
                 assertEquals("Position " + target, written.getFirst(), copiedFromTable);
             }
             catch (UserException e)
@@ -298,7 +298,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             @From(GenRandom.class) Random r) throws Exception
     {
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
         tableManager = details._test_getTableManager();
         virtualGrid = details._test_getVirtualGrid();
         List<Table> allTables = tableManager.getAllTables();
@@ -318,12 +318,12 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             CellPosition pos = keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
             String valueFromData = DataTypeUtility.valueToString(col.getType().getCollapsed(row));
             // Clear clipboard to prevent tests interfering:
-            TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
+            TFXUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
             // Check original has the right string:
             pushCopy();
             // Need to wait for hop to simulation thread and back:
-            TestUtil.delay(2000);
-            String copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
+            TFXUtil.sleep(2000);
+            String copiedFromTable = TFXUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             assertEquals("Location " + pos + " row : " + row + " col: " + column, valueFromData, copiedFromTable);
             // Now start editing:
             write("" + r.nextLong());
@@ -343,8 +343,8 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             sleep(200);
             pushCopy();
             // Need to wait for hop to simulation thread and back:
-            TestUtil.delay(2000);
-            copiedFromTable = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
+            TFXUtil.sleep(2000);
+            copiedFromTable = TFXUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
             
             valueFromData = DataTypeUtility.valueToString(col.getType().getCollapsed(row));
             assertEquals("Location " + pos + " row : " + row + " col: " + column + " escape: " + escape, valueFromData, copiedFromTable);
@@ -355,7 +355,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
     private void assertErrorShowing(CellPosition cellPos, boolean expectError)
     {
         Node field = withItemInBounds(lookup(".document-text-field"), virtualGrid, new RectangleBounds(cellPos, cellPos), (n, p) -> {});
-        assertEquals(expectError, TestUtil.fx(() -> FXUtility.hasPseudoclass(field, "has-error")));
+        assertEquals(expectError, TFXUtil.fx(() -> FXUtility.hasPseudoclass(field, "has-error")));
     }
 
     @OnThread(Tag.Any)
@@ -372,6 +372,6 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
         if (SystemUtils.IS_OS_MAC_OSX)
             push(KeyCode.F11);
         else
-            push(TestUtil.ctrlCmd(), KeyCode.C);
+            push(TFXUtil.ctrlCmd(), KeyCode.C);
     }
 }

@@ -32,6 +32,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import test.functions.TFunctionUtil;
+import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -353,7 +354,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("The quick brown fox"), Collections.emptyList(), ""));
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
 
-            Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
+            Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(5), CellPosition.col(5));
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
             // Only need to click once as already selected by keyboard:
@@ -365,7 +366,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             correctTargetWindow().clickOn(".id-transform-calculate");
             correctTargetWindow().write("Table1");
             push(KeyCode.ENTER);
-            TestUtil.sleep(200);
+            TFXUtil.sleep(200);
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);
@@ -373,7 +374,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             enterAndDeleteSmartBrackets(internalContent);
 
             /*
-            TestUtil.fx_(() -> {
+            TFXUtil.fx_(() -> {
                 Node n = getFocusOwner();
                 if (n != null && n.getScene() != null)
                 {
@@ -440,7 +441,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                     if (caretCentre == null)
                         continue;
                     System.out.println("Clicking on " + clickIndex + ": " + caretCentre);
-                    //TestUtil.fx_(() -> dumpScreenshot());
+                    //TFXUtil.fx_(() -> dumpScreenshot());
                     moveAndDismissPopupsAtPos(point(caretCentre));
                     sleep(400);
                     clickOn(caretCentre.add(1, 0));
@@ -450,7 +451,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                     // Double click is unreliable in TestFX, so fake it:
                     Point2D doubleClick = caretCentre.add(1, 0);
                     EditorDisplay editorDisplay = getEditorDisplay();
-                    TestUtil.fx_(() -> editorDisplay._test_doubleClickOn(doubleClick));
+                    TFXUtil.fx_(() -> editorDisplay._test_doubleClickOn(doubleClick));
                     int lhsSel = findPrev(wordBoundaryCaretPos, internalCaretPos[clickIndex == internalCaretPos.length - 1 ? clickIndex - 1 : clickIndex]);
                     assertEquals("Double clicked: " + caretCentre.add(1, 0), lhsSel, getAnchorPosition());
                     assertEquals("Double clicked: " + caretCentre.add(1, 0), findNext(wordBoundaryCaretPos, internalCaretPos[clickIndex]), getPosition().getSecond().intValue());
@@ -512,7 +513,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             }
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
 
-            Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
+            Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(5), CellPosition.col(5));
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
             // Only need to click once as already selected by keyboard:
@@ -524,14 +525,14 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             correctTargetWindow().clickOn(".id-transform-calculate");
             correctTargetWindow().write("Table1");
             push(KeyCode.ENTER);
-            TestUtil.sleep(200);
+            TFXUtil.sleep(200);
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);
             
             write(content);
             
-            TestUtil.fx_(() -> {
+            TFXUtil.fx_(() -> {
                 Node n = getFocusOwner();
                 if (n != null && n.getScene() != null)
                 {
@@ -583,7 +584,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     private Pair<EditorDisplay, Integer> getPosition()
     {
         EditorDisplay textField = getEditorDisplay();
-        return new Pair<>(textField, TestUtil.fx(() -> textField.getCaretPosition()));
+        return new Pair<>(textField, TFXUtil.fx(() -> textField.getCaretPosition()));
     }
 
     private EditorDisplay getEditorDisplay()
@@ -597,19 +598,19 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
     private int getAnchorPosition()
     {
         EditorDisplay textField = getEditorDisplay();
-        return TestUtil.fx(() -> textField.getAnchorPosition());
+        return TFXUtil.fx(() -> textField.getAnchorPosition());
     }
     
     private Point2D getCaretPosOnScreen()
     {
         EditorDisplay editorDisplay = getPosition().getFirst();
-        Node caret = TestUtil.fx(() -> editorDisplay.lookup(".document-caret"));
-        return TestUtil.fx(() -> FXUtility.getCentre(caret.localToScreen(caret.getBoundsInLocal())));
+        Node caret = TFXUtil.fx(() -> editorDisplay.lookup(".document-caret"));
+        return TFXUtil.fx(() -> FXUtility.getCentre(caret.localToScreen(caret.getBoundsInLocal())));
     }
     
     private String getDisplayText()
     {
         Pair<EditorDisplay, Integer> pos = getPosition();
-        return TestUtil.fx(() -> Utility.filterClass(((TextFlow) pos.getFirst().lookup(".document-text-flow")).getChildren().stream(), Text.class).map(t -> t.getText()).collect(Collectors.joining()));
+        return TFXUtil.fx(() -> Utility.filterClass(((TextFlow) pos.getFirst().lookup(".document-text-flow")).getChildren().stream(), Text.class).map(t -> t.getText()).collect(Collectors.joining()));
     }
 }

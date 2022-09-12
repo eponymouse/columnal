@@ -33,6 +33,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Window;
 import test.functions.TFunctionUtil;
+import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.BaseMatcher;
@@ -153,7 +154,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
 
             File dest = File.createTempFile("blank", "rec");
             dest.deleteOnExit();
-            MainWindowActions mainWindowActions = TestUtil.fx(() -> MainWindow.show(windowToUse, dest, null, null));
+            MainWindowActions mainWindowActions = TFXUtil.fx(() -> MainWindow.show(windowToUse, dest, null, null));
 
             List<ColumnDetails> columns = new ArrayList<>();
             // First add split variable:
@@ -206,12 +207,12 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             // Now add the actual aggregate:
             CellPosition aggTarget = CellPosition.ORIGIN.offsetByRowCols(1, columns.size() + 2);
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), aggTarget);
-            clickOnItemInBounds(from(TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(aggTarget, aggTarget), MouseButton.PRIMARY);
-            TestUtil.delay(100);
+            clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(aggTarget, aggTarget), MouseButton.PRIMARY);
+            TFXUtil.sleep(100);
             clickOn(".id-new-transform");
-            TestUtil.delay(100);
+            TFXUtil.sleep(100);
             clickOn(".id-transform-aggregate");
-            TestUtil.delay(100);
+            TFXUtil.sleep(100);
             write("Src Data");
             push(KeyCode.ENTER);
             sleep(300);
@@ -232,14 +233,14 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 push(KeyCode.DOWN);
                 push(KeyCode.ENTER);
                 TextField field = getFocusOwner(TextField.class);
-                assertEquals("Split Col", TestUtil.fx(() -> field.getText()));
-                assertEquals((Integer)"Split Col".length(), TestUtil.<Integer>fx(() -> field.getCaretPosition()));
+                assertEquals("Split Col", TFXUtil.fx(() -> field.getText()));
+                assertEquals((Integer)"Split Col".length(), TFXUtil.<Integer>fx(() -> field.getCaretPosition()));
                 MatcherAssert.assertThat(listWindows(), Matchers.everyItem(new BaseMatcher<Window>()
                 {
                     @Override
                     public boolean matches(Object o)
                     {
-                        return !(o instanceof AutoComplete.AutoCompleteWindow) || TestUtil.fx(() -> !((Window)o).isShowing());
+                        return !(o instanceof AutoComplete.AutoCompleteWindow) || TFXUtil.fx(() -> !((Window)o).isShowing());
                     }
 
                     @Override
@@ -251,7 +252,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             }
             moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(".ok-button");
-            TestUtil.sleep(3000);
+            TFXUtil.sleep(3000);
 
             // Should be one column at the moment, with the distinct split values, and maybe the first calculation:
             Aggregate aggTable = (Aggregate) mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> !t.getId().equals(new TableId("Src Data"))).findFirst().orElseThrow(RuntimeException::new);
@@ -276,14 +277,14 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                     keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), arrowLoc);
                     clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowLoc, arrowLoc));
                     // Now enter column name and expression:
-                    TestUtil.sleep(500);
+                    TFXUtil.sleep(500);
                     checkDialogFocused("New column dialog");
                     write(calculation.columnName.getRaw(), 1);
                     push(KeyCode.TAB);
                     enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), calculation.expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
                     moveAndDismissPopupsAtPos(point(".ok-button"));
                     clickOn(".ok-button");
-                    TestUtil.sleep(1000);
+                    TFXUtil.sleep(1000);
                 }
             }
 
@@ -512,8 +513,8 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
     {
         triggerTableHeaderContextMenu(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), new TableId(tableName))
                 .clickOn(".id-tableDisplay-menu-copyValues");
-        TestUtil.sleep(2000);
-        Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
+        TFXUtil.sleep(2000);
+        Optional<ImmutableList<LoadedColumnInfo>> clip = TFXUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));
         assertTrue(clip.isPresent());
         return clip.get();
     }
@@ -545,7 +546,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
     public void testCheck(@From(GenImmediateData.class) ImmediateData_Mgr srcImmedData, @From(GenRandom.class) Random r) throws Exception
     {
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, srcImmedData.mgr).get();
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
         TableManager tableManager = details._test_getTableManager();
         VirtualGrid virtualGrid = details._test_getVirtualGrid();
         List<Table> allTables = tableManager.getAllTables();
@@ -602,17 +603,17 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         }
 
         @SuppressWarnings("nullness")
-        CellPosition targetPos = allTables.stream().map(t -> TestUtil.fx(() -> ((HeadedDisplay)t.getDisplay()).getBottomRightIncl()).offsetByRowCols(8, 2)).max(Comparator.comparing(p -> p.columnIndex)).get();
+        CellPosition targetPos = allTables.stream().map(t -> TFXUtil.fx(() -> ((HeadedDisplay)t.getDisplay()).getBottomRightIncl()).offsetByRowCols(8, 2)).max(Comparator.comparing(p -> p.columnIndex)).get();
 
         keyboardMoveTo(virtualGrid, targetPos);
-        TestUtil.delay(300);
+        TFXUtil.sleep(300);
 
         Log.debug("Aiming for " + targetPos);
-        clickOnItemInBounds(from(TestUtil.fx(() -> virtualGrid.getNode())), virtualGrid, new RectangleBounds(targetPos, targetPos));
+        clickOnItemInBounds(from(TFXUtil.fx(() -> virtualGrid.getNode())), virtualGrid, new RectangleBounds(targetPos, targetPos));
 
-        TestUtil.delay(300);
+        TFXUtil.sleep(300);
         clickOn(".id-new-check");
-        TestUtil.delay(300);
+        TFXUtil.sleep(300);
         write(srcTable.getId().getRaw());
         push(KeyCode.ENTER);
 
@@ -631,7 +632,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         CellPosition labelPos = targetPos.offsetByRowCols(1, 0);
         Label label = (Label)withItemInBounds(lookup(".check-result"), virtualGrid, new RectangleBounds(targetPos, labelPos), (n, p) -> {});
         
-        assertEquals(expectedPass ? "OK" : "Fail", TestUtil.fx(() -> label.getText()));
+        assertEquals(expectedPass ? "OK" : "Fail", TFXUtil.fx(() -> label.getText()));
 
         if (!expectedPass)
         {

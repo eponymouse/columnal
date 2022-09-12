@@ -28,6 +28,7 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.junit.runner.RunWith;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.TBasicUtil;
@@ -77,18 +78,18 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
     {
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original.mgr).get();
-        TestUtil.sleep(5000);
-        CellPosition targetPos = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
+        TFXUtil.sleep(5000);
+        CellPosition targetPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
-        clickOnItemInBounds(from(TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-        TestUtil.delay(100);
+        clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+        TFXUtil.sleep(100);
         clickOn(".id-new-transform");
-        TestUtil.delay(100);
+        TFXUtil.sleep(100);
         clickOn(".id-transform-filter");
-        TestUtil.delay(100);
+        TFXUtil.sleep(100);
         write(original.data().getId().getRaw());
         push(KeyCode.ENTER);
-        TestUtil.sleep(200);
+        TFXUtil.sleep(200);
         // Then enter filter condition.
         // Find numeric column:
         Column srcColumn = original.data().getData().getColumns().stream().filter(c -> TBasicUtil.checkedToRuntime(() -> DataTypeUtility.isNumber(c.getType().getType()))).findFirst().orElseGet((Supplier<Column>)(() -> {throw new AssertionError("No numeric column");}));
@@ -99,7 +100,7 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         else
             cutOff = (Number)srcColumn.getType().getCollapsed(r.nextInt(srcColumn.getLength()));
         
-        push(TestUtil.ctrlCmd(), KeyCode.A);
+        push(TFXUtil.ctrlCmd(), KeyCode.A);
         push(KeyCode.DELETE);
         // Select column in auto complete:
         write(srcColumn.getName().getRaw());
@@ -110,16 +111,16 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         clickOn(".ok-button");
 
         // Now check output values by getting them from clipboard:
-        TestUtil.sleep(500);
+        TFXUtil.sleep(500);
         showContextMenu(".table-display-table-title.transformation-table-title")
                 .clickOn(".id-tableDisplay-menu-copyValues");
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
 
         @SuppressWarnings("recorded")
         ComparisonExpression expectedCmp = new ComparisonExpression(ImmutableList.of(IdentExpression.column(srcColumn.getName()), new NumericLiteral(cutOff, null)), ImmutableList.of(ComparisonOperator.GREATER_THAN));
         assertEquals(expectedCmp, Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), Filter.class).findFirst().get().getFilterExpression());
                 
-        Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
+        Optional<ImmutableList<LoadedColumnInfo>> clip = TFXUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
         assertTrue(clip.isPresent());
         // Need to fish out first column from clip, then compare item:
         List<Either<String, @Value Object>> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TBasicUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers((Number)x, cutOff) > 0).map(x -> Either.<String, Object>right(x)).collect(Collectors.toList());

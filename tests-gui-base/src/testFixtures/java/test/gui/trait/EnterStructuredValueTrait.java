@@ -30,6 +30,8 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Window;
+import org.junit.Assert;
+import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
@@ -46,7 +48,6 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.GrammarUtility;
 import xyz.columnal.gui.dtf.DocumentTextField;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
@@ -86,7 +87,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
         if (deleteAllFirst)
         {
             //FlexibleTextField view = robot.getFocusOwner(FlexibleTextField.class);
-            push(TestUtil.ctrlCmd(), KeyCode.A);
+            push(TFXUtil.ctrlCmd(), KeyCode.A);
             push(KeyCode.DELETE);
             push(KeyCode.HOME);
         }
@@ -99,7 +100,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             {
                 if (haveWritten && r.nextInt(3) == 1)
                 {
-                    TestUtil.fx_(() -> {
+                    TFXUtil.fx_(() -> {
                         Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, content));
                     });
                     push(KeyCode.SHORTCUT, KeyCode.V);
@@ -264,25 +265,25 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
     @OnThread(Tag.Any)
     default public void defocusSTFAndCheck(boolean checkContentSame, FXPlatformRunnable defocus)
     {
-        Window window = TestUtil.fx(() -> getRealFocusedWindow());
-        Node node = TestUtil.fx(() -> window.getScene().getFocusOwner());
+        Window window = TFXUtil.fx(() -> getRealFocusedWindow());
+        Node node = TFXUtil.fx(() -> window.getScene().getFocusOwner());
         assertTrue("" + node, node instanceof DocumentTextField);
         DocumentTextField field = (DocumentTextField) node;
-        String content = TestUtil.fx(() -> field._test_getGraphicalText());
+        String content = TFXUtil.fx(() -> field._test_getGraphicalText());
         ChangeListener<String> logTextChange = (a, oldVal, newVal) -> Log.logStackTrace("Text changed on defocus from : \"" + oldVal + "\" to \"" + newVal + "\"");
         if (checkContentSame)
         {
-            //TestUtil.fx_(() -> field.textProperty().addListener(logTextChange));
+            //TFXUtil.fx_(() -> field.textProperty().addListener(logTextChange));
         }
-        TestUtil.fx_(defocus);
+        TFXUtil.fx_(defocus);
         WaitForAsyncUtils.waitForFxEvents();
-        assertNotEquals(node, TestUtil.fx(() -> window.getScene().getFocusOwner()));
-        node = TestUtil.fx(() -> window.getScene().getFocusOwner());
+        Assert.assertNotEquals(node, TFXUtil.fx(() -> window.getScene().getFocusOwner()));
+        node = TFXUtil.fx(() -> window.getScene().getFocusOwner());
         assertFalse("" + node, node instanceof DocumentTextField);
         if (checkContentSame)
         {
-            assertEquals(content, TestUtil.fx(() -> field._test_getGraphicalText()));
-            //TestUtil.fx_(() -> field.textProperty().removeListener(logTextChange));
+            Assert.assertEquals(content, TFXUtil.fx(() -> field._test_getGraphicalText()));
+            //TFXUtil.fx_(() -> field.textProperty().removeListener(logTextChange));
         }
     }
 }

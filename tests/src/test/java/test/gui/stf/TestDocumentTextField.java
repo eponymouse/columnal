@@ -32,6 +32,7 @@ import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
+import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -41,7 +42,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import xyz.columnal.gui.dtf.DisplayDocument;
 import xyz.columnal.gui.dtf.DocumentTextField;
-import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.GenString;
 import test.gui.util.FXApplicationTest;
@@ -70,7 +70,7 @@ public class TestDocumentTextField extends FXApplicationTest
     @Before
     public void makeField()
     {
-        field = TestUtil.fx(() -> new DocumentTextField(null));
+        field = TFXUtil.fx(() -> new DocumentTextField(null));
     }
     
     @Property(trials=5, shrink = false)
@@ -88,18 +88,18 @@ public class TestDocumentTextField extends FXApplicationTest
         assertThat(s, Matchers.startsWith(unfocused));
         
         clickOn(field);
-        assertTrue(TestUtil.fx(() -> field.isFocused()));
+        assertTrue(TFXUtil.fx(() -> field.isFocused()));
         String focused = getText();
         // Once focused, should have complete text:
         assertEquals(s, focused);
         
         push(KeyCode.HOME);
-        assertEquals((Integer)0, TestUtil.<Integer>fx(() -> field.getCaretPosition()));
+        assertEquals((Integer)0, TFXUtil.<Integer>fx(() -> field.getCaretPosition()));
         int moveRightTo = s.isEmpty() ? 0 : r.nextInt(Math.min(s.length(), 25));
         for (int i = 0; i < moveRightTo; i++)
         {
             push(KeyCode.RIGHT);
-            assertEquals(Integer.valueOf(i + 1), TestUtil.<Integer>fx(() -> field.getCaretPosition()));
+            assertEquals(Integer.valueOf(i + 1), TFXUtil.<Integer>fx(() -> field.getCaretPosition()));
         }
         
         write("a z");
@@ -117,14 +117,14 @@ public class TestDocumentTextField extends FXApplicationTest
         for (int i = 0; i < 5; i++)
         {
             int pos = s.isEmpty() ? 0 : editPositions.get(r.nextInt(editPositions.size()));
-            Optional<Point2D> clickTarget = TestUtil.fx(() -> 
+            Optional<Point2D> clickTarget = TFXUtil.fx(() -> 
                 field._test_getClickPosFor(pos).map(field::localToScreen)
             );
             clickTarget.ifPresent(this::clickOn);
             if (clickTarget.isPresent())
                 assertEquals(pos, getFieldCaretPos());
             // Prevent it counting as multi click:
-            TestUtil.sleep(1000);
+            TFXUtil.sleep(1000);
         }
 
         for (int i = 0; i < 5; i++)
@@ -132,10 +132,10 @@ public class TestDocumentTextField extends FXApplicationTest
             editPositions = calcEditPositions(s);
             int aPos = s.isEmpty() ? 0 : editPositions.get(r.nextInt(editPositions.size()));
             int bPos = s.isEmpty() ? 0 : editPositions.get(r.nextInt(editPositions.size()));
-            Optional<Point2D> aClick = TestUtil.fx(() ->
+            Optional<Point2D> aClick = TFXUtil.fx(() ->
                 field._test_getClickPosFor(aPos).map(field::localToScreen)
             );
-            Optional<Point2D> bClick = TestUtil.fx(() ->
+            Optional<Point2D> bClick = TFXUtil.fx(() ->
                 field._test_getClickPosFor(bPos).map(field::localToScreen)
             );
             if (aClick.isPresent() && bClick.isPresent())
@@ -148,7 +148,7 @@ public class TestDocumentTextField extends FXApplicationTest
                 assertEquals("Selecting " + aPos + " to " + bPos, bPos, getFieldCaretPos());
             }
             // Prevent it counting as multi click:
-            TestUtil.sleep(1000);
+            TFXUtil.sleep(1000);
             push(KeyCode.HOME);
             for (int j = 0; j < aPos; j++)
             {
@@ -202,7 +202,7 @@ public class TestDocumentTextField extends FXApplicationTest
 
     private void initialiseField(String initialText)
     {
-        TestUtil.fx_(() ->{
+        TFXUtil.fx_(() ->{
             windowToUse.setScene(new Scene(field));
             windowToUse.show();
             windowToUse.sizeToScene();
@@ -213,8 +213,8 @@ public class TestDocumentTextField extends FXApplicationTest
                 }
             });
         });
-        assertThat(TestUtil.fx(() -> field.getWidth()), Matchers.greaterThanOrEqualTo(100.0));
-        assertThat(TestUtil.fx(() -> field.getHeight()), Matchers.greaterThanOrEqualTo(10.0));
+        assertThat(TFXUtil.fx(() -> field.getWidth()), Matchers.greaterThanOrEqualTo(100.0));
+        assertThat(TFXUtil.fx(() -> field.getHeight()), Matchers.greaterThanOrEqualTo(10.0));
     }
 
     @Test
@@ -291,13 +291,13 @@ public class TestDocumentTextField extends FXApplicationTest
     @OnThread(Tag.Any)
     public int getFieldAnchorPos()
     {
-        return (int) TestUtil.<Integer>fx(() -> (Integer)field.getAnchorPosition());
+        return (int) TFXUtil.<Integer>fx(() -> (Integer)field.getAnchorPosition());
     }
 
     @OnThread(Tag.Any)
     public int getFieldCaretPos()
     {
-        return (int) TestUtil.<Integer>fx(() -> (Integer)field.getCaretPosition());
+        return (int) TFXUtil.<Integer>fx(() -> (Integer)field.getCaretPosition());
     }
 
     private List<Integer> calcEditPositions(String s)
@@ -329,7 +329,7 @@ public class TestDocumentTextField extends FXApplicationTest
             s += s;
 
         String sFinal = s;
-        TestUtil.fx_(() -> {
+        TFXUtil.fx_(() -> {
             field.setPrefWidth(100);
             field.setMaxWidth(100);
             windowToUse.setScene(new Scene(new StackPane(field)));
@@ -343,11 +343,11 @@ public class TestDocumentTextField extends FXApplicationTest
             });
         });
         
-        MatcherAssert.assertThat(TestUtil.fx(() -> field.getWidth()), Matchers.lessThanOrEqualTo(110.0));
+        MatcherAssert.assertThat(TFXUtil.fx(() -> field.getWidth()), Matchers.lessThanOrEqualTo(110.0));
 
         clickOn(field);
         push(KeyCode.HOME);
-        Bounds fieldBounds = TestUtil.fx(() -> field.localToScreen(field.getBoundsInLocal()));
+        Bounds fieldBounds = TFXUtil.fx(() -> field.localToScreen(field.getBoundsInLocal()));
         Node caret = lookup(".document-caret").query();
         List<Rectangle2D> allBounds = new ArrayList<>();
         for (int i = 0; i < 50; i++)
@@ -355,7 +355,7 @@ public class TestDocumentTextField extends FXApplicationTest
             push(KeyCode.RIGHT);
             sleep(500);
 
-            Bounds caretBounds = TestUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()));
+            Bounds caretBounds = TFXUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()));
             allBounds.add(FXUtility.boundsToRect(caretBounds));
             assertTrue("Field: " + fieldBounds + " caret: " + caretBounds, fieldBounds.intersects(caretBounds));
         }
@@ -363,7 +363,7 @@ public class TestDocumentTextField extends FXApplicationTest
         {
             push(KeyCode.LEFT);
             sleep(500);
-            Bounds caretBounds = TestUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()));
+            Bounds caretBounds = TFXUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()));
             allBounds.add(FXUtility.boundsToRect(caretBounds));
             assertTrue(fieldBounds.intersects(caretBounds));
         }
@@ -377,6 +377,6 @@ public class TestDocumentTextField extends FXApplicationTest
 
     private String getText()
     {
-        return TestUtil.fx(() -> lookup((Predicate<Node>) t -> t instanceof Text).queryAll().stream().sorted(Comparator.comparing(n -> n.getLayoutX())).map(n -> ((Text)n).getText()).collect(Collectors.joining()));
+        return TFXUtil.fx(() -> lookup((Predicate<Node>) t -> t instanceof Text).queryAll().stream().sorted(Comparator.comparing(n -> n.getLayoutX())).map(n -> ((Text)n).getText()).collect(Collectors.joining()));
     }
 }

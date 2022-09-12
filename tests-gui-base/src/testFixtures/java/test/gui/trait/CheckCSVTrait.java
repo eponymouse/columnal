@@ -23,8 +23,11 @@ package test.gui.trait;
 import com.google.common.primitives.Ints;
 import javafx.scene.input.KeyCode;
 import org.apache.commons.io.FileUtils;
+import org.junit.Assert;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.util.WaitForAsyncUtils;
+import test.gui.TFXUtil;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.id.TableId;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.data.datatype.DataTypeUtility;
@@ -32,7 +35,6 @@ import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.grid.VirtualGrid;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
@@ -80,20 +82,20 @@ public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnT
             TestUtil.sleep(500);
         }
         */
-        TestUtil.sleep(2000);
+        TFXUtil.sleep(2000);
         // Wait for work queue to be empty:
-        TestUtil.sim_(() -> {});
+        TFXUtil.sim_(() -> {});
 
         // Now load CSV and check it:
         String actualCSV = FileUtils.readFileToString(destCSV, Charset.forName("UTF-8"));
-        TestUtil.assertEqualsText(prefix, toCSV(expected), actualCSV);
+        TBasicUtil.assertEqualsText(prefix, toCSV(expected), actualCSV);
     }
 
     @OnThread(Tag.Any)
     static String toCSV(List<Pair<String, List<String>>> csvColumns)
     {
         Set<Integer> columnLengths = csvColumns.stream().map(p -> p.getSecond().size()).collect(Collectors.toSet());
-        assertEquals("Column lengths differ (column lengths: " + Utility.listToString(new ArrayList<>(columnLengths)) + ")", 1, columnLengths.size());
+        Assert.assertEquals("Column lengths differ (column lengths: " + Utility.listToString(new ArrayList<>(columnLengths)) + ")", 1, columnLengths.size());
 
         int length = columnLengths.iterator().next();
 

@@ -76,17 +76,17 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
     public void testKeyboardMovement(@NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src, @From(GenRandom.class) Random r) throws Exception
     {
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
-        TestUtil.sleep(2000);
+        TFXUtil.sleep(2000);
         
         VirtualGrid virtualGrid = mainWindowActions._test_getVirtualGrid();
-        TestUtil.fx_(windowToUse::requestFocus);
-        assertTrue(TestUtil.fx(() -> windowToUse.isFocused()));
-        Log.debug("Focus owner: " + TestUtil.fx(() -> windowToUse.getScene().getFocusOwner()));
+        TFXUtil.fx_(windowToUse::requestFocus);
+        assertTrue(TFXUtil.fx(() -> windowToUse.isFocused()));
+        Log.debug("Focus owner: " + TFXUtil.fx(() -> windowToUse.getScene().getFocusOwner()));
         push(KeyCode.SHORTCUT, KeyCode.HOME);        
-        assertEquals(Optional.of(true), TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN.offsetByRowCols(1, 1)))));
+        assertEquals(Optional.of(true), TFXUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN.offsetByRowCols(1, 1)))));
         checkSelectionOnScreen("Origin", virtualGrid);
         @SuppressWarnings("nullness")
-        String tableSummary = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getAllTables().stream().map(t -> (TableDisplay)t.getDisplay()).map(t -> t.getPosition() + " - " + t.getBottomRightIncl()).collect(Collectors.joining()));
+        String tableSummary = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getAllTables().stream().map(t -> (TableDisplay)t.getDisplay()).map(t -> t.getPosition() + " - " + t.getBottomRightIncl()).collect(Collectors.joining()));
         
         // We go for a random walk right/down, then check that it is reversible:
         List<Pair<List<KeyCode>, RectangleBounds>> paths = new ArrayList<>();
@@ -94,7 +94,7 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
         {
             int dist = 1 + r.nextInt(5);
             ArrayList<KeyCode> presses = new ArrayList<>(Utility.replicate(dist, r.nextInt(3) != 1 ? KeyCode.DOWN : KeyCode.RIGHT));
-            RectangleBounds rectangleBounds = TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
+            RectangleBounds rectangleBounds = TFXUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
             for (ListIterator<KeyCode> iterator = presses.listIterator(); iterator.hasNext(); )
             {
                 KeyCode keyCode = iterator.next();
@@ -107,10 +107,10 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
                 }
                     
                 Log.debug("Pressing: " + keyCode + " at rect: " + rectangleBounds); 
-                        //" Focus owner: " + TestUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
+                        //" Focus owner: " + TFXUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
                 push(keyCode);
                 // If we've reached edge, don't count keypress on the reverse trip:
-                RectangleBounds newRectangleBounds = TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
+                RectangleBounds newRectangleBounds = TFXUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
                 if (newRectangleBounds.equals(rectangleBounds))
                 {
                     iterator.remove();
@@ -130,42 +130,42 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
         // TODO also check that trailing edge of selection is always moving strictly on
         for (int i = paths.size() - 1; i >= 0; i--)
         {
-            assertEquals("Index " + i, Optional.of(paths.get(i).getSecond()), TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())));
+            assertEquals("Index " + i, Optional.of(paths.get(i).getSecond()), TFXUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())));
             List<KeyCode> first = paths.get(i).getFirst();
             for (int k = first.size() - 1; k >= 0; k--)
             {
                 KeyCode keyCode = first.get(k);
                 // Reverse the down/right into up/left:
                 push(keyCode == KeyCode.DOWN ? KeyCode.UP : KeyCode.LEFT);
-                RectangleBounds rectangleBounds = TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
+                RectangleBounds rectangleBounds = TFXUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
                 Log.debug("Reversed " + keyCode + " to get to " + rectangleBounds);
             }
             checkSelectionOnScreen("Index " + i + " " + paths.get(i).getSecond().toString() + (i < paths.size() - 1 ? (" (from " + paths.get(i + 1).getSecond() + ")") : "") + " tables: " + tableSummary, virtualGrid);
         }
         // Should be back at origin:
-        assertTrue(TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN.offsetByRowCols(1, 1))).orElse(false)));
+        assertTrue(TFXUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN.offsetByRowCols(1, 1))).orElse(false)));
     }
 
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     public void checkSelectionOnScreen(String prefix, VirtualGrid virtualGrid)
     {
-        assertTrue(prefix, TestUtil.fx(() -> windowToUse.isFocused()));
+        assertTrue(prefix, TFXUtil.fx(() -> windowToUse.isFocused()));
         Node selectionRect = lookup(".virt-grid-selection-overlay").match(Node::isVisible).tryQuery().orElse(null);
         if (selectionRect == null)
         {
             // In case of a load:
-            TestUtil.delay(5000);
+            TFXUtil.sleep(5000);
             selectionRect = lookup(".virt-grid-selection-overlay").match(Node::isVisible).tryQuery().orElse(null);
             Log.debug("Window: " + windowToUse + " Target: " + targetWindow() + " rect: " + lookup(".virt-grid-selection-overlay").tryQuery().orElse(null));
         }
-        assertTrue(prefix, TestUtil.fx(() -> windowToUse.isFocused()));
+        assertTrue(prefix, TFXUtil.fx(() -> windowToUse.isFocused()));
         assertNotNull(prefix, selectionRect);
         if (selectionRect != null)
         {
             @NonNull Node selectionRectFinal = selectionRect;
-            Bounds selScreenBounds = TestUtil.fx(() -> selectionRectFinal.localToScreen(selectionRectFinal.getBoundsInLocal()));
-            Bounds gridScreenBounds = TestUtil.fx(() -> virtualGrid.getNode().localToScreen(virtualGrid.getNode().getLayoutBounds()));
+            Bounds selScreenBounds = TFXUtil.fx(() -> selectionRectFinal.localToScreen(selectionRectFinal.getBoundsInLocal()));
+            Bounds gridScreenBounds = TFXUtil.fx(() -> virtualGrid.getNode().localToScreen(virtualGrid.getNode().getLayoutBounds()));
             // Selection must be at least part in view (ideally wholly in view, but if table is big, whole table
             // selection isn't all going to fit)
             //Log.debug("Grid bounds on screen: " + gridScreenBounds + " sel bounds " + selScreenBounds);
@@ -181,12 +181,12 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
     public void testKeyboardScrollTo(@NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src, @From(GenRandom.class) Random r) throws Exception
     {
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
-        TestUtil.sleep(2000);
+        TFXUtil.sleep(2000);
         assertThat(mainWindowActions._test_getSaveCount(), Matchers.lessThanOrEqualTo(1));
 
         VirtualGrid virtualGrid = mainWindowActions._test_getVirtualGrid();
-        TestUtil.fx_(windowToUse::requestFocus);
-        assertTrue(TestUtil.fx(() -> windowToUse.isFocused()));
+        TFXUtil.fx_(windowToUse::requestFocus);
+        assertTrue(TFXUtil.fx(() -> windowToUse.isFocused()));
 
         ImmutableList<Table> allTables = mainWindowActions._test_getTableManager().getAllTables();
         
@@ -201,10 +201,10 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
             
             keyboardMoveTo(virtualGrid, mainWindowActions._test_getTableManager(), t.getId(), row, col);
 
-            Optional<CellSelection> selection = TestUtil.fx(() -> virtualGrid._test_getSelection());
+            Optional<CellSelection> selection = TFXUtil.fx(() -> virtualGrid._test_getSelection());
             @SuppressWarnings("nullness")
-            CellPosition target = TestUtil.fx(() -> t.getDisplay().getMostRecentPosition().offsetByRowCols(row + 3, col));
-            assertTrue("Selected is " + selection.toString() + " aiming for " + target, TestUtil.fx(() -> selection.map(s -> s.isExactly(target)).orElse(false)));
+            CellPosition target = TFXUtil.fx(() -> t.getDisplay().getMostRecentPosition().offsetByRowCols(row + 3, col));
+            assertTrue("Selected is " + selection.toString() + " aiming for " + target, TFXUtil.fx(() -> selection.map(s -> s.isExactly(target)).orElse(false)));
         }
     }
 }

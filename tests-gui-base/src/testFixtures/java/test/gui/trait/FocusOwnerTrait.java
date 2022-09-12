@@ -25,7 +25,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
-import test.TestUtil;
+import test.gui.TFXUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Utility;
@@ -41,14 +41,14 @@ public interface FocusOwnerTrait extends FxRobotInterface
     @OnThread(Tag.Any)
     default @Nullable Node getFocusOwner()
     {
-        Window curWindowFinal = TestUtil.fx(() -> getRealFocusedWindow());
-        return TestUtil.fx(() -> curWindowFinal.getScene().getFocusOwner());
+        Window curWindowFinal = TFXUtil.fx(() -> getRealFocusedWindow());
+        return TFXUtil.fx(() -> curWindowFinal.getScene().getFocusOwner());
     }
 
     @OnThread(Tag.Any)
     default Window fxGetRealFocusedWindow()
     {
-        return TestUtil.fx(this::getRealFocusedWindow);
+        return TFXUtil.fx(this::getRealFocusedWindow);
     }
     
 
@@ -73,7 +73,7 @@ public interface FocusOwnerTrait extends FxRobotInterface
         {
             // Remove any windows claiming to be focused which have a child
             // window that is focused:
-            TestUtil.fx_(() -> {
+            TFXUtil.fx_(() -> {
                 curWindow.removeIf(w -> curWindow.stream().anyMatch(parent -> parent instanceof Stage && ((Stage) parent).getOwner() == w));
             });
         }
@@ -86,14 +86,14 @@ public interface FocusOwnerTrait extends FxRobotInterface
     {
         Node node = getFocusOwner();
         if (!expectedClass.isInstance(node))
-            throw new RuntimeException("Focus owner is " + (node == null ? "null" : node.getClass().toString()) + " but expected " + expectedClass + " Target window: " + targetWindow() + " Real focused window: " + TestUtil.fx(() -> getRealFocusedWindow()));
+            throw new RuntimeException("Focus owner is " + (node == null ? "null" : node.getClass().toString()) + " but expected " + expectedClass + " Target window: " + targetWindow() + " Real focused window: " + TFXUtil.fx(() -> getRealFocusedWindow()));
         return expectedClass.cast(node);
     }
 
     @OnThread(Tag.Any) 
     default FxRobotInterface correctTargetWindow()
     {
-        return targetWindow(TestUtil.fx(() -> getRealFocusedWindow()));
+        return targetWindow(TFXUtil.fx(() -> getRealFocusedWindow()));
     }
     
     default public void checkDialogFocused(String msg)

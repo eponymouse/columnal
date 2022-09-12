@@ -55,7 +55,6 @@ import xyz.columnal.gui.grid.VirtualGridSupplier.VisibleBounds;
 import xyz.columnal.gui.grid.VirtualGridSupplierIndividual;
 import xyz.columnal.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import xyz.columnal.styled.StyledString;
-import test.TestUtil;
 import test.gen.GenRandom;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
@@ -98,7 +97,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         stage.setWidth(WINDOW_WIDTH);
         stage.setHeight(WINDOW_HEIGHT);
         stage.show();
-        TestUtil.sleep(500);
+        TFXUtil.sleep(500);
     }
     
     @Test
@@ -113,7 +112,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
     @Test
     public void testCellsNoLayout()
     {
-        TestUtil.fx_(() -> {
+        TFXUtil.fx_(() -> {
             SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
             SimpleGridArea simpleGridArea = new SimpleGridArea();
             virtualGrid.addGridAreas(ImmutableList.of(simpleGridArea));
@@ -130,7 +129,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
     @Test
     public void testCellsScroll()
     {
-        TestUtil.fx_(() -> {
+        TFXUtil.fx_(() -> {
             SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
             SimpleGridArea simpleGridArea = new SimpleGridArea();
             virtualGrid.addGridAreas(ImmutableList.of(simpleGridArea));
@@ -146,29 +145,29 @@ public class TestVirtualGridLayout extends FXApplicationTest
             dummySupplier.layoutCount = 0;
             // For small scroll, shouldn't need any new layout
             // as should just be handled by translation
-            TestUtil.fx_(() -> {
+            TFXUtil.fx_(() -> {
                 virtualGrid.getScrollGroup().requestScrollBy(-1.0 * xf, -1.0 * yf);
                 virtualGrid.getScrollGroup().requestScrollBy(1.0 * xf, 1.0 * yf);
             });
             // Wait for smooth scrolling to finish:
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
             assertEquals("ST " + scrollType, 0, dummySupplier.layoutCount);
             // True even for medium scroll:
-            TestUtil.fx_(() -> {
+            TFXUtil.fx_(() -> {
                 virtualGrid.getScrollGroup().requestScrollBy(-100.0 * xf, -100.0 * yf);
                 virtualGrid.getScrollGroup().requestScrollBy(100.0 * xf, 100.0 * yf);
             });
             // Wait for smooth scrolling to finish:
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
             assertEquals("ST " + scrollType, 0, dummySupplier.layoutCount);
 
             // However, a large scroll will require a layout -- but should only need two (one up, one down):
-            TestUtil.fx_(() -> {
+            TFXUtil.fx_(() -> {
                 virtualGrid.getScrollGroup().requestScrollBy(-1000.0 * xf, -1000.0 * yf);
                 virtualGrid.getScrollGroup().requestScrollBy(1000.0 * xf, 1000.0 * yf);
             });
             // Wait for smooth scrolling to finish:
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
             // This should be 2 scrolls even for X and Y together:
             assertEquals("ST " + scrollType, 2, dummySupplier.layoutCount);
         }
@@ -181,7 +180,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
     {
         SimpleGridArea simpleGridArea = new SimpleGridArea();
         assertTrue(simpleGridArea.fetches.isEmpty());
-        TestUtil.fx_(() -> {
+        TFXUtil.fx_(() -> {
             SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
             virtualGrid.addGridAreas(ImmutableList.of(simpleGridArea));
             simpleCellSupplier.addGrid(simpleGridArea, simpleGridArea);
@@ -189,20 +188,20 @@ public class TestVirtualGridLayout extends FXApplicationTest
             virtualGrid.addNodeSupplier(new VirtualGridLineSupplier());
         });
         // Small scroll and back shouldn't fetch:
-        assertEquals(0, (long)TestUtil.<Integer>fx(() -> {
+        assertEquals(0, (long) TFXUtil.<Integer>fx(() -> {
             simpleGridArea.fetches.clear();
             virtualGrid.getScrollGroup().requestScrollBy(-100.0, -100.0);
             virtualGrid.getScrollGroup().requestScrollBy(100.0, 100.0);
             return simpleGridArea.fetches.size();
         }));
         // Scrolling only downwards should not re-fetch any cells:
-        assertEquals(1, (long)TestUtil.<Integer>fx(() -> {
+        assertEquals(1, (long) TFXUtil.<Integer>fx(() -> {
             virtualGrid.getScrollGroup().requestScrollBy(-1000.0, -1000.0);
             return simpleGridArea.fetches.entrySet().stream().mapToInt(e -> e.getCount()).max().orElse(0);
         }));
         // Scrolling back should still not re-fetch any -- items should either have been fetched during first
         // scroll, or during second, but not both (because they should just stay fetched):
-        assertEquals(1, (long)TestUtil.<Integer>fx(() -> {
+        assertEquals(1, (long) TFXUtil.<Integer>fx(() -> {
             virtualGrid.getScrollGroup().requestScrollBy(1000.0, 1000.0);
             System.err.println(simpleGridArea.fetches.entrySet().stream().filter(e -> e.getCount() > 1).map(e -> e.toString()).collect(Collectors.joining("\n")));
             return simpleGridArea.fetches.entrySet().stream().mapToInt(e -> e.getCount()).max().orElse(0);
@@ -214,7 +213,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
     {
         SimpleGridArea simpleGridArea = new SimpleGridArea();
         VirtualGridLineSupplier gridLineSupplier = new VirtualGridLineSupplier();
-        TestUtil.fx_(() -> {
+        TFXUtil.fx_(() -> {
             virtualGrid.addGridAreas(ImmutableList.of(simpleGridArea));
             virtualGrid.addNodeSupplier(gridLineSupplier);
         });
@@ -226,13 +225,13 @@ public class TestVirtualGridLayout extends FXApplicationTest
             int expectedLines = (int)Math.ceil(WINDOW_WIDTH / 100.0);
             final int SCROLL_AMOUNT = 29;
             
-            TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(-SCROLL_AMOUNT, 0.0));
+            TFXUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(-SCROLL_AMOUNT, 0.0));
             curScrollOffset += SCROLL_AMOUNT;
             // Don't let them all turn into one big smooth scroll:
             if (i % 20 == 0)
-                TestUtil.sleep(500);
+                TFXUtil.sleep(500);
 
-            Collection<Line> columnDividers = TestUtil.fx(() -> gridLineSupplier._test_getColumnDividers());
+            Collection<Line> columnDividers = TFXUtil.fx(() -> gridLineSupplier._test_getColumnDividers());
             MatcherAssert.assertThat(columnDividers.size(), Matchers.greaterThanOrEqualTo(expectedLines));
             for (Line columnDivider : columnDividers)
             {
@@ -249,13 +248,13 @@ public class TestVirtualGridLayout extends FXApplicationTest
             int expectedLines = (int)Math.ceil(WINDOW_HEIGHT / 24.0);
             final int SCROLL_AMOUNT = 7;
 
-            TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(0.0, -SCROLL_AMOUNT));
+            TFXUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(0.0, -SCROLL_AMOUNT));
             curScrollOffset += SCROLL_AMOUNT;
             // Don't let them all turn into one big smooth scroll:
             if (i % 20 == 0)
-                TestUtil.sleep(500);
+                TFXUtil.sleep(500);
 
-            Collection<Line> rowDividers = TestUtil.fx(() -> gridLineSupplier._test_getRowDividers());
+            Collection<Line> rowDividers = TFXUtil.fx(() -> gridLineSupplier._test_getRowDividers());
             MatcherAssert.assertThat(rowDividers.size(), Matchers.greaterThanOrEqualTo(expectedLines));
             for (Line rowDivider : rowDividers)
             {
@@ -271,7 +270,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
     {
         SimpleGridArea simpleGridArea = new SimpleGridArea();
         // Test that when table moves, cells are updated properly
-        TestUtil.fx_(() -> {
+        TFXUtil.fx_(() -> {
             SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
             virtualGrid.addGridAreas(ImmutableList.of(simpleGridArea));
             simpleCellSupplier.addGrid(simpleGridArea, simpleGridArea);
@@ -287,7 +286,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
             for (Label cell : lookup(".simple-cell").match(Label::isVisible).<Label>queryAll())
             {
                 // Find out what position it thinks it is:
-                String content = TestUtil.fx(() -> cell.getText());
+                String content = TFXUtil.fx(() -> cell.getText());
                 Matcher m = posPattern.matcher(content);
                 assertTrue(content, m.matches());
                 @SuppressWarnings({"units", "nullness"})
@@ -295,18 +294,18 @@ public class TestVirtualGridLayout extends FXApplicationTest
                 @SuppressWarnings({"units", "nullness"})
                 @AbsRowIndex int row = Integer.valueOf(m.group(2));
 
-                Point2D expectedLayoutPos = TestUtil.fx(() -> {
+                Point2D expectedLayoutPos = TFXUtil.fx(() -> {
                     VisibleBounds visibleBounds = virtualGrid.getVisibleBounds();
                     return new Point2D(visibleBounds.getXCoord(column + simpleGridArea.getPosition().columnIndex), visibleBounds.getYCoord(row + simpleGridArea.getPosition().rowIndex));
                 });
-                Point2D actualLayoutPos = TestUtil.fx(() -> new Point2D(cell.getLayoutX(), cell.getLayoutY()));
+                Point2D actualLayoutPos = TFXUtil.fx(() -> new Point2D(cell.getLayoutX(), cell.getLayoutY()));
                 
                 assertEquals(content, expectedLayoutPos, actualLayoutPos);
                 MatcherAssert.assertThat(column, Matchers.greaterThanOrEqualTo(0));
                 MatcherAssert.assertThat(row, Matchers.greaterThanOrEqualTo(0));
             }
             // Try again after a move:
-            TestUtil.fx_(() -> simpleGridArea.setPosition(new CellPosition(CellPosition.row(3), CellPosition.col(5))));
+            TFXUtil.fx_(() -> simpleGridArea.setPosition(new CellPosition(CellPosition.row(3), CellPosition.col(5))));
         }
     }
     
@@ -333,7 +332,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         List<BoundsGridArea> gridAreas = Utility.mapList(bounds, r -> {
             return new BoundsGridArea(r);
         });
-        TestUtil.fx_(() -> virtualGrid.addGridAreas(gridAreas));
+        TFXUtil.fx_(() -> virtualGrid.addGridAreas(gridAreas));
         sleep(1000);
         // Should already not be touching:
         for (BoundsGridArea a : gridAreas)
@@ -399,7 +398,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         // Test that when columns change, cells are updated properly
         SimpleGridArea simpleGridArea = new SimpleGridArea();
         // Test that when table moves, cells are updated properly
-        TestUtil.fx_(() -> {
+        TFXUtil.fx_(() -> {
             SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
             virtualGrid.addGridAreas(ImmutableList.of(simpleGridArea));
             simpleCellSupplier.addGrid(simpleGridArea, simpleGridArea);
@@ -415,7 +414,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
             for (Label cell : lookup(".simple-cell").match(Label::isVisible).<Label>queryAll())
             {
                 // Find out what position it thinks it is:
-                String content = TestUtil.fx(() -> cell.getText());
+                String content = TFXUtil.fx(() -> cell.getText());
                 Matcher m = posPattern.matcher(content);
                 assertTrue(content, m.matches());
                 @SuppressWarnings({"units", "nullness"})
@@ -423,18 +422,18 @@ public class TestVirtualGridLayout extends FXApplicationTest
                 @SuppressWarnings({"units", "nullness"})
                 @AbsRowIndex int row = Integer.valueOf(m.group(2));
 
-                Point2D expectedLayoutPos = TestUtil.fx(() -> {
+                Point2D expectedLayoutPos = TFXUtil.fx(() -> {
                     VisibleBounds visibleBounds = virtualGrid.getVisibleBounds();
                     return new Point2D(visibleBounds.getXCoord(column + simpleGridArea.getPosition().columnIndex), visibleBounds.getYCoord(row + simpleGridArea.getPosition().rowIndex));
                 });
-                Point2D actualLayoutPos = TestUtil.fx(() -> new Point2D(cell.getLayoutX(), cell.getLayoutY()));
+                Point2D actualLayoutPos = TFXUtil.fx(() -> new Point2D(cell.getLayoutX(), cell.getLayoutY()));
 
                 assertEquals(content, expectedLayoutPos, actualLayoutPos);
                 MatcherAssert.assertThat(column, Matchers.greaterThanOrEqualTo(0));
                 MatcherAssert.assertThat(row, Matchers.greaterThanOrEqualTo(0));
             }
             // Try again after a move:
-            TestUtil.fx_(() -> simpleGridArea.setPosition(new CellPosition(CellPosition.row(3), CellPosition.col(5))));
+            TFXUtil.fx_(() -> simpleGridArea.setPosition(new CellPosition(CellPosition.row(3), CellPosition.col(5))));
         }
     }    
     */

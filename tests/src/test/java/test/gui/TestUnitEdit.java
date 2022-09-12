@@ -23,7 +23,6 @@ package test.gui;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TableCell;
@@ -64,21 +63,21 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
     public void testNewUnit(@From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetails) throws Exception
     {
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, new DummyManager()).get();
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
         
         clickOn("#id-menu-view").clickOn(".id-menu-view-units");
-        TestUtil.delay(200);
+        TFXUtil.sleep(200);
         clickOn(".id-units-userDeclared-add");
-        TestUtil.delay(200);
+        TFXUtil.sleep(200);
         enterUnitDetails(unitDetails);
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
-        TestUtil.sleep(500);
+        TFXUtil.sleep(500);
         clickOn(".close-button");
-        TestUtil.sleep(500);
+        TFXUtil.sleep(500);
 
         // Check that saved units in file match our new unit:
-        String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+        String fileContent = FileUtils.readFileToString(TFXUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
         Log.debug("Saved:\n" + fileContent);
         String unitSrc = getUnitSrcFromFile(fileContent);
         UnitManager tmpUnits = new UnitManager();
@@ -100,7 +99,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         correctTargetWindow();
         TextInputControl input = selectAllCurrentTextField();
         write(unitDetails.name);
-        assertEquals(unitDetails.name, TestUtil.fx(input::getText));
+        assertEquals(unitDetails.name, TFXUtil.fx(input::getText));
         if (unitDetails.aliasOrDeclaration.isLeft())
         {
             // Select and move to alias field:
@@ -124,7 +123,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
             if (equiv != null)
             {
                 // Tick the box:
-                if (!TestUtil.fx(() -> equivCheck.isSelected()))
+                if (!TFXUtil.fx(() -> equivCheck.isSelected()))
                     push(KeyCode.SPACE);
                 push(KeyCode.TAB);
                 selectAllCurrentTextField();
@@ -137,7 +136,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
             else
             {
                 // Untick the box:
-                if (TestUtil.fx(() -> equivCheck.isSelected()))
+                if (TFXUtil.fx(() -> equivCheck.isSelected()))
                     push(KeyCode.SPACE);
             }
         }
@@ -150,24 +149,24 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         DummyManager prevManager = new DummyManager();
         prevManager.getUnitManager().addUserUnit(new Pair<>(details.name, details.aliasOrDeclaration));
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
 
         clickOn("#id-menu-view").clickOn(".id-menu-view-units");
-        TestUtil.delay(200);
+        TFXUtil.sleep(200);
         clickOn(".user-unit-list");
         push(KeyCode.HOME);
         clickOn(".id-units-userDeclared-edit");
-        TestUtil.delay(500);
-        
+        TFXUtil.sleep(500);
+
         // No edit
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
-        TestUtil.sleep(500);
+        TFXUtil.sleep(500);
         clickOn(".close-button");
-        TestUtil.sleep(500);
+        TFXUtil.sleep(500);
 
         // Check that saved units in file match our new unit:
-        String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+        String fileContent = FileUtils.readFileToString(TFXUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
         Log.debug("Saved:\n" + fileContent);
         UnitManager tmpUnits = new UnitManager();
         tmpUnits.loadUserUnits(getUnitSrcFromFile(fileContent));
@@ -183,25 +182,25 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         DummyManager prevManager = new DummyManager();
         prevManager.getUnitManager().addUserUnit(new Pair<>(before.name, before.aliasOrDeclaration));
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
 
         clickOn("#id-menu-view").clickOn(".id-menu-view-units");
-        TestUtil.delay(200);
+        TFXUtil.sleep(200);
         clickOn(".user-unit-list");
         push(KeyCode.HOME);
         clickOn(".id-units-userDeclared-edit");
-        TestUtil.delay(500);
+        TFXUtil.sleep(500);
 
         enterUnitDetails(after);
 
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
-        TestUtil.sleep(500);
+        TFXUtil.sleep(500);
         clickOn(".close-button");
-        TestUtil.sleep(500);
+        TFXUtil.sleep(500);
 
         // Check that saved units in file match our new unit:
-        String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+        String fileContent = FileUtils.readFileToString(TFXUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
         Log.debug("Saved:\n" + fileContent);
         UnitManager tmpUnits = new UnitManager();
         tmpUnits.loadUserUnits(getUnitSrcFromFile(fileContent));
@@ -217,10 +216,10 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         prevManager.getUnitManager().addUserUnit(new Pair<>(unitDetailsB.name, unitDetailsB.aliasOrDeclaration));
         prevManager.getUnitManager().addUserUnit(new Pair<>(unitDetailsC.name, unitDetailsC.aliasOrDeclaration));
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
 
         clickOn("#id-menu-view").clickOn(".id-menu-view-units");
-        TestUtil.delay(200);
+        TFXUtil.sleep(200);
         clickOn(".user-unit-list");
         push(KeyCode.HOME);
         int count = 0;
@@ -228,12 +227,12 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
             push(KeyCode.DOWN);
         assertTrue(unitDetailsA.name, existsSelectedCell(unitDetailsA.name));
         clickOn(".id-units-userDeclared-remove");
-        TestUtil.sleep(500);
+        TFXUtil.sleep(500);
         clickOn(".close-button");
-        TestUtil.sleep(500);
+        TFXUtil.sleep(500);
 
         // Check that saved units in file match our new unit:
-        String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+        String fileContent = FileUtils.readFileToString(TFXUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
         Log.debug("Saved:\n" + fileContent);
         UnitManager tmpUnits = new UnitManager();
         tmpUnits.loadUserUnits(getUnitSrcFromFile(fileContent));
@@ -247,7 +246,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
             if (t instanceof TableCell)
             {
                 TableCell tableCell = (TableCell) t;
-                return TestUtil.fx(() -> tableCell.getTableRow().isSelected() && content.equals(tableCell.getText()));
+                return TFXUtil.fx(() -> tableCell.getTableRow().isSelected() && content.equals(tableCell.getText()));
             }
             return false;
         }).tryQuery().isPresent();

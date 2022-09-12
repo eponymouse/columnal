@@ -28,6 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.junit.runner.RunWith;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.RecordSet;
@@ -63,22 +64,22 @@ public class TestHideColumns extends FXApplicationTest implements ScrollToTrait,
     {
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original.mgr).get();
-        TestUtil.sleep(5000);
+        TFXUtil.sleep(5000);
         Table src = mainWindowActions._test_getTableManager().getAllTables().get(0);
         RecordSet srcRS = src.getData();
 
-        CellPosition targetPos = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
+        CellPosition targetPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
-        clickOnItemInBounds(from(TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-        TestUtil.delay(100);
+        clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+        TFXUtil.sleep(100);
         clickOn(".id-new-transform");
-        TestUtil.delay(100);
+        TFXUtil.sleep(100);
         scrollTo(".id-transform-hideColumns");
         clickOn(".id-transform-hideColumns");
-        TestUtil.delay(100);
+        TFXUtil.sleep(100);
         write(src.getId().getRaw());
         push(KeyCode.ENTER);
-        TestUtil.delay(100);
+        TFXUtil.sleep(100);
 
         ArrayList<ColumnId> toHide = new ArrayList<>();
         ImmutableList<ColumnId> originalColumnIds = srcRS.getColumnIds();
@@ -132,7 +133,7 @@ public class TestHideColumns extends FXApplicationTest implements ScrollToTrait,
             for (int i = 0; i < columnIdsLeft.size(); i++)
             {
                 @SuppressWarnings("nullness")
-                CellPosition pos = TestUtil.fx(() -> hide.getDisplay().getMostRecentPosition()).offsetByRowCols(1, i);
+                CellPosition pos = TFXUtil.fx(() -> hide.getDisplay().getMostRecentPosition()).offsetByRowCols(1, i);
                 ColumnId columnId = columnIdsLeft.get(i);
                 keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), pos);
                 withItemInBounds(lookup(".table-display-column-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(pos, pos), (n, p) -> assertEquals(columnId.getRaw(), ((Label)n).getText()));

@@ -138,10 +138,10 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     @OnThread(Tag.Any)
     public void testStartState()
     {
-        assertTrue(TestUtil.fx(() -> windowToUse.isShowing()));
-        assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().size()));
-        assertTrue(TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().isEmpty()));
-        assertEquals(1, (int) TestUtil.fx(() -> listWindows().size()));
+        assertTrue(TFXUtil.fx(() -> windowToUse.isShowing()));
+        assertEquals(1, (int) TFXUtil.fx(() -> MainWindow._test_getViews().size()));
+        assertTrue(TFXUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().isEmpty()));
+        assertEquals(1, (int) TFXUtil.fx(() -> listWindows().size()));
     }
 
     @Test
@@ -171,7 +171,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         CellPosition targetPos = NEW_TABLE_POS;
         makeNewDataEntryTable(targetPos);
 
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
         assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().size());
         assertNotEquals("", mainWindowActions._test_getTableManager().getAllTables().get(0).getId().getRaw());
         assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().get(0).getData().getColumns().size());
@@ -213,7 +213,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         }
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
-        TestUtil.delay(200);
+        TFXUtil.sleep(200);
     }
 
     @Test
@@ -222,11 +222,11 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     {
         testStartState();
         makeNewDataEntryTable(NEW_TABLE_POS);
-        assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
+        assertEquals(1, (int) TFXUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
         assertEquals(1, lookup(".table-display-table-title").queryAll().size());
         clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
-        TestUtil.sleep(1000);
-        assertEquals(0, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
+        TFXUtil.sleep(1000);
+        assertEquals(0, (int) TFXUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
         assertEquals(0, lookup(".table-display-table-title").queryAll().size());
     }
 
@@ -252,10 +252,10 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             {
                 //System.out.println("###\n# Undoing " + Instant.now() + "\n###\n");
                 clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
-                TestUtil.sleep(1000);
+                TFXUtil.sleep(1000);
                 tableIds.remove(tableIds.size() - 1);
             }
-            assertEquals(ImmutableSet.copyOf(tableIds), TestUtil.fx(() -> mainWindowActions._test_getTableManager().getAllTables().stream().map(t -> t.getId()).collect(ImmutableSet.toImmutableSet())));
+            assertEquals(ImmutableSet.copyOf(tableIds), TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getAllTables().stream().map(t -> t.getId()).collect(ImmutableSet.toImmutableSet())));
             assertEquals(tableIds.size(), lookup(".table-display-table-title").queryAll().size());
         }
     }
@@ -267,7 +267,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         testStartState();
         makeNewDataEntryTable(NEW_TABLE_POS);
         TableManager tableManager = mainWindowActions._test_getTableManager();
-        assertEquals(1, (int) TestUtil.fx(() -> tableManager.getAllTables().size()));
+        assertEquals(1, (int) TFXUtil.fx(() -> tableManager.getAllTables().size()));
         assertEquals(0, tableManager.getAllTables().get(0).getData().getLength());
         CellPosition arrowPos = NEW_TABLE_POS.offsetByRowCols(3, 0);
         clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowPos, arrowPos));
@@ -276,8 +276,8 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertEquals(1, lookup(".document-text-field").queryAll().size());
         
         clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
-        TestUtil.sleep(2000);
-        assertEquals(1, (int) TestUtil.fx(() -> tableManager.getAllTables().size()));
+        TFXUtil.sleep(2000);
+        assertEquals(1, (int) TFXUtil.fx(() -> tableManager.getAllTables().size()));
         assertEquals(1, lookup(".table-display-table-title").queryAll().size());
         assertEquals(0, tableManager.getAllTables().get(0).getData().getLength());
         // STF will be retained invisible for re-use, so
@@ -293,9 +293,9 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         Supplier<@Value Number> makeNumber = () -> gen.generate(new SourceOfRandomness(r), null);
         @Value Number def = makeNumber.get();
         makeNewDataEntryTable(null, NEW_TABLE_POS, new Pair<>(DataType.NUMBER, def));
-        TestUtil.sleep(200);
+        TFXUtil.sleep(200);
         TableManager tableManager = mainWindowActions._test_getTableManager();
-        assertEquals(1, (int) TestUtil.fx(() -> tableManager.getAllTables().size()));
+        assertEquals(1, (int) TFXUtil.fx(() -> tableManager.getAllTables().size()));
 
         // We make new rows and edit the data, and undo at random.
 
@@ -322,7 +322,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 dataHistory.remove(dataHistory.size() - 1);
                 dataHistory.remove(dataHistory.size() - 1);
                 clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
-                TestUtil.sleep(500);
+                TFXUtil.sleep(500);
             }
             else // 6 - 9
             {
@@ -347,7 +347,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             }
             
             dataHistory.add(latest);
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
         }
     }
 
@@ -371,7 +371,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     private void addNewTableWithColumn(DataType dataType, @Nullable @Value Object value) throws InternalException, UserException
     {
         testNewEntryTable();
-        Node expandRight = lookup(".expand-arrow").match(n -> TestUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right"))).<Node>query();
+        Node expandRight = lookup(".expand-arrow").match(n -> TFXUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right"))).<Node>query();
         assertNotNull(expandRight);
         // Won't happen, assertion will fail:
         if (expandRight == null) return;
@@ -396,9 +396,9 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             Thread.sleep(2000);
         }
         catch (InterruptedException e) { }
-        assertEquals(2, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size()));
-        assertEquals(newColName, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(1).getName().getRaw()));
-        assertEquals(dataType, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(1).getType().getType()));
+        assertEquals(2, (int) TFXUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size()));
+        assertEquals(newColName, TFXUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(1).getName().getRaw()));
+        assertEquals(dataType, TFXUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(1).getType().getType()));
     }
 
     private void clickOnSub(Node root, String subQuery)
@@ -424,13 +424,13 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 addNewRow();
                 values.add(initialVal);
                 // Now test for equality:
-                RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
+                RecordSet recordSet = TFXUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
                 DataTypeValue column = recordSet.getColumns().get(1).getType();
-                assertEquals(values.size(), (int) TestUtil.sim(() -> recordSet.getLength()));
+                assertEquals(values.size(), (int) TFXUtil.sim(() -> recordSet.getLength()));
                 for (int j = 0; j < values.size(); j++)
                 {
                     int jFinal = j;
-                    TBasicUtil.assertValueEqual("Index " + j, values.get(j), TestUtil.<@Value Object>sim(() -> column.getCollapsed(jFinal)));
+                    TBasicUtil.assertValueEqual("Index " + j, values.get(j), TFXUtil.<@Value Object>sim(() -> column.getCollapsed(jFinal)));
                 }
             }
         });
@@ -446,7 +446,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         for (int i = 0; i < 10;i ++)
         {
             addNewRow();
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
             Either<String, Pair<DataType, @Value Object>> entry;
             final String invalidChar;
             final int invalidPos;
@@ -489,16 +489,16 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             values.add(entry.<@Value Object>map(p -> p.getSecond()));
             DocumentTextField field = enterValue(NEW_TABLE_POS.offsetByRowCols(3 + i, 1), entry, r);
             if (entry.isLeft())
-                MatcherAssert.assertThat(TestUtil.fx(() -> field._test_getStyleSpans(invalidPos, invalidPos + invalidChar.length())), Matchers.everyItem(TestUtil.matcherOn(Matchers.hasItem("input-error"), s -> s.getFirst())));
+                MatcherAssert.assertThat(TFXUtil.fx(() -> field._test_getStyleSpans(invalidPos, invalidPos + invalidChar.length())), Matchers.everyItem(TestUtil.matcherOn(Matchers.hasItem("input-error"), s -> s.getFirst())));
         }
         // Now test for equality:
-        RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
+        RecordSet recordSet = TFXUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
         DataTypeValue column = recordSet.getColumns().get(1).getType();
-        assertEquals(values.size(), (int) TestUtil.sim(() -> recordSet.getLength()));
+        assertEquals(values.size(), (int) TFXUtil.sim(() -> recordSet.getLength()));
         for (int i = 0; i < values.size(); i++)
         {
             int iFinal = i;
-            TBasicUtil.assertValueEitherEqual("Index " + i, values.get(i), TestUtil.<Either<String, @Value Object>>sim(() -> {
+            TBasicUtil.assertValueEitherEqual("Index " + i, values.get(i), TFXUtil.<Either<String, @Value Object>>sim(() -> {
                 try
                 {
                     return Either.right(column.getCollapsed(iFinal));
@@ -540,7 +540,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         boolean expectSame = value.eitherEx(s -> {
             if (needDeleteAll)
             {
-                push(TestUtil.ctrlCmd(), KeyCode.A);
+                push(TFXUtil.ctrlCmd(), KeyCode.A);
                 push(KeyCode.DELETE);
                 push(KeyCode.HOME);
             }
@@ -614,7 +614,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     @OnThread(Tag.Any)
     private void addNewRow()
     {
-        Node expandDown = lookup(".expand-arrow").match(n -> TestUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-down"))).<Node>query();
+        Node expandDown = lookup(".expand-arrow").match(n -> TFXUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-down"))).<Node>query();
         assertNotNull(expandDown);
         // Won't happen, assertion will fail:
         if (expandDown == null) return;
@@ -628,7 +628,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         Node original = lookup(query).<Node>query();
         if (original == null)
             return false;
-        return TestUtil.fx(() -> {
+        return TFXUtil.fx(() -> {
             return actuallyVisible(original);
         });
     }

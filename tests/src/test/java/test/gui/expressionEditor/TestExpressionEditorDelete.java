@@ -34,6 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import test.functions.TFunctionUtil;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
@@ -203,13 +204,13 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         Expression originalExp = TFunctionUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         EditorDisplay expressionEditor = enter(originalExp, r);
 
-        TestUtil.fx_(() -> {
+        TFXUtil.fx_(() -> {
             expressionEditor._test_positionCaret(caretPos);
             Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, paste));
         });
         push(KeyCode.SHORTCUT, KeyCode.V);
 
-        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save(false));
+        Expression after = (Expression) TFXUtil.fx(() -> expressionEditor._test_getEditor().save(false));
 
         assertEquals(TFunctionUtil.parseExpression(expected, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), after);
 
@@ -223,7 +224,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         Expression originalExp = TFunctionUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         EditorDisplay expressionEditor = enter(originalExp, r);
 
-        TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteBefore));
+        TFXUtil.fx_(() -> expressionEditor._test_positionCaret(deleteBefore));
         sleep(200);
 
         for (int i = 0; i < deleteCount; i++)
@@ -234,11 +235,11 @@ public class TestExpressionEditorDelete extends FXApplicationTest
             write(retype);
         else
         {
-            TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, retype)));
+            TFXUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, retype)));
             push(KeyCode.SHORTCUT, KeyCode.V);
         }
 
-        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save(false));
+        Expression after = (Expression) TFXUtil.fx(() -> expressionEditor._test_getEditor().save(false));
 
         assertEquals(originalExp, after);
 
@@ -253,13 +254,13 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         assertEquals(2, mainWindowActions._test_getTableManager().getAllTables().size());
         triggerTableHeaderContextMenu(mainWindowActions._test_getVirtualGrid(), targetPos);
         clickOn(".id-tableDisplay-menu-delete");
-        TestUtil.sleep(300);
+        TFXUtil.sleep(300);
         assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().size());
         testDelete(original, deleteAfterPos, deleteCount, expectedStr, r);
         assertEquals(2, mainWindowActions._test_getTableManager().getAllTables().size());
         triggerTableHeaderContextMenu(mainWindowActions._test_getVirtualGrid(), targetPos);
         clickOn(".id-tableDisplay-menu-delete");
-        TestUtil.sleep(300);
+        TFXUtil.sleep(300);
         assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().size());
         if (cutCount.length == 0 || cutCount[0] > 0)
             testCut(original, deleteAfterPos, cutCount.length > 0 ? cutCount[0] : deleteCount, expectedStr, r);
@@ -272,18 +273,18 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         Expression originalExp = TFunctionUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         EditorDisplay expressionEditor = enter(originalExp, r);
         
-        assertEquals(originalExp, TestUtil.fx(() -> expressionEditor._test_getEditor().save(false)));
+        assertEquals(originalExp, TFXUtil.fx(() -> expressionEditor._test_getEditor().save(false)));
 
-        TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteBefore));
+        TFXUtil.fx_(() -> expressionEditor._test_positionCaret(deleteBefore));
 
         for (int i = 0; i < deleteCount; i++)
         {
             push(KeyCode.BACK_SPACE);
         }
         
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
 
-        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save(false));
+        Expression after = (Expression) TFXUtil.fx(() -> expressionEditor._test_getEditor().save(false));
 
         assertEquals(expectedExp, after);
         
@@ -297,14 +298,14 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         Expression expectedExp = TFunctionUtil.parseExpression(expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         EditorDisplay expressionEditor = enter(TFunctionUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
 
-        TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteAfter));
+        TFXUtil.fx_(() -> expressionEditor._test_positionCaret(deleteAfter));
 
         for (int i = 0; i < deleteCount; i++)
         {
             push(KeyCode.DELETE);
         }
 
-        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save(false));
+        Expression after = (Expression) TFXUtil.fx(() -> expressionEditor._test_getEditor().save(false));
 
         assertEquals(expectedExp, after);
 
@@ -318,7 +319,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         Expression expectedExp = TFunctionUtil.parseExpression(expectedStr, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager()));
         EditorDisplay expressionEditor = enter(TFunctionUtil.parseExpression(original, dummyManager.getTypeManager(), FunctionList.getFunctionLookup(dummyManager.getUnitManager())), r);
 
-        TestUtil.fx_(() -> expressionEditor._test_positionCaret(deleteAfter));
+        TFXUtil.fx_(() -> expressionEditor._test_positionCaret(deleteAfter));
 
         press(KeyCode.SHIFT);
         for (int i = 0; i < deleteCount; i++)
@@ -332,16 +333,16 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         else
         {
             // Test copy does same as cut:
-            TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, "EMPTY")));
+            TFXUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, "EMPTY")));
             push(KeyCode.SHORTCUT, KeyCode.C);
-            String copied = TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
-            TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, "EMPTY")));
+            String copied = TFXUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
+            TFXUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, "EMPTY")));
             push(KeyCode.SHORTCUT, KeyCode.X);
-            assertEquals(copied, TestUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString()));
+            assertEquals(copied, TFXUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString()));
         }
         
 
-        Expression after = (Expression)TestUtil.fx(() -> expressionEditor._test_getEditor().save(false));
+        Expression after = (Expression) TFXUtil.fx(() -> expressionEditor._test_getEditor().save(false));
 
         assertEquals(expectedExp, after);
 
@@ -350,7 +351,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     
     private EditorDisplay enter(Expression expression, Random r) throws Exception
     {
-        Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
+        Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
         push(KeyCode.SHORTCUT, KeyCode.HOME);
         for (int i = 0; i < 2; i++)
             clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
@@ -358,7 +359,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         clickOn(".id-transform-calculate");
         write("Table1");
         push(KeyCode.ENTER);
-        TestUtil.sleep(200);
+        TFXUtil.sleep(200);
         write("DestCol");
         // Focus expression editor:
         push(KeyCode.TAB);

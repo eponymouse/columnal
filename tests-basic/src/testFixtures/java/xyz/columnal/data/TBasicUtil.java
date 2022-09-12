@@ -531,6 +531,26 @@ public class TBasicUtil
         return list.remove(index);
     }
 
+    public static void assertEqualsText(String prefix, String expected, String actual)
+    {
+        if (!expected.equals(actual))
+        {
+            String[] expectedLines = expected.split("\n");
+            String[] actualLines = actual.split("\n");
+            for (int i = 0; i < Math.max(expectedLines.length, actualLines.length); i++)
+            {
+                String expectedLine = i < expectedLines.length ? expectedLines[i] : null;
+                String actualLine = i < actualLines.length ? actualLines[i] : null;
+                assertEquals(prefix + "\nExpected line " + i + ": " + (expectedLine == null ? "null" : stringAsHexChars(expectedLine)) + "\nActual: " + (actualLine == null ? "null" : stringAsHexChars(actualLine)), expectedLine, actualLine);
+            }
+        }
+    }
+
+    public static String stringAsHexChars(String str)
+    {
+        return str.chars().mapToObj(c -> Integer.toHexString(c) + (c == 10 ? "\n" : "")).collect(Collectors.joining(" "));
+    }
+
     public static interface TestRunnable
     {
         public void run() throws Exception;

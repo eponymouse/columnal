@@ -29,6 +29,7 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.junit.runner.RunWith;
+import test.gui.TFXUtil;
 import xyz.columnal.data.*;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.datatype.DataTypeValue;
@@ -150,15 +151,15 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
         
         
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, srcMgr).get();
-        TestUtil.sleep(2000);
-        CellPosition targetPos = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
+        TFXUtil.sleep(2000);
+        CellPosition targetPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
-        clickOnItemInBounds(from(TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-        TestUtil.delay(100);
+        clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+        TFXUtil.sleep(100);
         clickOn(".id-new-transform");
-        TestUtil.delay(100);
+        TFXUtil.sleep(100);
         clickOn(".id-transform-join");
-        TestUtil.delay(100);
+        TFXUtil.sleep(100);
 
         ArrayList<Pair<ColumnId, ColumnId>> expJoin = new ArrayList<>();
         if (joinColumnCount >= 1)

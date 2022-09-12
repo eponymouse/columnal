@@ -31,6 +31,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import test.functions.TFunctionUtil;
+import test.gui.TFXUtil;
 import xyz.columnal.data.Table;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -39,7 +40,6 @@ import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.Expression.ColumnLookup;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenInvalidExpressionSource;
 import test.gui.trait.EnterTypeTrait;
 import test.gui.util.FXApplicationTest;
@@ -57,20 +57,20 @@ public class TestExpressionEditorInvalid extends FXApplicationTest implements En
     {
         DummyManager dummyManager = new DummyManager();
         ExpressionEditor expressionEditorA = makeExpressionEditor(dummyManager, null);
-        TestUtil.fx_(() -> {
+        TFXUtil.fx_(() -> {
             windowToUse.setScene(new Scene(new StackPane(expressionEditorA.getContainer())));
             windowToUse.show();
         });
         clickOn(".top-level-editor");
         enterAndDeleteSmartBrackets(invalid);
-        @Recorded @NonNull Expression savedInvalid = TestUtil.fx(() -> expressionEditorA.save(false));
+        @Recorded @NonNull Expression savedInvalid = TFXUtil.fx(() -> expressionEditorA.save(false));
         ExpressionEditor expressionEditorB = makeExpressionEditor(dummyManager, savedInvalid);
-        assertEquals(savedInvalid.toString(), invalid.replaceAll("[ ()]", ""), TestUtil.fx(() -> expressionEditorB._test_getRawText()).replaceAll("[ ()]", ""));
+        assertEquals(savedInvalid.toString(), invalid.replaceAll("[ ()]", ""), TFXUtil.fx(() -> expressionEditorB._test_getRawText()).replaceAll("[ ()]", ""));
     }
 
     @OnThread(Tag.Any)
     private ExpressionEditor makeExpressionEditor(DummyManager dummyManager, @Nullable Expression initial)
     {
-        return TestUtil.fx(() -> new ExpressionEditor(initial, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<ColumnLookup>(TFunctionUtil.dummyColumnLookup()), null, null, dummyManager.getTypeManager(), () -> TFunctionUtil.createTypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
+        return TFXUtil.fx(() -> new ExpressionEditor(initial, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<ColumnLookup>(TFunctionUtil.dummyColumnLookup()), null, null, dummyManager.getTypeManager(), () -> TFunctionUtil.createTypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
     }
 }

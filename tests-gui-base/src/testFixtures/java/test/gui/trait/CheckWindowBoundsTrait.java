@@ -23,8 +23,9 @@ package test.gui.trait;
 import javafx.geometry.Rectangle2D;
 import javafx.stage.Screen;
 import javafx.stage.Window;
+import org.hamcrest.MatcherAssert;
 import org.testfx.api.FxRobotInterface;
-import test.TestUtil;
+import test.gui.TFXUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -42,16 +43,16 @@ public interface CheckWindowBoundsTrait extends FxRobotInterface
     {
         for (Window window : listWindows())
         {
-            double windowX = TestUtil.fx(() -> window.getX());
-            double windowY = TestUtil.fx(() -> window.getY());
-            List<Screen> screens = TestUtil.fx(() -> Screen.getScreensForRectangle(windowX, windowY, window.getWidth(), window.getHeight()));
+            double windowX = TFXUtil.fx(() -> window.getX());
+            double windowY = TFXUtil.fx(() -> window.getY());
+            List<Screen> screens = TFXUtil.fx(() -> Screen.getScreensForRectangle(windowX, windowY, window.getWidth(), window.getHeight()));
             assertEquals(1, screens.size());
             Screen screen = screens.get(0);
-            Rectangle2D screenBounds = TestUtil.fx(() -> screen.getVisualBounds());
-            assertThat(windowX, greaterThanOrEqualTo(screenBounds.getMinX()));
-            assertThat(windowY, greaterThanOrEqualTo(screenBounds.getMinY()));
-            assertThat(windowX + TestUtil.fx(() -> window.getWidth()), lessThanOrEqualTo(screenBounds.getMaxX()));
-            assertThat(windowY + TestUtil.fx(() -> window.getHeight()), lessThanOrEqualTo(screenBounds.getMaxY()));
+            Rectangle2D screenBounds = TFXUtil.fx(() -> screen.getVisualBounds());
+            MatcherAssert.assertThat(windowX, greaterThanOrEqualTo(screenBounds.getMinX()));
+            MatcherAssert.assertThat(windowY, greaterThanOrEqualTo(screenBounds.getMinY()));
+            MatcherAssert.assertThat(windowX + TFXUtil.fx(() -> window.getWidth()), lessThanOrEqualTo(screenBounds.getMaxX()));
+            MatcherAssert.assertThat(windowY + TFXUtil.fx(() -> window.getHeight()), lessThanOrEqualTo(screenBounds.getMaxY()));
         }
     }
 }

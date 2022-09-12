@@ -33,6 +33,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import org.testfx.service.query.NodeQuery;
+import test.gui.TFXUtil;
 import xyz.columnal.data.*;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.datatype.DataType;
@@ -125,7 +126,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
 
         triggerRowLabelContextMenu(srcData.getId(), randomRow);
         clickOn(".id-virtGrid-row-delete");
-        TestUtil.delay(500);
+        TFXUtil.sleep(500);
         scrollToRow(calculated.getId(), randomRow == 0 ? randomRow : randomRow - TableDataRowIndex.ONE);
 
         // There's now several aspects to check:
@@ -181,8 +182,8 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
 
         Column sortBy = srcData.getData().getColumns().get(r.nextInt(srcData.getData().getColumns().size()));
         InitialLoadDetails ild = new InitialLoadDetails(null, null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + srcData.getData().getColumns().size())), null);
-        Table calculated = TestUtil.sim(() -> new Sort(manager, ild, srcData.getId(), ImmutableList.of(new Pair<>(sortBy.getName(), Direction.ASCENDING))));
-        MainWindowActions details = TestUtil.sim(() -> {
+        Table calculated = TFXUtil.sim(() -> new Sort(manager, ild, srcData.getId(), ImmutableList.of(new Pair<>(sortBy.getName(), Direction.ASCENDING))));
+        MainWindowActions details = TFXUtil.sim(() -> {
             manager.record(calculated);
             try
             {
@@ -196,7 +197,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         tableManager = details._test_getTableManager();
         virtualGrid = details._test_getVirtualGrid();
 
-        int srcLength = TestUtil.sim(() -> srcData.getData().getLength());
+        int srcLength = TFXUtil.sim(() -> srcData.getData().getLength());
         @SuppressWarnings("units")
         @TableDataRowIndex int targetNewRow = r.nextInt(srcLength + 1);
         boolean originalWasEmpty = false;
@@ -207,7 +208,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             // Let's do insert-before to get the new row
             triggerRowLabelContextMenu(srcData.getId(), targetNewRow);
             clickOn(".id-virtGrid-row-insertBefore");
-            TestUtil.delay(500);
+            TFXUtil.sleep(500);
         }
         else if (targetNewRow > 0)
         {
@@ -215,15 +216,15 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             @TableDataRowIndex int beforeTargetRow = targetNewRow - ONE_ROW;
             triggerRowLabelContextMenu(srcData.getId(), beforeTargetRow);
             clickOn(".id-virtGrid-row-insertAfter");
-            TestUtil.delay(500);
+            TFXUtil.sleep(500);
         }
         else // targetNewRow == 0 && srcLength == 0
         {
-            TestUtil.delay(2000);
+            TFXUtil.sleep(2000);
             // No rows at all: need to click append button
             CellPosition pos = scrollToRow(srcData.getId(), DataItemPosition.row(0));
-            clickOnItemInBounds(lookup(".expand-arrow" /*".stable-view-row-append-button"*/).match(n -> TestUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-down"))), virtualGrid, new RectangleBounds(pos, pos));
-            TestUtil.delay(500);
+            clickOnItemInBounds(lookup(".expand-arrow" /*".stable-view-row-append-button"*/).match(n -> TFXUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-down"))), virtualGrid, new RectangleBounds(pos, pos));
+            TFXUtil.sleep(500);
             originalWasEmpty = true;
         }
 
@@ -238,7 +239,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         @SuppressWarnings("units")
         @TableDataRowIndex int beforeDefault = 0;
         @Nullable Pair<Integer, @Value Object> firstAfterDefault = null;
-        @Nullable @Value Object sortDefault_ = TestUtil.<@Nullable @Value Object>sim(() -> sortBy.getDefaultValue());
+        @Nullable @Value Object sortDefault_ = TFXUtil.<@Nullable @Value Object>sim(() -> sortBy.getDefaultValue());
         if (sortDefault_ == null)
         {
             fail("Default value null for sortBy column: " + sortBy.getName() + " " + sortBy.getType());
@@ -246,12 +247,12 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         }
         @NonNull @Value Object sortDefault = sortDefault_;
 
-        int newSrcLength = TestUtil.sim(() -> srcData.getData().getLength());
+        int newSrcLength = TFXUtil.sim(() -> srcData.getData().getLength());
         for (int i = 0; i < newSrcLength; i++)
         {
             int iFinal = i;
-            @Value Object value = TestUtil.<@Value Object>sim(() -> sortBy.getType().getCollapsed(iFinal));
-            int cmp = TestUtil.sim(() -> Utility.compareValues(value, sortDefault));
+            @Value Object value = TFXUtil.<@Value Object>sim(() -> sortBy.getType().getCollapsed(iFinal));
+            int cmp = TFXUtil.sim(() -> Utility.compareValues(value, sortDefault));
             // It will be before us if either it is strictly lower, or it is equal
             // and it started before us.
             if (cmp < 0 || (i < targetNewRow && cmp == 0))
@@ -261,7 +262,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             else
             {
                 @Nullable Pair<Integer, @Value Object> curFirstAfterDefault = firstAfterDefault;
-                if (TestUtil.sim(() -> curFirstAfterDefault == null || Utility.compareValues(value, curFirstAfterDefault.getSecond()) < 0))
+                if (TFXUtil.sim(() -> curFirstAfterDefault == null || Utility.compareValues(value, curFirstAfterDefault.getSecond()) < 0))
                 {
                     firstAfterDefault = new Pair<>(i, value);
                 }
@@ -273,17 +274,17 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         // TODO check for default data in inserted spot
 
         scrollToRow(srcData.getId(), targetNewRow == 0 ? targetNewRow : targetNewRow - ONE_ROW);
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
         // Row still there, but data from the row after it:
         if (targetNewRow < newSrcLength)
         {
             String prefix = "Sorted by " + sortBy.getName().getRaw() + " inserted at " + targetNewRow + " before default is " + beforeDefault + " first after default " + (firstAfterDefault == null ? "null" : Integer.toString(firstAfterDefault.getFirst())) + ";";
-            TestUtil.sim_(() -> TBasicUtil.checkedToRuntime_(() -> checkVisibleRowData(prefix, srcData.getId(), targetNewRow + ONE_ROW, getRowVals(srcData.getData(), targetNewRow))));
+            TFXUtil.sim_(() -> TBasicUtil.checkedToRuntime_(() -> checkVisibleRowData(prefix, srcData.getId(), targetNewRow + ONE_ROW, getRowVals(srcData.getData(), targetNewRow))));
             if (firstAfterDefault != null)
             {
                 scrollToRow(calculated.getId(), beforeDefault + ONE_ROW);
                 Pair<Integer, @Value Object> firstAfterDefaultFinal = firstAfterDefault;
-                TestUtil.sim_(() -> TBasicUtil.checkedToRuntime_(() -> checkVisibleRowData(prefix, calculated.getId(), positionPostSort + ONE_ROW, getRowVals(srcData.getData(), firstAfterDefaultFinal.getFirst()))));
+                TFXUtil.sim_(() -> TBasicUtil.checkedToRuntime_(() -> checkVisibleRowData(prefix, calculated.getId(), positionPostSort + ONE_ROW, getRowVals(srcData.getData(), firstAfterDefaultFinal.getFirst()))));
             }
         }
 
@@ -294,9 +295,9 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         for (Column column : srcData.getData().getColumns())
         {
             DataTypeValue columnType = column.getType();
-            Pair<String, List<String>> colData = new Pair<>(column.getName().getRaw(), TestUtil.sim(() -> CheckCSVTrait.collapse(srcData.getData().getLength(), columnType)));
+            Pair<String, List<String>> colData = new Pair<>(column.getName().getRaw(), TFXUtil.sim(() -> CheckCSVTrait.collapse(srcData.getData().getLength(), columnType)));
             // Add new default data at right point:
-            @Nullable @Value Object defaultValue_ = TestUtil.<@Nullable @Value Object>sim(() -> column.getDefaultValue());
+            @Nullable @Value Object defaultValue_ = TFXUtil.<@Nullable @Value Object>sim(() -> column.getDefaultValue());
             if (defaultValue_ == null)
             {
                 fail("Null default value for column " + column.getName().getRaw());
@@ -304,7 +305,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             else
             {
                 @NonNull @Value Object defaultValue = defaultValue_;
-                String defaultAsString = TestUtil.sim(() -> DataTypeUtility.valueToString(defaultValue));
+                String defaultAsString = TFXUtil.sim(() -> DataTypeUtility.valueToString(defaultValue));
                 expectedSrcContent.add(colData.mapSecond(d -> {
                     ArrayList<String> xs = new ArrayList<>(d);
                     xs.add(targetNewRow, defaultAsString);
@@ -340,14 +341,14 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         // Find the row label.  Should be visible based on previous actions:
         Node rowLabel = findRowLabel(tableId, targetRow);
         if (rowLabel == null)
-            throw new RuntimeException("No row label for zero-based row " + targetRow + " in " + findVisRowLabels(tableId) + "focused: " + TestUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
+            throw new RuntimeException("No row label for zero-based row " + targetRow + " in " + findVisRowLabels(tableId) + "focused: " + TFXUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
         @NonNull Node rowLabelFinal = rowLabel;
-        double rowLabelTop = TestUtil.fx(() -> rowLabelFinal.localToScene(rowLabelFinal.getBoundsInLocal()).getMinY());
-        List<Node> rowCells = queryTableDisplay(tableId).lookup(".document-text-field").match(n -> Math.abs(TestUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinY()) - rowLabelTop) <= 3).queryAll().stream().sorted(Comparator.comparing(n -> TestUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinX()))).collect(Collectors.toList());
+        double rowLabelTop = TFXUtil.fx(() -> rowLabelFinal.localToScene(rowLabelFinal.getBoundsInLocal()).getMinY());
+        List<Node> rowCells = queryTableDisplay(tableId).lookup(".document-text-field").match(n -> Math.abs(TFXUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinY()) - rowLabelTop) <= 3).queryAll().stream().sorted(Comparator.comparing(n -> TFXUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinX()))).collect(Collectors.toList());
         for (int i = 0; i < rowCells.size(); i++)
         {
             int iFinal = i;
-            assertEquals(prefix + " " + i + ": ", DataTypeUtility.valueToString(expected.get(i).getSecond()), TestUtil.fx(() -> ((DocumentTextField)rowCells.get(iFinal))._test_getGraphicalText()));
+            assertEquals(prefix + " " + i + ": ", DataTypeUtility.valueToString(expected.get(i).getSecond()), TFXUtil.fx(() -> ((DocumentTextField)rowCells.get(iFinal))._test_getGraphicalText()));
         }
     }
 
@@ -379,7 +380,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
     private String findVisRowLabels(TableId id)
     {
         NodeQuery tableDisplay = queryTableDisplay(id);
-        return tableDisplay.lookup((Node l) -> l instanceof Label).<Label>queryAll().stream().map(l -> TestUtil.fx(() -> l.getText())).sorted().collect(Collectors.joining(", "));
+        return tableDisplay.lookup((Node l) -> l instanceof Label).<Label>queryAll().stream().map(l -> TFXUtil.fx(() -> l.getText())).sorted().collect(Collectors.joining(", "));
     }
 
     // Note: table ID header will get clicked, to expose the labels
@@ -392,9 +393,9 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         Set<Node> possibles = 
             lookup(".virt-grid-row-label-pane")
             .match(Node::isVisible)
-            .match((RowLabelSupplier.LabelPane p) -> id.equals(TestUtil.<@Nullable TableId>fx(() -> p._test_getTableId())))
+            .match((RowLabelSupplier.LabelPane p) -> id.equals(TFXUtil.<@Nullable TableId>fx(() -> p._test_getTableId())))
             .lookup(".virt-grid-row-label")
-            .match((Label l) -> TestUtil.fx(() -> l.getText().trim().equals(Integer.toString(1 + targetRow))))
+            .match((Label l) -> TFXUtil.fx(() -> l.getText().trim().equals(Integer.toString(1 + targetRow))))
             .queryAll();
         
         if (possibles.isEmpty())

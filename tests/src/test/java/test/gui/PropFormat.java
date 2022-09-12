@@ -70,7 +70,6 @@ import xyz.columnal.importers.gui.ImportChoicesDialog.RecordSetDataDisplay;
 import xyz.columnal.importers.gui.ImportChoicesDialog.SrcDataDisplay;
 import xyz.columnal.importers.gui.ImporterGUI.PickOrOther;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenFormattedData;
 import test.gen.GenFormattedData.FormatAndData;
 import test.gui.trait.ComboUtilTrait;
@@ -128,9 +127,9 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
             loadTable.consume(0);
             f.complete(true);
         });
-        TestUtil.sleep(5000);
+        TFXUtil.sleep(5000);
 
-        @Nullable ImportChoicesDialog<?, ?> maybeICD = TestUtil.<@Nullable ImportChoicesDialog<?, ?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
+        @Nullable ImportChoicesDialog<?, ?> maybeICD = TFXUtil.<@Nullable ImportChoicesDialog<?, ?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
         if (maybeICD == null)
         {
             assertNotNull(maybeICD);
@@ -157,8 +156,8 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
         
         CompletableFuture<RecordSet> rsFuture = TextImporter._test_importTextFile(new DummyManager(), tempFile); //, link);
         // GUI should show (after a slight delay), so we should provide inputs:
-        TestUtil.sleep(8000);
-        @Nullable ImportChoicesDialog<?, ?> maybeICD = TestUtil.<@Nullable ImportChoicesDialog<?, ?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
+        TFXUtil.sleep(8000);
+        @Nullable ImportChoicesDialog<?, ?> maybeICD = TFXUtil.<@Nullable ImportChoicesDialog<?, ?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
         if (maybeICD == null)
         {
             assertNotNull(maybeICD);
@@ -169,18 +168,18 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
         checkTrim(importChoicesDialog);
         
         selectGivenComboBoxItem(lookup(".id-guess-charset").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.charset));
-        TestUtil.sleep(2000);
+        TFXUtil.sleep(2000);
         checkTrim(importChoicesDialog);
         selectGivenComboBoxItem(lookup(".id-guess-separator").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.separator == null ? "" : formatAndData.format.initialTextFormat.separator));
-        TestUtil.sleep(2000);
+        TFXUtil.sleep(2000);
         checkTrim(importChoicesDialog);
         selectGivenComboBoxItem(lookup(".id-guess-quote").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.quote == null ? "" : formatAndData.format.initialTextFormat.quote));
-        TestUtil.sleep(2000);
+        TFXUtil.sleep(2000);
         checkTrim(importChoicesDialog);
 
         setTrim(formatAndData.format.trimChoice, importChoicesDialog);
         
-        @Nullable RecordSet destRS = TestUtil.<@Nullable RecordSet>fx(() -> importChoicesDialog._test_getDestDataDisplay()._test_getRecordSet());
+        @Nullable RecordSet destRS = TFXUtil.<@Nullable RecordSet>fx(() -> importChoicesDialog._test_getDestDataDisplay()._test_getRecordSet());
         assertNotNull(destRS);
         if (destRS != null)
             checkDataValues(formatAndData, destRS);
@@ -199,24 +198,24 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
         VirtualGrid srcGrid = importChoicesDialog._test_getSrcGrid();
         SrcDataDisplay srcDataDisplay = importChoicesDialog._test_getSrcDataDisplay();
         // Find the current top-left corner of the selection rectangle:
-        RectangleBounds curBounds = TestUtil.fx(() -> srcDataDisplay._test_getCurSelectionBounds());
-        VisibleBounds visibleBounds = TestUtil.fx(() -> srcGrid.getVisibleBounds());
-        Region srcGridNode = TestUtil.fx(() -> srcGrid.getNode());
+        RectangleBounds curBounds = TFXUtil.fx(() -> srcDataDisplay._test_getCurSelectionBounds());
+        VisibleBounds visibleBounds = TFXUtil.fx(() -> srcGrid.getVisibleBounds());
+        Region srcGridNode = TFXUtil.fx(() -> srcGrid.getNode());
         targetWindow(srcGridNode);
-        Point2D startDrag = TestUtil.fx(() -> visibleBounds._test_localToScreen(new Point2D(
+        Point2D startDrag = TFXUtil.fx(() -> visibleBounds._test_localToScreen(new Point2D(
                 visibleBounds.getXCoord(curBounds.topLeftIncl.columnIndex) + 1.0,
                 visibleBounds.getYCoord(curBounds.topLeftIncl.rowIndex) + 1.0)));
         moveTo(startDrag);
         drag(MouseButton.PRIMARY);
-        TestUtil.sleep(500);
-        CellPosition newTopLeft = TestUtil.fx(() -> srcDataDisplay.getPosition()).offsetByRowCols(1 + trimChoice.trimFromTop, trimChoice.trimFromLeft);
-        Point2D endDrag = TestUtil.fx(() -> visibleBounds._test_localToScreen(new Point2D(
+        TFXUtil.sleep(500);
+        CellPosition newTopLeft = TFXUtil.fx(() -> srcDataDisplay.getPosition()).offsetByRowCols(1 + trimChoice.trimFromTop, trimChoice.trimFromLeft);
+        Point2D endDrag = TFXUtil.fx(() -> visibleBounds._test_localToScreen(new Point2D(
                 visibleBounds.getXCoord(newTopLeft.columnIndex),
                 visibleBounds.getYCoord(newTopLeft.rowIndex))));
         dropTo(endDrag);
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
         checkTrim(importChoicesDialog);
-        assertEquals("Dragged from " + startDrag + " to " + endDrag, trimChoice, TestUtil.fx(() -> importChoicesDialog._test_getSrcDataDisplay().getTrim()));
+        assertEquals("Dragged from " + startDrag + " to " + endDrag, trimChoice, TFXUtil.fx(() -> importChoicesDialog._test_getSrcDataDisplay().getTrim()));
     }
 
     @OnThread(Tag.Simulation)
@@ -230,28 +229,28 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
 
         SrcDataDisplay srcDataDisplay = importChoicesDialog._test_getSrcDataDisplay();
         // Start with internal trim as the base value:
-        TrimChoice internal = TestUtil.fx(() -> srcDataDisplay.getTrim());
+        TrimChoice internal = TFXUtil.fx(() -> srcDataDisplay.getTrim());
 
         // Check against the visual bounds held internally:
-        RectangleBounds expectedTrimBounds = TestUtil.fx(() -> new RectangleBounds(srcDataDisplay.getPosition().offsetByRowCols(1 + internal.trimFromTop, internal.trimFromLeft),
+        RectangleBounds expectedTrimBounds = TFXUtil.fx(() -> new RectangleBounds(srcDataDisplay.getPosition().offsetByRowCols(1 + internal.trimFromTop, internal.trimFromLeft),
             srcDataDisplay.getBottomRightIncl().offsetByRowCols(- internal.trimFromBottom, -internal.trimFromRight)));
         assertEquals("Internal trim against logical rectangle bounds", expectedTrimBounds, 
-            TestUtil.fx(() -> srcDataDisplay._test_getCurSelectionBounds()));
+            TFXUtil.fx(() -> srcDataDisplay._test_getCurSelectionBounds()));
         
         // Check the visible bounds of the graphical rectangle:
-        VisibleBounds srcVisibleBounds = TestUtil.fx(() -> importChoicesDialog._test_getSrcGrid().getVisibleBounds());
+        VisibleBounds srcVisibleBounds = TFXUtil.fx(() -> importChoicesDialog._test_getSrcGrid().getVisibleBounds());
         @SuppressWarnings("nullness")
         @NonNull Rectangle blackRect = lookup(".prospective-import-rectangle").query();
-        assertEquals("Graphical left", TestUtil.fx(() -> srcVisibleBounds.getXCoord(expectedTrimBounds.topLeftIncl.columnIndex)), TestUtil.fx(() -> blackRect.getLayoutX()), 1.0);
+        assertEquals("Graphical left", TFXUtil.fx(() -> srcVisibleBounds.getXCoord(expectedTrimBounds.topLeftIncl.columnIndex)), TFXUtil.fx(() -> blackRect.getLayoutX()), 1.0);
         // Because of clamp visible, we can only do a very weak check on right and bottom:
-        MatcherAssert.assertThat("Graphical right", TestUtil.fx(() -> srcVisibleBounds.getXCoordAfter(expectedTrimBounds.bottomRightIncl.columnIndex)), Matchers.greaterThanOrEqualTo(TestUtil.fx(() -> blackRect.getLayoutX() + blackRect.getWidth())));
-        assertEquals("Graphical top", TestUtil.fx(() -> srcVisibleBounds.getYCoord(expectedTrimBounds.topLeftIncl.rowIndex)), TestUtil.fx(() -> blackRect.getLayoutY()), 1.0);
-        MatcherAssert.assertThat("Graphical bottom", TestUtil.fx(() -> srcVisibleBounds.getYCoordAfter(expectedTrimBounds.bottomRightIncl.rowIndex)), Matchers.greaterThanOrEqualTo(TestUtil.fx(() -> blackRect.getLayoutY() + blackRect.getHeight())));
+        MatcherAssert.assertThat("Graphical right", TFXUtil.fx(() -> srcVisibleBounds.getXCoordAfter(expectedTrimBounds.bottomRightIncl.columnIndex)), Matchers.greaterThanOrEqualTo(TFXUtil.fx(() -> blackRect.getLayoutX() + blackRect.getWidth())));
+        assertEquals("Graphical top", TFXUtil.fx(() -> srcVisibleBounds.getYCoord(expectedTrimBounds.topLeftIncl.rowIndex)), TFXUtil.fx(() -> blackRect.getLayoutY()), 1.0);
+        MatcherAssert.assertThat("Graphical bottom", TFXUtil.fx(() -> srcVisibleBounds.getYCoordAfter(expectedTrimBounds.bottomRightIncl.rowIndex)), Matchers.greaterThanOrEqualTo(TFXUtil.fx(() -> blackRect.getLayoutY() + blackRect.getHeight())));
         
         // Check the size of the dest record set:
         RecordSetDataDisplay destDataDisplay = importChoicesDialog._test_getDestDataDisplay();
-        RecordSet destRecordSet = TestUtil.<@Nullable RecordSet>fx(() -> destDataDisplay._test_getRecordSet());
-        RecordSet srcRecordSet = TestUtil.<@Nullable RecordSet>fx(() -> srcDataDisplay._test_getRecordSet());
+        RecordSet destRecordSet = TFXUtil.<@Nullable RecordSet>fx(() -> destDataDisplay._test_getRecordSet());
+        RecordSet srcRecordSet = TFXUtil.<@Nullable RecordSet>fx(() -> srcDataDisplay._test_getRecordSet());
         assertNotNull(srcRecordSet);
         assertNotNull(destRecordSet);
         if (srcRecordSet != null && destRecordSet != null)
@@ -261,7 +260,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
             assertEquals(srcRecordSet.getLength() - internal.trimFromTop - internal.trimFromBottom,
                 destRecordSet.getLength());
             assertEquals(CellPosition.ORIGIN.offsetByRowCols(internal.trimFromTop, 1 + internal.trimFromLeft),
-                TestUtil.fx(() -> destDataDisplay.getPosition()));    
+                TFXUtil.fx(() -> destDataDisplay.getPosition()));    
         }
     }
 

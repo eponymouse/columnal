@@ -33,6 +33,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.SubstringMatcher;
 import org.junit.runner.RunWith;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableColumn;
@@ -96,7 +97,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
             }
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 1));
 
-            Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
+            Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(6), CellPosition.col(3));
             for (int i = 0; i < 2; i++)
                 clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
@@ -106,7 +107,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
             clickOn(".id-transform-calculate");
             write("Table1");
             push(KeyCode.ENTER);
-            TestUtil.sleep(200);
+            TFXUtil.sleep(200);
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);
@@ -132,7 +133,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
             else
             {
                 EditorDisplay editorDisplay = lookup(".editor-display").<EditorDisplay>query();
-                List<ErrorDetails> actualErrors = new ArrayList<>(TestUtil.fx(() -> editorDisplay._test_getErrors().stream().filter(e -> e.error.getLength() > 0).collect(Collectors.toList())));
+                List<ErrorDetails> actualErrors = new ArrayList<>(TFXUtil.fx(() -> editorDisplay._test_getErrors().stream().filter(e -> e.error.getLength() > 0).collect(Collectors.toList())));
                 List<Error> expectedErrors = new ArrayList<>(Arrays.asList(errors));
                 assertEquals(Utility.listToString(actualErrors), expectedErrors.size(), actualErrors.size());
                 Collections.sort(actualErrors, Comparator.comparing(e -> e.location));
@@ -145,7 +146,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                 
                 // Not necessarily caret pos of the end, if they
                 // entered auto-matched brackets.
-                @CanonicalLocation int endingCaretPos = TestUtil.fx(() -> editorDisplay.getCaretPosition());
+                @CanonicalLocation int endingCaretPos = TFXUtil.fx(() -> editorDisplay.getCaretPosition());
 
                 boolean hasSpanNotContainingEndingPos = Arrays.stream(errors).anyMatch(s -> !s.location.touches(endingCaretPos));
                 assertErrorShowing(hasSpanNotContainingEndingPos, false);
@@ -179,7 +180,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                     assertTrue(lookup(".ok-double-prompt").tryQuery().isPresent());
                 }
 
-                actualErrors = new ArrayList<>(TestUtil.fx(() -> editorDisplay._test_getErrors().stream().filter(e -> e.error.getLength() > 0).collect(Collectors.toList())));
+                actualErrors = new ArrayList<>(TFXUtil.fx(() -> editorDisplay._test_getErrors().stream().filter(e -> e.error.getLength() > 0).collect(Collectors.toList())));
                 Collections.sort(actualErrors, Comparator.comparing(e -> e.location));
 
                 for (int i = 0; i < expectedErrors.size(); i++)
@@ -225,7 +226,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
 
     private void assertErrorShowing(boolean underlineShowing, @Nullable Boolean errorPopupShowing)
     {
-        Scene dialogScene = TestUtil.fx(() -> getRealFocusedWindow().getScene());
+        Scene dialogScene = TFXUtil.fx(() -> getRealFocusedWindow().getScene());
         Collection<Path> errorUnderline = lookup(".expression-editor .error-underline").<Path>queryAll();
         assertEquals("Underline showing", underlineShowing, errorUnderline.size() > 0);
         if (errorPopupShowing != null)
@@ -248,7 +249,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
         {
             this.location = new CanonicalSpan(start, end);
             @SuppressWarnings("units")
-            DisplaySpan displayLocation = TestUtil.fx(() -> new DisplaySpan(start, start == end ? end + 1 : end));
+            DisplaySpan displayLocation = TFXUtil.fx(() -> new DisplaySpan(start, start == end ? end + 1 : end));
             this.displayLocation = displayLocation;
             this.expectedMessageParts = expectedMessageParts;
         }
@@ -256,7 +257,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
         public Error(@CanonicalLocation int start, @CanonicalLocation int end, @DisplayLocation int displayStart, @DisplayLocation int displayEnd, ImmutableList<String> expectedMessageParts)
         {
             this.location = new CanonicalSpan(start, end);
-            this.displayLocation = TestUtil.fx(() -> new DisplaySpan(displayStart, displayEnd));
+            this.displayLocation = TFXUtil.fx(() -> new DisplaySpan(displayStart, displayEnd));
             this.expectedMessageParts = expectedMessageParts;
         }
     }

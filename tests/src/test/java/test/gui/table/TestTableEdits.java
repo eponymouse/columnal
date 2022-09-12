@@ -43,6 +43,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import test.functions.TFunctionUtil;
+import test.gui.TFXUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.DataItemPosition;
 import xyz.columnal.id.TableId;
@@ -212,7 +213,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
                     this.tableManager = details._test_getTableManager();
                     virtualGrid = details._test_getVirtualGrid();
                     // Make columns thinner so everything fits on screen easily:
-                    TestUtil.fx_(() -> {
+                    TFXUtil.fx_(() -> {
                         for (int c = 0; c < 12; c++)
                         {
                             virtualGrid._test_setColumnWidth(c, 60.0);
@@ -387,11 +388,11 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         // Different ways of exiting:
 
         // Click on right-hand end of table header:
-        Bounds headerBox = TestUtil.fx(() -> virtualGrid.getRectangleBoundsScreen(rectangleBounds));
+        Bounds headerBox = TFXUtil.fx(() -> virtualGrid.getRectangleBoundsScreen(rectangleBounds));
         clickOn(new Point2D(headerBox.getMaxX() - 2, headerBox.getMinY() + 2));
 
         // Renaming involves thread hopping, so wait for a bit:
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
 
         assertEquals(ImmutableSet.copyOf(Utility.prependToList(newTableId.getRaw(), transformPositions.keySet().stream().map(t -> t.getRaw()).collect(ImmutableList.toImmutableList()))), tableManager.getAllTables().stream().map(t -> t.getId().getRaw()).sorted().collect(Collectors.toSet()));
         // Check we haven't amassed multiple tables during the rename re-runs:
@@ -408,14 +409,14 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         assertEquals(tableCount * 2, lookup(".table-display-column-title").queryAll().size());
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, 0));
         clickOnItemInBounds(lookup(".table-display-column-title"), virtualGrid, rectangleBounds);
-        TestUtil.delay(1000);
+        TFXUtil.sleep(1000);
         clickOn(".column-name-text-field");
         selectAllCurrentTextField();
         write(newColumnId.getRaw());
         clickOn(".ok-button");
 
         // Renaming involves thread hopping, so wait for a bit:
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
 
         // Fetch the sorted transformation and check the column names (checks rename, and propagation):
         for (Entry<TableId, CellPosition> entry : transformPositions.entrySet())
@@ -515,13 +516,13 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         ColumnDetails columnDetails = new ColumnDetails(null, name, typeAndValueGen.getType(), typeAndValueGen.makeValue());
         enterColumnDetails(columnDetails, new Random(n + 100));
         
-        TestUtil.sleep(500);
+        TFXUtil.sleep(500);
         
         // Check no tables moved:
-        assertEquals(originalTableTopLeft, TestUtil.tablePosition(tableManager, srcId));
+        assertEquals(originalTableTopLeft, TFXUtil.tablePosition(tableManager, srcId));
         for (Entry<TableId, CellPosition> entry : transformPositions.entrySet())
         {
-            assertEquals(entry.getValue(), TestUtil.tablePosition(tableManager, entry.getKey()));
+            assertEquals(entry.getValue(), TFXUtil.tablePosition(tableManager, entry.getKey()));
         }
         
         for (Table table : tableManager.getAllTables())
@@ -563,7 +564,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         String targetColumnName = Arrays.asList("Boolean", "Number").get(Math.abs(positionIndicator) % originalColumns);
         // Bring up context menu and click item:
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, originalColumns));
-        withItemInBounds(lookup(".column-title").lookup((Label t) -> TestUtil.fx(() -> t.getText()).equals(targetColumnName)), 
+        withItemInBounds(lookup(".column-title").lookup((Label t) -> TFXUtil.fx(() -> t.getText()).equals(targetColumnName)), 
             virtualGrid, rectangleBounds,
                 this::showContextMenu);
         clickOn(lookup(positionIndicator < 0 ? ".id-virtGrid-column-addBefore" : ".id-virtGrid-column-addAfter").<Node>query());
@@ -571,12 +572,12 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         // We borrow n as a seed:
         ColumnDetails columnDetails = new ColumnDetails(null, name, typeAndValueGen.getType(), typeAndValueGen.makeValue());
         enterColumnDetails(columnDetails, new Random(positionIndicator + 100));
-        TestUtil.sleep(500);
+        TFXUtil.sleep(500);
 
         // Should now be one more column in each table:
         ImmutableList<Table> allTables = tableManager.getAllTables();
         assertEquals(tableCount, allTables.size());
-        assertEquals(tableCount * 3, TestUtil.fx(() -> allTables.stream().mapToInt(t -> {
+        assertEquals(tableCount * 3, TFXUtil.fx(() -> allTables.stream().mapToInt(t -> {
             @SuppressWarnings("nullness")
             @NonNull TableDisplay display = (TableDisplay) t.getDisplay();
             return display.getDisplayColumns().size();
@@ -612,20 +613,20 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         // Pick a table:
         Table table = tableManager.getAllTables().get(r.nextInt(tableManager.getAllTables().size()));
         @SuppressWarnings("nullness")
-        @NonNull TableDisplay tableDisplay = (TableDisplay)TestUtil.fx(() -> table.getDisplay());
+        @NonNull TableDisplay tableDisplay = (TableDisplay) TFXUtil.fx(() -> table.getDisplay());
         
-        CellPosition original = TestUtil.fx(() -> tableDisplay.getPosition());
+        CellPosition original = TFXUtil.fx(() -> tableDisplay.getPosition());
         keyboardMoveTo(virtualGrid, original.offsetByRowCols(-1, -1));
         CellPosition dest = original.offsetByRowCols(r.nextInt(4) - 1, r.nextInt(7) - 1);
         Rectangle2D start;
-        BoundingBox windowBoundsOnScreen = TestUtil.fx(() -> FXUtility.getWindowBounds(windowToUse));
+        BoundingBox windowBoundsOnScreen = TFXUtil.fx(() -> FXUtility.getWindowBounds(windowToUse));
         Rectangle2D end;
         int attempts = 0;
         do
         {
             sleep(400);
-            start = TestUtil.fx(() -> FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(original, original))));
-            end = TestUtil.fx(() -> FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(dest, dest))));
+            start = TFXUtil.fx(() -> FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(original, original))));
+            end = TFXUtil.fx(() -> FXUtility.boundsToRect(virtualGrid.getRectangleBoundsScreen(new RectangleBounds(dest, dest))));
             final double scrollX;
             final double scrollY;
             if (end.getMinX() < windowBoundsOnScreen.getMinX())
@@ -650,7 +651,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             }
             else
                 break;
-            TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(-scrollX, -scrollY));
+            TFXUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(-scrollX, -scrollY));
         }
         while (++attempts < 10);
         assertTrue(attempts < 10);
@@ -669,11 +670,11 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         
         // Check table actually moved:
         if (dest.columnIndex >= original.columnIndex && dest.rowIndex >= original.rowIndex && !dest.equals(original))
-            assertNotEquals("Dragged from " + dragFrom + " to " + dragTo, original, TestUtil.fx(() -> tableDisplay.getPosition()));
+            assertNotEquals("Dragged from " + dragFrom + " to " + dragTo, original, TFXUtil.fx(() -> tableDisplay.getPosition()));
         /*
         TextField tableNameTextField = (TextField)withItemInBounds(lookup(".table-name-text-field"), virtualGrid, new RectangleBounds(dest, dest), (n, p) -> {});
         assertNotNull(tableNameTextField);
-        assertEquals(table.getId().getRaw(), TestUtil.fx(() -> tableNameTextField.getText()));
+        assertEquals(table.getId().getRaw(), TFXUtil.fx(() -> tableNameTextField.getText()));
         */
         // TODO check drag overlays
         checkNoOverlap();
@@ -687,12 +688,12 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         ImmutableList<Table> allTables = tableManager.getAllTables();
         for (Table a : allTables)
         {
-            RectangleBounds aBounds = TestUtil.fx(() -> getBounds(a));
+            RectangleBounds aBounds = TFXUtil.fx(() -> getBounds(a));
             for (Table b : allTables)
             {
                 if (a != b)
                 {
-                    RectangleBounds bBounds = TestUtil.fx(() -> getBounds(b));
+                    RectangleBounds bBounds = TFXUtil.fx(() -> getBounds(b));
 
                     assertFalse("Bounds " + a.getId() + aBounds + " and " + b.getId() + bBounds + " touching", aBounds.touches(bBounds));
                 }
@@ -708,7 +709,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         ImmutableList<Pair<Node, BoundingBox>> cells = Stream.<Node>concat(
             lookup(".table-data-cell").match(Node::isVisible).<Node>queryAll().stream(),
             lookup(".expand-arrow").match(Node::isVisible).<Node>queryAll().stream()
-        ).map(n -> new Pair<>(n, TestUtil.fx(() -> shave(n.localToScreen(n.getBoundsInLocal())))))
+        ).map(n -> new Pair<>(n, TFXUtil.fx(() -> shave(n.localToScreen(n.getBoundsInLocal())))))
             // Put on-screen first as that's easier to debug:
             .sorted(Comparator.comparing(p -> !p.getSecond().intersects(screenBounds)))
             .collect(ImmutableList.toImmutableList());
@@ -769,7 +770,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         sleep(300);
         clickOn(".type-editor");
         sleep(300);
-        push(TestUtil.ctrlCmd(), KeyCode.A);
+        push(TFXUtil.ctrlCmd(), KeyCode.A);
         sleep(300);
         push(KeyCode.DELETE);
         sleep(300);
@@ -841,7 +842,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         clickOn(".type-editor");
         MatcherAssert.assertThat("Clicked on: " + point(".type-editor").query(), getFocusOwner(), Matchers.instanceOf(EditorDisplay.class));
         sleep(300);
-        push(TestUtil.ctrlCmd(), KeyCode.A);
+        push(TFXUtil.ctrlCmd(), KeyCode.A);
         sleep(300);
         push(KeyCode.DELETE);
         sleep(300);

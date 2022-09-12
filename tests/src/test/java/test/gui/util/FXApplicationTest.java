@@ -34,10 +34,10 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
+import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Rule;
@@ -49,7 +49,6 @@ import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.gui.Main;
-import test.TestUtil;
 import test.gui.trait.FocusOwnerTrait;
 import test.gui.trait.ScreenshotTrait;
 import threadchecker.OnThread;
@@ -79,7 +78,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         {
             super.failed(e, description);
             System.err.println("Screenshot of failure, " + targetWindow().toString() + ":");
-            TestUtil.fx_(() -> dumpScreenshot());
+            TFXUtil.fx_(() -> dumpScreenshot());
             e.printStackTrace();
             if (e.getCause() != null)
                 e.getCause().printStackTrace();
@@ -109,7 +108,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
 
     private static String showWindow(Window w)
     {
-        return w.toString() + TestUtil.fx(() -> (w instanceof Stage ? ((Stage)w).getTitle() : ""));
+        return w.toString() + TFXUtil.fx(() -> (w instanceof Stage ? ((Stage)w).getTitle() : ""));
     }
 
     @OnThread(Tag.Any)
@@ -191,12 +190,12 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     @Override
     public FxRobot write(String text, int sleepMillis)
     {
-        Log.debug("Writing: " + text + " to " + TestUtil.fx(() -> {
+        Log.debug("Writing: " + text + " to " + TFXUtil.fx(() -> {
             Window window = getRealFocusedWindow();
             Node focusNode = window.getScene().getFocusOwner();
             return window.toString() + (window instanceof Stage ? " " + ((Stage)window).getTitle() : "") + " @ " + focusNode;
         }));
-        Scene scene = TestUtil.fx(() -> getRealFocusedWindow().getScene());
+        Scene scene = TFXUtil.fx(() -> getRealFocusedWindow().getScene());
         text.chars().forEach(c -> {
             robotContext().getBaseRobot().typeKeyboard(scene, determineKeyCode(c), Utility.codePointToString(c));
             WaitForAsyncUtils.waitForFxEvents();
@@ -238,7 +237,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     {
         if (GraphicsEnvironment.isHeadless())
         {
-            TestUtil.fx_(() -> {
+            TFXUtil.fx_(() -> {
                 Bounds local = node.getBoundsInLocal();
                 Bounds screen = node.localToScreen(local);
                 Point2D localMid = Utility.middle(local);

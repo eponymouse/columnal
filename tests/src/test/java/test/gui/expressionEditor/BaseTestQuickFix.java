@@ -28,6 +28,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Window;
 import test.functions.TFunctionUtil;
+import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -133,13 +134,13 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             CellPosition position = new CellPosition(CellPosition.row(7), CellPosition.col(1));
             tableManager.record(new Calculate(tableManager, new InitialLoadDetails(null, null, position, null), tableManager.getAllTables().get(0).getId(), ImmutableMap.of()));
 
-            TestUtil.sleep(3000);
-            NodeQuery arrowQuery = lookup(".expand-arrow").match(n -> TestUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right")));
+            TFXUtil.sleep(3000);
+            NodeQuery arrowQuery = lookup(".expand-arrow").match(n -> TFXUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right")));
             clickOnItemInBounds(arrowQuery, mainWindowActions._test_getVirtualGrid(), new RectangleBounds(
                 new CellPosition(CellPosition.row(8), CellPosition.col(1)),
                 new CellPosition(CellPosition.row(8), CellPosition.col(20))
             ));
-            TestUtil.sleep(1000);
+            TFXUtil.sleep(1000);
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);
@@ -153,16 +154,16 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             assertNotNull("Editor Display", targetField);
             if (targetField == null) return;
             @NonNull Node targetFinal = targetField;
-            if (!TestUtil.fx(() -> targetFinal.isFocused()))
+            if (!TFXUtil.fx(() -> targetFinal.isFocused()))
             {
                 Log.debug("Focusing target field: " + targetFinal);
                 // Get rid of any popups in the way:
                 moveAndDismissPopupsAtPos(point(targetField));
                 clickOn(point(targetField));
-                assertTrue("Clicked " + point(targetField).query().toString() + " focus is: " + TestUtil.<@Nullable Node>fx(() -> getFocusOwner()), TestUtil.fx(() -> targetFinal.isFocused()));
+                assertTrue("Clicked " + point(targetField).query().toString() + " focus is: " + TFXUtil.<@Nullable Node>fx(() -> getFocusOwner()), TFXUtil.fx(() -> targetFinal.isFocused()));
             }
             // Now need to move to right position:
-            int moveDist = TestUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent));
+            int moveDist = TFXUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent));
             while (moveDist > 0)
             {
                 push(KeyCode.RIGHT);
@@ -174,23 +175,23 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
                 moveDist +=1;
             }
             // Check we're actually now in bounds:
-            assertTrue(TestUtil.fx(() -> targetFinal.isFocused()));
-            assertEquals(0, TestUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent)).intValue());
-            
-            TestUtil.delay(500);
+            assertTrue(TFXUtil.fx(() -> targetFinal.isFocused()));
+            assertEquals(0, TFXUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent)).intValue());
+
+            TFXUtil.sleep(500);
             List<Window> windows = listWindows();
             @Nullable Window errorPopup = windows.stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
             assertNotNull(Utility.listToString(windows), errorPopup);
             assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
                 1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
-            assertEquals("Looking for row that matches" + showId(fixId) + ", among: " + lookup(".quick-fix-row").<Node>queryAll().stream().map(n -> "{" + TestUtil.fx(() -> n.getStyleClass()).stream().map(s -> showId(s)).collect(Collectors.joining(", ")) + "}").collect(Collectors.joining(" and ")), 
+            assertEquals("Looking for row that matches" + showId(fixId) + ", among: " + lookup(".quick-fix-row").<Node>queryAll().stream().map(n -> "{" + TFXUtil.fx(() -> n.getStyleClass()).stream().map(s -> showId(s)).collect(Collectors.joining(", ")) + "}").collect(Collectors.joining(" and ")), 
                 1, lookup(".quick-fix-row" + fixId).queryAll().size());
             // Get around issue with not being able to get the position of
             // items in the fix popup correctly, by using keyboard:
             //moveTo(".quick-fix-row" + fixId);
             //clickOn(".quick-fix-row" + fixId);
             Node fixRow = lookup(".quick-fix-row" + fixId).queryAll().iterator().next();
-            List<String> fixStyles = TestUtil.fx(() -> fixRow.getStyleClass());
+            List<String> fixStyles = TFXUtil.fx(() -> fixRow.getStyleClass());
             String key = fixStyles.stream().filter(c -> c.startsWith("key-")).map(c -> c.substring("key-".length())).findFirst().orElse("");
             assertNotEquals(Utility.listToString(fixStyles), "", key);
             Log.debug("Pressing: SHIFT-" + key);
@@ -198,10 +199,10 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             WaitForAsyncUtils.waitForFxEvents();
             afterClick.run();
             // Check that popup vanishes pretty much straight away:
-            TestUtil.sleep(200);
+            TFXUtil.sleep(200);
             assertFalse("Popup still showing: " + errorPopup, isShowingErrorPopup());
             TestUtil.doubleOk(this);
-            TestUtil.sleep(1000);
+            TFXUtil.sleep(1000);
             WaitForAsyncUtils.waitForFxEvents();
             @Nullable Calculate calculate = Utility.filterClass(tableManager.getAllTables().stream(), Calculate.class).findFirst().orElse(null);
             assertNotNull(calculate);
@@ -243,6 +244,6 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
 
     private String textFlowToString(Node n)
     {
-        return TestUtil.fx(() -> n.toString() + " " + n.localToScreen(n.getBoundsInLocal().getMinX(), n.getBoundsInLocal().getMinY()) + ((TextFlow)n).getChildren().stream().map(c -> ((Text)c).getText()).collect(Collectors.joining(";")));
+        return TFXUtil.fx(() -> n.toString() + " " + n.localToScreen(n.getBoundsInLocal().getMinX(), n.getBoundsInLocal().getMinY()) + ((TextFlow)n).getChildren().stream().map(c -> ((Text)c).getText()).collect(Collectors.joining(";")));
     }
 }

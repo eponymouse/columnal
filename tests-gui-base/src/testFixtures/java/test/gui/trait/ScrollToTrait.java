@@ -35,6 +35,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.service.query.NodeQuery;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.id.ColumnId;
@@ -47,7 +48,6 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.gui.grid.CellSelection;
 import xyz.columnal.gui.grid.VirtualGrid;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Utility;
@@ -84,7 +84,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
     default public void scrollTo(Node target)
     {
         // Find enclosing scroll:
-        ScrollPane enclosingScroll = TestUtil.fx(() -> {
+        ScrollPane enclosingScroll = TFXUtil.fx(() -> {
             Node n = target.getParent();
             while (n != null && !(n instanceof ScrollPane))
             {
@@ -97,8 +97,8 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
             fail("Could not find enclosing scroll pane");
         }
 
-        Bounds targetBeforeScroll = TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()));
-        Bounds viewBounds = TestUtil.fx(() -> enclosingScroll.localToScreen(enclosingScroll.getBoundsInLocal()));
+        Bounds targetBeforeScroll = TFXUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()));
+        Bounds viewBounds = TFXUtil.fx(() -> enclosingScroll.localToScreen(enclosingScroll.getBoundsInLocal()));
         // Move, ready for potentially scrolling:
         moveTo(viewBounds.getMinX() + 2, viewBounds.getMinY() + 2);
 
@@ -106,31 +106,31 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
         ScrollBar vertScroll = getScrollBar(enclosingScroll, Orientation.VERTICAL);
         
         // We limit how many times we will scroll, to avoid an infinite loop in case of test failure:
-        for (int i = 0;i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMaxX()) > viewBounds.getMaxX(); i++)
+        for (int i = 0;i < 100 && TFXUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMaxX()) > viewBounds.getMaxX(); i++)
         {
             System.out.println("Scrolling RIGHT");
             clickOrScroll(from(horizScroll).lookup(".increment-button"), () -> scroll(HorizontalDirection.RIGHT));
             //scroll(HorizontalDirection.RIGHT);
         }
-        for (int i = 0; i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinX()) < viewBounds.getMinX(); i++)
+        for (int i = 0; i < 100 && TFXUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinX()) < viewBounds.getMinX(); i++)
         {
             System.out.println("Scrolling LEFT");
             clickOrScroll(from(horizScroll).lookup(".decrement-button"), () -> scroll(HorizontalDirection.LEFT));
             //scroll(HorizontalDirection.LEFT);
         }
-        for (int i = 0; i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMaxY()) > viewBounds.getMaxY(); i++)
+        for (int i = 0; i < 100 && TFXUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMaxY()) > viewBounds.getMaxY(); i++)
         {
             System.out.println("Scrolling DOWN");
             //scroll(VerticalDirection.DOWN);
             clickOrScroll(from(vertScroll).lookup(".increment-button"), () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN));
         }
-        for (int i = 0; i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinY()) < viewBounds.getMinY(); i++)
+        for (int i = 0; i < 100 && TFXUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinY()) < viewBounds.getMinY(); i++)
         {
             System.out.println("Scrolling UP");
             //scroll(VerticalDirection.UP);
             clickOrScroll(from(vertScroll).lookup(".decrement-button"), () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.DOWN : VerticalDirection.UP));
         }
-        Bounds targetScreenBounds = TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()));
+        Bounds targetScreenBounds = TFXUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()));
         assertTrue("View bounds: " + viewBounds + " target: " + targetScreenBounds + " target before scroll: " + targetBeforeScroll, viewBounds.contains(targetScreenBounds));
     }
     
@@ -144,12 +144,12 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
         boolean bypassGUI = r.nextInt(10) != 1;
         if (bypassGUI)
         {
-            TestUtil.fx_(() -> virtualGrid._test_keyboardMoveTo(target));
+            TFXUtil.fx_(() -> virtualGrid._test_keyboardMoveTo(target));
         }
         else
         {
 
-            int pageHeight = TestUtil.fx(() -> virtualGrid.calcPageHeight());
+            int pageHeight = TFXUtil.fx(() -> virtualGrid.calcPageHeight());
 
             push(KeyCode.SHORTCUT, KeyCode.HOME);
             // First go to correct row:
@@ -165,16 +165,16 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
             int maxAttempts = target.columnIndex + 1;
             int attempts = 0;
 
-            while (TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.positionToEnsureInView().columnIndex).orElse(Integer.MAX_VALUE)) < target.columnIndex && attempts++ < maxAttempts)
+            while (TFXUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.positionToEnsureInView().columnIndex).orElse(Integer.MAX_VALUE)) < target.columnIndex && attempts++ < maxAttempts)
             {
                 push(KeyCode.RIGHT);
             }
         }
         // Wait for smooth scroll to finish:
-        TestUtil.sleep(300);
+        TFXUtil.sleep(300);
 
-        Optional<CellSelection> selection = TestUtil.fx(() -> virtualGrid._test_getSelection());
-        assertTrue("Selected is " + selection.toString() + " aiming for " + target + " focus owner is " + getFocusOwner() + (bypassGUI ? " bypassed GUI" : " used GUI"), TestUtil.fx(() -> selection.map(s -> s.isExactly(target) || s.getActivateTarget().equals(target)).orElse(false)));
+        Optional<CellSelection> selection = TFXUtil.fx(() -> virtualGrid._test_getSelection());
+        assertTrue("Selected is " + selection.toString() + " aiming for " + target + " focus owner is " + getFocusOwner() + (bypassGUI ? " bypassed GUI" : " used GUI"), TFXUtil.fx(() -> selection.map(s -> s.isExactly(target) || s.getActivateTarget().equals(target)).orElse(false)));
     }
 
     @OnThread(Tag.Any)
@@ -188,11 +188,11 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
         
         boolean usingMenu = r.nextDouble() < menuChance;
         Table table = tableManager.getSingleTableOrThrow(tableId);
-        TableDisplay tableDisplay = (TableDisplay) TestUtil.<@Nullable TableDisplayBase>fx(() -> table.getDisplay());
+        TableDisplay tableDisplay = (TableDisplay) TFXUtil.<@Nullable TableDisplayBase>fx(() -> table.getDisplay());
         assertNotNull(tableDisplay);
         if (tableDisplay == null)
             throw new RuntimeException("Impossible");
-        keyboardMoveTo(virtualGrid, TestUtil.fx(() -> {
+        keyboardMoveTo(virtualGrid, TFXUtil.fx(() -> {
             @TableDataRowIndex int rowIndex = usingMenu ? DataItemPosition.row(0) : row;
             return tableDisplay.getDataPosition(rowIndex, col);
         }));
@@ -200,15 +200,15 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
         {
             clickOn("#id-menu-view").clickOn(".id-menu-view-goto-row");
             assertTrue("Zero-based row: " + row, lookup(".ok-button").tryQuery().isPresent());
-            TestUtil.sleep(200);
+            TFXUtil.sleep(200);
             // UI expects one-based:
             write(Integer.toString(row + 1));
             push(KeyCode.ENTER);
             assertFalse("Zero-based row: " + row, lookup(".ok-button").tryQuery().isPresent());
         }
         // Wait for complete refresh:
-        TestUtil.sleep(1000);
-        return TestUtil.fx(() -> tableDisplay.getDataPosition(row, col));
+        TFXUtil.sleep(1000);
+        return TFXUtil.fx(() -> tableDisplay.getDataPosition(row, col));
     }
 
     default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, @TableDataRowIndex int row) throws UserException
@@ -220,8 +220,8 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
     default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, ColumnId columnId, @TableDataRowIndex int row) throws UserException
     {
         Table table = tableManager.getSingleTableOrThrow(tableId);
-        TableDisplay display = (TableDisplay) TBasicUtil.checkNonNull(TestUtil.fx(() -> table.getDisplay()));
-        return keyboardMoveTo(virtualGrid, tableManager, tableId, row, DataItemPosition.col(Utility.findFirstIndex(TestUtil.fx(() -> display.getDisplayColumns()), c -> c.getColumnId().equals(columnId)).orElseThrow(RuntimeException::new)));
+        TableDisplay display = (TableDisplay) TBasicUtil.checkNonNull(TFXUtil.fx(() -> table.getDisplay()));
+        return keyboardMoveTo(virtualGrid, tableManager, tableId, row, DataItemPosition.col(Utility.findFirstIndex(TFXUtil.fx(() -> display.getDisplayColumns()), c -> c.getColumnId().equals(columnId)).orElseThrow(RuntimeException::new)));
     }
     
     // Ideally, will be private in later Java:
@@ -237,7 +237,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
     
     default public ScrollBar getScrollBar(ScrollPane scrollPane, Orientation orientation)
     {
-        return TestUtil.fx(() -> Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class)
+        return TFXUtil.fx(() -> Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class)
             .filter(sb -> sb.getOrientation().equals(orientation))
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Can't find " + orientation + " scroll bar.")));

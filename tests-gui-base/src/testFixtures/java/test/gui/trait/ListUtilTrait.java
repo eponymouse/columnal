@@ -24,7 +24,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import org.testfx.api.FxRobotInterface;
-import test.TestUtil;
+import test.gui.TFXUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformSupplier;
@@ -44,7 +44,7 @@ public interface ListUtilTrait extends FxRobotInterface
 {
     @OnThread(Tag.Any)
     default <T> void selectGivenListViewItem(final ListView<T> list, final Predicate<T> findItem) {
-        OptionalInt firstIndex = TestUtil.fx(() -> Utility.findFirstIndex(list.getItems(), findItem));
+        OptionalInt firstIndex = TFXUtil.fx(() -> Utility.findFirstIndex(list.getItems(), findItem));
         assertTrue("Not found item satisfying predicate", firstIndex.isPresent());
         final int index = firstIndex.getAsInt();
 
@@ -52,7 +52,7 @@ public interface ListUtilTrait extends FxRobotInterface
         push(KeyCode.SPACE);
         sleep(100);
         // If nothing selected, selection will begin when you hit a key:
-        FXPlatformSupplier<Integer> cur = () -> TestUtil.fx(() -> list.getSelectionModel().getSelectedIndex());
+        FXPlatformSupplier<Integer> cur = () -> TFXUtil.fx(() -> list.getSelectionModel().getSelectedIndex());
         
         while (cur.get() < index)
             push(KeyCode.DOWN);

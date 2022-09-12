@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import org.junit.Test;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.id.ColumnId;
@@ -74,7 +75,7 @@ public class TestTypeEditorCompletion extends BaseTestEditorCompletion
         sleep(1000);
         // Start creating column 
         correctTargetWindow();
-        Node expandRight = lookup(".expand-arrow").match(n -> TestUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right"))).<Node>query();
+        Node expandRight = lookup(".expand-arrow").match(n -> TFXUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right"))).<Node>query();
         assertNotNull(expandRight);
         // Won't happen, assertion will fail:
         if (expandRight == null) return;

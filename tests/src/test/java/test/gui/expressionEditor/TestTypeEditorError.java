@@ -34,6 +34,7 @@ import org.hamcrest.core.SubstringMatcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import test.functions.TFunctionUtil;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
@@ -221,7 +222,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
         {
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, TFunctionUtil.managerWithTestTypes().getFirst()).get();
 
-            Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
+            Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(1));
             for (int i = 0; i < 2; i++)
                 clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
@@ -246,7 +247,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
             else
             {
                 EditorDisplay editorDisplay = lookup(".editor-display").<EditorDisplay>query();
-                List<ErrorDetails> actualErrors = new ArrayList<>(TestUtil.fx(() -> editorDisplay._test_getErrors().stream().filter(e -> e.error.getLength() > 0).collect(Collectors.toList())));
+                List<ErrorDetails> actualErrors = new ArrayList<>(TFXUtil.fx(() -> editorDisplay._test_getErrors().stream().filter(e -> e.error.getLength() > 0).collect(Collectors.toList())));
                 List<Error> expectedErrors = new ArrayList<>(Arrays.asList(errors));
                 assertEquals(Utility.listToString(actualErrors), expectedErrors.size(), actualErrors.size());
                 Collections.sort(actualErrors, Comparator.comparing(e -> e.location));
@@ -306,7 +307,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
 
     private void assertErrorShowing(boolean underlineShowing, @Nullable Boolean popupShowing)
     {
-        Scene dialogScene = TestUtil.fx(() -> getRealFocusedWindow().getScene());
+        Scene dialogScene = TFXUtil.fx(() -> getRealFocusedWindow().getScene());
         Collection<Path> errorUnderline = lookup(".type-editor .error-underline").<Path>queryAll();
         assertEquals("Underline showing", underlineShowing, errorUnderline.size() > 0);
         if (popupShowing != null)

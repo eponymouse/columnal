@@ -112,7 +112,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                 push(KeyCode.ENTER);
                 enterStructuredValue(colType.getType(), newVal, r, true, false);
                 push(KeyCode.ENTER);
-                TestUtil.sleep(2000);
+                TFXUtil.sleep(2000);
 
                 List<List<@Nullable String>> latestDataA = getDataViaGraphics(details, 0);
                 checkAllMatch(colA.getType(), latestDataA);
@@ -196,7 +196,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                 push(KeyCode.ENTER);
                 enterStructuredValue(colType.getType(), newVal, r, true, false);
                 push(KeyCode.ENTER);
-                TestUtil.sleep(2000);
+                TFXUtil.sleep(2000);
 
                 latestDataA = getDataViaGraphics(details, 0);
                 checkAllMatch(colA.getType(), latestDataA);
@@ -223,7 +223,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
         addTransformation(dummy, "T1", "T2", CellPosition.ORIGIN.offsetByRowCols(1, 7), r);
 
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, dummy).get();
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
         // First check that the data is valid to begin with:
         List<List<@Nullable String>> origDataA = getDataViaGraphics(details, 0);
         checkAllMatch(colA.getType(), origDataA);
@@ -239,14 +239,14 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
         for (@ExpressionIdentifier String tableName : ImmutableList.<@ExpressionIdentifier String>of("Src", "T1", "T2"))
         {
             @SuppressWarnings("nullness") // Will just throw if it turns out to be null, which is fine
-            TableDisplay tableDisplay = (TableDisplay)TestUtil.fx(() -> details._test_getTableManager().getSingleTableOrThrow(new TableId(tableName)).getDisplay());
-            int rowCount = TestUtil.fx(() -> tableDisplay._test_getRowCount());
+            TableDisplay tableDisplay = (TableDisplay) TFXUtil.fx(() -> details._test_getTableManager().getSingleTableOrThrow(new TableId(tableName)).getDisplay());
+            int rowCount = TFXUtil.fx(() -> tableDisplay._test_getRowCount());
             for (int i = 0; i < rowCount; i++)
             {
                 if (r.size() <= i)
                     r.add(new ArrayList<>());
                 int iFinal = i;
-                r.get(i).add(TestUtil.<@Nullable String>fx(() -> getGraphicalValue(details, tableDisplay, columnIndex, iFinal)));
+                r.get(i).add(TFXUtil.<@Nullable String>fx(() -> getGraphicalValue(details, tableDisplay, columnIndex, iFinal)));
             }
         }
         return r;

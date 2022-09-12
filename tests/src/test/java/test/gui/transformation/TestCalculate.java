@@ -34,6 +34,7 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import org.testfx.service.query.NodeQuery;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.id.ColumnId;
@@ -239,6 +240,6 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
 
     private NodeQuery findColumnTitle(@ExpressionIdentifier String columnNameToReplace)
     {
-        return lookup(".column-title").match((Label l) -> TestUtil.fx(() -> l.getText()).equals(columnNameToReplace));
+        return lookup(".column-title").match((Label l) -> TFXUtil.fx(() -> l.getText()).equals(columnNameToReplace));
     }
 }

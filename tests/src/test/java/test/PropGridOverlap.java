@@ -23,13 +23,10 @@ package test;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import xyz.columnal.log.Log;
+import test.gui.TFXUtil;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import xyz.columnal.data.CellPosition;
@@ -51,7 +48,7 @@ public class PropGridOverlap extends FXApplicationTest
     @Property(trials = 100)
     public void testLoad(@From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas)
     {
-        TestUtil.fxTest_(() -> {
+        TFXUtil.fxTest_(() -> {
             VirtualGrid grid = new VirtualGrid(null, 0, 0);
             ImmutableList<GridArea> sortedByOriginalX = sortByCurrentX(gridAreas.gridAreas);
             grid.addGridAreas(gridAreas.gridAreas);
@@ -113,7 +110,7 @@ public class PropGridOverlap extends FXApplicationTest
     @Property(trials = 100)
     public void testMove(@From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas, int toMove, int newColumn, int newRow)
     {
-        TestUtil.fxTest_(() -> {
+        TFXUtil.fxTest_(() -> {
             VirtualGrid grid = new VirtualGrid(null, 0, 0);
             ImmutableList<GridArea> sortedByOriginalX = sortByCurrentX(gridAreas.gridAreas);
             grid.addGridAreas(gridAreas.gridAreas);
@@ -134,7 +131,7 @@ public class PropGridOverlap extends FXApplicationTest
     @Test
     public void testPair()
     {
-        TestUtil.fxTest_(() -> {
+        TFXUtil.fxTest_(() -> {
             // A particular pair which caused an infinite loop:
             VirtualGrid grid = new VirtualGrid(null, 0, 0);
             ImmutableList<GridArea> gridAreas = ImmutableList.of(

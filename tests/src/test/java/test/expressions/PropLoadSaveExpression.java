@@ -29,6 +29,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import test.functions.TFunctionUtil;
+import test.gui.TFXUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.Table;
 import xyz.columnal.id.TableAndColumnRenames;
@@ -43,7 +44,6 @@ import xyz.columnal.transformations.expression.Expression.ColumnLookup;
 import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
@@ -73,7 +73,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
     @Property(trials = 200)
     public void testEditNonsense(@When(seed=-303310519735882501L) @From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
-        TestUtil.fxTest_(() -> {
+        TFXUtil.fxTest_(() -> {
             testNoOpEdit(expression);
         });
     }
@@ -82,7 +82,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
     @OnThread(Tag.FXPlatform)
     public void testUnit() throws InternalException, UserException
     {
-        TestUtil.fxTest_(() -> {
+        TFXUtil.fxTest_(() -> {
             try
             {
                 testNoOpEdit("@define var\\\\N100m Time=@call tag\\\\Optional\\Is(0{s}),var\\\\N100yd time=@call tag\\\\Optional\\Is(0{s})@then@ifvar\\\\N100m Time=~@call tag\\\\Optional\\Is(var\\\\m)@then100{m}/var\\\\m@else@ifvar\\\\N100yd time=~@call tag\\\\Optional\\Is(var\\\\y)@then@call function\\\\core\\convert unit(unit{m/s},100{yard}/var\\\\y)@else0{m/s}@endif@endif@enddefine");
@@ -97,7 +97,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
     @Test
     public void testInvalids()
     {
-        TestUtil.fxTest_(() -> {
+        TFXUtil.fxTest_(() -> {
             try
             {
                 testNoOpEdit("@invalidops(2, @unfinished \"+\")");

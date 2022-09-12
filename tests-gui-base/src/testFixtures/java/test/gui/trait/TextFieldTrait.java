@@ -25,7 +25,7 @@ import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import org.apache.commons.lang3.SystemUtils;
 import org.testfx.api.FxRobotInterface;
-import test.TestUtil;
+import test.gui.TFXUtil;
 import test.gui.trait.FocusOwnerTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -40,18 +40,18 @@ public interface TextFieldTrait extends FxRobotInterface, FocusOwnerTrait
         Node focusOwner = getFocusOwner();
         if (!(focusOwner instanceof TextInputControl))
             throw new RuntimeException("Focus owner is " + (focusOwner == null ? "null" : focusOwner.getClass().toString()) 
-                + "\nTarget window is " + targetWindow() + " " + TestUtil.fx(() -> targetWindow().isFocused())
-                //+ "\nOut of " + TestUtil.fx(() -> Streams.stream(Window.impl_getWindows()).map(w -> w.toString() + ":" + w.isFocused()).collect(Collectors.joining("/")))
+                + "\nTarget window is " + targetWindow() + " " + TFXUtil.fx(() -> targetWindow().isFocused())
+                //+ "\nOut of " + TFXUtil.fx(() -> Streams.stream(Window.impl_getWindows()).map(w -> w.toString() + ":" + w.isFocused()).collect(Collectors.joining("/")))
             );
         TextInputControl textField = (TextInputControl) focusOwner;
 
-        assertTrue(TestUtil.fx(textField::isEditable));
-        assertTrue(!TestUtil.fx(textField::isDisabled));
-        assertTrue(TestUtil.fx(textField::isFocused));
+        assertTrue(TFXUtil.fx(textField::isEditable));
+        assertTrue(!TFXUtil.fx(textField::isDisabled));
+        assertTrue(TFXUtil.fx(textField::isFocused));
         
         // Some sort of bug on OS X prevents Cmd-A working in TestFX:
         if (SystemUtils.IS_OS_MAC_OSX)
-            TestUtil.fx_(() -> textField.selectAll());
+            TFXUtil.fx_(() -> textField.selectAll());
         else
             push(KeyCode.CONTROL, KeyCode.A);
         return textField;

@@ -34,6 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.TBasicUtil;
@@ -81,18 +82,18 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
     {
         // Save the table, then open GUI and load it, then add a sort transformation
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original.mgr).get();
-        TestUtil.sleep(5000);
-        CellPosition targetPos = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
+        TFXUtil.sleep(5000);
+        CellPosition targetPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
-        clickOnItemInBounds(from(TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-        TestUtil.delay(100);
+        clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+        TFXUtil.sleep(100);
         clickOn(".id-new-transform");
-        TestUtil.delay(100);
+        TFXUtil.sleep(100);
         clickOn(".id-transform-sort");
-        TestUtil.delay(100);
+        TFXUtil.sleep(100);
         write(original.data().getId().getRaw());
         push(KeyCode.ENTER);
-        TestUtil.sleep(200);
+        TFXUtil.sleep(200);
         // Then enter sort information.
         // Find random column (s):
         List<Column> allColumns = original.data().getData().getColumns();
@@ -125,8 +126,8 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
             // All columns start ascending.  We click n * 2 times, + 1 if descending
             int numClicks = 2 * r.nextInt(3) + (pickedColumn.getSecond() == Direction.DESCENDING ? 1 : 0);
             // Bit of a hack to find the matching button
-            Parent sortPane = TBasicUtil.checkNonNull(TestUtil.<@Nullable Parent>fx(() -> TestUtil.findParent(focused.getParent(), p -> p.getStyleClass().contains("sort-pane"))));
-            Node button = TBasicUtil.checkNonNull(TestUtil.fx(() -> sortPane.lookup(".sort-direction-button")));
+            Parent sortPane = TBasicUtil.checkNonNull(TFXUtil.<@Nullable Parent>fx(() -> TestUtil.findParent(focused.getParent(), p -> p.getStyleClass().contains("sort-pane"))));
+            Node button = TBasicUtil.checkNonNull(TFXUtil.fx(() -> sortPane.lookup(".sort-direction-button")));
             for (int i = 0; i < numClicks; i++)
             {
                 clickOn(button);
@@ -137,17 +138,17 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
 
-        TestUtil.sleep(500);
+        TFXUtil.sleep(500);
         assertEquals(pickedColumns, Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), Sort.class).findFirst().get().getSortBy());
 
         // Now check output values by getting them from clipboard:
         showContextMenu(".table-display-table-title.transformation-table-title")
                 .clickOn(".id-tableDisplay-menu-copyValues");
-        TestUtil.sleep(1000);
+        TFXUtil.sleep(1000);
 
         
                 
-        Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
+        Optional<ImmutableList<LoadedColumnInfo>> clip = TFXUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
         assertTrue(clip.isPresent());
         List<Map<ColumnId, Either<String, @Value Object>>> sorted = new ArrayList<>();
         int length = original.data().getData().getLength();

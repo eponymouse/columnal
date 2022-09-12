@@ -31,6 +31,7 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import test.functions.TFunctionUtil;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.data.TBasicUtil;
@@ -92,7 +93,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         sleep(1000);
         // Not much more to do -- just edit the expression 
         correctTargetWindow();
-        clickOn(lookup(".column-title").match((Label l) -> TestUtil.fx(() -> l.getText()).startsWith("My C")).<Label>query());
+        clickOn(lookup(".column-title").match((Label l) -> TFXUtil.fx(() -> l.getText()).startsWith("My C")).<Label>query());
         push(KeyCode.TAB);
     }
     
@@ -200,7 +201,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         write("My Nu");
         checkPosition();
         // Click first cell:
-        Node cell = TBasicUtil.checkNonNull(lookup(".lex-completion").<Node>queryAll().stream().min(Comparator.comparing(c -> TestUtil.fx(() -> c.localToScreen(c.getBoundsInLocal()).getMinY()))).orElse(null));
+        Node cell = TBasicUtil.checkNonNull(lookup(".lex-completion").<Node>queryAll().stream().min(Comparator.comparing(c -> TFXUtil.fx(() -> c.localToScreen(c.getBoundsInLocal()).getMinY()))).orElse(null));
         // Doesn't matter if registered as double click or two single:
         clickOn(point(cell).atOffset(5, 0));
         clickOn(point(cell).atOffset(5, 0));
@@ -244,18 +245,18 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
     {
         EditorDisplay editorDisplay = lookup(".editor-display").query();
         // Caret will update on blink, but let's not wait around for that:
-        TestUtil.fx_(() -> editorDisplay._test_queueUpdateCaret());
+        TFXUtil.fx_(() -> editorDisplay._test_queueUpdateCaret());
         sleep(200);
         ImmutableList<LexAutoCompleteWindow> completions = Utility.filterClass(listWindows().stream(), LexAutoCompleteWindow.class).collect(ImmutableList.toImmutableList());
         assertEquals(1, completions.size());
         Node caret = lookup(".document-caret").query();
-        double caretBottom = TestUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()).getMaxY());
-        MatcherAssert.assertThat(TestUtil.fx(() -> completions.get(0).getY()), Matchers.closeTo(caretBottom, 2.0));
+        double caretBottom = TFXUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()).getMaxY());
+        MatcherAssert.assertThat(TFXUtil.fx(() -> completions.get(0).getY()), Matchers.closeTo(caretBottom, 2.0));
         @SuppressWarnings("units") // Because passes through IntStream
-        @CanonicalLocation int targetStartPos = TestUtil.fx(() -> completions.get(0)._test_getShowing().stream().mapToInt(c -> c.startPos).min().orElse(0));
-        double edX = TestUtil.fx(() -> FXUtility.getCentre(editorDisplay._test_getCaretBounds(targetStartPos)).getX());
-        Collection<Node> compText = TestUtil.fx(() -> lookup(n -> n instanceof Text && n.getStyleClass().contains("styled-text") &&  !((Text)n).getText().isEmpty() && !ImmutableList.of("Related", "Operators", "Help").contains(((Text)n).getText()) && n.getScene() == completions.get(0).getScene()).queryAll());
-        double compX = TestUtil.fx(() -> compText.stream().mapToDouble(t -> {
+        @CanonicalLocation int targetStartPos = TFXUtil.fx(() -> completions.get(0)._test_getShowing().stream().mapToInt(c -> c.startPos).min().orElse(0));
+        double edX = TFXUtil.fx(() -> FXUtility.getCentre(editorDisplay._test_getCaretBounds(targetStartPos)).getX());
+        Collection<Node> compText = TFXUtil.fx(() -> lookup(n -> n instanceof Text && n.getStyleClass().contains("styled-text") &&  !((Text)n).getText().isEmpty() && !ImmutableList.of("Related", "Operators", "Help").contains(((Text)n).getText()) && n.getScene() == completions.get(0).getScene()).queryAll());
+        double compX = TFXUtil.fx(() -> compText.stream().mapToDouble(t -> {
             //Log.debug("Text: " + ((Text)t).getText() + " bounds: " + t.localToScreen(t.getBoundsInLocal()));
             return t.localToScreen(t.getBoundsInLocal()).getMinX();
         }).average()).orElse(-1);

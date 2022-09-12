@@ -24,10 +24,10 @@ import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import test.gui.TFXUtil;
 import xyz.columnal.gui.lexeditor.EditorDisplay;
 import xyz.columnal.gui.lexeditor.completion.LexAutoCompleteWindow;
 import xyz.columnal.gui.lexeditor.completion.LexCompletion;
-import test.TestUtil;
 import test.gui.util.FXApplicationTest;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
@@ -59,11 +59,11 @@ public abstract class BaseTestEditorCompletion extends FXApplicationTest
         push(KeyCode.END);
         int prevPos = -1;
         int curPos;
-        while (prevPos != (curPos = TestUtil.fx(() -> editorDisplay.getCaretPosition())))
+        while (prevPos != (curPos = TFXUtil.fx(() -> editorDisplay.getCaretPosition())))
         {
             // Check completions here
             @Nullable LexAutoCompleteWindow window = Utility.filterClass(listWindows().stream(), LexAutoCompleteWindow.class).findFirst().orElse(null);
-            List<LexCompletion> showing = TestUtil.fx(() -> window == null ? ImmutableList.<LexCompletion>of() : window._test_getShowing());
+            List<LexCompletion> showing = TFXUtil.fx(() -> window == null ? ImmutableList.<LexCompletion>of() : window._test_getShowing());
             for (CompletionCheck check : checks)
             {
                 ImmutableList<LexCompletion> matching = showing.stream().filter(l -> Objects.equals(l.content, check.content)).collect(ImmutableList.toImmutableList());

@@ -25,13 +25,13 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.TableId;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.grid.VirtualGrid;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -40,7 +40,7 @@ public interface ClickOnTableHeaderTrait extends FxRobotInterface, ScrollToTrait
     @OnThread(Tag.Any)
     public default FxRobotInterface triggerTableHeaderContextMenu(VirtualGrid virtualGrid, TableManager tableManager, TableId id) throws UserException
     {
-        return triggerTableHeaderContextMenu(virtualGrid, TestUtil.tablePosition(tableManager, id));
+        return triggerTableHeaderContextMenu(virtualGrid, TFXUtil.tablePosition(tableManager, id));
     }
     
     @OnThread(Tag.Any)
@@ -53,8 +53,8 @@ public interface ClickOnTableHeaderTrait extends FxRobotInterface, ScrollToTrait
         if (tableNameField == null)
             throw new RuntimeException("Could not find table name field for " + position);
         @SuppressWarnings("nullness")
-        Node tableHeader = TestUtil.fx(() -> tableNameField.getParent());
-        Bounds tableHeaderBounds = TestUtil.fx(() -> tableHeader.localToScreen(tableHeader.getBoundsInLocal()));
+        Node tableHeader = TFXUtil.fx(() -> tableNameField.getParent());
+        Bounds tableHeaderBounds = TFXUtil.fx(() -> tableHeader.localToScreen(tableHeader.getBoundsInLocal()));
         return showContextMenu(tableHeader, new Point2D(tableHeaderBounds.getMinX() + 1, tableHeaderBounds.getMinY() + 2));
     }
     

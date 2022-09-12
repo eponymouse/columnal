@@ -33,6 +33,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import test.functions.TFunctionUtil;
+import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Ignore;
@@ -124,7 +125,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet);
         try
         {
-            Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
+            Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(3), CellPosition.col(3 + expressionValue.recordSet.getColumns().size()));
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
             // Only need to click once as already selected by keyboard:
@@ -136,7 +137,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             correctTargetWindow().clickOn(".id-transform-calculate");
             correctTargetWindow().write("Table1");
             push(KeyCode.ENTER);
-            TestUtil.sleep(200);
+            TFXUtil.sleep(200);
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);
@@ -155,7 +156,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
                     assertNotNull(view);
                     return;
                 }
-                TestUtil.sleep(500);
+                TFXUtil.sleep(500);
                 assertNull(lookup(".ok-button").tryQuery().orElse(null));
                 Calculate calculate = (Calculate) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
     
@@ -175,11 +176,11 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             }
 
             // Now check values match:
-            TestUtil.fx_(() -> Clipboard.getSystemClipboard().clear());
+            TFXUtil.fx_(() -> Clipboard.getSystemClipboard().clear());
             showContextMenu(".table-display-table-title.transformation-table-title")
                 .clickOn(".id-tableDisplay-menu-copyValues");
-            TestUtil.sleep(1000);
-            Optional<ImmutableList<LoadedColumnInfo>> clip = TestUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(expressionValue.typeManager));
+            TFXUtil.sleep(1000);
+            Optional<ImmutableList<LoadedColumnInfo>> clip = TFXUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(expressionValue.typeManager));
             assertTrue(clip.isPresent());
             // Need to fish out first column from clip, then compare item:
             //TestUtil.checkType(expressionValue.type, clip.get().get(0));
@@ -188,7 +189,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             
             // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
             // Shouldn't really need this code but test is flaky without it due to some JavaFX animation-related exceptions:
-            TestUtil.sleep(2000);
+            TFXUtil.sleep(2000);
             WaitForAsyncUtils.clearExceptions();
         }
         finally
@@ -200,11 +201,11 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
 
     public @Nullable Expression plainEntry(String expressionSrc, TypeManager typeManager) throws Exception
     {
-        TestUtil.fx_(() -> {windowToUse = new Stage();});
+        TFXUtil.fx_(() -> {windowToUse = new Stage();});
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new KnownLengthRecordSet(ImmutableList.of(), 0));
         try
         {
-            Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
+            Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(3), CellPosition.col(5));
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
             // Only need to click once as already selected by keyboard:
@@ -216,7 +217,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             correctTargetWindow().clickOn(".id-transform-calculate");
             correctTargetWindow().write("Table1");
             push(KeyCode.ENTER);
-            TestUtil.sleep(200);
+            TFXUtil.sleep(200);
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);
@@ -231,7 +232,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
                 assertNotNull(view);
                 return null;
             }
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
             assertNull(lookup(".ok-button").tryQuery().orElse(null));
             Calculate calculate = (Calculate) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
 
@@ -240,7 +241,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             
             // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
             // Shouldn't really need this code but test is flaky without it due to some JavaFX animation-related exceptions:
-            TestUtil.sleep(2000);
+            TFXUtil.sleep(2000);
             WaitForAsyncUtils.clearExceptions();
             return expression;
         }

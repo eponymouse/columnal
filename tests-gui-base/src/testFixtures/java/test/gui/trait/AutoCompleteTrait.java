@@ -26,9 +26,9 @@ import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
 import org.testfx.api.FxRobotInterface;
+import test.gui.TFXUtil;
 import xyz.columnal.gui.AutoComplete.Completion;
 import xyz.columnal.gui.lexeditor.completion.LexAutoCompleteWindow;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Utility;
@@ -53,16 +53,16 @@ public interface AutoCompleteTrait extends FxRobotInterface
     @OnThread(Tag.Any)
     default void scrollLexAutoCompleteToOption(String content)
     {
-        List<Window> autos = listTargetWindows().stream().filter(w -> TestUtil.fx(() -> w.isShowing())).filter(w -> w instanceof LexAutoCompleteWindow).collect(Collectors.toList());
-        assertEquals(autos.stream().map(Object::toString).collect(Collectors.joining(";")), 1, autos.size());
+        List<Window> autos = listTargetWindows().stream().filter(w -> TFXUtil.fx(() -> w.isShowing())).filter(w -> w instanceof LexAutoCompleteWindow).collect(Collectors.toList());
+        Assert.assertEquals(autos.stream().map(Object::toString).collect(Collectors.joining(";")), 1, autos.size());
 
-        LexAutoCompleteWindow autoComplete = ((LexAutoCompleteWindow)window(w -> w instanceof LexAutoCompleteWindow && TestUtil.fx(() -> w.isShowing())));
+        LexAutoCompleteWindow autoComplete = ((LexAutoCompleteWindow)window(w -> w instanceof LexAutoCompleteWindow && TFXUtil.fx(() -> w.isShowing())));
 
         // Move to top:
         String prev = "\u0000";
-        while (!Objects.equals(prev, TestUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent())))
+        while (!Objects.equals(prev, TFXUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent())))
         {
-            prev = TestUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent());
+            prev = TFXUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent());
             push(KeyCode.PAGE_UP);
         }
 
@@ -70,27 +70,27 @@ public interface AutoCompleteTrait extends FxRobotInterface
 
         // Now scroll down until we find it, or reach end:
         prev = "\u0000";
-        while (!Objects.equals(prev, TestUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent()))
-            && !Objects.equals(content, TestUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent())))
+        while (!Objects.equals(prev, TFXUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent()))
+            && !Objects.equals(content, TFXUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent())))
         {
-            prev = TestUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent());
+            prev = TFXUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent());
             if (prev != null)
                 all.add(prev);
             push(KeyCode.DOWN);
         }
 
-        assertEquals("Options: " + all.stream().collect(Collectors.joining(";")), content, TestUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent()));
+        Assert.assertEquals("Options: " + all.stream().collect(Collectors.joining(";")), content, TFXUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent()));
     }
 
 
     public default void autoComplete(String completion, boolean useTab)
     {
         ListView<Completion> listView = lookup(".autocomplete").query();
-        int itemCount = TestUtil.fx(() -> listView.getItems().size());
-        for (int i = TestUtil.fx(() -> listView.getSelectionModel().getSelectedIndex()); i < itemCount; i++)
+        int itemCount = TFXUtil.fx(() -> listView.getItems().size());
+        for (int i = TFXUtil.fx(() -> listView.getSelectionModel().getSelectedIndex()); i < itemCount; i++)
         {
             push(KeyCode.DOWN);
-            if (Objects.equals(TestUtil.<@Nullable String>fx(() -> Utility.onNullable(listView.getSelectionModel().getSelectedItem(), x -> x._test_getContent())), completion))
+            if (Objects.equals(TFXUtil.<@Nullable String>fx(() -> Utility.onNullable(listView.getSelectionModel().getSelectedItem(), x -> x._test_getContent())), completion))
             {
                 push(useTab ? KeyCode.TAB : KeyCode.ENTER);
                 return;

@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
 import org.testfx.api.FxRobotInterface;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
 import xyz.columnal.id.ColumnId;
@@ -39,7 +40,6 @@ import xyz.columnal.gui.grid.VirtualGrid;
 import xyz.columnal.importers.ClipboardUtils;
 import xyz.columnal.importers.ClipboardUtils.RowRange;
 import xyz.columnal.styled.StyledString;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
@@ -128,14 +128,14 @@ public interface CreateDataTableTrait extends FxRobotInterface, ScrollToTrait, C
         
         keyboardMoveTo(virtualGrid, targetPos);
         push(KeyCode.SHORTCUT, KeyCode.V);
-        TestUtil.sleep(3000);
+        TFXUtil.sleep(3000);
         // Enter table name:
         clickOnItemInBounds(lookup(".table-display-table-title .table-name-text-field"), virtualGrid, new RectangleBounds(targetPos, targetPos));
         selectAllCurrentTextField();
         write(tableName, 1);
         push(KeyCode.ENTER);
         // Give time for rename:
-        TestUtil.sleep(3000);
+        TFXUtil.sleep(3000);
 
         // Double check the values via direct access:
         List<Column> actualColumns = mainWindowActions._test_getTableManager().getSingleTableOrThrow(new TableId(tableName)).getData().getColumns();

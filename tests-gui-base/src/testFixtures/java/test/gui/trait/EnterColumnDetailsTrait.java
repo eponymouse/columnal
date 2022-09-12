@@ -23,6 +23,7 @@ package test.gui.trait;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Window;
+import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.testfx.api.FxRobotInterface;
@@ -30,7 +31,6 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.EditImmediateColumnDialog.ColumnDetails;
 import xyz.columnal.transformations.expression.type.TypeExpression;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -50,23 +50,23 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
         // We should be focused on name initially with the whole field selected, or blank:
         assertFalse("Should be no errors showing in type editor while unfocused", lookup(".type-editor .error-underline").tryQuery().isPresent());
         write(columnDetails.columnId.getRaw(), DELAY);
-        Window dialog = TestUtil.fx(() -> getRealFocusedWindow());
+        Window dialog = TFXUtil.fx(() -> getRealFocusedWindow());
         Log.debug("Pressing TAB on window: " + dialog);
         push(KeyCode.TAB);
         enterType(TypeExpression.fromDataType(columnDetails.dataType), r);
-        dialog = TestUtil.fx(() -> getRealFocusedWindow());
+        dialog = TFXUtil.fx(() -> getRealFocusedWindow());
         Log.debug("Pressing ESCAPE on window: " + dialog);
         push(KeyCode.ESCAPE);
         push(KeyCode.ESCAPE);
-        //assertTrue(TestUtil.fx(() -> dialog.isShowing()));
+        //assertTrue(TFXUtil.fx(() -> dialog.isShowing()));
         Node defValue = lookup(".default-value").<Node>query();
         assertNotNull(defValue);
         if (defValue != null)
         {
             @NonNull Node defValueFinal = defValue;
-            assertFalse(TestUtil.fx(() -> defValueFinal.isDisabled()));
+            assertFalse(TFXUtil.fx(() -> defValueFinal.isDisabled()));
             clickOn(".default-value");
-            assertTrue(TestUtil.fx(() -> defValueFinal.isFocused()));
+            assertTrue(TFXUtil.fx(() -> defValueFinal.isFocused()));
         }
         
         
@@ -79,7 +79,7 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
         {
             Log.normal("Error in dialog; cancelling");
             // Let us see what the problem is:
-            TestUtil.sleep(1500);
+            TFXUtil.sleep(1500);
             clickOn(".cancel-button");
             fail("Could not click OK in dialog without error");
         }

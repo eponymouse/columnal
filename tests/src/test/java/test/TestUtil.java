@@ -41,6 +41,7 @@ import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.ImmediateDataSource;
@@ -50,7 +51,6 @@ import xyz.columnal.data.Table;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.id.TableId;
 import xyz.columnal.log.Log;
-import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -59,7 +59,6 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.testfx.api.FxRobotInterface;
-import org.testfx.util.WaitForAsyncUtils;
 import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.Table.TableDisplayBase;
 import xyz.columnal.error.InvalidImmediateValueException;
@@ -77,18 +76,13 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Workers.Priority;
 import xyz.columnal.utility.gui.FXUtility;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -127,139 +121,6 @@ public class TestUtil
         return new Pair<>(null, type);
     }
 
-    @OnThread(Tag.Any)
-    public static <T> T fx(FXPlatformSupplierEx<T> action)
-    {
-        try
-        {
-            return WaitForAsyncUtils.asyncFx(action).get(60, TimeUnit.SECONDS);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    // Note: also waits for the queue to be empty
-    @OnThread(Tag.Any)
-    public static void fx_(FXPlatformRunnable action)
-    {
-        try
-        {
-            WaitForAsyncUtils.asyncFx(action::run).get(60, TimeUnit.SECONDS);
-            WaitForAsyncUtils.waitForFxEvents();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    // Doesn't wait for action to complete
-    @OnThread(Tag.Any)
-    public static void asyncFx_(FXPlatformRunnable action)
-    {
-        WaitForAsyncUtils.asyncFx(action::run);
-    }
-
-    @OnThread(Tag.Any)
-    public static void fxTest_(FXPlatformRunnable action)
-    {
-        try
-        {
-            WaitForAsyncUtils.<Optional<Throwable>>asyncFx(new Callable<Optional<Throwable>>()
-            {
-                @Override
-                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-                public Optional<Throwable> call() throws Exception
-                {
-                    try
-                    {
-                        action.run();
-                        return Optional.empty();
-                    }
-                    catch (Throwable t)
-                    {
-                        return Optional.of(t);
-                    }
-                }
-            }).get(5, TimeUnit.MINUTES).ifPresent(e -> {throw new RuntimeException(e);});
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @OnThread(Tag.Any)
-    public static <T> T sim(SimulationSupplier<T> action)
-    {
-        try
-        {
-            CompletableFuture<Either<Throwable, T>> f = new CompletableFuture<>();
-            Workers.onWorkerThread("Test.sim " + Thread.currentThread().getStackTrace()[2].getClassName() + "." + Thread.currentThread().getStackTrace()[2].getMethodName() + ":" + Thread.currentThread().getStackTrace()[2].getLineNumber(), Priority.FETCH, () -> {
-                try
-                {
-                    f.complete(Either.right(action.get()));
-                }
-                catch (Throwable e)
-                {
-                    f.complete(Either.left(e));
-                }
-            });
-            return f.get(60, TimeUnit.SECONDS).either(e -> {throw new RuntimeException(e);}, x -> x);
-        }
-        catch (TimeoutException e)
-        {
-            throw new RuntimeException(Workers._test_getCurrentTaskName(), e);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @OnThread(Tag.Any)
-    public static void sim_(SimulationRunnable action)
-    {
-        try
-        {
-            CompletableFuture<Either<Throwable, Object>> f = new CompletableFuture<>();
-            Workers.onWorkerThread("Test.sim_ " + Thread.currentThread().getStackTrace()[2].getClassName() + "." + Thread.currentThread().getStackTrace()[2].getMethodName() + ":" + Thread.currentThread().getStackTrace()[2].getLineNumber(), Priority.FETCH, () -> {
-                try
-                {
-                    action.run();
-                    f.complete(Either.right(new Object()));
-                }
-                catch (Throwable e)
-                {
-                    f.complete(Either.left(e));
-                }
-            });
-            f.get(60, TimeUnit.SECONDS).either_(e -> {throw new RuntimeException(e);}, x -> {});
-        }
-        catch (TimeoutException e)
-        {
-            throw new RuntimeException(Workers._test_getCurrentTaskName(), e);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void sleep(int millis)
-    {
-        try
-        {
-            Thread.sleep(millis);
-        }
-        catch (InterruptedException e)
-        {
-
-        }
-    }
-
     /**
      * IMPORTANT: we say Simulation thread to satisfy thread-checker, but don't call it from the actual
      * simultation thread or it will time out!  Just tag yours as simulation, too.
@@ -291,10 +152,10 @@ public class TestUtil
             do
             {
                 //System.err.println("Waiting for main window");
-                sleep(1000);
+                TFXUtil.sleep(1000);
                 count += 1;
             }
-            while (fx(() -> windowToUse.getScene().lookup(".virt-grid-line")) == null && count < 30);
+            while (TFXUtil.fx(() -> windowToUse.getScene().lookup(".virt-grid-line")) == null && count < 30);
             if (count >= 30)
                 throw new RuntimeException("Could not load table data");
             return tableManagerAtomicReference.get();
@@ -304,7 +165,7 @@ public class TestUtil
     // WOuld be nice to get this working, but doesn't currently work
     public static void writePaste_doesntwork(FxRobotInterface robot, String string)
     {
-        fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, string)));
+        TFXUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, string)));
         robot.push(PlatformUtil.isMac() ? KeyCode.COMMAND : KeyCode.CONTROL, KeyCode.V);
     }
 
@@ -325,53 +186,7 @@ public class TestUtil
         }
         return openDataAsTable(windowToUse, manager).get();
     }
-
-    // Wait.  Useful to stop multiple consecutive clicks turning into double clicks
-    public static void delay(int millis)
-    {
-        try
-        {
-            Thread.sleep(millis);
-        }
-        catch (InterruptedException e)
-        {
-
-        }
-    }
-
-    public static void assertEqualsText(String prefix, String expected, String actual)
-    {
-        if (!expected.equals(actual))
-        {
-            String[] expectedLines = expected.split("\n");
-            String[] actualLines = actual.split("\n");
-            for (int i = 0; i < Math.max(expectedLines.length, actualLines.length); i++)
-            {
-                String expectedLine = i < expectedLines.length ? expectedLines[i] : null;
-                String actualLine = i < actualLines.length ? actualLines[i] : null;
-                assertEquals(prefix + "\nExpected line " + i + ": " + (expectedLine == null ? "null" : stringAsHexChars(expectedLine)) + "\nActual: " + (actualLine == null ? "null" : stringAsHexChars(actualLine)), expectedLine, actualLine);
-            }
-        }
-    }
-
-    public static String stringAsHexChars(String str)
-    {
-        return str.chars().mapToObj(c -> Integer.toHexString(c) + (c == 10 ? "\n" : "")).collect(Collectors.joining(" "));
-    }
-
-    public @OnThread(Tag.Any)
-    static CellPosition tablePosition(TableManager tableManager, TableId srcId) throws UserException
-    {
-        Table table = tableManager.getSingleTableOrThrow(srcId);
-        return TBasicUtil.checkNonNull(fx(() -> table.getDisplay())).getMostRecentPosition();
-    }
-
-    public static KeyCode ctrlCmd()
-    {
-        return SystemUtils.IS_OS_MAC_OSX ? KeyCode.COMMAND : KeyCode.CONTROL;
-    }
-
-
+    
     @OnThread(Tag.FXPlatform)
     public static void copySnapshotToClipboard(Node node)
     {
@@ -428,7 +243,7 @@ public class TestUtil
 
     public static <T extends Styleable> Matcher<T> matcherHasStyleClass(String styleClass)
     {
-        return TestUtil.<T, Iterable<? extends String>>matcherOn(Matchers.contains(styleClass), (T s) -> fx(() -> ImmutableList.copyOf(s.getStyleClass())));
+        return TestUtil.<T, Iterable<? extends String>>matcherOn(Matchers.contains(styleClass), (T s) -> TFXUtil.fx(() -> ImmutableList.copyOf(s.getStyleClass())));
     }
 
     @OnThread(Tag.Simulation)
@@ -451,7 +266,7 @@ public class TestUtil
     public static <E extends Event> void debugEventRecipient_(FxRobotInterface robot, @Nullable Point2D target, EventType<E> eventType, Runnable during)
     {
         Set<Node> allNodes = robot.lookup(n -> {
-            Bounds screen = fx(() -> n.localToScreen(n.getBoundsInLocal()));
+            Bounds screen = TFXUtil.fx(() -> n.localToScreen(n.getBoundsInLocal()));
             return target == null || screen.contains(target);
         }).queryAll();
 
@@ -462,7 +277,7 @@ public class TestUtil
             EventHandler<E> eventHandler = e -> {
                 received.add(new Pair<>(node, e.getEventType()));
             };
-            fx_(() -> node.addEventFilter(eventType, eventHandler));
+            TFXUtil.fx_(() -> node.addEventFilter(eventType, eventHandler));
             listeners.put(node, eventHandler);
         }
         
@@ -470,7 +285,7 @@ public class TestUtil
 
         listeners.forEach((n, l) ->
         {
-            fx_(() -> n.removeEventFilter(eventType, l));
+            TFXUtil.fx_(() -> n.removeEventFilter(eventType, l));
         });
         
         Log.normal("Events received:\n" + received.stream().map(n -> "  " + n.toString()).collect(Collectors.joining("\n")));
@@ -481,7 +296,7 @@ public class TestUtil
     {
         for (Table table : tableManager.getAllTables())
         {
-            fx_(() -> {
+            TFXUtil.fx_(() -> {
                 TableDisplayBase display = table.getDisplay();
                 if (display instanceof TableDisplay)
                 {
@@ -489,13 +304,7 @@ public class TestUtil
                 }
             });
         }
-        fx_(() -> virtualGrid.redoLayoutAfterScroll());
-    }
-
-    public static interface FXPlatformSupplierEx<T> extends Callable<T>
-    {
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public T call() throws InternalException, UserException;
+        TFXUtil.fx_(() -> virtualGrid.redoLayoutAfterScroll());
     }
 
     public static class Expression_Mgr
@@ -525,7 +334,7 @@ public class TestUtil
     {
         robot.moveAndDismissPopupsAtPos(robot.point(".ok-button"));
         robot.clickOn(".ok-button");
-        sleep(300);
+        TFXUtil.sleep(300);
         if (robot.lookup(".ok-button").tryQuery().isPresent())
             robot.clickOn(".ok-button");
     }

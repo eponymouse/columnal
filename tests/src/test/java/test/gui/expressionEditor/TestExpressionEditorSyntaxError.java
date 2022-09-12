@@ -25,7 +25,7 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import test.TestUtil;
+import test.gui.TFXUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.gui.FXUtility;
@@ -221,8 +221,8 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
     {
         // Should disappear when OK pressed, and not leave a runtime error:
         testError("ACC1 ");
-        TestUtil.fx_(() -> dumpScreenshot());
-        assertEquals(ImmutableSet.of(), lookup(".table-data-cell").match(c -> TestUtil.fx(() -> FXUtility.hasPseudoclass(c, "has-error"))).queryAll());
+        TFXUtil.fx_(() -> dumpScreenshot());
+        assertEquals(ImmutableSet.of(), lookup(".table-data-cell").match(c -> TFXUtil.fx(() -> FXUtility.hasPseudoclass(c, "has-error"))).queryAll());
     }
     
     @Test

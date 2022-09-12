@@ -26,6 +26,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.data.TBasicUtil;
@@ -62,16 +63,16 @@ public class TestRTransformation extends FXApplicationTest implements ScrollToTr
         RecordSet original = new KnownLengthRecordSet(ImmutableList.of(ColumnUtility.makeImmediateColumn(DataType.TEXT, new ColumnId("The Strings"), ImmutableList.of(Either.right("Hello"), Either.right("There")), "")), 2);
         
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, null, original);
-        TestUtil.sleep(5000);
-        CellPosition targetPos = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
+        TFXUtil.sleep(5000);
+        CellPosition targetPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
-        clickOnItemInBounds(from(TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-        TestUtil.delay(100);
+        clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+        TFXUtil.sleep(100);
         clickOn(".id-new-transform");
-        TestUtil.delay(100);
+        TFXUtil.sleep(100);
         scrollTo(".id-transform-runr");
         clickOn(".id-transform-runr");
-        TestUtil.delay(200);
+        TFXUtil.sleep(200);
         // Focus should begin in the expression, so let's do that first:
         write("digest(str_c(Table1$\"The Strings\"))");
         

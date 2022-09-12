@@ -81,14 +81,14 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         
         CellPosition tablePos = mwa._test_getTableManager().getAllTables().get(0)._test_getPrevPosition();
         
-        TestUtil.sleep(2000);
+        TFXUtil.sleep(2000);
 
         ArrayList<@Nullable VersionedSTF> cells = new ArrayList<>(expectedGUI.size());
 
         for (int i = 0; i < expectedGUI.size(); i++)
         {
             final int iFinal = i;
-            @Nullable String cellText = TestUtil.<@Nullable String>fx(() -> {
+            @Nullable String cellText = TFXUtil.<@Nullable String>fx(() -> {
                 @Nullable VersionedSTF cell = mwa._test_getDataCell(tablePos.offsetByRowCols(3 + iFinal, 0));
                 synchronized (this)
                 {
@@ -107,12 +107,12 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         {
             if (cell != null)
             {
-                String cellText = TestUtil.fx(() -> cell._test_getGraphicalText());
+                String cellText = TFXUtil.fx(() -> cell._test_getGraphicalText());
                 int lastIntDigit = cellText.indexOf('.') - 1;
                 if (lastIntDigit < 0)
                     lastIntDigit = cellText.length() - 1;
                 int lastIntDigitFinal = lastIntDigit;
-                rightOfLowestIntDigit.add(TestUtil.fx(() -> cell._test_getCharacterBoundsOnScreen(lastIntDigitFinal).getMaxX()));
+                rightOfLowestIntDigit.add(TFXUtil.fx(() -> cell._test_getCharacterBoundsOnScreen(lastIntDigitFinal).getMaxX()));
             }
         }
         double leftmostX = rightOfLowestIntDigit.stream().mapToDouble(d -> d).min().orElse(0);
@@ -133,7 +133,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                 push(KeyCode.ENTER);
                 sleep(200);
                 VersionedSTF cellFinal = cell;
-                cellText = TestUtil.fx(() -> getText(cellFinal));
+                cellText = TFXUtil.fx(() -> getText(cellFinal));
             }
             else
                 cellText = null;
@@ -157,21 +157,21 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     @NonNull VersionedSTF cellFinal = cell;
                     // Click twice to edit, so click once now:
                     clickOn(cell);
-                    TestUtil.sleep(400);
+                    TFXUtil.sleep(400);
                     String gui = expectedGUI.get(i);
                     String guiMinusEllipsis = gui.replaceAll("\u2026", "").replaceAll("-", "").replaceAll("\\. ", "").trim();
                     
                     Function<Integer, Point2D> posOfCaret = n -> {
                         Bounds b;
-                        String curText = TestUtil.fx(() -> getText(cellFinal));
+                        String curText = TFXUtil.fx(() -> getText(cellFinal));
                         if (n < curText.length())
                         {
-                            b = TestUtil.fx(() -> cellFinal._test_getCharacterBoundsOnScreen(n));
+                            b = TFXUtil.fx(() -> cellFinal._test_getCharacterBoundsOnScreen(n));
                             return new Point2D(b.getMinX(), b.getMinY() + b.getHeight() * 0.5);
                         }
                         else if (n == curText.length())
                         {
-                            b = TestUtil.fx(() -> cellFinal._test_getCharacterBoundsOnScreen(n - 1));
+                            b = TFXUtil.fx(() -> cellFinal._test_getCharacterBoundsOnScreen(n - 1));
                             return new Point2D(b.getMaxX(), b.getMinY() + b.getHeight() * 0.5);
                         }
                         
@@ -209,7 +209,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                             clickOnScreenPos = posOfCaret.apply(gui.trim().length());
                             if (!gui.endsWith(" "))
                             {
-                                Bounds cellScreenBounds = TestUtil.fx(() -> cell.localToScreen(cell.getBoundsInLocal()));
+                                Bounds cellScreenBounds = TFXUtil.fx(() -> cell.localToScreen(cell.getBoundsInLocal()));
                                 MatcherAssert.assertThat(clickOnScreenPos.getX(), Matchers.closeTo(cellScreenBounds.getMaxX(), 5.0));
                             }
                             afterIndex = nonEllipsisPos + guiMinusEllipsis.length() + (gui.endsWith("\u2026") ? 1 : 0);
@@ -222,13 +222,13 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     }
                     clickOn(clickOnScreenPos);
                     
-                    assertTrue("Clicked on: " + clickOnScreenPos + " focus owner: " + getFocusOwner(), TestUtil.fx(() -> cellFinal.isFocused()));
+                    assertTrue("Clicked on: " + clickOnScreenPos + " focus owner: " + getFocusOwner(), TFXUtil.fx(() -> cellFinal.isFocused()));
                     assertEquals("Clicking " + target + " before: \"" + gui + "\" after: \"" + actual + "\" pos: " + clickOnScreenPos, afterIndex, 
-                        (int)TestUtil.<Integer>fx(() -> cellFinal.getCaretPosition())
+                        (int) TFXUtil.<Integer>fx(() -> cellFinal.getCaretPosition())
                     );
                     // Double-check cellText while we're here:
                     
-                    cellText = TestUtil.fx(() -> getText(cellFinal));
+                    cellText = TFXUtil.fx(() -> getText(cellFinal));
                 } else
                     cellText = null;
                 assertEquals("Row " + i, actual, cellText);
@@ -236,8 +236,8 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                 // Now exit to make sure text goes back:
                 push(KeyCode.ESCAPE);
                 // Wait for batched re-layout:
-                TestUtil.sleep(1000);
-                assertEquals("Row " + i, expectedGUI.get(i), TestUtil.<@Nullable String>fx(() -> cell == null ? null : getText(cell)));
+                TFXUtil.sleep(1000);
+                assertEquals("Row " + i, expectedGUI.get(i), TFXUtil.<@Nullable String>fx(() -> cell == null ? null : getText(cell)));
             }
         }
 
@@ -354,15 +354,15 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         ), values.size()));
         
         Supplier<List<String>> getCurShowing = () ->
-                IntStream.range(0, 1000).mapToObj(i -> Utility.streamNullable(TestUtil.fx(() -> mwa._test_getDataCell(new CellPosition(CellPosition.row(i), CellPosition.col(1)))))).flatMap(s -> s).map(s -> TestUtil.fx(() -> getText(s))).collect(ImmutableList.toImmutableList());
+                IntStream.range(0, 1000).mapToObj(i -> Utility.streamNullable(TFXUtil.fx(() -> mwa._test_getDataCell(new CellPosition(CellPosition.row(i), CellPosition.col(1)))))).flatMap(s -> s).map(s -> TFXUtil.fx(() -> getText(s))).collect(ImmutableList.toImmutableList());
         
         checkNumericSorted(getCurShowing.get());
 
         for (int i = 0; i < 15; i++)
         {
             int iFinal = i;
-            TestUtil.asyncFx_(() -> mwa._test_getVirtualGrid().getScrollGroup().requestScrollBy(0, (iFinal % 4 == 0) ? 1000 : -1000));
-            TestUtil.sleep(1000);
+            TFXUtil.asyncFx_(() -> mwa._test_getVirtualGrid().getScrollGroup().requestScrollBy(0, (iFinal % 4 == 0) ? 1000 : -1000));
+            TFXUtil.sleep(1000);
             checkNumericSorted(getCurShowing.get());
         }
         

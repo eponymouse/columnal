@@ -82,25 +82,25 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     {
         TBasicUtil.printSeedOnFail(() -> {
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, new DummyManager()).get();
-            TestUtil.sleep(1000);
+            TFXUtil.sleep(1000);
 
             clickOn("#id-menu-view").clickOn(".id-menu-view-types");
-            TestUtil.delay(200);
+            TFXUtil.sleep(200);
             Window typeWindow = fxGetRealFocusedWindow();
             clickOn(".id-types-add");
-            TestUtil.delay(200);
+            TFXUtil.sleep(200);
             Window dialog = fxGetRealFocusedWindow();
             enterTypeDetails(typeDefinition, random, mainWindowActions._test_getTableManager().getTypeManager());
             moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(".ok-button");
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
             assertNotEquals(dialog, fxGetRealFocusedWindow());
             clickOn(".close-button");
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
             assertNotEquals(typeWindow, fxGetRealFocusedWindow());
 
             // Check that saved types in file match our new unit:
-            String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+            String fileContent = FileUtils.readFileToString(TFXUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
             Log.debug("Saved:\n" + fileContent);
             TypeManager tmpTypes = new TypeManager(new UnitManager());
             tmpTypes.loadTypeDecls(getTypeSrcFromFile(fileContent));
@@ -214,11 +214,11 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         while (lookup(".small-delete").tryQuery().isPresent() && ++count < 30)
         {
             // Click highest one as likely to not be off the screen:
-            Node node = TestUtil.<@Nullable Node>fx(() -> lookup(".small-delete-circle").match(NodeQueryUtils.isVisible()).<Node>queryAll().stream().sorted(Comparator.comparing(n -> n.localToScene(0, 0).getY())).findFirst().orElse(null));
+            Node node = TFXUtil.<@Nullable Node>fx(() -> lookup(".small-delete-circle").match(NodeQueryUtils.isVisible()).<Node>queryAll().stream().sorted(Comparator.comparing(n -> n.localToScene(0, 0).getY())).findFirst().orElse(null));
             if (node != null)
             {
                 clickOn(node);
-                TestUtil.sleep(800);
+                TFXUtil.sleep(800);
             }
         }
         assertTrue(!lookup(".small-delete").tryQuery().isPresent());
@@ -227,21 +227,21 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     @OnThread(Tag.Any)
     private void enterNewInnerValueTag(Random r, TypeManager typeManager, TagType<JellyType> tagType) throws InternalException, UserException
     {
-        int count;Optional<ScrollBar> visibleScroll = lookup(".fancy-list > .scroll-bar").match(NodeQueryUtils.isVisible()).match((ScrollBar s) -> TestUtil.fx(() -> s.getOrientation()).equals(Orientation.VERTICAL)).tryQuery();
+        int count;Optional<ScrollBar> visibleScroll = lookup(".fancy-list > .scroll-bar").match(NodeQueryUtils.isVisible()).match((ScrollBar s) -> TFXUtil.fx(() -> s.getOrientation()).equals(Orientation.VERTICAL)).tryQuery();
         if (visibleScroll.isPresent())
         {
             moveTo(visibleScroll.get());
             count = 0;
-            while (TestUtil.fx(() -> visibleScroll.get().getValue()) < 0.99 && ++count < 100)
+            while (TFXUtil.fx(() -> visibleScroll.get().getValue()) < 0.99 && ++count < 100)
                 scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN);
         }
-        TestUtil.delay(200);
+        TFXUtil.sleep(200);
         Log.debug("Entering: " + tagType.getName());
-        //TestUtil.fx_(() -> dumpScreenshot(getRealFocusedWindow()));
+        //TFXUtil.fx_(() -> dumpScreenshot(getRealFocusedWindow()));
         scrollTo(".id-fancylist-add");
         moveAndDismissPopupsAtPos(point(".id-fancylist-add"));
         clickOn(".id-fancylist-add");
-        TestUtil.delay(500);
+        TFXUtil.sleep(500);
         write(tagType.getName(), 1);
         @Nullable JellyType inner = tagType.getInner();
         if (inner != null)
@@ -262,22 +262,22 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             DummyManager initial = new DummyManager();
             initial.getTypeManager().registerTaggedType(typeDefinition.getTaggedTypeName().getRaw(), typeDefinition.getTypeArguments(), typeDefinition.getTags());
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, initial).get();
-            TestUtil.sleep(1000);
+            TFXUtil.sleep(1000);
 
             clickOn("#id-menu-view").clickOn(".id-menu-view-types");
-            TestUtil.delay(200);
+            TFXUtil.sleep(200);
             clickOn(".types-list");
             push(KeyCode.DOWN);
             push(KeyCode.HOME);
             clickOn(".id-types-edit");
-            TestUtil.delay(2000);
+            TFXUtil.sleep(2000);
             clickOn(".ok-button");
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
             clickOn(".close-button");
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
 
             // Check that saved types in file match our new unit:
-            String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+            String fileContent = FileUtils.readFileToString(TFXUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
             Log.debug("Saved:\n" + fileContent);
             TypeManager tmpTypes = new TypeManager(new UnitManager());
             tmpTypes.loadTypeDecls(getTypeSrcFromFile(fileContent));
@@ -293,24 +293,24 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             DummyManager initial = new DummyManager();
             initial.getTypeManager().registerTaggedType(before.getTaggedTypeName().getRaw(), before.getTypeArguments(), before.getTags());
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, initial).get();
-            TestUtil.sleep(1000);
+            TFXUtil.sleep(1000);
 
             clickOn("#id-menu-view").clickOn(".id-menu-view-types");
-            TestUtil.delay(200);
+            TFXUtil.sleep(200);
             clickOn(".types-list");
             push(KeyCode.DOWN);
             push(KeyCode.HOME);
             clickOn(".id-types-edit");
             enterTypeDetails(after, random, mainWindowActions._test_getTableManager().getTypeManager());
-            TestUtil.delay(500);
+            TFXUtil.sleep(500);
             moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(".ok-button");
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
             clickOn(".close-button");
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
 
             // Check that saved types in file match our new unit:
-            String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+            String fileContent = FileUtils.readFileToString(TFXUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
             Log.debug("Saved:\n" + fileContent);
             TypeManager tmpTypes = new TypeManager(new UnitManager());
             tmpTypes.loadTypeDecls(getTypeSrcFromFile(fileContent));
@@ -328,10 +328,10 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             prevManager.getTypeManager().registerTaggedType(typeDefinitionB.getTaggedTypeName().getRaw(), typeDefinitionB.getTypeArguments(), typeDefinitionB.getTags());
             prevManager.getTypeManager().registerTaggedType(typeDefinitionC.getTaggedTypeName().getRaw(), typeDefinitionC.getTypeArguments(), typeDefinitionC.getTags());
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
-            TestUtil.sleep(1000);
+            TFXUtil.sleep(1000);
 
             clickOn("#id-menu-view").clickOn(".id-menu-view-types");
-            TestUtil.delay(200);
+            TFXUtil.sleep(200);
             clickOn(".types-list");
             push(KeyCode.DOWN);
             push(KeyCode.HOME);
@@ -348,12 +348,12 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
                 push(KeyCode.DOWN);
             assertTrue(toDeleteCellText, existsSelectedCell(toDeleteCellText));
             clickOn(".id-types-remove");
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
             clickOn(".close-button");
-            TestUtil.sleep(500);
+            TFXUtil.sleep(500);
 
             // Check that saved units in file match our new unit:
-            String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+            String fileContent = FileUtils.readFileToString(TFXUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
             Log.debug("Saved:\n" + fileContent);
             TypeManager tmpTypes = new TypeManager(new UnitManager());
             HashMap<TypeId, TaggedTypeDefinition> remaining = new HashMap<>();
@@ -373,7 +373,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             if (t instanceof ListCell)
             {
                 ListCell<?> listCell = (ListCell<?>) t;
-                return TestUtil.fx(() -> {
+                return TFXUtil.fx(() -> {
                     Log.debug("Cell text: \"" + listCell.getText() + "\" sel: " + listCell.isSelected());
                     return listCell.isSelected() && content.equals(listCell.getText());
                 });

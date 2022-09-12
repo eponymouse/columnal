@@ -30,6 +30,7 @@ import javafx.scene.control.ListView;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.ColumnUtility;
@@ -155,13 +156,13 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
         }
         else if (to != null)
         {
-            assertFalse(TestUtil.fx(() -> listView.getItems()).stream().anyMatch(t -> t._test_hasDestinationType(to)));
+            assertFalse(TFXUtil.fx(() -> listView.getItems()).stream().anyMatch(t -> t._test_hasDestinationType(to)));
             clickOn(".cancel-button");
         }
         else 
         {
-            assertEquals(ImmutableList.of(), TestUtil.fx(() -> listView.getItems()));
-            assertTrue(TestUtil.fx(() -> lookup(".ok-button").queryButton().isDisabled()));
+            assertEquals(ImmutableList.of(), TFXUtil.fx(() -> listView.getItems()));
+            assertTrue(TFXUtil.fx(() -> lookup(".ok-button").queryButton().isDisabled()));
             clickOn(".cancel-button");
         }
     }
