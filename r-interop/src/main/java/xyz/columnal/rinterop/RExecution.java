@@ -164,7 +164,7 @@ public class RExecution
             {
                 copyOut.start();
                 copyErr.start();
-                if (!p.waitFor(15, TimeUnit.SECONDS))
+                if (!p.waitFor(180, TimeUnit.SECONDS))
                     throw new UserException("R process took too long to complete, giving up.\nOutput was:\n" + copyOut.destination.getBuffer().toString() + "\nError was:\n" + copyErr.destination.getBuffer().toString());
                 if (p.exitValue() != 0)
                     throw new UserException("Exit code from running R (" + p.exitValue() + ") indicates error.  Output was:\n" + copyOut.destination.getBuffer().toString() + "\nError was:\n" + copyErr.destination.getBuffer().toString());
