@@ -22,20 +22,3 @@ dependencies {
     testCompileOnly project(':threadchecker')
 }
 description = 'utility'
-
-test {
-    checkerFramework {
-        checkers = []
-        extraJavacArgs = []
-    }
-    
-    useJUnit()
-
-    scanForTestClasses = false
-    filter {
-        includeTestsMatching "Test*"
-        includeTestsMatching "Prop*"
-        excludeTestsMatching "*\$*"
-    }
-    maxParallelForks = Runtime.runtime.availableProcessors() / 2
-}

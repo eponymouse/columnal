@@ -29,6 +29,3 @@ sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/res
 
 description = 'tests-functions'
 
-test {
-    maxParallelForks = Runtime.runtime.availableProcessors() / 2
-}

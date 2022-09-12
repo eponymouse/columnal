@@ -12,7 +12,3 @@ dependencies {
 }
 
 description = 'tests-basic'
-
-test {
-    maxParallelForks = Runtime.runtime.availableProcessors() / 2
-}
