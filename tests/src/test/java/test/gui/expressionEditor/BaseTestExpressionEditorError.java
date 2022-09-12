@@ -33,6 +33,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.SubstringMatcher;
 import org.junit.runner.RunWith;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.ColumnId;
@@ -95,7 +96,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                 columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("S" + iFinal), ImmutableList.of(Either.right("Hi " + iFinal)), ""));
                 columns.add(rs -> new MemoryNumericColumn(rs, new ColumnId("ACC" + iFinal), new NumberInfo(u.loadUse("m/s^2")), ImmutableList.of(Either.right(iFinal)), 0));
             }
-            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 1));
+            MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 1));
 
             Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(6), CellPosition.col(3));

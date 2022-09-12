@@ -56,7 +56,6 @@ import xyz.columnal.transformations.Sort;
 import xyz.columnal.transformations.expression.BooleanLiteral;
 import xyz.columnal.transformations.function.FromString;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.type.GenTypeAndValueGen;
 import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
@@ -222,7 +221,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
         addTransformation(dummy, "Src", "T1", CellPosition.ORIGIN.offsetByRowCols(1, 4), r);
         addTransformation(dummy, "T1", "T2", CellPosition.ORIGIN.offsetByRowCols(1, 7), r);
 
-        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, dummy).get();
+        MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, dummy).get();
         TFXUtil.sleep(1000);
         // First check that the data is valid to begin with:
         List<List<@Nullable String>> origDataA = getDataViaGraphics(details, 0);

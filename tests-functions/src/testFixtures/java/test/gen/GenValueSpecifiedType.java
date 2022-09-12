@@ -26,7 +26,6 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import test.TestUtil;
 import test.gen.GenValueSpecifiedType.ValueGenerator;
 
 import java.util.function.Function;

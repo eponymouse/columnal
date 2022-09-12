@@ -42,7 +42,6 @@ import xyz.columnal.transformations.Check.CheckType;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
-import test.TestUtil;
 import test.gui.trait.ClickOnTableHeaderTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
@@ -83,7 +82,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
         columns.add(text("alphabet animals", "Aardvark", "Bear", "Cat", "Deer"));
         tempManager.record(new ImmediateDataSource(tempManager, new InitialLoadDetails(new TableId("T2"), null, null, null), new EditableRecordSet(columns, () -> 4)));
         
-        mainWindowActions = TestUtil.openDataAsTable(windowToUse, tempManager).get();
+        mainWindowActions = TAppUtil.openDataAsTable(windowToUse, tempManager).get();
     }
 
     private static SimulationFunction<RecordSet, EditableColumn> bools(@ExpressionIdentifier String name, boolean... values)

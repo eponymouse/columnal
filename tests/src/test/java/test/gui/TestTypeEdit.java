@@ -52,7 +52,6 @@ import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.jellytype.JellyType;
 import xyz.columnal.transformations.expression.type.TypeExpression;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.GenTaggedTypeDefinition;
 import test.gui.trait.CheckWindowBoundsTrait;
@@ -81,7 +80,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     public void testNewType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception
     {
         TBasicUtil.printSeedOnFail(() -> {
-            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, new DummyManager()).get();
+            MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, new DummyManager()).get();
             TFXUtil.sleep(1000);
 
             clickOn("#id-menu-view").clickOn(".id-menu-view-types");
@@ -261,7 +260,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
 
             DummyManager initial = new DummyManager();
             initial.getTypeManager().registerTaggedType(typeDefinition.getTaggedTypeName().getRaw(), typeDefinition.getTypeArguments(), typeDefinition.getTags());
-            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, initial).get();
+            MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, initial).get();
             TFXUtil.sleep(1000);
 
             clickOn("#id-menu-view").clickOn(".id-menu-view-types");
@@ -292,7 +291,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         TBasicUtil.printSeedOnFail(() -> {
             DummyManager initial = new DummyManager();
             initial.getTypeManager().registerTaggedType(before.getTaggedTypeName().getRaw(), before.getTypeArguments(), before.getTags());
-            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, initial).get();
+            MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, initial).get();
             TFXUtil.sleep(1000);
 
             clickOn("#id-menu-view").clickOn(".id-menu-view-types");
@@ -327,7 +326,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             prevManager.getTypeManager().registerTaggedType(typeDefinitionA.getTaggedTypeName().getRaw(), typeDefinitionA.getTypeArguments(), typeDefinitionA.getTags());
             prevManager.getTypeManager().registerTaggedType(typeDefinitionB.getTaggedTypeName().getRaw(), typeDefinitionB.getTypeArguments(), typeDefinitionB.getTags());
             prevManager.getTypeManager().registerTaggedType(typeDefinitionC.getTaggedTypeName().getRaw(), typeDefinitionC.getTypeArguments(), typeDefinitionC.getTags());
-            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
+            MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, prevManager).get();
             TFXUtil.sleep(1000);
 
             clickOn("#id-menu-view").clickOn(".id-menu-view-types");

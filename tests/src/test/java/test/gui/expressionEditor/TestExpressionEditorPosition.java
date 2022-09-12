@@ -32,6 +32,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import test.functions.TFunctionUtil;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.apache.commons.lang3.SystemUtils;
@@ -352,7 +353,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             }
             columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("Str"), Collections.emptyList(), ""));
             columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("The quick brown fox"), Collections.emptyList(), ""));
-            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
+            MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
 
             Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(5), CellPosition.col(5));
@@ -511,7 +512,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                 columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("S" + iFinal), Collections.emptyList(), ""));
                 columns.add(rs -> new MemoryNumericColumn(rs, new ColumnId("ACC" + iFinal), new NumberInfo(u.loadUse("m/s^2")), Collections.emptyList(), 0));
             }
-            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
+            MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
 
             Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(5), CellPosition.col(5));

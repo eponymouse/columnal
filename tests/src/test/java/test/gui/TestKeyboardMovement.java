@@ -41,7 +41,6 @@ import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.gui.grid.CellSelection;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.grid.VirtualGrid;
-import test.TestUtil;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
@@ -75,7 +74,7 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
     @OnThread(Tag.Simulation)
     public void testKeyboardMovement(@NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src, @From(GenRandom.class) Random r) throws Exception
     {
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, src.mgr).get();
         TFXUtil.sleep(2000);
         
         VirtualGrid virtualGrid = mainWindowActions._test_getVirtualGrid();
@@ -180,7 +179,7 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
     @OnThread(Tag.Simulation)
     public void testKeyboardScrollTo(@NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src, @From(GenRandom.class) Random r) throws Exception
     {
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, src.mgr).get();
         TFXUtil.sleep(2000);
         assertThat(mainWindowActions._test_getSaveCount(), Matchers.lessThanOrEqualTo(1));
 

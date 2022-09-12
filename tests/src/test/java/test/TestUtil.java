@@ -39,17 +39,10 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import test.gui.TFXUtil;
-import xyz.columnal.data.CellPosition;
-import xyz.columnal.data.EditableRecordSet;
-import xyz.columnal.data.ImmediateDataSource;
-import xyz.columnal.data.RecordSet;
-import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.Table;
 import xyz.columnal.data.TableManager;
-import xyz.columnal.id.TableId;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -59,11 +52,8 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.testfx.api.FxRobotInterface;
-import xyz.columnal.data.Table.InitialLoadDetails;
 import xyz.columnal.data.Table.TableDisplayBase;
 import xyz.columnal.error.InvalidImmediateValueException;
-import xyz.columnal.gui.MainWindow;
-import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.gui.grid.VirtualGrid;
 import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.transformations.expression.Expression;
@@ -71,19 +61,13 @@ import test.gui.trait.PopupTrait;
 import xyz.columnal.utility.*;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeValue;
-import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.gui.FXUtility;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -121,47 +105,6 @@ public class TestUtil
         return new Pair<>(null, type);
     }
 
-    /**
-     * IMPORTANT: we say Simulation thread to satisfy thread-checker, but don't call it from the actual
-     * simultation thread or it will time out!  Just tag yours as simulation, too.
-     *
-     * Returns a runnable which will wait for the table to load
-     *
-     * @param windowToUse
-     * @param mgr
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws ExecutionException
-     * @throws InvocationTargetException
-     */
-    @OnThread(Tag.Simulation)
-    public static Supplier<MainWindowActions> openDataAsTable(Stage windowToUse, TableManager mgr) throws Exception
-    {
-        File temp = File.createTempFile("srcdata", "tables");
-        temp.deleteOnExit();
-        String saved = TTableUtil.save(mgr);
-        //System.out.println("Saving: {{{" + saved + "}}}");
-        AtomicReference<MainWindowActions> tableManagerAtomicReference = new AtomicReference<>();
-        FXUtility.runFX(() -> TBasicUtil.checkedToRuntime_(() -> {
-            MainWindowActions mainWindowActions = MainWindow.show(windowToUse, temp, new Pair<>(temp, saved), null);
-            tableManagerAtomicReference.set(mainWindowActions);
-        }));
-        // Wait until individual tables are actually loaded:
-        return () -> {
-            int count = 0;
-            do
-            {
-                //System.err.println("Waiting for main window");
-                TFXUtil.sleep(1000);
-                count += 1;
-            }
-            while (TFXUtil.fx(() -> windowToUse.getScene().lookup(".virt-grid-line")) == null && count < 30);
-            if (count >= 30)
-                throw new RuntimeException("Could not load table data");
-            return tableManagerAtomicReference.get();
-        };
-    }
-
     // WOuld be nice to get this working, but doesn't currently work
     public static void writePaste_doesntwork(FxRobotInterface robot, String string)
     {
@@ -174,19 +117,6 @@ public class TestUtil
         public List<Table>
     }*/
 
-    @OnThread(Tag.Simulation)
-    public static MainWindowActions openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data) throws Exception
-    {
-        TableManager manager = new DummyManager();
-        Table t = new ImmediateDataSource(manager, new InitialLoadDetails(new TableId("Table1"), null, CellPosition.ORIGIN.offsetByRowCols(1, 1), null), new EditableRecordSet(data));
-        manager.record(t);
-        if (typeManager != null)
-        {
-            manager.getTypeManager()._test_copyTaggedTypesFrom(typeManager);
-        }
-        return openDataAsTable(windowToUse, manager).get();
-    }
-    
     @OnThread(Tag.FXPlatform)
     public static void copySnapshotToClipboard(Node node)
     {

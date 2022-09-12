@@ -38,7 +38,6 @@ import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.transformations.Calculate;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
@@ -75,7 +74,7 @@ public class TestExportToCSV extends FXApplicationTest implements ScrollToTrait,
         Table calculated = new Calculate(manager, TFunctionUtil.ILD, srcData.getId(), ImmutableMap.of(new ColumnId("Result"), expressionValue.expression));
         manager.record(calculated);
 
-        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, manager).get();
+        MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, manager).get();
 
         List<Pair<String, List<String>>> expectedContent = new ArrayList<>();
         for (Column column : expressionValue.recordSet.getColumns())

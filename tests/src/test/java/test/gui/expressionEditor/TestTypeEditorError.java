@@ -34,6 +34,7 @@ import org.hamcrest.core.SubstringMatcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import test.functions.TFunctionUtil;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.datatype.TypeManager;
@@ -42,7 +43,6 @@ import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.lexeditor.EditorDisplay;
 import xyz.columnal.transformations.expression.CanonicalSpan;
 import xyz.columnal.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.EnterTypeTrait;
 import test.gui.trait.ListUtilTrait;
@@ -220,7 +220,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     {        
         try
         {
-            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, TFunctionUtil.managerWithTestTypes().getFirst()).get();
+            MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, TFunctionUtil.managerWithTestTypes().getFirst()).get();
 
             Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(1));

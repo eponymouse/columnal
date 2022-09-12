@@ -29,6 +29,7 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.junit.runner.RunWith;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.*;
 import xyz.columnal.data.Table.InitialLoadDetails;
@@ -150,7 +151,7 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
         
         
         
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, srcMgr).get();
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, srcMgr).get();
         TFXUtil.sleep(2000);
         CellPosition targetPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);

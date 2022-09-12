@@ -28,6 +28,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Window;
 import test.functions.TFunctionUtil;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -128,7 +129,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
                 columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("S" + iFinal), Collections.emptyList(), ""));
                 columns.add(rs -> new MemoryNumericColumn(rs, new ColumnId("ACC" + iFinal), new NumberInfo(u.loadUse("m/s^2")), Collections.emptyList(), 0));
             }
-            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
+            MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
             TableManager tableManager = mainWindowActions._test_getTableManager();
 
             CellPosition position = new CellPosition(CellPosition.row(7), CellPosition.col(1));

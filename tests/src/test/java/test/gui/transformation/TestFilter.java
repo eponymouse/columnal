@@ -28,6 +28,7 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.junit.runner.RunWith;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
@@ -42,7 +43,6 @@ import xyz.columnal.transformations.expression.ComparisonExpression;
 import xyz.columnal.transformations.expression.ComparisonExpression.ComparisonOperator;
 import xyz.columnal.transformations.expression.IdentExpression;
 import xyz.columnal.transformations.expression.NumericLiteral;
-import test.TestUtil;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.MustIncludeNumber;
 import test.gen.GenImmediateData.NumTables;
@@ -77,7 +77,7 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
             @From(GenRandom.class) Random r) throws Exception
     {
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original.mgr).get();
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, original.mgr).get();
         TFXUtil.sleep(5000);
         CellPosition targetPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);

@@ -43,6 +43,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import test.functions.TFunctionUtil;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.DataItemPosition;
@@ -207,7 +208,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
                 addTransforms(dummyManager, srcId, 0, nextPos(src), Multimaps.newMultimap(new HashMap<>(), ArrayList::new), new Random(10L));
                 tableCount = dummyManager.getAllTables().size();
                 
-                Supplier<MainWindowActions> supplier = TestUtil.openDataAsTable(stage, dummyManager);
+                Supplier<MainWindowActions> supplier = TAppUtil.openDataAsTable(stage, dummyManager);
                 new Thread(() -> {
                     MainWindowActions details = supplier.get();
                     this.tableManager = details._test_getTableManager();

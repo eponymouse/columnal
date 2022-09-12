@@ -42,7 +42,6 @@ import xyz.columnal.data.datatype.NumberInfo;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.gui.DataCellSupplier.VersionedSTF;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
-import test.TestUtil;
 import test.gen.GenRandom;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
@@ -75,7 +74,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
      */
     private void testNumbers(ImmutableList<String> actualValues, ImmutableList<String> expectedGUI) throws Exception
     {
-        MainWindowActions mwa = TestUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.of((RecordSet rs) -> 
+        MainWindowActions mwa = TAppUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.of((RecordSet rs) -> 
             new MemoryNumericColumn(rs, new ColumnId("C"), new NumberInfo(Unit.SCALAR), actualValues.stream())
         ), actualValues.size()));
         
@@ -349,7 +348,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
             }
         };
 
-        MainWindowActions mwa = TestUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.of((RecordSet rs) ->
+        MainWindowActions mwa = TAppUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.of((RecordSet rs) ->
                 new MemoryNumericColumn(rs, new ColumnId("C"), new NumberInfo(Unit.SCALAR), values.stream())
         ), values.size()));
         

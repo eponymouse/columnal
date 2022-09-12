@@ -33,6 +33,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Window;
 import test.functions.TFunctionUtil;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -78,7 +79,6 @@ import xyz.columnal.transformations.expression.IdentExpression;
 import xyz.columnal.transformations.expression.ImplicitLambdaArg;
 import xyz.columnal.transformations.expression.NumericLiteral;
 import xyz.columnal.transformations.function.FunctionList;
-import test.TestUtil;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.ImmediateData_Mgr;
 import test.gen.GenRandom;
@@ -545,7 +545,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
     @Property(trials = 5)
     public void testCheck(@From(GenImmediateData.class) ImmediateData_Mgr srcImmedData, @From(GenRandom.class) Random r) throws Exception
     {
-        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, srcImmedData.mgr).get();
+        MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, srcImmedData.mgr).get();
         TFXUtil.sleep(1000);
         TableManager tableManager = details._test_getTableManager();
         VirtualGrid virtualGrid = details._test_getVirtualGrid();

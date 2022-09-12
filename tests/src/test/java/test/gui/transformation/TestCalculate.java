@@ -34,6 +34,7 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import org.testfx.service.query.NodeQuery;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.TBasicUtil;
@@ -59,7 +60,6 @@ import xyz.columnal.gui.lexeditor.EditorDisplay;
 import xyz.columnal.transformations.Calculate;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.IdentExpression;
-import test.TestUtil;
 import test.gen.GenRandom;
 import test.gui.trait.AutoCompleteTrait;
 import test.gui.trait.ClickTableLocationTrait;
@@ -121,7 +121,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
     public void testCalculate(@From(GenRandom.class) Random r) throws Exception
     {
         RecordSet orig = new EditableRecordSet(Utility.<Col, SimulationFunction<RecordSet, EditableColumn>>mapListI(ImmutableList.copyOf(Col.values()), (Col c) -> (RecordSet rs) -> makeColumn(c, rs)), () -> 0);
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, null, orig);
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, null, orig);
 
         CellPosition calcPos = CellPosition.ORIGIN.offsetByRowCols(1, 6);
         VirtualGrid grid = mainWindowActions._test_getVirtualGrid();

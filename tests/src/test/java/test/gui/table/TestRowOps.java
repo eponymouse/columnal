@@ -33,6 +33,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import org.testfx.service.query.NodeQuery;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.*;
 import xyz.columnal.data.Table.InitialLoadDetails;
@@ -53,7 +54,6 @@ import xyz.columnal.transformations.Calculate;
 import xyz.columnal.transformations.Sort;
 import xyz.columnal.transformations.Sort.Direction;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
@@ -117,7 +117,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         Table calculated = new Calculate(manager, ild, srcData.getId(), ImmutableMap.of(new ColumnId("Result"), expressionValue.expression));
         manager.record(calculated);
 
-        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, manager).get();
+        MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, manager).get();
         tableManager = details._test_getTableManager();
         virtualGrid = details._test_getVirtualGrid();
 
@@ -187,7 +187,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             manager.record(calculated);
             try
             {
-                return TestUtil.openDataAsTable(windowToUse, manager);
+                return TAppUtil.openDataAsTable(windowToUse, manager);
             }
             catch (Exception e)
             {

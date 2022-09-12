@@ -1,0 +1,25 @@
+dependencies {
+    testImplementation project(':app')
+    testImplementation project(':data')
+    testImplementation project(':gui-utility')
+    testImplementation project(':identifiers')
+    testImplementation project(':stf')
+    testImplementation project(':types')
+    testImplementation project(':utility')
+    testImplementation libs.commons.lang3
+    testImplementation libs.guava
+    testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
+    testImplementation 'org.testfx:testfx-junit:4.0.15-alpha'
+
+    testImplementation(testFixtures(project(":tests-basic")))
+    testImplementation(testFixtures(project(":tests-functions")))
+    testImplementation(testFixtures(project(":tests-gui-base")))
+    testImplementation(testFixtures(project(":tests-tables")))
+}
+
+javafx {
+    modules = [ 'javafx.base', 'javafx.controls' ]
+    configuration = "testImplementation"
+}
+
+description = 'tests-cell-rw'

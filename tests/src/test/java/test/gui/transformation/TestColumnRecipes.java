@@ -30,6 +30,7 @@ import javafx.scene.control.ListView;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
@@ -59,7 +60,6 @@ import xyz.columnal.transformations.expression.*;
 import xyz.columnal.transformations.expression.function.FunctionLookup;
 import xyz.columnal.transformations.expression.type.TypePrimitiveLiteral;
 import xyz.columnal.transformations.function.FunctionList;
-import test.TestUtil;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.ImmediateData_Mgr;
 import test.gen.GenImmediateData.MustIncludeNumber;
@@ -91,7 +91,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     public void testAverageSum(@From(GenImmediateData.class) @NumTables(maxTables = 1) @MustIncludeNumber ImmediateData_Mgr dataMgr, @From(GenRandom.class) Random r) throws Exception
     {
         // Test the average and sum recipes on numeric columns
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, dataMgr.mgr).get();
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, dataMgr.mgr).get();
         
         // Find the numeric column and scroll to it:
         Table table = mainWindowActions._test_getTableManager().getAllTables().get(0);
@@ -123,7 +123,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     @SuppressWarnings("valuetype")
     private void testTypeTransform(DataType from, @Nullable DataType to, @Nullable Function<ColumnId, Expression> expression, ImmutableList<Object> values, @Nullable Runnable execAfterTypeSelection) throws Exception
     {
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(ColumnUtility.makeImmediateColumn(from, new ColumnId("C"), Utility.mapListI(values, v -> v == ERR ? Either.<String, @Value Object>left("Error") : Either.<String, @Value Object>right(v)), DataTypeUtility.makeDefaultValue(from))), values.size()));
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(ColumnUtility.makeImmediateColumn(from, new ColumnId("C"), Utility.mapListI(values, v -> v == ERR ? Either.<String, @Value Object>left("Error") : Either.<String, @Value Object>right(v)), DataTypeUtility.makeDefaultValue(from))), values.size()));
 
         // Find the column and scroll to it:
         Table table = mainWindowActions._test_getTableManager().getAllTables().get(0);

@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import org.junit.Test;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.ColumnUtility;
@@ -42,7 +43,6 @@ import xyz.columnal.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import test.DummyManager;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Pair;
@@ -71,7 +71,7 @@ public class TestTypeEditorCompletion extends BaseTestEditorCompletion
                                 ImmutableList.of(rs -> ColumnUtility.makeImmediateColumn(DataType.NUMBER, new ColumnId("My Number"), DataTypeUtility.value(0)).apply(rs)),
                                 (SimulationSupplier<Integer>)() -> 0)));
         
-        mainWindowActions = TestUtil.openDataAsTable(windowToUse, toLoad).get();
+        mainWindowActions = TAppUtil.openDataAsTable(windowToUse, toLoad).get();
         sleep(1000);
         // Start creating column 
         correctTargetWindow();

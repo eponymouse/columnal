@@ -31,6 +31,7 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import test.functions.TFunctionUtil;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.ColumnUtility;
@@ -89,7 +90,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
                     (SimulationSupplier<Integer>)() -> 0)));
         toLoad.record(new Calculate(toLoad, new InitialLoadDetails(new TableId("Calc"), null, new CellPosition(CellPosition.row(1), CellPosition.col(6)), null), new TableId("IDS"), ImmutableMap.of(new ColumnId("My Calc"), TFunctionUtil.parseExpression(expressionSrc, toLoad.getTypeManager(), FunctionList.getFunctionLookup(toLoad.getUnitManager())))));
 
-        mainWindowActions = TestUtil.openDataAsTable(windowToUse, toLoad).get();
+        mainWindowActions = TAppUtil.openDataAsTable(windowToUse, toLoad).get();
         sleep(1000);
         // Not much more to do -- just edit the expression 
         correctTargetWindow();

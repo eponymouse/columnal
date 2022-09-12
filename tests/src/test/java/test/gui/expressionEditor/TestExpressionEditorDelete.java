@@ -34,6 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import test.functions.TFunctionUtil;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.EditableRecordSet;
@@ -43,7 +44,6 @@ import xyz.columnal.gui.lexeditor.EditorDisplay;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenRandom;
 import test.gui.trait.ClickOnTableHeaderTrait;
 import test.gui.trait.ClickTableLocationTrait;
@@ -70,7 +70,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     @Before
     public void setupWindow() throws Exception
     {
-        mainWindowActions = TestUtil.openDataAsTable(windowToUse,null, new EditableRecordSet(ImmutableList.of(), () -> 0));
+        mainWindowActions = TAppUtil.openDataAsTable(windowToUse,null, new EditableRecordSet(ImmutableList.of(), () -> 0));
 
     }
     

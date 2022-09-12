@@ -142,7 +142,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             @From(GenDataAndTransforms.class) TableManager original,
             @From(GenRandom.class) Random r) throws Exception
     {
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original).get();
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, original).get();
         TFXUtil.sleep(5000);
 
         // Pick a src table for the manual edit: 

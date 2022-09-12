@@ -42,7 +42,6 @@ import xyz.columnal.grammar.MainParser2;
 import xyz.columnal.grammar.MainParser2.FileContext;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenUnitDefinition;
 import test.gui.trait.PopupTrait;
 import test.gui.trait.TextFieldTrait;
@@ -62,7 +61,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
     @OnThread(Tag.Simulation)
     public void testNewUnit(@From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetails) throws Exception
     {
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, new DummyManager()).get();
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, new DummyManager()).get();
         TFXUtil.sleep(1000);
         
         clickOn("#id-menu-view").clickOn(".id-menu-view-units");
@@ -148,7 +147,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
     {
         DummyManager prevManager = new DummyManager();
         prevManager.getUnitManager().addUserUnit(new Pair<>(details.name, details.aliasOrDeclaration));
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, prevManager).get();
         TFXUtil.sleep(1000);
 
         clickOn("#id-menu-view").clickOn(".id-menu-view-units");
@@ -181,7 +180,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
     {
         DummyManager prevManager = new DummyManager();
         prevManager.getUnitManager().addUserUnit(new Pair<>(before.name, before.aliasOrDeclaration));
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, prevManager).get();
         TFXUtil.sleep(1000);
 
         clickOn("#id-menu-view").clickOn(".id-menu-view-units");
@@ -215,7 +214,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         prevManager.getUnitManager().addUserUnit(new Pair<>(unitDetailsA.name, unitDetailsA.aliasOrDeclaration));
         prevManager.getUnitManager().addUserUnit(new Pair<>(unitDetailsB.name, unitDetailsB.aliasOrDeclaration));
         prevManager.getUnitManager().addUserUnit(new Pair<>(unitDetailsC.name, unitDetailsC.aliasOrDeclaration));
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, prevManager).get();
         TFXUtil.sleep(1000);
 
         clickOn("#id-menu-view").clickOn(".id-menu-view-units");

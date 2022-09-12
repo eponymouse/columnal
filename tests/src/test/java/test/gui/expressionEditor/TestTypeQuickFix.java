@@ -31,6 +31,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Window;
 import test.functions.TFunctionUtil;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.log.Log;
@@ -182,7 +183,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
     {
         try
         {
-            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, TFunctionUtil.managerWithTestTypes().getFirst()).get();
+            MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, TFunctionUtil.managerWithTestTypes().getFirst()).get();
 
             Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(1));

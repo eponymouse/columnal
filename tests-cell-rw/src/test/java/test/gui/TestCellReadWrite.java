@@ -30,6 +30,7 @@ import javafx.scene.Node;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
+import org.junit.Assert;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.log.Log;
 import org.apache.commons.lang3.SystemUtils;
@@ -48,7 +49,6 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.grid.VirtualGrid;
-import test.TestUtil;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
@@ -93,7 +93,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             @From(GenRandom.class) Random r) throws Exception
     {
 
-        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
+        MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, src.mgr).get();
         TFXUtil.sleep(1000);
         tableManager = details._test_getTableManager();
         virtualGrid = details._test_getVirtualGrid();
@@ -130,7 +130,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             @From(GenRandom.class) Random r) throws Exception
     {
 
-        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
+        MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, src.mgr).get();
         TFXUtil.sleep(1000);
         tableManager = details._test_getTableManager();
         virtualGrid = details._test_getVirtualGrid();
@@ -171,7 +171,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             @From(GenValueSpecifiedType.class) GenValueSpecifiedType.ValueGenerator valueGenerator) throws Exception
     {
 
-        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
+        MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, src.mgr).get();
         TFXUtil.sleep(3000);
         tableManager = details._test_getTableManager();
         virtualGrid = details._test_getVirtualGrid();
@@ -282,7 +282,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
                 // Need to wait for hop to simulation thread and back:
                 TFXUtil.sleep(2000);
                 String copiedFromTable = TFXUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
-                assertEquals("Position " + target, written.getFirst(), copiedFromTable);
+                Assert.assertEquals("Position " + target, written.getFirst(), copiedFromTable);
             }
             catch (UserException e)
             {
@@ -297,7 +297,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             @NumTables(minTables = 2, maxTables = 4) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src,
             @From(GenRandom.class) Random r) throws Exception
     {
-        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
+        MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, src.mgr).get();
         TFXUtil.sleep(1000);
         tableManager = details._test_getTableManager();
         virtualGrid = details._test_getVirtualGrid();
@@ -355,7 +355,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
     private void assertErrorShowing(CellPosition cellPos, boolean expectError)
     {
         Node field = withItemInBounds(lookup(".document-text-field"), virtualGrid, new RectangleBounds(cellPos, cellPos), (n, p) -> {});
-        assertEquals(expectError, TFXUtil.fx(() -> FXUtility.hasPseudoclass(field, "has-error")));
+        Assert.assertEquals(expectError, TFXUtil.fx(() -> FXUtility.hasPseudoclass(field, "has-error")));
     }
 
     @OnThread(Tag.Any)

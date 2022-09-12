@@ -34,6 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
@@ -81,7 +82,7 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
             @From(GenRandom.class) Random r) throws Exception
     {
         // Save the table, then open GUI and load it, then add a sort transformation
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original.mgr).get();
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, original.mgr).get();
         TFXUtil.sleep(5000);
         CellPosition targetPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);

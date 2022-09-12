@@ -33,6 +33,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import test.functions.TFunctionUtil;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -122,7 +123,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
 
     private void testEntry_Impl(ExpressionValue expressionValue, Random r, String... qualifiedIdentsToEnterInFull) throws Exception
     {
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet);
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet);
         try
         {
             Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
@@ -202,7 +203,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     public @Nullable Expression plainEntry(String expressionSrc, TypeManager typeManager) throws Exception
     {
         TFXUtil.fx_(() -> {windowToUse = new Stage();});
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new KnownLengthRecordSet(ImmutableList.of(), 0));
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, typeManager, new KnownLengthRecordSet(ImmutableList.of(), 0));
         try
         {
             Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());

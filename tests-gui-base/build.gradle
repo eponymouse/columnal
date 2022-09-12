@@ -13,12 +13,15 @@ dependencies {
     testFixturesImplementation libs.commons.lang3
     testFixturesImplementation libs.guava
     testFixturesImplementation 'org.testfx:testfx-core:4.0.16-alpha'
+    testFixturesImplementation 'org.testfx:testfx-junit:4.0.15-alpha'
 
     testFixturesImplementation(testFixtures(project(":tests-basic")))
+    testFixturesImplementation(testFixtures(project(":tests-functions")))
+    testFixturesImplementation(testFixtures(project(":tests-tables")))
 }
 
 javafx {
-    modules = [ 'javafx.base', 'javafx.controls' ]
+    modules = [ 'javafx.base', 'javafx.controls', 'javafx.swing' ]
     configuration = "testFixturesImplementation"
 }
 

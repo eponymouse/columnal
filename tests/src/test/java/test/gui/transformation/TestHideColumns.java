@@ -28,6 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.junit.runner.RunWith;
+import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.ColumnId;
@@ -36,7 +37,6 @@ import xyz.columnal.data.Table;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.transformations.HideColumns;
-import test.TestUtil;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
@@ -63,7 +63,7 @@ public class TestHideColumns extends FXApplicationTest implements ScrollToTrait,
             @From(GenRandom.class) Random r) throws Exception
     {
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original.mgr).get();
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, original.mgr).get();
         TFXUtil.sleep(5000);
         Table src = mainWindowActions._test_getTableManager().getAllTables().get(0);
         RecordSet srcRS = src.getData();
