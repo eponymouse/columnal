@@ -1,3 +1,5 @@
+import java.time.Duration
+
 plugins {
   id 'org.checkerframework' version '0.6.15' apply false
   id 'org.openjfx.javafxplugin' version '0.0.10' apply false
@@ -129,9 +131,14 @@ subprojects { subproject ->
       filter {
         includeTestsMatching "Test*"
         includeTestsMatching "Prop*"
+        // Don't want inner classes to be scanned:
         excludeTestsMatching "*\$*"
+        // TODO rename the class and remove this rule:
         excludeTestsMatching "test.TestUtil*"
       }
+
+      // If it goes beyond this in normal execution, we should split the module(s) up further:
+      timeout = Duration.ofMinutes(60)
     }
   }
 

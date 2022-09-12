@@ -1,7 +1,3 @@
-apply plugin: 'java-library'
-apply plugin: 'org.checkerframework'
-apply plugin: 'org.openjfx.javafxplugin'
-
 dependencies {
     implementation project(':app')
     implementation project(':data')
@@ -24,17 +20,9 @@ dependencies {
     implementation libs.javaSMT
     implementation libs.commons.lang3
     implementation libs.controlsfx
-    testImplementation libs.bundles.junitWithQuickcheck
     testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
     testImplementation 'org.testfx:testfx-junit:4.0.15-alpha'
     testImplementation 'org.testfx:openjfx-monocle:jdk-12.0.1+2'
-    testAnnotationProcessor project(':anns')
-    testAnnotationProcessor project(':anns-threadchecker')
-    testAnnotationProcessor project(':threadchecker')
-    testCompileOnly project(':anns')
-    testCompileOnly project(':anns-threadchecker')
-    testCompileOnly project(':threadchecker')
-
     // From https://stackoverflow.com/questions/5644011/multi-project-test-dependencies-with-gradle/60138176#60138176
     testImplementation(testFixtures(project(":tests-basic")))
     testImplementation(testFixtures(project(":tests-functions")))
@@ -57,11 +45,9 @@ test {
         excludeTestsMatching "test.TestUtil*"
         
         // Temporarily exclude what I think are the longest-running tests:
+        // TODO remove this rule and thus the whole block
         excludeTestsMatching "*TestExpression*"
     }
-    
-    forkEvery = 1
-    maxParallelForks = 3 
     
     jvmArgs += ['-Xmx2G',
             '-Djava.awt.headless=true',
