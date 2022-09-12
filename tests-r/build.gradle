@@ -18,7 +18,7 @@ dependencies {
 
 description = 'tests-r'
 
-sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/resources/main')
+sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/resources', '../test/src/test/resources')
 
 test {
     maxParallelForks = Runtime.runtime.availableProcessors() / 2
