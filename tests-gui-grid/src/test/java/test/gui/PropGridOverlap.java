@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package test;
+package test.gui;
 
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
