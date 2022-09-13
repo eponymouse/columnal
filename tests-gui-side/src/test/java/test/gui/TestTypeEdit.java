@@ -31,6 +31,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Window;
+import org.junit.Assert;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.log.Log;
 import org.apache.commons.io.FileUtils;
@@ -93,17 +94,17 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(".ok-button");
             TFXUtil.sleep(500);
-            assertNotEquals(dialog, fxGetRealFocusedWindow());
+            Assert.assertNotEquals(dialog, fxGetRealFocusedWindow());
             clickOn(".close-button");
             TFXUtil.sleep(500);
-            assertNotEquals(typeWindow, fxGetRealFocusedWindow());
+            Assert.assertNotEquals(typeWindow, fxGetRealFocusedWindow());
 
             // Check that saved types in file match our new unit:
             String fileContent = FileUtils.readFileToString(TFXUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
             Log.debug("Saved:\n" + fileContent);
             TypeManager tmpTypes = new TypeManager(new UnitManager());
             tmpTypes.loadTypeDecls(getTypeSrcFromFile(fileContent));
-            assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
+            Assert.assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
         });
     }
 
@@ -193,7 +194,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     @OnThread(Tag.Any)
     private void assertNoErrors()
     {
-        assertEquals(0, lookup(".error-underline").queryAll().size());
+        Assert.assertEquals(0, lookup(".error-underline").queryAll().size());
     }
 
     @OnThread(Tag.Any)
@@ -280,7 +281,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             Log.debug("Saved:\n" + fileContent);
             TypeManager tmpTypes = new TypeManager(new UnitManager());
             tmpTypes.loadTypeDecls(getTypeSrcFromFile(fileContent));
-            assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
+            Assert.assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
         });
     }
 
@@ -313,7 +314,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             Log.debug("Saved:\n" + fileContent);
             TypeManager tmpTypes = new TypeManager(new UnitManager());
             tmpTypes.loadTypeDecls(getTypeSrcFromFile(fileContent));
-            assertEquals(ImmutableMap.of(after.getTaggedTypeName(), after), tmpTypes.getUserTaggedTypes());
+            Assert.assertEquals(ImmutableMap.of(after.getTaggedTypeName(), after), tmpTypes.getUserTaggedTypes());
         });
     }
 
@@ -361,7 +362,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             remaining.put(typeDefinitionC.getTaggedTypeName(), typeDefinitionC);
             remaining.remove(toDelete.getTaggedTypeName());
             tmpTypes.loadTypeDecls(getTypeSrcFromFile(fileContent));
-            assertEquals(remaining, tmpTypes.getUserTaggedTypes());
+            Assert.assertEquals(remaining, tmpTypes.getUserTaggedTypes());
         });
     }
 
