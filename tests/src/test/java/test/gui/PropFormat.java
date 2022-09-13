@@ -188,7 +188,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
         
         
         
-        RecordSet rs = rsFuture.get(5000, TimeUnit.MILLISECONDS);
+        RecordSet rs = rsFuture.get(10_000, TimeUnit.MILLISECONDS);
         checkDataValues(formatAndData, rs);
     }
 
