@@ -248,8 +248,8 @@ public class Utility
             else if (lnr.getLineNumber() == 0 && !empty)
                 return 1;
             else
-            // Some content with newlines; ignore blank extra line if \n is very end of file:
-                return lnr.getLineNumber() + 1 - (lastWasNewline ? 1 : 0);
+            // Some content with newlines:
+                return lnr.getLineNumber();
         }
     }
 
