@@ -285,9 +285,9 @@ class SaxonXsltTask extends DefaultTask {
 
     @TaskAction
     void run() {
-        WorkQueue workQueue = workerExecutor.classLoaderIsolation() {
-            it.getClasspath().from(this.classpath);
-        };
+        // This is a deliberate choice as classLoaderIsolation() triggers a problem with
+        // Saxon-HE: https://saxonica.plan.io/issues/5685
+        WorkQueue workQueue = workerExecutor.noIsolation()
 
         List<String> commonArguments = getCommonArguments() + getStylesheetParameters()
 
