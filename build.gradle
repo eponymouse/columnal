@@ -139,7 +139,7 @@ subprojects { subproject ->
       }
 
       // If it goes beyond this in normal execution, we should split the module(s) up further:
-      timeout = Duration.ofMinutes(60)
+      timeout = Duration.ofMinutes(30)
     }
 
     processTestResources.dependsOn ':xml:build'
