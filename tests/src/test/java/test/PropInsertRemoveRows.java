@@ -118,6 +118,9 @@ public class PropInsertRemoveRows
     @OnThread(Tag.Simulation)
     public void removeRows(@From(GenEditableColumn.class) EditableColumn column, @From(GenRandom.class) Random r) throws InternalException, UserException
     {
+        if (column.getLength() == 0)
+            return; // Can't remove any rows.  Happens rarely.
+        
         List<@Value Object> prevValues = new ArrayList<>();
         for (int i = 0; column.indexValid(i); i++)
         {
