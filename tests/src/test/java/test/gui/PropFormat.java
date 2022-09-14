@@ -73,6 +73,7 @@ import test.DummyManager;
 import test.gen.GenFormattedData;
 import test.gen.GenFormattedData.FormatAndData;
 import test.gui.trait.ComboUtilTrait;
+import test.gui.trait.ScreenshotTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -105,7 +106,7 @@ import static xyz.columnal.data.datatype.DataType.DateTimeInfo.F.*;
  */
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class PropFormat extends FXApplicationTest implements ComboUtilTrait
+public class PropFormat extends FXApplicationTest implements ComboUtilTrait, ScreenshotTrait
 {
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
@@ -184,7 +185,10 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
         if (destRS != null)
             checkDataValues(formatAndData, destRS);
         
+        dumpScreenshot();
         clickOn(".ok-button");
+        TFXUtil.sleep(1000);
+        dumpScreenshot();
         
         
         
