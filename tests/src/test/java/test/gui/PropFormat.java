@@ -184,11 +184,11 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         assertNotNull(destRS);
         if (destRS != null)
             checkDataValues(formatAndData, destRS);
-        
-        dumpScreenshot();
+
+        TFXUtil.fx_(() -> dumpScreenshot());
         clickOn(".ok-button");
         TFXUtil.sleep(1000);
-        dumpScreenshot();
+        TFXUtil.fx_(() -> dumpScreenshot());
         
         
         
