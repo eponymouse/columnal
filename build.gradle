@@ -137,6 +137,8 @@ subprojects { subproject ->
         // TODO rename the class and remove this rule:
         excludeTestsMatching "test.TestUtil*"
       }
+      
+      forkEvery = 1
 
       // If it goes beyond this in normal execution, we should split the module(s) up further:
       timeout = Duration.ofMinutes(30)
