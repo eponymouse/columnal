@@ -31,6 +31,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
+import org.junit.Assert;
 import xyz.columnal.log.Log;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -115,7 +116,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         String content = formatAndData.textContent.stream().collect(Collectors.joining("\n"));
         Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.make().getTypeManager(), DummyManager.make().getUnitManager(), variousCharsets(formatAndData.textContent, formatAndData.format.initialTextFormat.charset), formatAndData.format.initialTextFormat, formatAndData.format.trimChoice);
         FinalTextFormat ftf = format._test_getResultNoGUI();
-        assertEquals("Failure with content: " + content + "\n\n", formatAndData.format, ftf);
+        Assert.assertEquals("Failure with content: " + content + "\n\n", formatAndData.format, ftf);
         checkDataValues(formatAndData, TextImporter.makeRecordSet(DummyManager.make().getTypeManager(), writeDataToFile(formatAndData), ftf));
         
         List<DataSource> loaded = new ArrayList<>();
@@ -280,10 +281,10 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
     @OnThread(Tag.Simulation)
     private void checkDataValues(GenFormattedData.FormatAndData formatAndData, RecordSet rs) throws UserException, InternalException
     {
-        assertEquals("Column length, given intended trim " + formatAndData.format.trimChoice + " and source length " + formatAndData.textContent.size(), formatAndData.loadedContent.size(), rs.getLength());
+        Assert.assertEquals("Column length, given intended trim " + formatAndData.format.trimChoice + " and source length " + formatAndData.textContent.size(), formatAndData.loadedContent.size(), rs.getLength());
         for (int i = 0; i < formatAndData.loadedContent.size(); i++)
         {
-            assertEquals("Right row length for row " + i + " (+" + formatAndData.format.trimChoice.trimFromTop + "):\n" + formatAndData.textContent.get(i + formatAndData.format.trimChoice.trimFromTop) + "\n" + Utility.listToString(formatAndData.loadedContent.get(i)) + " guessed: " + "", 
+            Assert.assertEquals("Right row length for row " + i + " (+" + formatAndData.format.trimChoice.trimFromTop + "):\n" + formatAndData.textContent.get(i + formatAndData.format.trimChoice.trimFromTop) + "\n" + Utility.listToString(formatAndData.loadedContent.get(i)) + " guessed: " + "", 
                 formatAndData.loadedContent.get(i).size(), rs.getColumns().size());
             for (int c = 0; c < rs.getColumns().size(); c++)
             {
