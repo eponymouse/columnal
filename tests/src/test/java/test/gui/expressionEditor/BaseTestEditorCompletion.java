@@ -34,6 +34,7 @@ import xyz.columnal.utility.Utility;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.fail;
 
@@ -61,6 +62,7 @@ public abstract class BaseTestEditorCompletion extends FXApplicationTest
         int curPos;
         while (prevPos != (curPos = TFXUtil.fx(() -> editorDisplay.getCaretPosition())))
         {
+            TFXUtil.sleep(500);
             // Check completions here
             @Nullable LexAutoCompleteWindow window = Utility.filterClass(listWindows().stream(), LexAutoCompleteWindow.class).findFirst().orElse(null);
             List<LexCompletion> showing = TFXUtil.fx(() -> window == null ? ImmutableList.<LexCompletion>of() : window._test_getShowing());
@@ -76,7 +78,7 @@ public abstract class BaseTestEditorCompletion extends FXApplicationTest
                         wasChecked = true;
                         if (matching.isEmpty())
                         {
-                            fail("Did not find completion {{{" + check.content + "}}} at caret position " + curPos);
+                            fail("Did not find completion {{{" + check.content + "}}} at caret position " + curPos + " set was: " + showing.stream().map(s -> s.content).collect(Collectors.joining("|")));
                         }
                         else if (matching.size() > 1)
                         {
