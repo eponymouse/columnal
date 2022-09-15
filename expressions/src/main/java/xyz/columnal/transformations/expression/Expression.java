@@ -525,15 +525,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             @Override
             public Stream<String> implicitLambdaArg(ImplicitLambdaArg self)
             {
-                try
-                {
-                    return Stream.of(self.getVarName());
-                }
-                catch (InternalException e)
-                {
-                    Log.log(e);
-                    return Stream.of();
-                }
+                return Utility.streamNullable(self.getVarNameOrNull());
             }
         });
     }

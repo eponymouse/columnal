@@ -80,6 +80,13 @@ public class ImplicitLambdaArg extends NonOperatorExpression
         return "?" + id;
     }
 
+    protected @Nullable String getVarNameOrNull()
+    {
+        if (id < 0)
+            return null;
+        return "?" + id;
+    }
+
     @Override
     public ValueResult calculateValue(EvaluateState state) throws InternalException
     {
