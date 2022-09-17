@@ -1,6 +1,6 @@
 /*
  * Columnal: Safer, smoother data table processing.
- * Copyright (c) Neil Brown, 2022.
+ * Copyright (c) Neil Brown, 2016-2020, 2022.
  *
  * This file is part of Columnal.
  *
