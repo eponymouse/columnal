@@ -169,8 +169,16 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
                 () -> JellyType.list(genDepth(typeManager, r, maxDepth - 1, gs, typeKinds))
             );
         }
-        if ((typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED_INNER) || typeKinds.contains(TypeKinds.NEW_TAGGED_NO_INNER) || typeKinds.contains(TypeKinds.MAYBE_UNNESTED)) && maxDepth > 1)
+        if ((typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED_INNER)) && maxDepth > 1)
+        {
             options.add(() -> genTagged(typeManager, r, maxDepth, gs, typeKinds));
+        }
+        else if ((typeKinds.contains(TypeKinds.NEW_TAGGED_NO_INNER) || typeKinds.contains(TypeKinds.MAYBE_UNNESTED)) && maxDepth > 1)
+        {
+            options.add(() -> genTagged(typeManager, r, maxDepth, gs,
+                ImmutableSet.<TypeKinds>copyOf(Sets.<TypeKinds>difference(typeKinds, ImmutableSet.<TypeKinds>of(TypeKinds.RECORD, TypeKinds.LIST)))
+            ));
+        }
         
         if (!availableTypeVars.isEmpty())
             options.add(() -> JellyType.typeVariable(r.choose(availableTypeVars)));
