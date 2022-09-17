@@ -86,7 +86,14 @@ public class ConvertToR
     {
         DataTypeValue dataTypeValue = column.getType();
         int length = column.getLength();
-        return convertListToR(dataTypeValue, length, tableType == TableType.TIBBLE);
+        try
+        {
+            return convertListToR(dataTypeValue, length, tableType == TableType.TIBBLE);
+        }
+        catch (UserException e)
+        {
+            throw new UserException("Failed to convert column to R of type " + column.getType().getType().toDisplay(true) + " because: " + e.getMessage(), e);
+        }
     }
 
     private static RValue convertListToR(DataTypeValue dataTypeValue, int length, boolean allowSubLists) throws UserException, InternalException
