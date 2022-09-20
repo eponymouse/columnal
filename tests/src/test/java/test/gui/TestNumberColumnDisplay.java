@@ -138,7 +138,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                 cellText = null;
             assertEquals("Row " + i, actualValues.get(i), cellText);
             push(KeyCode.ESCAPE);
-            sleep(200);
+            sleep(2000);
         }
         
         // Clicking away from the edges is obvious.  For far sides of ellipsis, we do basic thing: click lands
@@ -235,7 +235,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                 // Now exit to make sure text goes back:
                 push(KeyCode.ESCAPE);
                 // Wait for batched re-layout:
-                TFXUtil.sleep(1000);
+                TFXUtil.sleep(2000);
                 assertEquals("Row " + i, expectedGUI.get(i), TFXUtil.<@Nullable String>fx(() -> cell == null ? null : getText(cell)));
             }
         }
