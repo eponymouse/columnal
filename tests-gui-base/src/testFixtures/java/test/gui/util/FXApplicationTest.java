@@ -161,6 +161,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
             System.err.println("Window " + target + " does not have a scene");
             return;
         }
+        System.out.println("Screenshot of window at position " + target.getX() + ", " + target.getY());
         // From https://stackoverflow.com/questions/31407382/javafx-chart-to-image-to-base64-string-use-in-php
         WritableImage image = target.getScene().snapshot(null);
         printBase64(image);
