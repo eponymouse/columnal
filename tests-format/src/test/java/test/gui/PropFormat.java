@@ -188,7 +188,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
 
         TFXUtil.fx_(() -> dumpScreenshot());
         clickOn(".ok-button");
-        TFXUtil.sleep(1000);
+        TFXUtil.sleep(5000);
         TFXUtil.fx_(() -> dumpScreenshot());
         
         
