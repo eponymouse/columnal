@@ -296,7 +296,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         TFXUtil.sleep(200);
         TableManager tableManager = mainWindowActions._test_getTableManager();
         assertEquals(1, (int) TFXUtil.fx(() -> tableManager.getAllTables().size()));
-
+        
         // We make new rows and edit the data, and undo at random.
 
         ArrayList<ArrayList<@Value Number>> dataHistory = new ArrayList<ArrayList<@Value Number>>(ImmutableList.of(new ArrayList<@Value Number>()));
@@ -312,6 +312,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 CellPosition arrowPos = NEW_TABLE_POS.offsetByRowCols(3 + latest.size(), 0);
                 latest.add(def);
                 clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowPos, arrowPos));
+                TFXUtil.sleep(300);
             }
             else if (choice <= 5 && dataHistory.size() > 1) // 3 - 5
             {
@@ -322,7 +323,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 dataHistory.remove(dataHistory.size() - 1);
                 dataHistory.remove(dataHistory.size() - 1);
                 clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
-                TFXUtil.sleep(500);
+                TFXUtil.sleep(2000);
             }
             else // 6 - 9
             {
@@ -338,7 +339,9 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 Log.debug("@@@ Editing row " + row + " to be: " + newVal + " attempts: " + attempts);
                 enterValue(NEW_TABLE_POS.offsetByRowCols(3 + row, 0), Either.right(new Pair<DataType, @Value Object>(DataType.NUMBER, newVal)), r);
                 latest.set(row, newVal);
+                TFXUtil.sleep(500);
             }
+            assertEquals(1, tableManager.getAllTables().size());
             RecordSet recordSet = tableManager.getAllTables().get(0).getData();
             assertEquals(latest.size(), recordSet.getLength());
             for (int j = 0; j < latest.size(); j++)
