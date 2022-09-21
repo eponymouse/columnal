@@ -138,7 +138,19 @@ subprojects { subproject ->
         excludeTestsMatching "test.TestUtil*"
       }
       
+      // This stops failing tests tripping others up, and generally
+      // helps keep the GUI tests isolated:
       forkEvery = 1
+
+      jvmArgs += ['-Xmx2G',
+                  '-Djava.awt.headless=true',
+                  '-Dtestfx.robot=glass',
+                  '-Dtestfx.headless=true',
+                  '-Dprism.order=sw',
+                  '-Dprism.text=t2k',
+                  '-Dglass.platform=Monocle',
+                  '-Dmonocle.platform=Headless',
+                  '-Dheadless.geometry=1920x1200-32']
 
       // If it goes beyond this in normal execution, we should split the module(s) up further:
       timeout = Duration.ofMinutes(30)

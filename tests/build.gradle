@@ -49,16 +49,6 @@ test {
         // TODO remove this rule and thus the whole block
         excludeTestsMatching "*TestExpression*"
     }
-    
-    jvmArgs += ['-Xmx2G',
-            '-Djava.awt.headless=true',
-            '-Dtestfx.robot=glass', 
-            '-Dtestfx.headless=true',
-            '-Dprism.order=sw', 
-            '-Dprism.text=t2k', 
-            '-Dglass.platform=Monocle', 
-            '-Dmonocle.platform=Headless', 
-            '-Dheadless.geometry=1920x1200-32']
 }
 
 description = 'tests'
