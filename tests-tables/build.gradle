@@ -27,7 +27,7 @@ dependencies {
     testFixturesImplementation(testFixtures(project(":tests-functions")))
 }
 
-description = 'tests-data'
+description = 'tests-tables'
 
 sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/main/resources', '../tests/src/test/resources')
 
