@@ -93,6 +93,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             @From(GenRandom.class) Random r) throws Exception
     {
         System.out.println("propCheckDataRead: opening table");
+        System.out.flush();
         MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, src.mgr).get();
         TFXUtil.sleep(1000);
         tableManager = details._test_getTableManager();
