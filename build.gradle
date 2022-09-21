@@ -3,8 +3,7 @@ import java.time.Duration
 plugins {
   id 'org.checkerframework' version '0.6.15' apply false
   id 'org.openjfx.javafxplugin' version '0.0.10' apply false
-  id "com.github.spotbugs" version "5.0.12" apply false
-  id "com.github.hierynomus.license" version"0.16.1" apply false
+  //id "com.github.spotbugs" version "5.0.12" apply false
 }
 
 // We configure this here because it determines JavaFX modules and stubs:
@@ -171,20 +170,5 @@ subprojects { subproject ->
     options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:module", "-Werror", "-parameters"]
     options.encoding = 'UTF-8'
     options.release = 11
-  }
-
-  if (!subproject.name.contains("threadchecker")) {
-    apply plugin: "com.github.hierynomus.license"
-    license {
-      header rootProject.file('LICENSE.header')
-      strictCheck true
-      excludes(["**/module-info.java", "**/*log4j2*.xml", "*.txt", "*.html", "*.properties", "**/xyz/columnal/grammar/*.java"])
-      ext.author = "Neil Brown"
-      // Not sure how this will work come 2023:
-      ext.years = "2016-2020, 2022"
-      mapping {
-        java = 'SLASHSTAR_STYLE'
-      }
-    }
   }
 }
