@@ -54,6 +54,6 @@ ext {
     javaMainClass = "xyz.columnal.gui.Main"
 }
 application {
-    mainClassName = javaMainClass
+    mainClass = javaMainClass
 }
 description = 'app'

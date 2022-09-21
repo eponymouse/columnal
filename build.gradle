@@ -31,6 +31,7 @@ subprojects { subproject ->
       }
       tasks.withType(Checkstyle) {
         exclude "**/module-info.java"
+        exclude "build/**/*"
       }
 
       // Annoying at the moment because spotbugs gets confused by thinking
