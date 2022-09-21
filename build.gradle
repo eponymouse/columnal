@@ -123,6 +123,8 @@ subprojects { subproject ->
       testFixturesCompileOnly project(':anns')
       testFixturesCompileOnly project(':anns-threadchecker')
       testFixturesCompileOnly project(':threadchecker')
+      
+      testImplementation 'org.testfx:openjfx-monocle:jdk-12.0.1+2'
     }
 
     test {
