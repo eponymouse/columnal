@@ -46,6 +46,8 @@ compileSass {
     noErrorCss()
 }
 
+// Gradle claims this as an implicit dependency but I don't understand why:
+checkstyleMain.dependsOn(compileSass)
 build.dependsOn(compileSass)
 jar.dependsOn(compileSass)
 run.dependsOn(compileSass)
