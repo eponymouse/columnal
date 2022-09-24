@@ -710,10 +710,7 @@ edit : editHeader editColumn*;
     public static TableId suggestedName(@Nullable ColumnId keyColumn, Map<ColumnId, ?> repls)
     {
         ImmutableList.Builder<@ExpressionIdentifier String> parts = ImmutableList.builder();
-        parts.add("Edit");
-        String colName = repls.keySet().stream().sorted().<@ExpressionIdentifier String>map(e -> IdentifierUtility.shorten(e.getRaw())).findFirst().orElse("none");
-        parts.add(colName);
-        parts.add("by");
+        parts.add("Edit by");
         parts.add(keyColumn == null ? "row" : IdentifierUtility.shorten(keyColumn.getRaw()));
         return new TableId(IdentifierUtility.spaceSeparated(parts.build()));
     }
