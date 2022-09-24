@@ -40,6 +40,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.scene.text.Text;
+import org.testfx.util.WaitForAsyncUtils;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.DataItemPosition;
 import xyz.columnal.id.TableId;
@@ -86,6 +88,7 @@ import xyz.columnal.utility.Either;
 import xyz.columnal.utility.ExSupplier;
 import xyz.columnal.utility.SimulationFunction;
 import xyz.columnal.utility.Utility;
+import xyz.columnal.utility.gui.Clickable;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.FancyList;
 
@@ -139,7 +142,9 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void propManualEdit(
+            @When(seed=2282428384113994379L)
             @From(GenDataAndTransforms.class) TableManager original,
+            @When(seed=-4393827614386214091L)
             @From(GenRandom.class) Random r) throws Exception
     {
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, original).get();
@@ -425,10 +430,12 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             Point2D selScreenPos = TFXUtil.fx(() -> FXUtility.getCentre(mainWindowActions._test_getVirtualGrid().getRectangleBoundsScreen(new RectangleBounds(target, target))));
             // Change sort order of source:
             // We might see both sort edit links on screen, so pick the closest one:
-            clickOn(lookup(".edit-sort-by").queryAll().stream().min(Comparator.comparing((Node n) -> {
+            // Sometimes the table hats overlap, so click programmatically:
+            Node editLink = lookup(".edit-sort-by").queryAll().stream().min(Comparator.comparing((Node n) -> {
                 Bounds bounds = TFXUtil.fx(() -> n.localToScreen(n.getBoundsInLocal()));
                 return Math.hypot(FXUtility.getCentre(bounds).getX() - selScreenPos.getX(), FXUtility.getCentre(bounds).getY() - selScreenPos.getY());
-            })).get());
+            })).get();
+            clickLinkSafely(editLink);
             sleep(200);
             clickOn(".small-delete");
             sleep(200);
@@ -515,10 +522,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         checkEqual(expectedSecondSort, getGraphicalContent(mainWindowActions, secondSort));
         
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), manualEditId, DataItemPosition.row(0), DataItemPosition.col(findManualEdit.get().getData().getColumns().size() - 1));
-        // Note -- this has been flaky in the past because when the text link is wrapped, the bounds are unreliable for clicking;
-        // a click on the centre can click where the link is not present.  Bottom left seems like best bet since if it does wrap,
-        // it will occupy the start of the last line...
-        clickOn(point(".manual-edit-entries").atPosition(Pos.BOTTOM_LEFT).query().add(4, -4));
+        clickLinkSafely(lookup(".manual-edit-entries").query());
         sleep(500);
         FancyList<ManualEditEntriesDialog.Entry, ?> listEntries = TBasicUtil.checkNonNull(lookup(".fancy-list").<FancyList<ManualEditEntriesDialog.Entry, ?>.FancyListScrollPane>tryQuery().orElse(null))._test_getList();
         
@@ -600,6 +604,19 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         expected = makeExpected(findSrc.get().getData(), replaceKeyColumn == null ? null : replaceKeyColumn.getName(), replacementsSoFar, null);
         checkEqual(expected, editViaClip);
         checkEqual(expected, getGraphicalContent(mainWindowActions, findManualEdit.get()));
+    }
+
+    private static void clickLinkSafely(Node editLink) throws InternalException
+    {
+        Text t = Utility.cast(editLink, Text.class);
+        // Need to use asyncFx because it may show a modal dialog; we don't want to wait:
+        WaitForAsyncUtils.asyncFx(() -> {
+            if (t.getUserData() instanceof Clickable)
+            {
+                Bounds screenBounds = editLink.localToScreen(editLink.getBoundsInLocal());
+                ((Clickable)t.getUserData())._test_onClick(MouseButton.PRIMARY, new Point2D(screenBounds.getCenterX(), screenBounds.getCenterY()));
+            }
+        });
     }
 
     public ImmutableList<ValueMaker> calculateColumnTypes(@When(seed = 2L) @From(GenRandom.class) Random r, ExSupplier<Transformation> findSrc) throws UserException, InternalException

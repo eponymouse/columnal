@@ -56,6 +56,11 @@ public abstract class Clickable extends Style<Clickable>
     @OnThread(Tag.FXPlatform)
     protected abstract void onClick(MouseButton mouseButton, Point2D screenPoint);
     
+    public final void _test_onClick(MouseButton mouseButton, Point2D screenPoint)
+    {
+        onClick(mouseButton, screenPoint);
+    }
+    
     protected void setHovering(boolean hovering, Point2D screenPos)
     {
     }
@@ -102,6 +107,8 @@ public abstract class Clickable extends Style<Clickable>
             setHovering(false, new Point2D(e.getScreenX(), e.getScreenY()));
             onClick(e.getButton(), new Point2D(e.getScreenX(), e.getScreenY()));
         });
+        // For testing:
+        t.setUserData(this);
         
         t.setOnMouseEntered(e -> hoverTracker.start(e));
         t.setOnMouseMoved(e -> hoverTracker.start(e));
