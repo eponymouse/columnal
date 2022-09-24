@@ -346,11 +346,11 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetSortPos);
         System.out.println("Focused: " + getFocusOwner() + " aiming for " + targetSortPos);
         clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetSortPos, targetSortPos), MouseButton.PRIMARY);
-        TFXUtil.sleep(100);
+        TFXUtil.sleep(1000);
         clickOn(".id-new-transform");
-        TFXUtil.sleep(100);
+        TFXUtil.sleep(1000);
         clickOn(".id-transform-sort");
-        TFXUtil.sleep(100);
+        TFXUtil.sleep(1000);
         write(manualEditId.getRaw());
         push(KeyCode.ENTER);
         ColumnId sortEditByColumn = findSrc.get().getData().getColumnIds().get(r.nextInt(numColumns));
