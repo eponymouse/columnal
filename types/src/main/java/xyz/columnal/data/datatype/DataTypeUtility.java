@@ -463,7 +463,7 @@ public class DataTypeUtility
         }
     }
 
-    public static String numberToString(Object item, @Nullable DataType asExpressionOfType, @Nullable Truncater truncater) throws InternalException, UserException
+    public static String numberToString(@Value Object item, @Nullable DataType asExpressionOfType, @Nullable Truncater truncater) throws InternalException, UserException
     {
         String number;
         if (truncater != null)
