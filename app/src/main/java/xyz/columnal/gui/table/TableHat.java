@@ -437,65 +437,64 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                         if (!newValues.equals(manualEdit.getReplacements()))
                                         {
                                             parent.getManager().edit(manualEdit, manualEdit.swapReplacementsTo(newValues), RenameOnEdit.ifOldAuto(ManualEdit.suggestedName(manualEdit.getReplacementIdentifier().orElse(null), newValues)));
-                                        }
-                                    }));
-
-                                    // This is a hack; we need to wait until the new table display is shown for the manual edit before
-                                    // querying it, especially because we need its known rows count to be accurate.  So we wait, but if the
-                                    // system is loaded, it's possible this may not jump to the location:
-                                    FXUtility.runAfterDelay(Duration.millis(500), () -> p.getFirst().ifPresent(jumpTo -> {
-                                        Utility.findFirstIndex(displayColumns, c -> c.equals(jumpTo.getSecond())).ifPresent(colIndex -> {
-                                            Workers.onWorkerThread("Finding manual edit location", Priority.FETCH, () -> {
-                                                int rowIndex = -1;
-                                                try
-                                                {
-                                                    Table srcTable = manualEdit.getSrcTable();
-                                                    if (srcTable == null)
-                                                        return; // Give up
-                                                    RecordSet srcData = srcTable.getData();
-                                                    int length = srcData.getLength();
-                                                    @Nullable ColumnId keyColumnId = manualEdit.getReplacementIdentifier().orElse(null);
-                                                    if (keyColumnId == null)
-                                                    {
-                                                        rowIndex = ((Number)jumpTo.getFirst().getValue()).intValue();
-                                                    }
-                                                    else
-                                                    {
-                                                        DataTypeValue keyColumn = srcData.getColumn(keyColumnId).getType();
-                                                        for (int row = 0; row < length; row++)
-                                                        {
+                                        
+                                            FXUtility.runFX(() -> {
+                                                // This is a hack; we need to wait until the new table display is shown for the manual edit before
+                                                // querying it, especially because we need its known rows count to be accurate.  So we wait, but if the
+                                                // system is loaded, it's possible this may not jump to the location:
+                                                FXUtility.runAfterDelay(Duration.millis(500), () -> p.getFirst().ifPresent(jumpTo -> {
+                                                    Utility.findFirstIndex(displayColumns, c -> c.equals(jumpTo.getSecond())).ifPresent(colIndex -> {
+                                                        Workers.onWorkerThread("Finding manual edit location", Priority.FETCH, () -> {
+                                                            int rowIndex = -1;
                                                             try
                                                             {
-                                                                if (Utility.compareValues(keyColumn.getCollapsed(row), jumpTo.getFirst().getValue()) == 0)
-                                                                    rowIndex = row;
-                                                            }
-                                                            catch (UserException e)
+                                                                Table srcTable = manualEdit.getSrcTable();
+                                                                if (srcTable == null)
+                                                                    return; // Give up
+                                                                RecordSet srcData = srcTable.getData();
+                                                                int length = srcData.getLength();
+                                                                @Nullable ColumnId keyColumnId = manualEdit.getReplacementIdentifier().orElse(null);
+                                                                if (keyColumnId == null)
+                                                                {
+                                                                    rowIndex = ((Number) jumpTo.getFirst().getValue()).intValue();
+                                                                } else
+                                                                {
+                                                                    DataTypeValue keyColumn = srcData.getColumn(keyColumnId).getType();
+                                                                    for (int row = 0; row < length; row++)
+                                                                    {
+                                                                        try
+                                                                        {
+                                                                            if (Utility.compareValues(keyColumn.getCollapsed(row), jumpTo.getFirst().getValue()) == 0)
+                                                                                rowIndex = row;
+                                                                        } catch (UserException e)
+                                                                        {
+                                                                            // Ignore fetch issues, just check following value.
+                                                                        }
+                                                                    }
+                                                                }
+                                                                int rowIndexFinal = rowIndex;
+                                                                if (rowIndexFinal != -1)
+                                                                {
+                                                                    Platform.runLater(() -> {
+                                                                        Table latestManualEdit = parent.getManager().getSingleTableOrNull(manualEdit.getId());
+                                                                        if (latestManualEdit != null && latestManualEdit.getDisplay() instanceof TableDisplay)
+                                                                        {
+                                                                            TableDisplay latestTableDisplay = (TableDisplay) latestManualEdit.getDisplay();
+                                                                            CellPosition cellPosition = latestTableDisplay.getDataPosition(DataItemPosition.row(rowIndexFinal), DataItemPosition.col(colIndex));
+                                                                            parent.getGrid().findAndSelect(Either.left(cellPosition));
+                                                                        }
+                                                                    });
+                                                                }
+                                                            } catch (InternalException | UserException e)
                                                             {
-                                                                // Ignore fetch issues, just check following value.
-                                                            }
-                                                        }
-                                                    }
-                                                    int rowIndexFinal = rowIndex;
-                                                    if (rowIndexFinal != -1)
-                                                    {
-                                                        Platform.runLater(() -> {
-                                                            Table latestManualEdit = parent.getManager().getSingleTableOrNull(manualEdit.getId());
-                                                            if (latestManualEdit != null && latestManualEdit.getDisplay() instanceof TableDisplay)
-                                                            {
-                                                                TableDisplay latestTableDisplay = (TableDisplay) latestManualEdit.getDisplay();
-                                                                CellPosition cellPosition = latestTableDisplay.getDataPosition(DataItemPosition.row(rowIndexFinal), DataItemPosition.col(colIndex));
-                                                                parent.getGrid().findAndSelect(Either.left(cellPosition));
+                                                                if (e instanceof InternalException)
+                                                                    Log.log(e);
                                                             }
                                                         });
-                                                    }
-                                                }
-                                                catch (InternalException | UserException e)
-                                                {
-                                                    if (e instanceof InternalException)
-                                                        Log.log(e);
-                                                }
+                                                    });
+                                                }));
                                             });
-                                        });
+                                        }
                                     }));
                                 });
                             });
