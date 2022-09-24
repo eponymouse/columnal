@@ -58,24 +58,30 @@ public class TaggedRecogniser extends Recogniser<@ImmediateValue TaggedValue>
         // Longest names first:
         Collections.<Pair<Integer, TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>>>sort(tagsLargestFirst, Comparator.<Pair<Integer, TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>>, Integer>comparing(p -> -p.getSecond().getName().length()));
 
+        StringBuilder replText = new StringBuilder();
+        
         for (Pair<Integer, TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>> tagInfo : tagsLargestFirst)
         {
             TagType<Recogniser<? extends @ImmediateValue @NonNull Object>> tag = tagInfo.getSecond();
             ParseProgress afterTag = pp.consumeNext(tag.getName());
             if (afterTag != null)
             {
+                replText.append(tag.getName());
                 @Nullable Recogniser<? extends @ImmediateValue @NonNull Object> inner = tag.getInner();
                 if (inner == null)
-                    return success(TaggedValue.immediate(tagInfo.getFirst(), null, DataTypeUtility.fromTags(tags)), afterTag);
+                    return success(TaggedValue.immediate(tagInfo.getFirst(), null, DataTypeUtility.fromTags(tags)), replText.toString(), afterTag);
                 
                 pp = afterTag.consumeNext("(");
+                replText.append("(");
                 if (pp == null)
                     return error("Expected '(' around an inner value", afterTag.curCharIndex);
                 return inner.process(pp, true).<SuccessDetails<@ImmediateValue TaggedValue>>flatMap((SuccessDetails<? extends @ImmediateValue @NonNull Object>  succ) -> {
+                    replText.append(succ.immediateReplacementText);
                     ParseProgress afterBracket = succ.parseProgress.consumeNext(")");
                     if (afterBracket == null)
                         return error("Expected closing ')' after an inner value", succ.parseProgress.curCharIndex);
-                    return success(TaggedValue.immediate(tagInfo.getFirst(), succ.value, DataTypeUtility.fromTags(tags)), afterBracket);
+                    replText.append(")");
+                    return success(TaggedValue.immediate(tagInfo.getFirst(), succ.value, DataTypeUtility.fromTags(tags)), replText.toString(), afterBracket);
                 });
                 
             }

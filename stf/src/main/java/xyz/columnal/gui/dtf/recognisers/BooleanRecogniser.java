@@ -35,10 +35,10 @@ public class BooleanRecogniser extends Recogniser<@ImmediateValue Boolean>
     {
         @Nullable ParseProgress pp = orig.consumeNextIC("true");
         if (pp != null)
-            return success(DataTypeUtility.value(true), pp);
+            return success(DataTypeUtility.value(true), "true", pp);
         pp = orig.consumeNextIC("false");
         if (pp != null)
-            return success(DataTypeUtility.value(false), pp);
+            return success(DataTypeUtility.value(false), "false", pp);
         
         return error("Expected true or false", orig.curCharIndex);
     }

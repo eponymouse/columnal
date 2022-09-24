@@ -59,22 +59,26 @@ public class RecordRecogniser extends Recogniser<@ImmediateValue Record>
 
         HashMap<@ExpressionIdentifier String, Recogniser<? extends @ImmediateValue @NonNull Object>> remainingFields = new HashMap<@ExpressionIdentifier String, Recogniser<? extends @ImmediateValue @NonNull Object>>(members);
         
-        return next(false, !immediatelySurroundedByRoundBrackets, remainingFields, pp, ImmutableMap.builderWithExpectedSize(members.size()));
+        return next(false, !immediatelySurroundedByRoundBrackets, remainingFields, pp, ImmutableMap.builderWithExpectedSize(members.size()), new StringBuilder(immediatelySurroundedByRoundBrackets ? "" : "("));
     }
 
     // Recurse down the list of members, processing one and if no error, process next, until no more members and then look for closing bracket:
-    private Either<ErrorDetails, SuccessDetails<@ImmediateValue Record>> next(boolean expectComma, boolean expectClosingBracket, HashMap<@ExpressionIdentifier String, Recogniser<? extends @ImmediateValue @NonNull Object>> remainingMembers, ParseProgress orig, ImmutableMap.Builder<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>> soFar)
+    private Either<ErrorDetails, SuccessDetails<@ImmediateValue Record>> next(boolean expectComma, boolean expectClosingBracket, HashMap<@ExpressionIdentifier String, Recogniser<? extends @ImmediateValue @NonNull Object>> remainingMembers, ParseProgress orig, ImmutableMap.Builder<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>> soFar, StringBuilder replTextSoFar)
     {
         ParseProgress pp = orig;
         // If no more members, look for closing bracket:
         if (remainingMembers.isEmpty())
         {
             if (expectClosingBracket)
+            {
                 pp = pp.consumeNext(")");
+                replTextSoFar.append(")");
+            }
             if (pp == null)
                 return error("Expected ')' to end record", orig.curCharIndex);
+            
             ImmutableMap<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>> all = soFar.build();
-            return success(RecordMap.immediate(Utility.<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>, @ImmediateValue Object>mapValues(all, s -> s.value)), all.values().stream().flatMap(s -> s.styles.stream()).collect(ImmutableList.<StyleSpanInfo>toImmutableList()), pp);
+            return success(RecordMap.immediate(Utility.<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>, @ImmediateValue Object>mapValues(all, s -> s.value)), replTextSoFar.toString(), all.values().stream().flatMap(s -> s.styles.stream()).collect(ImmutableList.<StyleSpanInfo>toImmutableList()), pp);
         }
 
         if (expectComma)
@@ -83,6 +87,7 @@ public class RecordRecogniser extends Recogniser<@ImmediateValue Record>
             pp = pp.consumeNext(",");
             if (pp == null)
                 return error("Expected ',' to separate record fields", beforeComma.curCharIndex);
+            replTextSoFar.append(", ");
         }
         
         // Look for field name:
@@ -97,10 +102,13 @@ public class RecordRecogniser extends Recogniser<@ImmediateValue Record>
             return error("Unknown field name: \"" + name + "\"", pp.curCharIndex);
         pp = fieldName.getSecond();
         
+        replTextSoFar.append(name + ": ");
+        
         return recogniser.process(pp, false).<SuccessDetails<@ImmediateValue Object>>map(s -> s.asObject())
             .<SuccessDetails<@ImmediateValue Record>>flatMap((SuccessDetails<@ImmediateValue Object> succ) -> {
                 soFar.put(name, succ);
-                return next(true, expectClosingBracket, remainingMembers, succ.parseProgress, soFar);
+                replTextSoFar.append(succ.immediateReplacementText);
+                return next(true, expectClosingBracket, remainingMembers, succ.parseProgress, soFar, replTextSoFar);
             });
     }
 }

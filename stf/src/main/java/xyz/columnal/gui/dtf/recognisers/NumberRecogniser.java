@@ -22,8 +22,11 @@ package xyz.columnal.gui.dtf.recognisers;
 
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
+import xyz.columnal.data.datatype.DataTypeUtility;
+import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.dtf.Recogniser;
+import xyz.columnal.log.Log;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.ParseProgress;
@@ -63,17 +66,33 @@ public class NumberRecogniser extends Recogniser<@ImmediateValue Number>
                     return error("Expected digits after decimal point", beforeDot.getSecond().curCharIndex + 1);
                 }
                 
-                return success(Utility.parseNumber(sign + beforeDot.getFirst() + "." + afterDot.getFirst()), afterDot.getSecond());
+                return success(sign + beforeDot.getFirst() + "." + afterDot.getFirst(), afterDot.getSecond());
             }
             else
             {
-                return success(Utility.parseNumber(sign + beforeDot.getFirst()), beforeDot.getSecond());
+                return success(sign + beforeDot.getFirst(), beforeDot.getSecond());
             }
         }
-        catch (UserException e)
+        catch (InternalException | UserException e)
         {
             return Either.left(new ErrorDetails(e.getStyledMessage(), orig.curCharIndex));
         }
+    }
+
+    private Either<ErrorDetails, SuccessDetails<Number>> success(String src, ParseProgress pp) throws UserException, InternalException
+    {
+        Number number = Utility.parseNumber(src);
+        String repl = src;
+        try
+        {
+            repl = DataTypeUtility.valueToString(number);
+        }
+        catch (InternalException | UserException e)
+        {
+            // Shouldn't happen:
+            Log.log(e);
+        }
+        return success(number, repl, pp);
     }
 
 }

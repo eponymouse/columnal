@@ -45,8 +45,10 @@ public class ListRecogniser extends Recogniser<@ImmediateValue ListEx>
         try
         {
             ImmutableList.Builder<@ImmediateValue Object> list = ImmutableList.builder();
+            StringBuilder replText = new StringBuilder();
             ParseProgress pp = parseProgress;
             pp = pp.consumeNext("[");
+            replText.append("[");
             if (pp == null)
                 return error("Expected '[' to begin list", parseProgress.curCharIndex);
             pp = pp.skipSpaces();
@@ -58,9 +60,10 @@ public class ListRecogniser extends Recogniser<@ImmediateValue ListEx>
                 {
                     // Skip comma:
                     pp = pp.skip(1);
+                    replText.append(", ");
                 }
 
-                pp = addToList(list, inner.process(pp, false));
+                pp = addToList(list, replText, inner.process(pp, false));
 
                 pp = pp.skipSpaces();
                 first = false;
@@ -70,8 +73,9 @@ public class ListRecogniser extends Recogniser<@ImmediateValue ListEx>
             pp = pp.consumeNext("]");
             if (pp == null)
                 return error("Expected ']' to end list", beforeBracket.curCharIndex);
-
-            return success(ListExList.immediate(list.build()), pp);
+            replText.append("]");
+            
+            return success(ListExList.immediate(list.build()), replText.toString(), pp);
         }
         catch (ListException e)
         {
@@ -89,9 +93,9 @@ public class ListRecogniser extends Recogniser<@ImmediateValue ListEx>
         }
     }
 
-    private <T extends @ImmediateValue Object> ParseProgress addToList(ImmutableList.Builder<@ImmediateValue Object> list, Either<ErrorDetails, SuccessDetails<T>> process) throws ListException
+    private static <T extends @ImmediateValue Object> ParseProgress addToList(ImmutableList.Builder<@ImmediateValue Object> list, StringBuilder replText, Either<ErrorDetails, SuccessDetails<T>> process) throws ListException
     {
         return process.either(err -> {throw new ListException(err);}, 
-            succ -> { list.add(succ.value); return succ.parseProgress; });
+            succ -> { list.add(succ.value); replText.append(succ.immediateReplacementText); return succ.parseProgress; });
     }
 }

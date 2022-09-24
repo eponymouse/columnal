@@ -56,10 +56,10 @@ public class StringRecogniser extends Recogniser<@ImmediateValue String>
         else
         {
             content = pp.consumeUpToAndIncluding("\"");
-            replacement = null;
+            if (content == null)
+                return error("Could not find closing \" for text", orig.src.length() - 1);
+            replacement = "\"" + content.getFirst() + "\"";
         }
-        if (content == null)
-            return error("Could not find closing \" for text", orig.src.length() - 1);
         return success(DataTypeUtility.value(GrammarUtility.processEscapes(content.getFirst(), false)), replacement, content.getSecond());
     }
 }

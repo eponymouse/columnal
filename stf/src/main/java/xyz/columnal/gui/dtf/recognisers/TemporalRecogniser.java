@@ -22,6 +22,7 @@ package xyz.columnal.gui.dtf.recognisers;
 
 import annotation.qual.ImmediateValue;
 import annotation.qual.Value;
+import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.log.Log;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -60,9 +61,20 @@ public class TemporalRecogniser extends Recogniser<@ImmediateValue TemporalAcces
     {
         try
         {
+            int start = orig.curCharIndex;
             StringView stringView = new StringView(orig);
-            @ImmediateValue TemporalAccessor temporal = DataTypeUtility.parseTemporalFlexible(new DateTimeInfo(dateTimeType), stringView);
-            return success(temporal, stringView.getParseProgress());
+            DateTimeInfo dateTimeInfo = new DateTimeInfo(dateTimeType);
+            @ImmediateValue TemporalAccessor temporal = DataTypeUtility.parseTemporalFlexible(dateTimeInfo, stringView);
+            String replacementText = orig.src.substring(start, stringView.getPosition());
+            try
+            {
+                replacementText = DataTypeUtility.valueToString(temporal, null, immediatelySurroundedByRoundBrackets, null);
+            }
+            catch (UserException | InternalException e)
+            {
+                Log.log(e);
+            }
+            return success(temporal, replacementText, stringView.getParseProgress());
         }
         catch (PositionedUserException e)
         {
