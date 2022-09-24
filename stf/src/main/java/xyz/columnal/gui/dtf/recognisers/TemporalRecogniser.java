@@ -68,9 +68,9 @@ public class TemporalRecogniser extends Recogniser<@ImmediateValue TemporalAcces
             String replacementText = orig.src.substring(start, stringView.getPosition());
             try
             {
-                replacementText = DataTypeUtility.valueToString(temporal, null, immediatelySurroundedByRoundBrackets, null);
+                replacementText = DataTypeUtility.temporalToString(temporal, null);
             }
-            catch (UserException | InternalException e)
+            catch (InternalException e)
             {
                 Log.log(e);
             }

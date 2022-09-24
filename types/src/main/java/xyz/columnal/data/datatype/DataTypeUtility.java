@@ -404,37 +404,7 @@ public class DataTypeUtility
         else if (item instanceof TemporalAccessor)
         {
             @Value TemporalAccessor t = Utility.cast(item, TemporalAccessor.class);
-            DateTimeType type;
-            if (item instanceof LocalDate)
-            {
-                type = DateTimeType.YEARMONTHDAY;
-            }
-            else if (item instanceof YearMonth)
-            {
-                type = DateTimeType.YEARMONTH;
-            }
-            else if (item instanceof LocalTime)
-            {
-                type = DateTimeType.TIMEOFDAY;
-            }
-            else if (item instanceof LocalDateTime)
-            {
-                type = DateTimeType.DATETIME;
-            }
-            else if (item instanceof ZonedDateTime)
-            {
-                type = DateTimeType.DATETIMEZONED;
-            }
-            else
-            {
-                throw new InternalException("Unknown internal temporal type: " + item.getClass());
-            }
-            DateTimeInfo dateTimeInfo = new DateTimeInfo(type);
-            String s = dateTimeInfo.getStrictFormatter().format(t);
-            if (asExpressionOfType != null)
-                return dateTimeInfo.getType().literalPrefix() + "{" + s + "}";
-            else
-                return s;
+            return temporalToString(t, asExpressionOfType);
         }
         else if (item instanceof TaggedValue)
         {
@@ -516,6 +486,41 @@ public class DataTypeUtility
         {
             throw new InternalException("Unknown internal type: " + item.getClass());
         }
+    }
+
+    public static String temporalToString(@Value TemporalAccessor t, @Nullable DataType asExpressionOfType) throws InternalException
+    {
+        DateTimeType type;
+        if (t instanceof LocalDate)
+        {
+            type = DateTimeType.YEARMONTHDAY;
+        }
+        else if (t instanceof YearMonth)
+        {
+            type = DateTimeType.YEARMONTH;
+        }
+        else if (t instanceof LocalTime)
+        {
+            type = DateTimeType.TIMEOFDAY;
+        }
+        else if (t instanceof LocalDateTime)
+        {
+            type = DateTimeType.DATETIME;
+        }
+        else if (t instanceof ZonedDateTime)
+        {
+            type = DateTimeType.DATETIMEZONED;
+        }
+        else
+        {
+            throw new InternalException("Unknown internal temporal type: " + t.getClass());
+        }
+        DateTimeInfo dateTimeInfo = new DateTimeInfo(type);
+        String s = dateTimeInfo.getStrictFormatter().format(t);
+        if (asExpressionOfType != null)
+            return dateTimeInfo.getType().literalPrefix() + "{" + s + "}";
+        else
+            return s;
     }
 
     public static <DT extends DataType> @ImmediateValue TaggedValue makeDefaultTaggedValue(ImmutableList<TagType<DT>> tagTypes) throws InternalException
