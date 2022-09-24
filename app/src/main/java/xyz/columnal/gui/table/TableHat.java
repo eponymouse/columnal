@@ -457,7 +457,8 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                                                 if (keyColumnId == null)
                                                                 {
                                                                     rowIndex = ((Number) jumpTo.getFirst().getValue()).intValue();
-                                                                } else
+                                                                }
+                                                                else
                                                                 {
                                                                     DataTypeValue keyColumn = srcData.getColumn(keyColumnId).getType();
                                                                     for (int row = 0; row < length; row++)
@@ -466,7 +467,8 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                                                         {
                                                                             if (Utility.compareValues(keyColumn.getCollapsed(row), jumpTo.getFirst().getValue()) == 0)
                                                                                 rowIndex = row;
-                                                                        } catch (UserException e)
+                                                                        }
+                                                                        catch (UserException e)
                                                                         {
                                                                             // Ignore fetch issues, just check following value.
                                                                         }
@@ -485,7 +487,8 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                                                         }
                                                                     });
                                                                 }
-                                                            } catch (InternalException | UserException e)
+                                                            }
+                                                            catch (InternalException | UserException e)
                                                             {
                                                                 if (e instanceof InternalException)
                                                                     Log.log(e);
