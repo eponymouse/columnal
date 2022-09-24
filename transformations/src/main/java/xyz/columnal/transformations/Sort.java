@@ -445,7 +445,7 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
         return suggestedName(originalSortBy);
     }
 
-    public static TableId suggestedName(ImmutableList<Pair<ColumnId, Direction>> sortBy)
+    public static <T> TableId suggestedName(ImmutableList<Pair<ColumnId, T>> sortBy)
     {
         return new TableId(IdentifierUtility.spaceSeparated("Sort by", sortBy.stream().<@ExpressionIdentifier String>map(p -> IdentifierUtility.shorten(p.getFirst().getRaw())).findFirst().orElse("none")));
     }

@@ -707,11 +707,12 @@ edit : editHeader editColumn*;
         return suggestedName(originalKeyColumn == null ? null : originalKeyColumn.getFirst(), replacements);
     }
 
-    public static TableId suggestedName(@Nullable ColumnId keyColumn, Map<ColumnId, ColumnReplacementValues> repls)
+    public static TableId suggestedName(@Nullable ColumnId keyColumn, Map<ColumnId, ?> repls)
     {
         ImmutableList.Builder<@ExpressionIdentifier String> parts = ImmutableList.builder();
         parts.add("Edit");
-        parts.add(repls.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).<@ExpressionIdentifier String>map(e -> IdentifierUtility.shorten(e.getKey().getRaw())).findFirst().orElse("none"));
+        String colName = repls.keySet().stream().sorted().<@ExpressionIdentifier String>map(e -> IdentifierUtility.shorten(e.getRaw())).findFirst().orElse("none");
+        parts.add(colName);
         parts.add("by");
         parts.add(keyColumn == null ? "row" : IdentifierUtility.shorten(keyColumn.getRaw()));
         return new TableId(IdentifierUtility.spaceSeparated(parts.build()));
