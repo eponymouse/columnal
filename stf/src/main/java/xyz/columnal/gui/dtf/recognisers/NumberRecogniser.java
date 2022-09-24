@@ -85,7 +85,7 @@ public class NumberRecogniser extends Recogniser<@ImmediateValue Number>
         String repl = src;
         try
         {
-            repl = DataTypeUtility.valueToString(number);
+            repl = DataTypeUtility.numberToString(number, null, null);
         }
         catch (InternalException | UserException e)
         {

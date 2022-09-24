@@ -366,32 +366,7 @@ public class DataTypeUtility
     {
         if (item instanceof Number)
         {
-            String number;
-            if (truncater != null)
-            {
-                @SuppressWarnings("valuetype") // Number is always ImmediateValue
-                @ImmediateValue Number cast = Utility.cast(item, Number.class);
-                number = truncater.truncateNumber(cast);
-            }
-            else if (item instanceof BigDecimal)
-            {
-                if (Utility.isIntegral(item))
-                {
-                    number = ((BigDecimal) item).toBigInteger().toString();
-                }
-                else
-                    number = ((BigDecimal) item).toPlainString();
-            }
-            else
-                number = item.toString();
-            Unit asExpressionOfUnit = asExpressionOfType == null ? null : asExpressionOfType.apply(new SpecificDataTypeVisitor<Unit>() {
-                @Override
-                public Unit number(NumberInfo displayInfo) throws InternalException
-                {
-                    return displayInfo.getUnit();
-                }
-            });
-            return number + (asExpressionOfUnit != null && !asExpressionOfUnit.equals(Unit.SCALAR) ? "{" + asExpressionOfUnit.toString() + "}" : "");
+            return numberToString(item, asExpressionOfType, truncater);
         }
         else if (item instanceof String)
         {
@@ -486,6 +461,36 @@ public class DataTypeUtility
         {
             throw new InternalException("Unknown internal type: " + item.getClass());
         }
+    }
+
+    public static String numberToString(Object item, @Nullable DataType asExpressionOfType, @Nullable Truncater truncater) throws InternalException, UserException
+    {
+        String number;
+        if (truncater != null)
+        {
+            @SuppressWarnings("valuetype") // Number is always ImmediateValue
+            @ImmediateValue Number cast = Utility.cast(item, Number.class);
+            number = truncater.truncateNumber(cast);
+        }
+        else if (item instanceof BigDecimal)
+        {
+            if (Utility.isIntegral(item))
+            {
+                number = ((BigDecimal) item).toBigInteger().toString();
+            }
+            else
+                number = ((BigDecimal) item).toPlainString();
+        }
+        else
+            number = item.toString();
+        Unit asExpressionOfUnit = asExpressionOfType == null ? null : asExpressionOfType.apply(new SpecificDataTypeVisitor<Unit>() {
+            @Override
+            public Unit number(NumberInfo displayInfo) throws InternalException
+            {
+                return displayInfo.getUnit();
+            }
+        });
+        return number + (asExpressionOfUnit != null && !asExpressionOfUnit.equals(Unit.SCALAR) ? "{" + asExpressionOfUnit.toString() + "}" : "");
     }
 
     public static String temporalToString(@Value TemporalAccessor t, @Nullable DataType asExpressionOfType) throws InternalException
