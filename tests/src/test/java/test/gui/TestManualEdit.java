@@ -143,9 +143,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void propManualEdit(
-            @When(seed=2282428384113994379L)
             @From(GenDataAndTransforms.class) TableManager original,
-            @When(seed=-4393827614386214091L)
             @From(GenRandom.class) Random r) throws Exception
     {
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, original).get();
