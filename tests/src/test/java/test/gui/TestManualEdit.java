@@ -86,6 +86,7 @@ import threadchecker.Tag;
 import xyz.columnal.utility.ComparableEither;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.ExSupplier;
+import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.SimulationFunction;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.Clickable;
@@ -335,7 +336,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         // Now we should have a transformation, time to do some edits
 
-        TableId manualEditId = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof ManualEdit).findFirst().orElseThrow(() -> new RuntimeException("No edit")).getId();
+        TableId manualEditId = ManualEdit.suggestedName(Utility.onNullable(findReplaceKeyColumn.get(), c -> c.getName()), replacementsSoFar);
         ExSupplier<ManualEdit> findManualEdit = () -> (ManualEdit) mainWindowActions._test_getTableManager().getSingleTableOrThrow(manualEditId);
         TableDisplay manualEditDisplay = TBasicUtil.checkNonNull((TableDisplay) TFXUtil.<@Nullable TableDisplayBase>fx(() -> findManualEdit.get().getDisplay()));
 
@@ -357,8 +358,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn();
         // Hack to get id of new sort:
-        TableId sortId = Sets.difference(getTableIdSet(mainWindowActions), idsBeforeNewSort).iterator().next();
-        
+        TableId sortId = Sort.suggestedName(ImmutableList.of(new Pair<>(sortEditByColumn, "")));        
         
         // Now make the further manual edits:
         int numFurtherEdits = r.nextInt(10);
@@ -421,9 +421,10 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         // On random chance, change sort order of the transformation that is sorting the manual edit:
         if (r.nextInt(3) == 1)
         {
+            TableId sortIdFinal = sortId;
             CellPosition target = TFXUtil.fx(() -> {
                 @SuppressWarnings("nullness")
-                @NonNull TableDisplayBase display = mainWindowActions._test_getTableManager().getSingleTableOrThrow(sortId).getDisplay();
+                @NonNull TableDisplayBase display = mainWindowActions._test_getTableManager().getSingleTableOrThrow(sortIdFinal).getDisplay();
                 return display.getMostRecentPosition().offsetByRowCols(0, findSrc.get().getData().getColumns().size() - 1);
             });
             TFXUtil.fx_(() -> mainWindowActions._test_getVirtualGrid()._test_ensureVisible(target));
@@ -442,6 +443,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             clickOn(".id-fancylist-add");
             sortEditByColumn = findSrc.get().getData().getColumnIds().get(r.nextInt(numColumns));
             write(sortEditByColumn.getRaw());
+            sortId = Sort.suggestedName(ImmutableList.of(new Pair<>(sortEditByColumn, "")));
             clickOn(".ok-button");
             sleep(1000);
         }
@@ -506,7 +508,8 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         checkEqual(expected, getGraphicalContent(mainWindowActions, findManualEdit.get()));
         
         // Copy the values from the resulting sort:
-        Sort secondSort = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort && t.getId().equals(sortId)).map(t -> (Sort)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
+        TableId secondSortId = sortId;
+        Sort secondSort = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort && t.getId().equals(secondSortId)).map(t -> (Sort)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
         TableDisplay secondSortDisplay = (TableDisplay) TBasicUtil.checkNonNull(TFXUtil.<@Nullable TableDisplayBase>fx(() -> secondSort.getDisplay()));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), secondSortDisplay.getMostRecentPosition());
         showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(secondSortDisplay.getMostRecentPosition(), secondSortDisplay.getMostRecentPosition()), (n, p) -> {}), null)
