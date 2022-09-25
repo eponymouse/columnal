@@ -81,7 +81,6 @@ import xyz.columnal.transformations.expression.type.TypeExpression;
 import xyz.columnal.transformations.expression.visitor.ExpressionVisitorFlat;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenColumnId;
 import test.gen.GenRandom;
 import test.gen.GenTableId;
@@ -751,7 +750,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         @Value Object swappedValue = swappedType.makeValue();
         int swappedValueIndex = r.nextInt(originalRows);
         CellPosition swappedValuePos = originalTableTopLeft.offsetByRowCols(3 + swappedValueIndex, changeBoolean ? 0 : 1);
-        TestUtil.collapseAllTableHats(tableManager, virtualGrid);
+        TFXUtil.collapseAllTableHats(tableManager, virtualGrid);
         sleep(500);
         clickOnItemInBounds(lookup(".document-text-field"), virtualGrid, new RectangleBounds(swappedValuePos, swappedValuePos));
         push(KeyCode.ENTER);
@@ -759,7 +758,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         push(KeyCode.ENTER);
         
         
-        TestUtil.collapseAllTableHats(tableManager, virtualGrid);
+        TFXUtil.collapseAllTableHats(tableManager, virtualGrid);
         sleep(500);
         assertNull(lookup(".type-editor").tryQuery().orElse(null));
         clickOnItemInBounds(
@@ -834,7 +833,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         TBasicUtil.assertValueListEitherEqual("After first type change", expectedAfterChange, TBasicUtil.getAllCollapsedData(findOriginal.get().getData().getColumn(changedColumnId).getType(), originalRows));
         
         // Now change type back:
-        TestUtil.collapseAllTableHats(tableManager, virtualGrid);
+        TFXUtil.collapseAllTableHats(tableManager, virtualGrid);
         clickOnItemInBounds(
                 r.nextBoolean() ? lookup(".table-display-column-title") : lookup(".table-display-column-type"),
                 virtualGrid, new RectangleBounds(originalTableTopLeft.offsetByRowCols(1, changeBoolean ? 0 : 1), originalTableTopLeft.offsetByRowCols(2, changeBoolean ? 0 : 1))

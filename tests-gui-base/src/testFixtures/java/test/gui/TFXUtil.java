@@ -31,9 +31,12 @@ import threadchecker.Tag;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.Table;
+import xyz.columnal.data.Table.TableDisplayBase;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
+import xyz.columnal.gui.grid.VirtualGrid;
+import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.id.TableId;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.FXPlatformRunnable;
@@ -213,6 +216,22 @@ public class TFXUtil
             parent = parent.getParent();
         }
         return parent;
+    }
+
+    @OnThread(Tag.Simulation)
+    public static void collapseAllTableHats(TableManager tableManager, VirtualGrid virtualGrid)
+    {
+        for (Table table : tableManager.getAllTables())
+        {
+            fx_(() -> {
+                TableDisplayBase display = table.getDisplay();
+                if (display instanceof TableDisplay)
+                {
+                    ((TableDisplay)display)._test_collapseTableHat();
+                }
+            });
+        }
+        fx_(() -> virtualGrid.redoLayoutAfterScroll());
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>

@@ -39,7 +39,6 @@ import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.util.Duration;
 import test.gui.TFXUtil;
-import xyz.columnal.data.Table;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -50,9 +49,6 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.testfx.api.FxRobotInterface;
-import xyz.columnal.data.Table.TableDisplayBase;
-import xyz.columnal.gui.grid.VirtualGrid;
-import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.utility.*;
 import xyz.columnal.data.datatype.DataType;
@@ -198,22 +194,6 @@ public class TestUtil
         });
         
         Log.normal("Events received:\n" + received.stream().map(n -> "  " + n.toString()).collect(Collectors.joining("\n")));
-    }
-
-    @OnThread(Tag.Simulation)
-    public static void collapseAllTableHats(TableManager tableManager, VirtualGrid virtualGrid)
-    {
-        for (Table table : tableManager.getAllTables())
-        {
-            TFXUtil.fx_(() -> {
-                TableDisplayBase display = table.getDisplay();
-                if (display instanceof TableDisplay)
-                {
-                    ((TableDisplay)display)._test_collapseTableHat();
-                }
-            });
-        }
-        TFXUtil.fx_(() -> virtualGrid.redoLayoutAfterScroll());
     }
 
     public static class Expression_Mgr
