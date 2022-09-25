@@ -1,0 +1,23 @@
+dependencies {
+    testImplementation project(':data')
+    testImplementation project(':expressions')
+    testImplementation project(':gui-utility')
+    testImplementation project(':identifiers')
+    testImplementation project(':parsers')
+    testImplementation project(':stf')
+    testImplementation project(':types')
+    testImplementation project(':utility')
+    testImplementation libs.guava
+    testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
+    testImplementation 'org.testfx:testfx-junit:4.0.15-alpha'
+
+    testImplementation(testFixtures(project(":tests-basic")))
+    testImplementation(testFixtures(project(":tests-gui-base")))
+}
+
+javafx {
+    modules = [ 'javafx.base', 'javafx.controls' ]
+    configuration = "testImplementation"
+}
+
+description = 'tests-gui-dtf'
