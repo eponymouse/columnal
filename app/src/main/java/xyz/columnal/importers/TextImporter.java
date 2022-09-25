@@ -143,7 +143,6 @@ public class TextImporter implements Importer
     @OnThread(Tag.Simulation)
     public static CompletableFuture<RecordSet> _test_importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException, InterruptedException, ExecutionException, TimeoutException
     {
-        Map<Charset, List<String>> initial = getInitial(textFile);
         CompletableFuture<RecordSet> f = new CompletableFuture<>();
         // TODO need some test code to operate the GUI
         importTextFile(null, mgr, textFile, CellPosition.ORIGIN, data -> {

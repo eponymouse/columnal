@@ -249,7 +249,7 @@ public class Utility
                 return 1;
             else
             // Some content with newlines:
-                return lnr.getLineNumber();
+                return lnr.getLineNumber() + (lastWasNewline ? 0 : 1);
         }
     }
 
