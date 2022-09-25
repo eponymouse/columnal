@@ -340,7 +340,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         ImmutableSet<TableId> idsBeforeNewSort = getTableIdSet(mainWindowActions);
         // Add a sort transformation, sorting the edit transformation by a random column:
-        CellPosition targetSortPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(manualEditId).offsetByRowCols(1, 0));
+        CellPosition targetSortPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(manualEditId).offsetByRowCols(2, 0));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetSortPos);
         System.out.println("Focused: " + getFocusOwner() + " aiming for " + targetSortPos);
         clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetSortPos, targetSortPos), MouseButton.PRIMARY);
