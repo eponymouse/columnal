@@ -2,15 +2,18 @@ dependencies {
     testFixturesImplementation project(":app")
     testFixturesImplementation project(":data")
     testFixturesImplementation project(":expressions")
+    testFixturesImplementation project(":functions")
     testFixturesImplementation project(":gui-utility")
     testFixturesImplementation project(":identifiers")
     testFixturesImplementation project(":lex-editor")
     testFixturesImplementation project(":parsers")
     testFixturesImplementation project(":stf")
+    testFixturesImplementation project(":transformations")
     testFixturesImplementation project(":types")
     testFixturesImplementation project(":utility")
     testFixturesImplementation libs.commons.io
     testFixturesImplementation libs.commons.lang3
+    testFixturesImplementation libs.controlsfx
     testFixturesImplementation libs.guava
     testFixturesImplementation 'org.testfx:testfx-core:4.0.16-alpha'
     testFixturesImplementation 'org.testfx:testfx-junit:4.0.15-alpha'
