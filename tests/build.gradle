@@ -35,22 +35,6 @@ javafx {
     configuration = "testImplementation"
 }
 
-test {
-    useJUnit()
-
-    scanForTestClasses = false
-    filter {
-        includeTestsMatching "Test*"
-        includeTestsMatching "Prop*"
-        excludeTestsMatching "*\$*"
-        excludeTestsMatching "test.TestUtil*"
-        
-        // Temporarily exclude what I think are the longest-running tests:
-        // TODO remove this rule and thus the whole block
-        excludeTestsMatching "*TestExpression*"
-    }
-}
-
 description = 'tests'
 
 sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/main/resources')
