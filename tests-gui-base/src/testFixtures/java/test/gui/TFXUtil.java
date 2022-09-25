@@ -19,8 +19,11 @@
  */
 package test.gui;
 
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.input.KeyCode;
 import org.apache.commons.lang3.SystemUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.util.WaitForAsyncUtils;
 import test.gui.trait.PopupTrait;
 import threadchecker.OnThread;
@@ -43,6 +46,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Predicate;
 
 public class TFXUtil
 {
@@ -198,6 +202,17 @@ public class TFXUtil
         sleep(300);
         if (robot.lookup(".ok-button").tryQuery().isPresent())
             robot.clickOn(".ok-button");
+    }
+
+    // Finds the first parent (starting at given one and going upwards via getParent) that satisfies the given predicate
+    @OnThread(Tag.FXPlatform)
+    public static @Nullable Parent findParent(@Nullable Parent parent, Predicate<Node> check)
+    {
+        while (parent != null && !check.test(parent))
+        {
+            parent = parent.getParent();
+        }
+        return parent;
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>

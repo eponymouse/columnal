@@ -48,7 +48,6 @@ import xyz.columnal.importers.ClipboardUtils;
 import xyz.columnal.importers.ClipboardUtils.LoadedColumnInfo;
 import xyz.columnal.transformations.Sort;
 import xyz.columnal.transformations.Sort.Direction;
-import test.TestUtil;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.CanHaveErrorValues;
 import test.gen.GenRandom;
@@ -127,7 +126,7 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
             // All columns start ascending.  We click n * 2 times, + 1 if descending
             int numClicks = 2 * r.nextInt(3) + (pickedColumn.getSecond() == Direction.DESCENDING ? 1 : 0);
             // Bit of a hack to find the matching button
-            Parent sortPane = TBasicUtil.checkNonNull(TFXUtil.<@Nullable Parent>fx(() -> TestUtil.findParent(focused.getParent(), p -> p.getStyleClass().contains("sort-pane"))));
+            Parent sortPane = TBasicUtil.checkNonNull(TFXUtil.<@Nullable Parent>fx(() -> TFXUtil.findParent(focused.getParent(), p -> p.getStyleClass().contains("sort-pane"))));
             Node button = TBasicUtil.checkNonNull(TFXUtil.fx(() -> sortPane.lookup(".sort-direction-button")));
             for (int i = 0; i < numClicks; i++)
             {

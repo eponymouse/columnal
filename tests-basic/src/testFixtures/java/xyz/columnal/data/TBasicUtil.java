@@ -551,6 +551,19 @@ public class TBasicUtil
         return str.chars().mapToObj(c -> Integer.toHexString(c) + (c == 10 ? "\n" : "")).collect(Collectors.joining(" "));
     }
 
+    @OnThread(Tag.Simulation)
+    public static Either<String, @Value Object> getSingleCollapsedData(DataTypeValue type, int index) throws UserException, InternalException
+    {
+        try
+        {
+            return Either.right(type.getCollapsed(index));
+        }
+        catch (InvalidImmediateValueException e)
+        {
+            return Either.left(e.getInvalid());
+        }
+    }
+
     public static interface TestRunnable
     {
         public void run() throws Exception;

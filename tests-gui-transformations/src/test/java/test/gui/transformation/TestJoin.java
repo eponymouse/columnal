@@ -40,7 +40,6 @@ import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.TableId;
 import xyz.columnal.transformations.Join;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.type.GenDataTypeMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeAndValueMaker;
@@ -209,13 +208,13 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
                 {
                     if (tableA == srcColName.getFirst())
                     {
-                        expected.add(TestUtil.getSingleCollapsedData(srcCol, src.getFirst()));
+                        expected.add(TBasicUtil.getSingleCollapsedData(srcCol, src.getFirst()));
                     }
                     else if (leftJoin)
                     {
                         if (src.getSecond().isPresent())
                         {
-                            expected.add(TestUtil.getSingleCollapsedData(srcCol, src.getSecond().getAsInt()).<@Value Object>map(v -> new TaggedValue(1, v, srcMgr.getTypeManager().getMaybeType())));
+                            expected.add(TBasicUtil.getSingleCollapsedData(srcCol, src.getSecond().getAsInt()).<@Value Object>map(v -> new TaggedValue(1, v, srcMgr.getTypeManager().getMaybeType())));
                         }
                         else
                         {
@@ -224,7 +223,7 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
                     }
                     else
                     {
-                        expected.add(TestUtil.getSingleCollapsedData(srcCol, src.getSecond().getAsInt()));
+                        expected.add(TBasicUtil.getSingleCollapsedData(srcCol, src.getSecond().getAsInt()));
                     }
                 }
                 

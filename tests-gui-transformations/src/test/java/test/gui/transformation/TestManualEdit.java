@@ -73,7 +73,6 @@ import xyz.columnal.importers.ClipboardUtils;
 import xyz.columnal.importers.ClipboardUtils.LoadedColumnInfo;
 import xyz.columnal.transformations.ManualEdit;
 import xyz.columnal.transformations.Sort;
-import test.TestUtil;
 import test.gen.GenDataAndTransforms;
 import test.gen.GenRandom;
 import test.gen.GenValueSpecifiedType;
@@ -248,9 +247,9 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             if (replaceKeyColumn == null)
                 replaceKey = DataTypeUtility.value(new BigDecimal(row));
             else
-                replaceKey = TestUtil.getSingleCollapsedData(replaceKeyColumn.getType(), row).leftToNull();
+                replaceKey = TBasicUtil.getSingleCollapsedData(replaceKeyColumn.getType(), row).leftToNull();
 
-            SimulationFunction<@Value Object, Boolean> equalToExistingKey = v -> TestUtil.getSingleCollapsedData(findSrc.get().getData().getColumns().get(col).getType(), row).eitherEx(e -> -1, x -> Utility.compareValues(x, v)) == 0;
+            SimulationFunction<@Value Object, Boolean> equalToExistingKey = v -> TBasicUtil.getSingleCollapsedData(findSrc.get().getData().getColumns().get(col).getType(), row).eitherEx(e -> -1, x -> Utility.compareValues(x, v)) == 0;
             @Value Object value = columnTypes.get(col).makeValue();
             for (int i = 0; i < 5 && equalToExistingKey.apply(value); i++)
             {
@@ -373,12 +372,12 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 if (replaceKeyColumn == null)
                     replaceKey = DataTypeUtility.value(new BigDecimal(row));
                 else
-                    replaceKey = TestUtil.getSingleCollapsedData(replaceKeyColumn.getType(), row).leftToNull();
+                    replaceKey = TBasicUtil.getSingleCollapsedData(replaceKeyColumn.getType(), row).leftToNull();
             }
             
             @Value Object value = columnTypes.get(col).makeValue();
             ComparableEither<String, ComparableValue> toEnter = ComparableEither.right(new ComparableValue(value));
-            if (TestUtil.getSingleCollapsedData(findSrc.get().getData().getColumns().get(col).getType(), row).eitherEx(e -> -1, x -> Utility.compareValues(x, value)) == 0)
+            if (TBasicUtil.getSingleCollapsedData(findSrc.get().getData().getColumns().get(col).getType(), row).eitherEx(e -> -1, x -> Utility.compareValues(x, value)) == 0)
             {
                 // Make error instead:
                 toEnter = ComparableEither.left("@" + r.nextInt());
@@ -675,12 +674,12 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 // We must map backwards to original row:
                 int rowWithoutSortFinal = rowWithoutSort;
                 int row = sortMap.get(rowWithoutSort);//Utility.findFirstIndex(sortMap, i -> i == rowWithoutSortFinal).orElseThrow(() -> new RuntimeException("Invalid sortMap"));
-                Either<String, @Value Object> rowKey = replacementIdentifier == null ? Either.<String, @Value Object>right(DataTypeUtility.value(row)) : TestUtil.getSingleCollapsedData(original.getColumn(replacementIdentifier).getType(), row);
+                Either<String, @Value Object> rowKey = replacementIdentifier == null ? Either.<String, @Value Object>right(DataTypeUtility.value(row)) : TBasicUtil.getSingleCollapsedData(original.getColumn(replacementIdentifier).getType(), row);
                 @Nullable ComparableEither<String, ComparableValue> replacement = rowKey.<@Nullable ComparableEither<String, ComparableValue>>either(err -> null, k -> colReplacements.get(new ComparableValue(k)));
                 if (replacement != null)
                     columnValues.add(replacement.<@Value Object>map(r -> r.getValue()));
                 else
-                    columnValues.add(TestUtil.getSingleCollapsedData(column.getType(), row));
+                    columnValues.add(TBasicUtil.getSingleCollapsedData(column.getType(), row));
                     
             }
             
@@ -722,7 +721,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 for (int row = 0; row < tableData.getLength(); row++)
                 {
                     int rowFinal = row;
-                    Either<String, @Value Object> internalContent = TestUtil.getSingleCollapsedData(column.getType(), rowFinal);
+                    Either<String, @Value Object> internalContent = TBasicUtil.getSingleCollapsedData(column.getType(), rowFinal);
                     @Nullable Either<String, @Value Object> cellValue = TFXUtil.<@Nullable Either<String, @Value Object>>fx(() -> {
                         CellPosition dataPosition = tableDisplay.getDataPosition(rowFinal, colIndex);
                         VersionedSTF cell = mainWindowActions._test_getDataCell(dataPosition);

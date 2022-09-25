@@ -20,7 +20,6 @@
 
 package test;
 
-import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.sun.javafx.PlatformUtil;
@@ -33,7 +32,6 @@ import javafx.event.EventType;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -53,22 +51,17 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.testfx.api.FxRobotInterface;
 import xyz.columnal.data.Table.TableDisplayBase;
-import xyz.columnal.error.InvalidImmediateValueException;
 import xyz.columnal.gui.grid.VirtualGrid;
 import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.utility.*;
 import xyz.columnal.data.datatype.DataType;
-import xyz.columnal.data.datatype.DataTypeValue;
-import xyz.columnal.error.InternalException;
-import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -175,19 +168,6 @@ public class TestUtil
         return TestUtil.<T, Iterable<? extends String>>matcherOn(Matchers.contains(styleClass), (T s) -> TFXUtil.fx(() -> ImmutableList.copyOf(s.getStyleClass())));
     }
 
-    @OnThread(Tag.Simulation)
-    public static Either<String, @Value Object> getSingleCollapsedData(DataTypeValue type, int index) throws UserException, InternalException
-    {
-        try
-        {
-            return Either.right(type.getCollapsed(index));
-        }
-        catch (InvalidImmediateValueException e)
-        {
-            return Either.left(e.getInvalid());
-        }
-    }
-
     // Adds event filters on all nodes under the target location,
     // and tracks which if any receive the given event type
     // while executing during.
@@ -246,17 +226,6 @@ public class TestUtil
             this.mgr = mgr;
             this.expression = expression;
         }
-    }
-
-    // Finds the first parent (starting at given one and going upwards via getParent) that satisfies the given predicate
-    @OnThread(Tag.FXPlatform)
-    public static @Nullable Parent findParent(@Nullable Parent parent, Predicate<Node> check)
-    {
-        while (parent != null && !check.test(parent))
-        {
-            parent = parent.getParent();
-        }
-        return parent;
     }
 
 }
