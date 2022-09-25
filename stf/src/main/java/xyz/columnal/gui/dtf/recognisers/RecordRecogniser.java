@@ -37,7 +37,10 @@ import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Utility.Record;
 import xyz.columnal.utility.Utility.RecordMap;
 
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 public class RecordRecogniser extends Recogniser<@ImmediateValue Record>
 {
@@ -59,11 +62,11 @@ public class RecordRecogniser extends Recogniser<@ImmediateValue Record>
 
         HashMap<@ExpressionIdentifier String, Recogniser<? extends @ImmediateValue @NonNull Object>> remainingFields = new HashMap<@ExpressionIdentifier String, Recogniser<? extends @ImmediateValue @NonNull Object>>(members);
         
-        return next(false, !immediatelySurroundedByRoundBrackets, remainingFields, pp, ImmutableMap.builderWithExpectedSize(members.size()), new StringBuilder(immediatelySurroundedByRoundBrackets ? "" : "("));
+        return next(false, !immediatelySurroundedByRoundBrackets, remainingFields, pp, ImmutableMap.builderWithExpectedSize(members.size()), new SortedStringContent(!immediatelySurroundedByRoundBrackets));
     }
 
     // Recurse down the list of members, processing one and if no error, process next, until no more members and then look for closing bracket:
-    private Either<ErrorDetails, SuccessDetails<@ImmediateValue Record>> next(boolean expectComma, boolean expectClosingBracket, HashMap<@ExpressionIdentifier String, Recogniser<? extends @ImmediateValue @NonNull Object>> remainingMembers, ParseProgress orig, ImmutableMap.Builder<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>> soFar, StringBuilder replTextSoFar)
+    private Either<ErrorDetails, SuccessDetails<@ImmediateValue Record>> next(boolean expectComma, boolean expectClosingBracket, HashMap<@ExpressionIdentifier String, Recogniser<? extends @ImmediateValue @NonNull Object>> remainingMembers, ParseProgress orig, ImmutableMap.Builder<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>> soFar, SortedStringContent replTextSoFar)
     {
         ParseProgress pp = orig;
         // If no more members, look for closing bracket:
@@ -72,13 +75,12 @@ public class RecordRecogniser extends Recogniser<@ImmediateValue Record>
             if (expectClosingBracket)
             {
                 pp = pp.consumeNext(")");
-                replTextSoFar.append(")");
             }
             if (pp == null)
                 return error("Expected ')' to end record", orig.curCharIndex);
             
             ImmutableMap<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>> all = soFar.build();
-            return success(RecordMap.immediate(Utility.<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>, @ImmediateValue Object>mapValues(all, s -> s.value)), replTextSoFar.toString(), all.values().stream().flatMap(s -> s.styles.stream()).collect(ImmutableList.<StyleSpanInfo>toImmutableList()), pp);
+            return success(RecordMap.immediate(Utility.<@ExpressionIdentifier String, SuccessDetails<@ImmediateValue Object>, @ImmediateValue Object>mapValues(all, s -> s.value)), replTextSoFar.build(), all.values().stream().flatMap(s -> s.styles.stream()).collect(ImmutableList.<StyleSpanInfo>toImmutableList()), pp);
         }
 
         if (expectComma)
@@ -87,7 +89,6 @@ public class RecordRecogniser extends Recogniser<@ImmediateValue Record>
             pp = pp.consumeNext(",");
             if (pp == null)
                 return error("Expected ',' to separate record fields", beforeComma.curCharIndex);
-            replTextSoFar.append(", ");
         }
         
         // Look for field name:
@@ -102,13 +103,34 @@ public class RecordRecogniser extends Recogniser<@ImmediateValue Record>
             return error("Unknown field name: \"" + name + "\"", pp.curCharIndex);
         pp = fieldName.getSecond();
         
-        replTextSoFar.append(name + ": ");
-        
         return recogniser.process(pp, false).<SuccessDetails<@ImmediateValue Object>>map(s -> s.asObject())
             .<SuccessDetails<@ImmediateValue Record>>flatMap((SuccessDetails<@ImmediateValue Object> succ) -> {
                 soFar.put(name, succ);
-                replTextSoFar.append(succ.immediateReplacementText);
+                replTextSoFar.append(name, succ.immediateReplacementText);
                 return next(true, expectClosingBracket, remainingMembers, succ.parseProgress, soFar, replTextSoFar);
             });
+    }
+    
+    private static class SortedStringContent
+    {
+        private final boolean addRoundBrackets;
+        private final HashMap<@ExpressionIdentifier String, String> fieldContent = new HashMap<>();
+
+        public SortedStringContent(boolean addRoundBrackets)
+        {
+            this.addRoundBrackets = addRoundBrackets;
+        }
+        
+        public void append(@ExpressionIdentifier String fieldName, String content)
+        {
+            fieldContent.put(fieldName, content);
+        }
+        
+        public String build()
+        {
+            return (addRoundBrackets ? "(" : "")
+                + fieldContent.entrySet().stream().sorted(Comparator.comparing(Entry::getKey)).map(e -> e.getKey() + ": " + e.getValue()).collect(Collectors.joining(", "))
+                + (addRoundBrackets ? ")" : "");
+        }
     }
 }
