@@ -79,9 +79,9 @@ public class NumberRecogniser extends Recogniser<@ImmediateValue Number>
         }
     }
 
-    private Either<ErrorDetails, SuccessDetails<Number>> success(String src, ParseProgress pp) throws UserException, InternalException
+    private Either<ErrorDetails, SuccessDetails<@ImmediateValue Number>> success(String src, ParseProgress pp) throws UserException, InternalException
     {
-        Number number = Utility.parseNumber(src);
+        @ImmediateValue Number number = Utility.parseNumber(src);
         String repl = src;
         try
         {
