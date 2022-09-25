@@ -26,7 +26,6 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import xyz.columnal.gui.lexeditor.ExpressionLexer.Keyword;
 import xyz.columnal.gui.lexeditor.ExpressionLexer.Op;
-import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
