@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package test.gui;
+package test.gui.table;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
@@ -31,6 +31,8 @@ import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
+import test.gui.TAppUtil;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.ColumnUtility;
 import xyz.columnal.id.ColumnId;
