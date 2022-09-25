@@ -56,7 +56,6 @@ import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.lexeditor.EditorDisplay;
 import xyz.columnal.transformations.expression.ExpressionUtil;
 import test.DummyManager;
-import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.ComboUtilTrait;
 import test.gui.trait.EnterExpressionTrait;
@@ -250,7 +249,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
             TFXUtil.sleep(200);
             assertTrue("Popup still showing: "+ errorPopup, TFXUtil.fx(() -> errorPopup != null && !errorPopup.isShowing()));
             WaitForAsyncUtils.waitForFxEvents();
-            TestUtil.doubleOk(this);
+            TFXUtil.doubleOk(this);
             TFXUtil.sleep(1000);
             WaitForAsyncUtils.waitForFxEvents();
             @Nullable ImmediateDataSource dataSource = Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), ImmediateDataSource.class).findFirst().orElse(null);

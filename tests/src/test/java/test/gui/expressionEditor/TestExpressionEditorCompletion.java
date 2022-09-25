@@ -57,7 +57,6 @@ import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.expression.function.FunctionLookup;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
-import test.TestUtil;
 import test.gui.trait.AutoCompleteTrait;
 import test.gui.trait.PopupTrait;
 import threadchecker.OnThread;
@@ -100,7 +99,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
     
     private Expression finish() throws UserException
     {
-        TestUtil.doubleOk(this);
+        TFXUtil.doubleOk(this);
         sleep(500);
         return TBasicUtil.checkNonNull(((Calculate)mainWindowActions._test_getTableManager().getSingleTableOrThrow(new TableId("Calc"))).getCalculatedColumns().get(new ColumnId("My Calc")));
     }

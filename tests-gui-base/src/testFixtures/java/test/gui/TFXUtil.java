@@ -22,6 +22,7 @@ package test.gui;
 import javafx.scene.input.KeyCode;
 import org.apache.commons.lang3.SystemUtils;
 import org.testfx.util.WaitForAsyncUtils;
+import test.gui.trait.PopupTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.data.CellPosition;
@@ -188,6 +189,15 @@ public class TFXUtil
     {
         Table table = tableManager.getSingleTableOrThrow(srcId);
         return TBasicUtil.checkNonNull(fx(() -> table.getDisplay())).getMostRecentPosition();
+    }
+
+    public static void doubleOk(PopupTrait robot)
+    {
+        robot.moveAndDismissPopupsAtPos(robot.point(".ok-button"));
+        robot.clickOn(".ok-button");
+        sleep(300);
+        if (robot.lookup(".ok-button").tryQuery().isPresent())
+            robot.clickOn(".ok-button");
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>

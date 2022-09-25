@@ -60,7 +60,6 @@ import xyz.columnal.transformations.Calculate;
 import xyz.columnal.transformations.expression.*;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
-import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
@@ -149,7 +148,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             for (int i = 0; i < 2; i++)
             {
                 // Get rid of popups:
-                TestUtil.doubleOk(this);
+                TFXUtil.doubleOk(this);
                 // Now close dialog, and check for equality;
                 View view = correctTargetWindow().lookup(".view").query();
                 if (view == null)
@@ -225,7 +224,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             enterAndDeleteSmartBrackets(expressionSrc);
 
             // Close dialog, ignoring errors:
-            TestUtil.doubleOk(this);
+            TFXUtil.doubleOk(this);
             // Now close dialog, and check for equality;
             View view = correctTargetWindow().lookup(".view").query();
             if (view == null)

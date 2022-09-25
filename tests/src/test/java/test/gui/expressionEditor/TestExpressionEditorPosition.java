@@ -53,7 +53,6 @@ import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.lexeditor.EditorDisplay;
-import test.TestUtil;
 import test.gen.GenRandom;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.EnterTypeTrait;
@@ -463,7 +462,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                 }
 
                 // Dismiss dialog:
-                TestUtil.doubleOk(this);
+                TFXUtil.doubleOk(this);
                 
                 if (i == 0)
                 {
@@ -572,7 +571,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             // Dismiss dialog:
             push(KeyCode.ESCAPE);
             push(KeyCode.ESCAPE);
-            TestUtil.doubleOk(this);
+            TFXUtil.doubleOk(this);
         }
         catch (Exception e)
         {

@@ -29,6 +29,7 @@ import javafx.stage.Stage;
 import org.junit.Test;
 import test.functions.TFunctionUtil;
 import test.gui.TAppUtil;
+import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableRecordSet;
@@ -44,7 +45,6 @@ import xyz.columnal.gui.lexeditor.EditorDisplay;
 import xyz.columnal.transformations.Calculate;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
-import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.EnterExpressionTrait;
 import test.gui.trait.PopupTrait;
@@ -81,7 +81,7 @@ public class TestExpressionEditorResolution extends FXApplicationTest implements
             assertEquals(expectedLoaded, content);
 
             // Close dialog, ignoring errors:
-            TestUtil.doubleOk(this);
+            TFXUtil.doubleOk(this);
         }
         finally
         {

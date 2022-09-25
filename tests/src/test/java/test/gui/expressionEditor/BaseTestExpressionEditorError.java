@@ -51,7 +51,6 @@ import xyz.columnal.gui.lexeditor.EditorDisplay;
 import xyz.columnal.transformations.expression.CanonicalSpan;
 import xyz.columnal.gui.lexeditor.EditorLocationAndErrorRecorder.DisplaySpan;
 import xyz.columnal.gui.lexeditor.EditorLocationAndErrorRecorder.ErrorDetails;
-import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.ListUtilTrait;
 import test.gui.trait.PopupTrait;
@@ -189,7 +188,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                     assertEquals("Error: " + actualErrors.get(i).error.toPlain(), expectedErrors.get(i).displayLocation, actualErrors.get(i).displayLocation);
                 }
                 
-                TestUtil.doubleOk(this);
+                TFXUtil.doubleOk(this);
                 assertFalse("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
                 System.out.println("Closed expression editor, opening again");
                 // Show again and check error is showing from the outset:
@@ -212,7 +211,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                 }
                 assertTrue("Error popup showed somewhere", seenPopup);
                 
-                TestUtil.doubleOk(this);
+                TFXUtil.doubleOk(this);
                 assertFalse("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
             }
             

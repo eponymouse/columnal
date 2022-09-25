@@ -57,7 +57,6 @@ import xyz.columnal.error.InvalidImmediateValueException;
 import xyz.columnal.gui.grid.VirtualGrid;
 import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.transformations.expression.Expression;
-import test.gui.trait.PopupTrait;
 import xyz.columnal.utility.*;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeValue;
@@ -258,15 +257,6 @@ public class TestUtil
             parent = parent.getParent();
         }
         return parent;
-    }
-    
-    public static void doubleOk(PopupTrait robot)
-    {
-        robot.moveAndDismissPopupsAtPos(robot.point(".ok-button"));
-        robot.clickOn(".ok-button");
-        TFXUtil.sleep(300);
-        if (robot.lookup(".ok-button").tryQuery().isPresent())
-            robot.clickOn(".ok-button");
     }
 
 }

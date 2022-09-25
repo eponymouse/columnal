@@ -59,7 +59,6 @@ import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.ExpressionUtil;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
-import test.TestUtil;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.ComboUtilTrait;
 import test.gui.trait.EnterExpressionTrait;
@@ -202,7 +201,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             // Check that popup vanishes pretty much straight away:
             TFXUtil.sleep(200);
             assertFalse("Popup still showing: " + errorPopup, isShowingErrorPopup());
-            TestUtil.doubleOk(this);
+            TFXUtil.doubleOk(this);
             TFXUtil.sleep(1000);
             WaitForAsyncUtils.waitForFxEvents();
             @Nullable Calculate calculate = Utility.filterClass(tableManager.getAllTables().stream(), Calculate.class).findFirst().orElse(null);
