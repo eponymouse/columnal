@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package test.gui;
+package test.gui.transformation;
 
 import annotation.qual.Value;
 import annotation.units.TableDataColIndex;
@@ -42,6 +42,8 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.text.Text;
 import org.testfx.util.WaitForAsyncUtils;
+import test.gui.TAppUtil;
+import test.gui.TFXUtil;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.DataItemPosition;
 import xyz.columnal.id.TableId;
