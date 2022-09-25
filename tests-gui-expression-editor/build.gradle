@@ -33,4 +33,6 @@ javafx {
     configuration = "testImplementation"
 }
 
+sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/main/resources')
+
 description = 'tests-gui-expression-editor'
