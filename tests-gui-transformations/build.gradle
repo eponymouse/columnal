@@ -1,0 +1,37 @@
+dependencies {
+    implementation project(':app')
+    implementation project(':data')
+    implementation project(':expressions')
+    implementation project(':functions')
+    implementation project(':gui-utility')
+    implementation project(':identifiers')
+    implementation project(':lex-editor')
+    implementation project(':parsers')
+    implementation project(':r-interop')
+    implementation project(':stf')
+    implementation project(':transformations')
+    implementation project(':types')
+    implementation project(':utility')
+    testImplementation libs.hamcrest
+    implementation libs.commons.io
+    implementation libs.poi.ooxml
+    implementation libs.guava
+    implementation libs.streamex
+    implementation libs.javaSMT
+    implementation libs.commons.lang3
+    implementation libs.controlsfx
+    testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
+    testImplementation 'org.testfx:testfx-junit:4.0.15-alpha'
+
+    // From https://stackoverflow.com/questions/5644011/multi-project-test-dependencies-with-gradle/60138176#60138176
+    testImplementation(testFixtures(project(":tests-basic")))
+    testImplementation(testFixtures(project(":tests-functions")))
+    testImplementation(testFixtures(project(":tests-gui-base")))
+    testImplementation(testFixtures(project(":tests-tables")))
+}
+
+javafx {
+    modules = [ 'javafx.base', 'javafx.controls', 'javafx.swing' ]
+    configuration = "testImplementation"
+}
+description = "tests-gui-transformations"
