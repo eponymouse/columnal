@@ -18,5 +18,5 @@ module xyz.columnal.utility.gui
     requires wellbehavedfx;
     requires static org.checkerframework.checker.qual;
     requires commons.lang3;
-    requires antlr4.runtime;
+    requires org.antlr.antlr4.runtime;
 }

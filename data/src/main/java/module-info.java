@@ -11,7 +11,7 @@ module xyz.columnal.data
     requires xyz.columnal.utility;
     
 
-    requires antlr4.runtime;
+    requires org.antlr.antlr4.runtime;
     requires com.google.common;
     //requires common;
     requires javafx.graphics;

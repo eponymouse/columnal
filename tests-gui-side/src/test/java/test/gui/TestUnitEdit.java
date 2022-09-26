@@ -67,10 +67,9 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         clickOn("#id-menu-view").clickOn(".id-menu-view-units");
         TFXUtil.sleep(200);
         clickOn(".id-units-userDeclared-add");
-        TFXUtil.sleep(200);
+        TFXUtil.sleep(500);
         enterUnitDetails(unitDetails);
-        moveAndDismissPopupsAtPos(point(".ok-button"));
-        clickOn(".ok-button");
+        TFXUtil.doubleOk(this);
         TFXUtil.sleep(500);
         clickOn(".close-button");
         TFXUtil.sleep(500);

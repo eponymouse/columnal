@@ -20,5 +20,5 @@ module xyz.columnal.transformations
     requires javafx.controls;
     requires javafx.graphics;
     requires static org.checkerframework.checker.qual;
-    requires antlr4.runtime;
+    requires org.antlr.antlr4.runtime;
 }

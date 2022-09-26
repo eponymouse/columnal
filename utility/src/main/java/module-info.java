@@ -14,7 +14,7 @@ module xyz.columnal.utility
     requires javafx.base;
     requires javafx.graphics;
     requires org.apache.logging.log4j;
-    requires antlr4.runtime;
+    requires org.antlr.antlr4.runtime;
     requires commons.io;
     requires java.string.similarity;
     requires common;

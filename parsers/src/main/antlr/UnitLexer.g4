@@ -23,6 +23,6 @@ CATEGORY: '@CATEGORY';
 UNITVAR : '@unitvar';
 
 // No spaces in unit identifiers
-IDENT : [\p{Alpha}\p{General_Category=Other_Letter}\p{General_Category=Currency_Symbol}]+ ('_' [\p{Alpha}\p{General_Category=Other_Letter}\p{General_Category=Currency_Symbol}]+)*;
+IDENT : [\p{Alphabetic}\p{General_Category=Other_Letter}\p{General_Category=Currency_Symbol}]+ ('_' [\p{Alphabetic}\p{General_Category=Other_Letter}\p{General_Category=Currency_Symbol}]+)*;
 
 COMMENT : '//' ~[\r\n]* NEWLINE -> skip;

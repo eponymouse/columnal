@@ -55,8 +55,8 @@ dependencyResolutionManagement {
             library('checkerframework-qual', 'org.checkerframework:checker-qual:3.25.0')
             
             library('guava', 'com.google.guava:guava:28.1-jre')
-            library('antlr.exec', 'org.antlr:antlr4:4.7.1')
-            library('antlr', 'org.antlr:antlr4-runtime:4.7.1')
+            library('antlr.exec', 'org.antlr:antlr4:4.10.1')
+            library('antlr', 'org.antlr:antlr4-runtime:4.10.1')
             library('commons.lang3', 'org.apache.commons:commons-lang3:3.0')
             library('commons.io', 'commons-io:commons-io:2.5')
             library('javaSMT', 'org.sosy-lab:java-smt:1.0.1')

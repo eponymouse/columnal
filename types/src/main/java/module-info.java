@@ -14,7 +14,7 @@ module xyz.columnal.types
     requires xyz.columnal.utility;
     requires xyz.columnal.identifiers;
 
-    requires antlr4.runtime;
+    requires org.antlr.antlr4.runtime;
     requires com.google.common;
     requires javafx.graphics;
     requires one.util.streamex;
