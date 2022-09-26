@@ -149,6 +149,19 @@ public class GenFormattedData extends Generator<FormatAndData>
                             str = str.replace(format.initialTextFormat.quote, format.initialTextFormat.quote + format.initialTextFormat.quote);
                         if (format.initialTextFormat.separator != null)
                             str = str.replace(format.initialTextFormat.separator, "");
+                        
+                        // Check that the string isn't a number, otherwise we'll think it's a numeric column:
+                        try
+                        {
+                            new BigDecimal(str);
+                            // Oh dear, it parsed, replace it with something:
+                            str = "oh dear my original idea parsed as a number";
+                        }
+                        catch (NumberFormatException e)
+                        {
+                            // Won't parse, that's fine then
+                        }
+                        
                     }
                     data.add(DataTypeUtility.value(str));
                     entry.append(str);
