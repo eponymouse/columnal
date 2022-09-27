@@ -1,6 +1,8 @@
 module xyz.columnal.utility.gui
 {
     exports xyz.columnal.utility.gui;
+    // Need to be opens for JNA access on Windows:
+    opens xyz.columnal.utility.gui;
 
     requires static anns;
     requires static annsthreadchecker;
