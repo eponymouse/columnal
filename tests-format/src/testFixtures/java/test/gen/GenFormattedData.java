@@ -149,6 +149,12 @@ public class GenFormattedData extends Generator<FormatAndData>
                             str = str.replace(format.initialTextFormat.quote, format.initialTextFormat.quote + format.initialTextFormat.quote);
                         if (format.initialTextFormat.separator != null)
                             str = str.replace(format.initialTextFormat.separator, "");
+
+                        // Check that the string isn't blank, otherwise we'll think it's a blank column:
+                        if (str.isBlank())
+                        {
+                            str = "oh no string was blank";
+                        }
                         
                         // Check that the string isn't a number, otherwise we'll think it's a numeric column:
                         try
