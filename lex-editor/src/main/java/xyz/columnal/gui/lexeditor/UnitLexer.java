@@ -203,8 +203,10 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
     
     private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ChunkType curType, ChunkType preceding)
     {
-        ArrayList<SingleUnit> allDeclared = new ArrayList<>(unitManager.getAllDeclared());
-        Collections.<SingleUnit>sort(allDeclared, (u, v) -> u.getName().compareToIgnoreCase(v.getName()));
+        ImmutableList<SingleUnit> allDeclared = ImmutableList.sortedCopyOf(
+            (u, v) -> u.getName().compareToIgnoreCase(v.getName()),
+            unitManager.getAllDeclared());
+                
         return new CodeCompletionContext(ImmutableList.of(
             new LexCompletionGroup(Utility.mapListI(allDeclared, u -> {
                 int len = Utility.longestCommonStartIgnoringCase(u.getName(), 0, stem, 0);
