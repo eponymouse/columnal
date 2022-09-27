@@ -67,7 +67,7 @@ public class BaseTestExpressionEditorEntry extends FXApplicationTest implements 
 {
     protected void testEntry_Impl(ExpressionValue expressionValue, Random r, String... qualifiedIdentsToEnterInFull) throws Exception
     {
-        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet);
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet, expressionValue.tableId);
         try
         {
             Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
@@ -80,7 +80,7 @@ public class BaseTestExpressionEditorEntry extends FXApplicationTest implements 
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             correctTargetWindow().clickOn(".id-new-transform");
             correctTargetWindow().clickOn(".id-transform-calculate");
-            correctTargetWindow().write("Table1");
+            correctTargetWindow().write(expressionValue.tableId.getRaw());
             push(KeyCode.ENTER);
             TFXUtil.sleep(200);
             write("DestCol");
