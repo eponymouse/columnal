@@ -96,6 +96,7 @@ import xyz.columnal.styled.StyledString;
 import xyz.columnal.styled.StyledString.Builder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.transformations.expression.visitor.ExpressionVisitorStream;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.FXPlatformFunction;
 import xyz.columnal.utility.Pair;
@@ -1075,7 +1076,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         public <T> T visit(ExpressionVisitor<T> visitor)
         {
             // Bit of a hack all round:
-            if (visitor instanceof AddedSpaceCalculator)
+            if (visitor instanceof ExpressionVisitorStream)
                 return (T)Stream.<Object>of();
             
             Log.logStackTrace("KeyValueExpression.visit");
