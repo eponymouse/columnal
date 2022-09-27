@@ -52,10 +52,13 @@ build.dependsOn(compileSass)
 jar.dependsOn(compileSass)
 run.dependsOn(compileSass)
 
+sourceSets.main.resources.srcDirs('../xml/build/resources/main')
+
 ext {
     javaMainClass = "xyz.columnal.gui.Main"
 }
 application {
     mainClass = javaMainClass
+    applicationDefaultJvmArgs = ["-Dlog4j.configurationFile=dev-log4j2.xml"]
 }
 description = 'app'
