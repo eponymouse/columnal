@@ -24,6 +24,7 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
@@ -38,6 +39,7 @@ import java.util.Random;
 @OnThread(Tag.Simulation)
 public class PropExpressionEditor extends BaseTestExpressionEditorEntry
 {
+    @Ignore
     @Property(trials = 10)
     public void testEntry(@When(satisfies = "#_.expressionLength < 500") @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @From(GenRandom.class) Random r) throws Exception
     {
