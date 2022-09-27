@@ -21,10 +21,6 @@
 package test.gui.expressionEditor;
 
 import com.google.common.collect.ImmutableList;
-import com.pholser.junit.quickcheck.From;
-import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
-import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
@@ -75,7 +71,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
 public class TestExpressionEditor extends BaseTestExpressionEditorEntry implements ListUtilTrait, ScrollToTrait, EnterExpressionTrait, ClickTableLocationTrait, PopupTrait
 {
@@ -103,11 +98,6 @@ public class TestExpressionEditor extends BaseTestExpressionEditorEntry implemen
         return super.write(text, sleepMillis);
     }
 
-    @Property(trials = 10)
-    public void testEntry(@When(satisfies = "#_.expressionLength < 500") @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @From(GenRandom.class) Random r) throws Exception
-    {
-        testEntry_Impl(expressionValue, r);
-    }
 
     public @Nullable Expression plainEntry(String expressionSrc, TypeManager typeManager) throws Exception
     {
