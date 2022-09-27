@@ -246,7 +246,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         EditorDisplay editorDisplay = lookup(".editor-display").query();
         // Caret will update on blink, but let's not wait around for that:
         TFXUtil.fx_(() -> editorDisplay._test_queueUpdateCaret());
-        sleep(200);
+        sleep(2000);
         ImmutableList<LexAutoCompleteWindow> completions = Utility.filterClass(listWindows().stream(), LexAutoCompleteWindow.class).collect(ImmutableList.toImmutableList());
         assertEquals(1, completions.size());
         Node caret = lookup(".document-caret").query();
@@ -260,7 +260,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
             //Log.debug("Text: " + ((Text)t).getText() + " bounds: " + t.localToScreen(t.getBoundsInLocal()));
             return t.localToScreen(t.getBoundsInLocal()).getMinX();
         }).average()).orElse(-1);
-        MatcherAssert.assertThat(compX, Matchers.closeTo(edX, 0.5));
+        MatcherAssert.assertThat(compX, Matchers.closeTo(edX, 1.0));
     }
 
     @Test
@@ -340,7 +340,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
     }
 
     @Test
-    public void testWholeIfByTyping() throws Exception
+    public void testJustIfByTyping() throws Exception
     {
         // Top completion in blank expression should be to insert a complete if statement.
         loadExpression("@unfinished \"\"");
@@ -348,7 +348,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         checkPosition();
         write("f");
         // It's going to be invalid due to the empty bits:
-        assertEquals(IfThenElseExpression.unrecorded(new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of())), finish());
+        assertEquals(new InvalidOperatorExpression(ImmutableList.of(new InvalidIdentExpression("@if"), new InvalidOperatorExpression(ImmutableList.of()))), finish());
     }
 
     @Test
