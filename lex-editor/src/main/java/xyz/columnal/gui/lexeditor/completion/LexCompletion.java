@@ -173,7 +173,14 @@ public class LexCompletion
 
     public LexCompletion offsetBy(@CanonicalLocation int offsetBy)
     {
-        return new LexCompletion(startPos + offsetBy, lastShowPosIncl + offsetBy, content, display, relativeCaretPos, selectionBehaviour, furtherDetails, sideText);
+        final LexCompletion original = this;
+        return new LexCompletion(startPos + offsetBy, lastShowPosIncl + offsetBy, content, display, relativeCaretPos, selectionBehaviour, furtherDetails, sideText) {
+            @Override
+            public boolean showFor(@CanonicalLocation int caretPos)
+            {
+                return original.showFor(caretPos - offsetBy);
+            }
+        };
     }
 
     public boolean showFor(@CanonicalLocation int caretPos)
