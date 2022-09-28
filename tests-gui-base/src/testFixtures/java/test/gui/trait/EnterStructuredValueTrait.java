@@ -126,7 +126,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                 @Value String stringValue = Utility.cast(value, String.class);
                 if (topLevel && !stringValue.isEmpty() && !stringValue.startsWith("\"") && !stringValue.endsWith("\"") && r.nextBoolean())
                 {
-                    writeOrPaste(stringValue);
+                    writeOrPaste(GrammarUtility.escapeChars(stringValue));
                 }
                 else
                 {
