@@ -193,8 +193,8 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                 System.out.println("Closed expression editor, opening again");
                 // Show again and check error is showing from the outset:
                 clickOn("DestCol");
-                sleep(500);
-                assertTrue("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
+                sleep(1500);
+                assertTrue("Expression editor showing again", lookup(".expression-editor").tryQuery().isPresent());
                 assertErrorShowing(true, false);
                 // Check it shows if you move into it:
                 push(KeyCode.TAB);
