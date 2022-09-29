@@ -337,7 +337,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
                 }
                 write(idents.stream().collect(Collectors.joining("\\")), DELAY);*/
                 String full = (namespace == null ? "" : namespace + "\\\\") + idents.stream().collect(Collectors.joining("\\"));
-                if (true || Arrays.asList(qualifiedIdentsToEnterInFull).contains(full))
+                if (Arrays.asList(qualifiedIdentsToEnterInFull).contains(full))
                 {
                     write(full, DELAY);
                 }
