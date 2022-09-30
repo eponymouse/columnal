@@ -119,7 +119,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                 if (!expression.startsWith("\u0000") && "({[\"".contains("" + c))
                     push(KeyCode.DELETE);
             }
-            sleep(200);
+            sleep(2000);
             
             if (errors.length == 0)
             {
