@@ -76,7 +76,7 @@ public class TestDocumentTextField extends FXApplicationTest
     @Property(trials=5, shrink = false)
     public void testBasic(@From(GenString.class) String s, @From(GenRandom.class) Random r)
     {
-        s = removeNonPrintable(s);
+        s = removeNonPrintableAndRtoL(s);
         
         if (s.length() > 100)
             s = s.substring(0, s.length() % 100);
@@ -237,7 +237,7 @@ public class TestDocumentTextField extends FXApplicationTest
     @Property(trials=5)
     public void testMove(@From(GenString.class) String s, @From(GenRandom.class) Random r)
     {
-        s = removeNonPrintable(s);
+        s = removeNonPrintableAndRtoL(s);
 
         if (s.length() > 100)
             s = s.substring(0, s.length() % 100);
@@ -311,11 +311,12 @@ public class TestDocumentTextField extends FXApplicationTest
         return r;
     }
 
-    private String removeNonPrintable(String s)
+    private String removeNonPrintableAndRtoL(String s)
     {
         // Adapted from https://stackoverflow.com/a/18603020/412908
         int[] filteredCodePoints = s.codePoints().filter(codePoint -> {
-                    return !ImmutableList.<Integer>of((int)Character.CONTROL, (int)Character.FORMAT, (int)Character.PRIVATE_USE, (int)Character.SURROGATE, (int)Character.UNASSIGNED).contains(Character.getType(codePoint));
+                    return !ImmutableList.<Integer>of((int)Character.CONTROL, (int)Character.FORMAT, (int)Character.PRIVATE_USE, (int)Character.SURROGATE, (int)Character.UNASSIGNED).contains(Character.getType(codePoint))
+                        && Character.getDirectionality(codePoint) != Character.DIRECTIONALITY_RIGHT_TO_LEFT;
                 }).toArray();
         return new String(filteredCodePoints, 0, filteredCodePoints.length);
     }
@@ -323,7 +324,7 @@ public class TestDocumentTextField extends FXApplicationTest
     @Property(trials=3)
     public void testHorizScroll(@From(GenString.class) String s)
     {
-        s = removeNonPrintable(s);
+        s = removeNonPrintableAndRtoL(s);
         Assume.assumeFalse(s.isEmpty());
         while (s.length() < 50)
             s += s;
