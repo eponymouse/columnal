@@ -515,7 +515,7 @@ public class TestExpressionEditor extends BaseTestExpressionEditorEntry implemen
     @Test
     public void testTableReference() throws Exception
     {
-        testSimple("table\\\\Table1");
+        testSimple("table\\\\TEE");
     }
 
     @Test
