@@ -23,6 +23,7 @@ package test.gui.util;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -34,11 +35,10 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
-import test.gui.TFXUtil;
-import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
@@ -47,17 +47,19 @@ import org.testfx.api.FxRobot;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
-import xyz.columnal.error.InternalException;
-import xyz.columnal.gui.Main;
+import test.gui.TFXUtil;
 import test.gui.trait.FocusOwnerTrait;
 import test.gui.trait.ScreenshotTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.gui.Main;
+import xyz.columnal.log.Log;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.FXUtility;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.GraphicsEnvironment;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
@@ -146,11 +148,30 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     public final void dumpScreenshot()
     {
         // Seems to throw an exception under JFX 13 and Monocle 12:
-        // printBase64(capture(Screen.getPrimary().getBounds()).getImage());
-        // So capture window instead:
-        Window window = targetWindow();
-        if (window != null)
-            dumpScreenshot(window);
+        //printBase64(new Robot().getScreenCapture(null, Screen.getPrimary().getBounds()));
+        WritableImage whole = new WritableImage((int)Screen.getPrimary().getBounds().getWidth(), (int)Screen.getPrimary().getBounds().getHeight());
+        ObservableList<Window> windows = Window.getWindows();
+        if (!windows.isEmpty() && windows.contains(targetWindow()))
+        {
+            windows.forEach(w -> {
+                WritableImage ws = w.getScene().snapshot(null);
+                for (int y = 0; y < ((int) ws.getHeight()); y++)
+                {
+                    for (int x = 0; x < ((int) ws.getWidth()); x++)
+                    {
+                        whole.getPixelWriter().setArgb((int) w.getX() + x, (int) w.getY() + y, ws.getPixelReader().getArgb(x, y));
+                    }
+                }
+            });
+            printBase64(whole);
+        }
+        else
+        {
+            // So capture window instead:
+            Window window = targetWindow();
+            if (window != null)
+                dumpScreenshot(window);
+        }
     }
     
     @OnThread(Tag.FXPlatform)
