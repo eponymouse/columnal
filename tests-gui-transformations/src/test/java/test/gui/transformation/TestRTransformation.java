@@ -67,12 +67,13 @@ public class TestRTransformation extends FXApplicationTest implements ScrollToTr
         CellPosition targetPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
         clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-        TFXUtil.sleep(100);
+        TFXUtil.sleep(500);
         clickOn(".id-new-transform");
-        TFXUtil.sleep(100);
+        TFXUtil.sleep(500);
         scrollTo(".id-transform-runr");
         clickOn(".id-transform-runr");
-        TFXUtil.sleep(200);
+        // First run can take quite a while:
+        TFXUtil.sleep(200_000);
         // Focus should begin in the expression, so let's do that first:
         write("digest(str_c(Table1$\"The Strings\"))");
         
@@ -87,7 +88,7 @@ public class TestRTransformation extends FXApplicationTest implements ScrollToTr
         clickOn(".ok-button");
         
         // Since we're installing packages, wait a bit longer than usual:
-        sleep(1000);
+        sleep(200_000);
         
         // Now check table exists, with correct output
         assertEquals(2, mainWindowActions._test_getTableManager().getAllTables().size());
