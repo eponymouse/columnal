@@ -46,6 +46,7 @@ public interface AutoCompleteTrait extends FxRobotInterface
     public default void lexComplete(String completion)
     {
         write(completion.substring(0, 1));
+        TFXUtil.sleep(500);
         scrollLexAutoCompleteToOption(completion);
         push(KeyCode.ENTER);
     }

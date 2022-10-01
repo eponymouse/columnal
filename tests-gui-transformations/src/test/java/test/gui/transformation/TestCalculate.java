@@ -211,6 +211,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         
         push(KeyCode.SHORTCUT, KeyCode.A);
         push(KeyCode.DELETE);
+        TFXUtil.sleep(200);
         
         // Copy existing column:
         boolean clickedExistingForExpression = r.nextBoolean();
