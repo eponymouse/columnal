@@ -145,6 +145,8 @@ subprojects { subproject ->
       forkEvery = 1
 
       jvmArgs += ['-Xmx2G',
+                  '-XX:+HeapDumpOnOutOfMemoryError',
+                  '-XX:+UseCompressedOops',
                   '-Djava.awt.headless=true',
                   '-Dtestfx.robot=glass',
                   '-Dtestfx.headless=true',
