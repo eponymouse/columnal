@@ -322,7 +322,9 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 // Pop twice as our state will get re-added as latest after this if/else:
                 dataHistory.remove(dataHistory.size() - 1);
                 dataHistory.remove(dataHistory.size() - 1);
-                clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
+                clickOn("#id-menu-edit").moveBy(5, 0);
+                TFXUtil.sleep(500);
+                clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
                 TFXUtil.sleep(2000);
             }
             else // 6 - 9
