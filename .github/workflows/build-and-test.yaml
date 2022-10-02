@@ -4,11 +4,14 @@ jobs:
   Ubuntu-Build-Test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 11
+      - name: Checkout repository code
+        uses: actions/checkout@v3
+      - name: Load .env file
+        uses: xom9ikk/dotenv@v1.0.2        
+      - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          java-version: '11'
+          java-version: ${{ env.java_version }}
           distribution: 'temurin'
           java-package: jdk
           architecture: x64
