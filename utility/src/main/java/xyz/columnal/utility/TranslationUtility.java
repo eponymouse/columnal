@@ -20,19 +20,24 @@
 
 package xyz.columnal.utility;
 
-import xyz.columnal.log.Log;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.log.Log;
+import xyz.columnal.styled.StyledString;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.MissingResourceException;
+import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by neil on 17/04/2017.
@@ -40,6 +45,15 @@ import java.util.ResourceBundle;
 @OnThread(Tag.Any)
 public class TranslationUtility
 {
+    private static final LoadingCache<@LocalizableKey String, Optional<@Localized String>> cached = CacheBuilder.newBuilder().build(new CacheLoader<@LocalizableKey String, Optional<@Localized String>>()
+    {
+        @Override
+        public Optional<@Localized String> load(@LocalizableKey String key) throws Exception
+        {
+            return Optional.ofNullable(loadString(key));
+        }
+    });
+    
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private static @MonotonicNonNull List<ResourceBundle> resources;
 
@@ -79,6 +93,36 @@ public class TranslationUtility
     @OnThread(Tag.Any)
     public static @Localized String getString(@LocalizableKey String key, String... values)
     {
+        @Localized String lookedUp = null;
+        try
+        {
+            lookedUp = cached.get(key).orElse(null);
+        }
+        catch (ExecutionException e)
+        {
+            // Leave lookedUp as null and log it
+            Log.log(e);
+        }
+        if (lookedUp != null)
+        {
+            if (values.length == 0)
+                return lookedUp;
+            for (int i = 0; i < values.length; i++)
+            {
+                lookedUp = lookedUp.replace("$" + (i+1), values[i]);
+            }
+            return lookedUp;
+        }
+        else
+        {
+            Log.error("Did not find translated key: \"" + key + "\"");
+            return key; // Best we can do, if we can't find the labels file.
+        }
+    }
+
+    private static @Localized @Nullable String loadString(@LocalizableKey String key)
+    {
+        @Nullable String lookedUp = null;
         @Nullable List<ResourceBundle> res = getResources();
         if (res != null)
         {
@@ -89,13 +133,8 @@ public class TranslationUtility
                     @Nullable String local = r.getString(key);
                     if (local != null)
                     {
-                        if (values.length == 0)
-                            return local;
-                        for (int i = 0; i < values.length; i++)
-                        {
-                            local = local.replace("$" + (i+1), values[i]);
-                        }
-                        return local;
+                        lookedUp = local;
+                        break;
                     }
                 }
                 catch (MissingResourceException e)
@@ -104,8 +143,7 @@ public class TranslationUtility
                 }
             }
         }
-        Log.error("Did not find translated key: \"" + key + "\"");
-        return key; // Best we can do, if we can't find the labels file.
+        return lookedUp;
     }
 
     @SuppressWarnings("i18n") // Because we return key if there's an issue
