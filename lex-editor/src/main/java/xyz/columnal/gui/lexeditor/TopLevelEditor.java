@@ -203,6 +203,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     {
         hiding = true;
         informationPopup.hidePopup(true);
+        display.cleanup();
     }
 
     protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)

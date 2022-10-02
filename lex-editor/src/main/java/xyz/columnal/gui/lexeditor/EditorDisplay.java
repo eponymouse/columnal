@@ -688,4 +688,9 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     {
         return ImmutableList.of();
     }
+
+    public void cleanup()
+    {
+        autoComplete.cleanup();
+    }
 }

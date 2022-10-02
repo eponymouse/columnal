@@ -123,6 +123,11 @@ public class LexAutoComplete
         return System.currentTimeMillis() < clickImmuneUntil;
     }
 
+    public void cleanup()
+    {
+        window.cleanup();
+    }
+
     public enum LexSelectionBehaviour
     {
         SELECT_IF_ONLY,

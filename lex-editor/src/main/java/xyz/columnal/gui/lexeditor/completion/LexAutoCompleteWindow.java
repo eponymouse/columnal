@@ -42,6 +42,7 @@ import xyz.columnal.gui.lexeditor.completion.LexAutoComplete.LexSelectionBehavio
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.FXPlatformRunnable;
 import xyz.columnal.utility.FXPlatformSupplier;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.ResourceUtility;
@@ -49,6 +50,7 @@ import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.FXUtility;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -59,16 +61,18 @@ public final class LexAutoCompleteWindow extends PopupControl
 {
     private final HBox pane;
     final LexCompletionList listView;
-    
+    private final ArrayList<FXPlatformRunnable> removeWebViewListeners = new ArrayList<>();
+    private final WebView webView;
+
     public LexAutoCompleteWindow(LexCompletionListener triggerCompletion)
     {
         this.listView = new LexCompletionList(triggerCompletion);
-        WebView webView = new WebView();
+        webView = FXUtility.makeOrReuseWebView();
         webView.setFocusTraversable(false);
-        FXUtility.addChangeListenerPlatformNN(webView.visibleProperty(), vis -> {
+        removeWebViewListeners.add(FXUtility.addChangeListenerPlatformNN(webView.visibleProperty(), vis -> {
             webView.managedProperty().set(vis);
             sizeToScene();
-        });
+        }));
         webView.setPrefWidth(Screen.getPrimary().getBounds().getWidth() >= 1200 ? 500.0 : 350.0);
         webView.setVisible(false);
         listView.setMaxHeight(400.0);
@@ -123,7 +127,7 @@ public final class LexAutoCompleteWindow extends PopupControl
             else
                 webView.setVisible(false);
         });
-        FXUtility.addChangeListenerPlatform(webView.getEngine().documentProperty(), webViewDoc -> enableInsertLinks(webViewDoc, triggerCompletion, () -> {
+        removeWebViewListeners.add(FXUtility.addChangeListenerPlatform(webView.getEngine().documentProperty(), webViewDoc -> enableInsertLinks(webViewDoc, triggerCompletion, () -> {
             LexCompletion lexCompletion = listView.getSelectedItem();
             if (lexCompletion != null)
             {
@@ -131,7 +135,7 @@ public final class LexAutoCompleteWindow extends PopupControl
             }
             else
                 return null;
-        }));
+        })));
     }
     
     public static void enableInsertLinks(@Nullable Document doc, InsertListener insertListener, FXPlatformSupplier<@Nullable @CanonicalLocation Integer> getInsertPosition)
@@ -188,6 +192,12 @@ public final class LexAutoCompleteWindow extends PopupControl
     public ImmutableList<LexCompletion> _test_getShowing()
     {
         return listView.getItems().collect(ImmutableList.<LexCompletion>toImmutableList());
+    }
+
+    public void cleanup()
+    {
+        removeWebViewListeners.forEach(FXPlatformRunnable::run);
+        FXUtility.returnWebViewForReuse(webView);
     }
 
     @OnThread(Tag.FX)

@@ -96,6 +96,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
@@ -173,6 +174,21 @@ public class FXUtility
     // Need to keep strong reference until they run:
     private static ArrayList<Runnable> pulseListeners = new ArrayList<>();
     private static WeakHashMap<Stage, MyHookProc> windowsHookSetOn = new WeakHashMap<>();
+    
+    private static ReusableResourcePool<WebView> webViewReusableResourcePool = new ReusableResourcePool<WebView>(2, WebView::new, w -> {
+        w.setFocusTraversable(true);
+        // All taken from WebView source code:
+        w.setMaxWidth(Double.MAX_VALUE);
+        w.setMaxHeight(Double.MAX_VALUE);
+        w.setPrefWidth(800);
+        w.setPrefHeight(600);
+        w.setMinWidth(0);
+        w.setMinHeight(0);
+        w.setVisible(true);
+        w.setManaged(true);
+        w.getEngine().load("");
+        
+    });
 
     public static <T> void enableDragFrom(ListView<T> listView, String type, TransferMode transferMode)
     {
@@ -383,10 +399,10 @@ public class FXUtility
 
     @OnThread(Tag.FXPlatform)
     @SuppressWarnings("nullness")
-    public static <T> void addChangeListenerPlatform(ObservableValue<T> property, FXPlatformConsumer<? super @Nullable T> listener)
+    public static <T> FXPlatformRunnable addChangeListenerPlatform(ObservableValue<T> property, FXPlatformConsumer<? super @Nullable T> listener)
     {
         // Defeat thread checker:
-        property.addListener(new ChangeListener<T>()
+        ChangeListener<T> changeListener = new ChangeListener<>()
         {
             @Override
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)
@@ -394,7 +410,9 @@ public class FXUtility
             {
                 listener.consume(newVal);
             }
-        });
+        };
+        property.addListener(changeListener);
+        return () -> property.removeListener(changeListener);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -411,13 +429,19 @@ public class FXUtility
         listener.consume(property.getValue());
     }
 
+    /**
+     * @param property The non-null property to listen to
+     * @param listener The listener to call
+     * @return A runnable that will remove the listener
+     * @param <T> The type of the observable
+     */
     @OnThread(Tag.FXPlatform)
     @SuppressWarnings("nullness")
     // NN = Not Null
-    public static <T> void addChangeListenerPlatformNN(ObservableValue<@NonNull T> property, FXPlatformConsumer<@NonNull ? super T> listener)
+    public static <T> FXPlatformRunnable addChangeListenerPlatformNN(ObservableValue<@NonNull T> property, FXPlatformConsumer<@NonNull ? super T> listener)
     {
         // Defeat thread checker:
-        property.addListener(new ChangeListener<T>()
+        ChangeListener<T> changeListener = new ChangeListener<>()
         {
             @Override
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)
@@ -425,7 +449,9 @@ public class FXUtility
             {
                 listener.consume(newVal);
             }
-        });
+        };
+        property.addListener(changeListener);
+        return () -> property.removeListener(changeListener);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -1517,6 +1543,16 @@ public class FXUtility
             // pass the callback on to the next hook in the chain
             return User32.INSTANCE.CallNextHookEx(null, nCode, wParam, new LPARAM(Pointer.nativeValue(hookProcStruct.getPointer())));
         }
+    }
+    
+    public static WebView makeOrReuseWebView()
+    {
+        return webViewReusableResourcePool.get();
+    }
+    
+    public static void returnWebViewForReuse(WebView webView)
+    {
+        webViewReusableResourcePool.returnToPool(webView);
     }
 
     public static interface GenOrError<T>
