@@ -42,6 +42,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import org.junit.Ignore;
 import test.functions.TFunctionUtil;
 import test.gui.TAppUtil;
 import test.gui.TFXUtil;
@@ -544,6 +545,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         }
     }
 
+    @Ignore // TODO restore
     @Property(trials=4, shrink = false)
     @OnThread(Tag.Simulation)
     public void testAddColumnBeforeAfter(
@@ -739,6 +741,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         return new RectangleBounds(table.getDisplay().getMostRecentPosition(), table.getDisplay().getBottomRightIncl());
     }
 
+    @Ignore // TODO restore
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
     public void testChangeColumnType(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker dataTypeMaker, @From(GenRandom.class) Random r) throws UserException, InternalException
