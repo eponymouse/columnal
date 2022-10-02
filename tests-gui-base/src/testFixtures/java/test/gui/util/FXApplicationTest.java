@@ -126,10 +126,20 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     {
         // There seems to be a problem with a memory leak via ParametersImpl
         // having a static map of Application to parameters.  We never need
-        // the parameters for testing so let's blank them:
-        Field field = ParametersImpl.class.getDeclaredField("params");
-        field.setAccessible(true);
-        ((Map)field.get(null)).clear();
+        // the parameters for testing so let's blank them.  Do it after
+        // to prevent it interfering with timeout:
+        FXUtility.runAfter(() -> {
+            try
+            {
+                Field field = ParametersImpl.class.getDeclaredField("params");
+                field.setAccessible(true);
+                ((Map) field.get(null)).clear();
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        });
         
         windowToUse = stage;
         // Don't run now because can upset the loading timeout:
