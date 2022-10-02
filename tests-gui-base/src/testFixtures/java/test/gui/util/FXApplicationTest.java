@@ -122,8 +122,12 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
+    public void start(Stage _stage) throws Exception
     {
+        // Don't use the stage TestFX gives us as it re-uses it across tests.  Although
+        // it's a bit slower, use a fresh one as it avoids issue with listeners etc
+        // that are still attached to the old Stage:
+        Stage stage = new Stage();
         // There seems to be a problem with a memory leak via ParametersImpl
         // having a static map of Application to parameters.  We never need
         // the parameters for testing so let's blank them.  Do it after

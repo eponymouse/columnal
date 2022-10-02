@@ -45,11 +45,11 @@ public class TestInitialWindow extends FXApplicationTest
     private @MonotonicNonNull Stage initialWindow;
 
     @Override
-    public void start(Stage stage) throws Exception
+    public void start(Stage _stage) throws Exception
     {
-        super.start(stage);
-        InitialWindow.show(stage, null);
-        initialWindow = stage;
+        super.start(_stage);
+        InitialWindow.show(windowToUse, null);
+        initialWindow = windowToUse;
     }
 
     @Test

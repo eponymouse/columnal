@@ -115,12 +115,12 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     private @NonNull MainWindowActions mainWindowActions;
 
     @Override
-    public void start(Stage stage) throws Exception
+    public void start(Stage _stage) throws Exception
     {
-        super.start(stage);
+        super.start(_stage);
         File dest = File.createTempFile("blank", "rec");
         dest.deleteOnExit();
-        mainWindowActions = MainWindow.show(stage, dest, null, null);
+        mainWindowActions = MainWindow.show(windowToUse, dest, null, null);
     }
 
     @After

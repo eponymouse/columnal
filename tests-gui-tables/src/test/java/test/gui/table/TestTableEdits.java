@@ -189,9 +189,10 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     }
 
     @Override
-    public void start(Stage stage) throws Exception
+    public void start(Stage _stage) throws Exception
     {
-        super.start(stage);
+        super.start(_stage);
+        Stage stage = windowToUse;
         final CompletableFuture<Optional<Throwable>> finish = new CompletableFuture<>();
         TableManager dummyManager = new DummyManager();
         Workers.onWorkerThread("Making tables", Priority.FETCH, () -> {

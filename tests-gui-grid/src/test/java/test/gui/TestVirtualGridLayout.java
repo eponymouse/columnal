@@ -87,9 +87,10 @@ public class TestVirtualGridLayout extends FXApplicationTest
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
+    public void start(Stage _stage) throws Exception
     {
-        super.start(stage);
+        super.start(_stage);
+        Stage stage = windowToUse;
         dummySupplier = new DummySupplier();
         virtualGrid = new VirtualGrid(null, 0, 0);
         virtualGrid.addNodeSupplier(dummySupplier);

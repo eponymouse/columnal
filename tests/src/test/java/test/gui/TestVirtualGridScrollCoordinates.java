@@ -84,9 +84,10 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
 
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     @Override
-    public void start(Stage stage) throws Exception
+    public void start(Stage _stage) throws Exception
     {
-        super.start(stage);
+        super.start(_stage);
+        Stage stage = windowToUse;
         virtualGrid = new VirtualGrid(null, 0, 0);
         stage.setScene(new Scene(new BorderPane(virtualGrid.getNode())));
         stage.setWidth(800);
