@@ -502,7 +502,6 @@ public class AutoComplete<C extends Completion>
         private final ListView<C> completions;
         private final BorderPane container;
         private final Instruction instruction;
-        private final WebView webView;
         private final NumberBinding webViewHeightBinding;
         
         // TO prevent memory leaks, it's important that this
@@ -532,10 +531,9 @@ public class AutoComplete<C extends Completion>
                     e.consume();
                 }
             });
-            this.webView = new WebView();
-            this.webView.setPrefWidth(400.0);
+            
             webViewHeightBinding = Bindings.max(300.0f, completions.heightProperty());
-            this.webView.prefHeightProperty().bind(webViewHeightBinding);
+            
 
             FXUtility.listen(completions.getItems(), change -> {
                 FXUtility.runAfter(() -> updateHeight(completions));
@@ -565,6 +563,9 @@ public class AutoComplete<C extends Completion>
                     @Nullable String url = selected.getFurtherDetailsURL();
                     if (url != null)
                     {
+                        WebView webView = new WebView();
+                        webView.setPrefWidth(400.0);
+                        webView.prefHeightProperty().bind(webViewHeightBinding);
                         webView.getEngine().load(url);
                         container.setCenter(webView);
                     }
