@@ -178,7 +178,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             assertTrue(TFXUtil.fx(() -> targetFinal.isFocused()));
             assertEquals(0, TFXUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent)).intValue());
 
-            TFXUtil.sleep(500);
+            TFXUtil.sleep(1000);
             List<Window> windows = listWindows();
             @Nullable Window errorPopup = windows.stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
             assertNotNull(Utility.listToString(windows), errorPopup);
