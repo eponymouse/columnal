@@ -197,6 +197,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             Log.debug("Pressing: SHIFT-" + key);
             push(KeyCode.SHIFT, KeyCode.valueOf(key));
             WaitForAsyncUtils.waitForFxEvents();
+            TFXUtil.sleep(500);
             afterClick.run();
             // Check that popup vanishes pretty much straight away:
             TFXUtil.sleep(200);
