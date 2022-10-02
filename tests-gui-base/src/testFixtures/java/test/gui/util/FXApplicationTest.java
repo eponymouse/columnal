@@ -20,6 +20,7 @@
 
 package test.gui.util;
 
+import com.sun.javafx.application.ParametersImpl;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -62,7 +63,9 @@ import javax.imageio.ImageIO;
 import java.awt.GraphicsEnvironment;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Base64;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertNull;
@@ -121,6 +124,13 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void start(Stage stage) throws Exception
     {
+        // There seems to be a problem with a memory leak via ParametersImpl
+        // having a static map of Application to parameters.  We never need
+        // the parameters for testing so let's blank them:
+        Field field = ParametersImpl.class.getDeclaredField("params");
+        field.setAccessible(true);
+        ((Map)field.get(null)).clear();
+        
         windowToUse = stage;
         // Don't run now because can upset the loading timeout:
         FXUtility.runAfter(Main::initialise);
