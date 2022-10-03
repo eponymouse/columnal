@@ -142,9 +142,7 @@ public class TestExpressionQuickFixType extends BaseTestQuickFix
     @Test
     public void testUnitLiteralFix9() throws UserException, InternalException
     {
-        testFix("type{Number{new/s}}", "new", ".quick-fix-action", "type{Number{new/s}}", () -> {
-            clickOn(".edit-unit-dialog .ok-button");
-        });
+        testFix("type{Number{new/s}}", "new", ".quick-fix-action", "type{Number{new/s}}");
     }
     
     @Test
