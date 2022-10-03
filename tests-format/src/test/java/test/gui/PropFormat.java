@@ -32,6 +32,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 import org.junit.Assert;
+import org.junit.Ignore;
 import xyz.columnal.log.Log;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -149,7 +150,8 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         f.get();
         checkDataValues(formatAndData, loaded.get(0).getData());
     }
-    
+
+    @Ignore // TODO restore
     @Property(trials=4)
     @OnThread(Tag.Simulation)
     public void testGuessFormatGUI(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException

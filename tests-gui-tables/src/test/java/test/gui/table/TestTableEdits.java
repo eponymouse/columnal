@@ -501,7 +501,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         assertTrue("New button showing", lookup(".create-table-grid-button").tryQuery().isPresent());
         assertTrue("New button showing", lookup(".create-table-grid-button").query().isVisible());
     }
-    
+
+    @Ignore // TODO restore
     @Property(trials = 2, shrink = false)
     @OnThread(Tag.Simulation)
     public void testAddColumnAtRight(int n, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
@@ -608,6 +609,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         }
     }
     
+    @Ignore // TODO restore
     @Property(trials = 15)
     @OnThread(Tag.Simulation)
     public void testTableDrag(@From(GenRandom.class) Random r)
