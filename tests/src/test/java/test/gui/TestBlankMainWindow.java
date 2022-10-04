@@ -312,7 +312,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 CellPosition arrowPos = NEW_TABLE_POS.offsetByRowCols(3 + latest.size(), 0);
                 latest.add(def);
                 clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowPos, arrowPos));
-                TFXUtil.sleep(2000);
+                TFXUtil.sleep(4000);
             }
             else if (choice <= 5 && dataHistory.size() > 1) // 3 - 5
             {
@@ -325,7 +325,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 clickOn("#id-menu-edit").moveBy(5, 0);
                 TFXUtil.sleep(500);
                 clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
-                TFXUtil.sleep(2000);
+                TFXUtil.sleep(4000);
             }
             else // 6 - 9
             {
@@ -341,7 +341,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 Log.debug("@@@ Editing row " + row + " to be: " + newVal + " attempts: " + attempts);
                 enterValue(NEW_TABLE_POS.offsetByRowCols(3 + row, 0), Either.right(new Pair<DataType, @Value Object>(DataType.NUMBER, newVal)), r);
                 latest.set(row, newVal);
-                TFXUtil.sleep(2000);
+                TFXUtil.sleep(4000);
             }
             assertEquals(1, tableManager.getAllTables().size());
             RecordSet recordSet = tableManager.getAllTables().get(0).getData();
