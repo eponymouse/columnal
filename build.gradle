@@ -173,5 +173,7 @@ subprojects { subproject ->
     options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:module", "-Werror", "-parameters"]
     options.encoding = 'UTF-8'
     options.release = 17
+    options.fork = true
+    options.forkOptions.memoryMaximumSize = "2G"
   }
 }
