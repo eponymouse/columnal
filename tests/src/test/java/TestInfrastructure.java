@@ -28,8 +28,8 @@ import static org.junit.Assert.assertEquals;
 
 public class TestInfrastructure
 {
-    // At the moment we run on JDK 11:
-    public static final String TARGET_VERSION = "11";
+    // At the moment we run on JDK 17:
+    public static final String TARGET_VERSION = "17";
 
     @Test
     public void testJavaVersion()
