@@ -1,6 +1,6 @@
 /*
  This file is part of the BlueJ program. 
- Copyright (C) 2014,2015,2016 Michael Kölling and John Rosenberg 
+ Copyright (C) 2014,2015,2016,2021,2022 Michael Kölling and John Rosenberg 
  
  This program is free software; you can redistribute it and/or 
  modify it under the terms of the GNU General Public License 
@@ -191,7 +191,7 @@ class TCScanner extends TreePathScanner<Void, Void>
         ).forEach(pkg -> packageAnns.put(pkg, new LocatedTag(Tag.Swing, false, true, "<Swing: " + pkg + ">")));
 
         //An override we need:
-        //methodAnns.add(new MethodRef("java.awt.Window", "dispose", new LocatedTag(Tag.Any, false, false, "<AWT>")));
+        methodAnns.add(new MethodRef("java.awt.Window", "dispose", new LocatedTag(Tag.Any, false, false, "<AWT>")));
         methodAnns.add(new MethodRef("javafx.beans.property.ObjectPropertyBase", "get", new LocatedTag(Tag.Any, false, false, "<JavaFX Beans>")));
         methodAnns.add(new MethodRef("javafx.beans.property.SimpleObjectProperty", "<init>", new LocatedTag(Tag.Any, false, false, "<JavaFX Beans>")));
         methodAnns.add(new MethodRef("javafx.beans.property.SimpleBooleanProperty", "<init>", new LocatedTag(Tag.Any, false, false, "<JavaFX Beans>")));
@@ -204,10 +204,56 @@ class TCScanner extends TreePathScanner<Void, Void>
         methodAnns.add(new MethodRef("javafx.application.Application", "start", new LocatedTag(Tag.FXPlatform, false, false, "<FX application>")));
         methodAnns.add(new MethodRef("javafx.animation.AnimationTimer", "handle", new LocatedTag(Tag.FXPlatform, false, false, "<AnimationTimer>")));
 
+        // This one isn't actually true!  But it's used during printing so let's live:
+        methodAnns.add(new MethodRef("javax.swing.JComponent", "paint", new LocatedTag(Tag.Any, false, false, "<Swing paint hack>")));
+        // This is actually thread-safe:
+        methodAnns.add(new MethodRef("javax.swing.JComponent", "getClientProperty", new LocatedTag(Tag.Any, false, false, "<Swing client properties>")));
+        methodAnns.add(new MethodRef("javax.swing.JComponent", "putClientProperty", new LocatedTag(Tag.Any, false, false, "<Swing client properties>")));
+
+        classAnns.put("java.awt.event.InputEvent", new LocatedTag(Tag.Any, false, true, "<AWT>"));
+        classAnns.put("java.awt.event.ComponentEvent", new LocatedTag(Tag.Any, false, true, "<AWT>"));
+        classAnns.put("java.awt.event.KeyEvent", new LocatedTag(Tag.Any, false, true, "<AWT>"));
+        classAnns.put("java.awt.event.MouseEvent", new LocatedTag(Tag.Any, false, true, "<AWT>"));
+        classAnns.put("java.awt.event.MouseWheelEvent", new LocatedTag(Tag.Any, false, true, "<AWT>"));
+        classAnns.put("javax.swing.SizeRequirements", new LocatedTag(Tag.Any, false, true, "<Swing>"));
+        classAnns.put("javax.swing.event.EventListenerList", new LocatedTag(Tag.Any, false, true, "<Swing>"));
+        
+        // Swing Documents can be played with from any thread:
+        classAnns.put("javax.swing.event.DocumentEvent", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.AttributeSet", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.MutableAttributes", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.MutableAttributeSet", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.Document", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.Element", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.AbstractDocument", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.AbstractDocument.AbstractElement", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.AbstractDocument.AttributeContext", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.AbstractDocument.BranchElement", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.AbstractDocument.DefaultDocumentEvent", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.AbstractDocument.ElementEdit", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.PlainDocument", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.Segment", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.Position", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.StyledDocument", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.DefaultStyledDocument", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        classAnns.put("javax.swing.text.StyleContext", new LocatedTag(Tag.Any, false, true, "<Swing Documents>"));
+        
+        // Timers can be stopped and started from any thread, looking at the source:
+        classAnns.put("javax.swing.Timer", new LocatedTag(Tag.Any, false, true, "<Swing Timer>"));
+        
+        
+        // As far as I can tell, this one is thread safe, and we certainly use it as if it is:
+        classAnns.put("javax.swing.KeyStroke", new LocatedTag(Tag.Any, false, false, "<Swing KeyStroke>"));
+        
         // You can call the runLater, etc, methods from any thread:
         classAnns.put("javafx.application.Platform", new LocatedTag(Tag.Any, false, false, "<JavaFX Platform>"));
         classAnns.put("java.awt.EventQueue", new LocatedTag(Tag.Any, false, false, "<Swing EventQueue>"));
         classAnns.put("javax.swing.SwingUtilities", new LocatedTag(Tag.Any, false, false, "<Swing EventQueue>"));
+
+        // These are dubious, but we've been calling these off the Swing thread for a while:
+        classAnns.put("javax.swing.UIManager", new LocatedTag(Tag.Any, false, true, "<Swing UIManager>"));
+        classAnns.put("javax.swing.UIManager.LookAndFeelInfo", new LocatedTag(Tag.Any, false, true, "<Swing UIManager>"));
+        methodAnns.add(new MethodRef("javax.swing.plaf.metal.MetalLookAndFeel", "setCurrentTheme", new LocatedTag(Tag.Any,  false, false, "<Swing UIManager>")));
 
         // Desktop should be AWT-only, it seems:
         classAnns.put("java.awt.Desktop", new LocatedTag(Tag.Swing, false, true, "<AWT Desktop>"));
@@ -239,6 +285,9 @@ class TCScanner extends TreePathScanner<Void, Void>
 
         // This makes Runnables ignore package tags:
         //classAnns.put("java.lang.Runnable", new LocatedTag(Tag.Any, true, false, "<Runnable>"));
+        
+        // AWT events are dispatched from the Swing thread:
+        methodAnns.add(new MethodRef("java.awt.DefaultKeyboardFocusManager", "processKeyEvent", new LocatedTag(Tag.Swing, false, false, "<AWT events>")));
     }
 
     private static String typeToName(PathAnd<ClassTree> t)
@@ -1096,7 +1145,7 @@ class TCScanner extends TreePathScanner<Void, Void>
         {
             for (Tag t : Arrays.asList(Tag.values()))
             {
-                if (s.equals("value() = " + Tag.class.getCanonicalName() + "." + t.toString()))
+                if (s.equals("value() = " + Tag.class.getCanonicalName() + "." + t.toString()) || s.equals("value() = " + t.toString()))
                 {
                     tag = t;
                 }
@@ -1112,7 +1161,7 @@ class TCScanner extends TreePathScanner<Void, Void>
 
         if (tag != null)
             return new LocatedTag(tag, ignoreParent, requireSynchronized, false, info);
-        throw new IllegalArgumentException("Unknown tag: " + stringValues.stream().collect(Collectors.joining(", ")) + " in " + cu.getSourceFile().toString() + ";" + info.get());
+        throw new IllegalArgumentException("Unknown tag: " + stringValues.stream().collect(Collectors.joining(", ")) + " in " + cu.getSourceFile().toString());
     }
 
     /**
