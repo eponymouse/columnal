@@ -96,8 +96,8 @@ subprojects { subproject ->
     }
     build.dependsOn ':xml:build'
 
-    sourceCompatibility = 11
-    targetCompatibility = 11
+    sourceCompatibility = 17
+    targetCompatibility = 17
   }
   else if (subproject.name.contains("tests")) {
     apply plugin: 'java-library'
@@ -172,6 +172,6 @@ subprojects { subproject ->
   tasks.withType(JavaCompile) {
     options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:module", "-Werror", "-parameters"]
     options.encoding = 'UTF-8'
-    options.release = 11
+    options.release = 17
   }
 }
