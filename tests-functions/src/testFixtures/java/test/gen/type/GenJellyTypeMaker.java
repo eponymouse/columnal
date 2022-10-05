@@ -35,6 +35,7 @@ import xyz.columnal.data.datatype.DataType.DateTimeInfo;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.data.datatype.TaggedTypeDefinition;
 import xyz.columnal.data.datatype.TaggedTypeDefinition.TypeVariableKind;
+import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
@@ -269,10 +270,16 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
         {
             typeDefinition = r.choose(pool);
         }
-        return JellyType.tagged(typeDefinition.getTaggedTypeName(), Utility.mapListExI(typeDefinition.getTypeArguments(), (Pair<TypeVariableKind, String> arg) -> {
+        TypeId taggedTypeName = typeDefinition.getTaggedTypeName();
+        return JellyType.tagged(taggedTypeName, Utility.mapListExI(typeDefinition.getTypeArguments(), (Pair<TypeVariableKind, String> arg) -> {
             if (arg.getFirst() == TypeVariableKind.TYPE)
-                return Either.right(genDepth(typeManager, r, maxDepth - 1, gs, ImmutableSet.<TypeKinds>copyOf(Sets.<TypeKinds>difference(typeKinds, ImmutableSet.<TypeKinds>of(TypeKinds.MAYBE_UNNESTED)))));
-            else
+            {
+                boolean taggedAllowed = typeKinds.contains(TypeKinds.NEW_TAGGED_INNER)
+                    || typeKinds.contains(TypeKinds.OTHER_BUILTIN_TAGGED);
+                ImmutableSet<TypeKinds> ks = taggedAllowed ?  typeKinds : ImmutableSet.<TypeKinds>copyOf(Sets.<TypeKinds>difference(typeKinds,
+                    ImmutableSet.<TypeKinds>of(TypeKinds.MAYBE_UNNESTED, TypeKinds.NEW_TAGGED_INNER, TypeKinds.NEW_TAGGED_NO_INNER, TypeKinds.OTHER_BUILTIN_TAGGED)));
+                return Either.right(genDepth(typeManager, r, maxDepth - 1, gs, ks));
+            } else
                 return Either.left(JellyUnit.fromConcrete(new GenUnit().generate(r, gs)));
         }));
     }
