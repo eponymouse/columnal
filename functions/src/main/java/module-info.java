@@ -15,9 +15,9 @@ module xyz.columnal.functions
     requires xyz.columnal.types;
     requires xyz.columnal.utility;
 
-    requires big.math;
+    requires ch.obermuhlner.math.big;
     requires com.google.common;
-    requires commons.lang3;
+    requires org.apache.commons.lang3;
     requires static org.checkerframework.checker.qual;
     //requires static org.checkerframework.checker;
 }

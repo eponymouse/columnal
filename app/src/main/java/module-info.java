@@ -27,9 +27,9 @@ module xyz.columnal.app
     requires com.google.common;
     requires static org.checkerframework.checker.qual;
     requires org.jsoup;
-    requires poi;
-    requires poi.ooxml;
+    requires org.apache.poi.poi;
+    requires org.apache.poi.ooxml;
     requires org.antlr.antlr4.runtime;
-    requires commons.io;
+    requires org.apache.commons.io;
     requires common;
 }
