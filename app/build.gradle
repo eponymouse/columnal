@@ -26,6 +26,7 @@ dependencies {
     implementation libs.jsoup
     implementation libs.commons.io
     implementation libs.commons.lang3
+    implementation libs.commons.text
     implementation libs.javaSMT
     implementation libs.jna
     implementation libs.jna.platform
@@ -46,11 +47,29 @@ compileSass {
     noErrorCss()
 }
 
+task makeLogo(type: Exec) {
+    workingDir "build/resources/main"
+    // Sizes from https://docs.microsoft.com/en-us/windows/desktop/uxguide/vis-icons
+    commandLine "magick", \
+        "convert", \
+        "../../../src/main/resources/logo.png", \
+        "(", "+clone", "-resize", "256x256", "-write", "logo-256.png", "+delete", ")", \
+        "(", "+clone", "-resize", "64x64", "-write", "logo-64.png", "+delete", ")", \
+        "(", "+clone", "-resize", "48x48", "-write", "logo-48.png", "+delete", ")", \
+        "(", "+clone", "-resize", "32x32", "-write", "logo-32.png", "+delete", ")", \
+        "(", "+clone", "-resize", "24x24", "-write", "logo-24.png", "+delete", ")", \
+        "-resize", "16x16", "logo-16.png"
+}
+
 // Gradle claims this as an implicit dependency but I don't understand why:
 checkstyleMain.dependsOn(compileSass)
 build.dependsOn(compileSass)
 jar.dependsOn(compileSass)
 run.dependsOn(compileSass)
+
+build.dependsOn(makeLogo)
+jar.dependsOn(makeLogo)
+run.dependsOn(makeLogo)
 
 sourceSets.main.resources.srcDirs('../xml/build/resources/main')
 

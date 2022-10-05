@@ -20,6 +20,6 @@ module xyz.columnal.utility.gui
     requires thumbnailator;
     requires wellbehavedfx;
     requires static org.checkerframework.checker.qual;
-    requires commons.lang3;
+    requires org.apache.commons.lang3;
     requires org.antlr.antlr4.runtime;
 }

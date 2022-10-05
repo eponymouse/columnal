@@ -15,10 +15,10 @@ module xyz.columnal.utility
     requires javafx.graphics;
     requires org.apache.logging.log4j;
     requires org.antlr.antlr4.runtime;
-    requires commons.io;
+    requires org.apache.commons.io;
     requires java.string.similarity;
     requires common;
-    requires commons.lang3;
+    requires org.apache.commons.lang3;
 
 
 }

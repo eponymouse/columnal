@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.columntype.BlankColumnType;
 import xyz.columnal.data.columntype.CleanDateColumnType;

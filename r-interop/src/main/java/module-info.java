@@ -10,7 +10,7 @@ module xyz.columnal.rinterop
     requires xyz.columnal.utility;
     
     requires com.google.common;
-    requires commons.io;
-    requires commons.lang3;
+    requires org.apache.commons.io;
+    requires org.apache.commons.lang3;
     requires static org.checkerframework.checker.qual;
 }
