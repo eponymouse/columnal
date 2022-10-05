@@ -1,0 +1,24 @@
+name: Build
+on: [push]
+jobs:
+  Ubuntu-Build-Test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v3
+      - name: Load .env file
+        uses: xom9ikk/dotenv@v1.0.2
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ env.java_version }}
+          distribution: 'temurin'
+          java-package: jdk
+          architecture: x64
+          cache: gradle
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@859c33240bd026ce8d5f711f5adcc65c2f8eafc1
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
+        with:
+          arguments: build -Pcheckers=all -PthreadCheck=true --info --stacktrace --no-daemon --scan -x test
