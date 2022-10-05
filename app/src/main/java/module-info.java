@@ -31,5 +31,6 @@ module xyz.columnal.app
     requires org.apache.poi.ooxml;
     requires org.antlr.antlr4.runtime;
     requires org.apache.commons.io;
+    requires org.apache.commons.text;
     requires common;
 }

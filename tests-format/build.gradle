@@ -19,6 +19,7 @@ dependencies {
     testFixturesImplementation project(':utility')
     testFixturesImplementation libs.guava
     testFixturesImplementation libs.commons.lang3
+    testFixturesImplementation libs.commons.text
 
     testImplementation(testFixtures(project(":tests-basic")))
     testImplementation(testFixtures(project(":tests-functions")))

@@ -23,7 +23,7 @@ package xyz.columnal.exporters;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.checkerframework.checker.i18n.qual.Localized;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.RecordSet;

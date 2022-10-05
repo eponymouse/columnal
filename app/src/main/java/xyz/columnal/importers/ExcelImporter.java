@@ -115,7 +115,7 @@ public class ExcelImporter implements Importer
                 while (cellIterator.hasNext())
                 {
                     Cell currentCell = cellIterator.next();
-                    String val = getCellValueAsString(currentCell, currentCell.getCellTypeEnum());
+                    String val = getCellValueAsString(currentCell, currentCell.getCellType());
                     // No need to set if empty, that's the default:
                     if (!val.isEmpty())
                     {
@@ -230,7 +230,7 @@ public class ExcelImporter implements Importer
             case STRING:
                 return currentCell.getStringCellValue();
             case FORMULA:
-                return getCellValueAsString(currentCell, currentCell.getCachedFormulaResultTypeEnum());
+                return getCellValueAsString(currentCell, currentCell.getCachedFormulaResultType());
             case BOOLEAN:
                 return Boolean.toString(currentCell.getBooleanCellValue()).toUpperCase();
             case _NONE:
