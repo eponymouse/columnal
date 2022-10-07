@@ -148,6 +148,7 @@ subprojects { subproject ->
       jvmArgs += ['-Xmx2G',
                   '-XX:+HeapDumpOnOutOfMemoryError',
                   '-XX:+UseCompressedOops',
+                  '--enable-preview',
                   '-Djava.awt.headless=true',
                   '-Dtestfx.robot=glass',
                   '-Dtestfx.headless=true',
@@ -171,7 +172,7 @@ subprojects { subproject ->
     }
   }
   tasks.withType(JavaCompile) {
-    options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:module", "-Werror", "-parameters"]
+    options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:moule", "-Werror", "-parameters", "--enable-preview"]
     options.encoding = 'UTF-8'
     options.release = 17
     options.fork = true
