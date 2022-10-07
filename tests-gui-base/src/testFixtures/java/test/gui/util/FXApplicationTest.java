@@ -50,6 +50,7 @@ import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 import test.gui.TFXUtil;
 import test.gui.trait.FocusOwnerTrait;
+import test.gui.trait.QueryTrait;
 import test.gui.trait.ScreenshotTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -70,7 +71,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertNull;
 
-public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrait, ScreenshotTrait
+public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrait, ScreenshotTrait, QueryTrait
 {
     @Rule
     public TestWatcher screenshotOnFail = new TestWatcher()
