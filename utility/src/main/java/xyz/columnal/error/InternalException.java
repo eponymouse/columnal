@@ -25,7 +25,7 @@ import xyz.columnal.styled.StyledString;
 /**
  * Created by neil on 22/10/2016.
  */
-public class InternalException extends ExceptionWithStyle
+public final class InternalException extends ExceptionWithStyle
 {
     public InternalException(String message)
     {
