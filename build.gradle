@@ -172,7 +172,7 @@ subprojects { subproject ->
     }
   }
   tasks.withType(JavaCompile) {
-    options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:moule", "-Werror", "-parameters", "--enable-preview"]
+    options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:module", "-Werror", "-parameters", "--enable-preview"]
     options.encoding = 'UTF-8'
     options.release = 17
     options.fork = true
