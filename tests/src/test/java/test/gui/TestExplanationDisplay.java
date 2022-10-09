@@ -210,8 +210,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), CHECK_POS);
         CellPosition resultPos = CHECK_POS.offsetByRowCols(1, 0);
         clickOnItemInBounds(lookup(".check-result"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(resultPos, resultPos));
-        sleep(1000);
-        TextFlow textFlow = lookup(".explanation-flow").query();
+        TextFlow textFlow = waitForOne(".explanation-flow");
         assertNotNull(textFlow);
         String allText = TFXUtil.fx(() -> textFlow.getChildren().stream().filter(t -> t instanceof Text).map(t -> ((Text)t).getText()).collect(Collectors.joining()));
         String[] splitText = allText.split("\n(\u2b11 )?", -1);

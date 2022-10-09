@@ -6,33 +6,20 @@ dependencies {
     testImplementation project(':stf')
     testImplementation project(':types')
     testImplementation project(':utility')
-    testImplementation libs.commons.io
     testImplementation libs.commons.lang3
     testImplementation libs.guava
     testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
     testImplementation 'org.testfx:testfx-junit:4.0.15-alpha'
 
-    testFixturesImplementation project(':app')
-    testFixturesImplementation project(':data')
-    testFixturesImplementation project(':identifiers')
-    testFixturesImplementation project(':types')
-    testFixturesImplementation project(':utility')
-    testFixturesImplementation libs.guava
-    testFixturesImplementation libs.commons.lang3
-    testFixturesImplementation libs.commons.text
-
     testImplementation(testFixtures(project(":tests-basic")))
     testImplementation(testFixtures(project(":tests-functions")))
     testImplementation(testFixtures(project(":tests-gui-base")))
     testImplementation(testFixtures(project(":tests-tables")))
-
-    testFixturesImplementation(testFixtures(project(":tests-basic")))
-    testFixturesImplementation(testFixtures(project(":tests-functions")))
 }
 
 javafx {
-    modules = [ 'javafx.base', 'javafx.controls', 'javafx.swing' ]
+    modules = [ 'javafx.base', 'javafx.controls' ]
     configuration = "testImplementation"
 }
 
-description = 'tests-format'
+description = 'tests-gui-cell-rw'
