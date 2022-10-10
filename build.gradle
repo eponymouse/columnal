@@ -70,9 +70,7 @@ subprojects { subproject ->
     }
     javafx {
       version = "13.0.2"
-      // We need at least javafx.base and javafx.graphics everywhere because the threadchecker uses it:
-      // TODO fix this!
-      modules = projectsToJavaFX.getOrDefault(subproject.name, ['javafx.base', 'javafx.graphics'])
+      modules = projectsToJavaFX.getOrDefault(subproject.name, [])
     }
 
     dependencies {
