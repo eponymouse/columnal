@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -128,7 +129,7 @@ class TCScanner extends TreePathScanner<Void, Void>
     private CompilationUnitTree cu;
     private boolean inSynchronizedThis;
 
-    public TCScanner(JavacTask task, List<String> ignorePackages) throws NoSuchMethodException
+    public TCScanner(JavacTask task, List<String> ignorePackages)
     {
         // Code for redirecting stderr if you need it:
         /*
@@ -830,8 +831,8 @@ class TCScanner extends TreePathScanner<Void, Void>
                 if (inDebugClass())
                 {
                     for (MethodRef m : methodAnns)
-                        System.err.println("Method " + m.classType.toString() + " . \"" + m.methodName + "\""
-                            + " class match: " + isSameType(types.erasure(m.classType), types.erasure(invokeTargetTypeFinal))
+                        System.err.println("Method " + m.qualifiedClassName + " . \"" + m.methodName + "\""
+                            + " class match: " + Objects.equals(m.qualifiedClassName, types.erasure(invokeTargetTypeFinal).toString())
                             + " name match: " + m.methodName.equals(name.toString())
                             + " .matches: " + m.matches(invokeTargetTypeFinal, name, null));
                     System.err.println("Is thread: " + types.isSameType(types.erasure(elements.getTypeElement("java.lang.Thread").asType()), types.erasure(invokeTargetTypeFinal)));
@@ -1492,20 +1493,15 @@ class TCScanner extends TreePathScanner<Void, Void>
 
     private class MethodRef
     {
-        private final TypeMirror classType;
+        private final String qualifiedClassName;
         private final String methodName;
-        private final List<TypeMirror> methodType;
         private final LocatedTag tag;
 
         // NoSuchMethodException is a bit of an abuse of the exception, but it fits just right...
-        public MethodRef(String className, String methodName, LocatedTag tag) throws NoSuchMethodException
+        public MethodRef(String className, String methodName, LocatedTag tag)
         {
-            TypeElement el = elements.getTypeElement(className);
-            if (el == null)
-                throw new NoSuchMethodException("Class: " + className);
-            this.classType = el.asType();
+            this.qualifiedClassName = className;
             this.methodName = methodName;
-            this.methodType = elements.getAllMembers(el).stream().filter(e -> methodName.equals(e.getSimpleName().toString())).map(Element::asType).collect(Collectors.toList());
             this.tag = tag;
         }
 
@@ -1513,9 +1509,7 @@ class TCScanner extends TreePathScanner<Void, Void>
         {
             // Check methodName first as it's quickest:
             return this.methodName.equals(methodName.toString()) &&
-                isSameType(types.erasure(this.classType), types.erasure(classType)) &&
-                // TODO should we re-enable parameter comparison?
-                (true || this.methodType.contains(methodType));
+                Objects.equals(this.qualifiedClassName, types.erasure(classType).toString());
         }
 
     }

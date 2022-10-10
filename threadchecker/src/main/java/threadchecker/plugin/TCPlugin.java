@@ -53,7 +53,7 @@ public class TCPlugin implements Plugin
                     {
                         this.scanner = new TCScanner(task, Arrays.asList(ignorePackages));
                     }
-                    catch (NoSuchMethodException e)
+                    catch (Exception e)
                     {
                         e.printStackTrace();
                     }
