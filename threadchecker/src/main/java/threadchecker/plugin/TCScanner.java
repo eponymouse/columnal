@@ -289,6 +289,9 @@ class TCScanner extends TreePathScanner<Void, Void>
         
         // AWT events are dispatched from the Swing thread:
         methodAnns.add(new MethodRef("java.awt.DefaultKeyboardFocusManager", "processKeyEvent", new LocatedTag(Tag.Swing, false, false, "<AWT events>")));
+
+        // JUnit Quickcheck runs before any of our code, so count it as being on the Simulation thread:
+        methodAnns.add(new MethodRef("com.pholser.junit.quickcheck.generator.Generator", "generate", new LocatedTag(Tag.Simulation, false, true, "Quickcheck")));
     }
 
     private static String typeToName(PathAnd<ClassTree> t)
