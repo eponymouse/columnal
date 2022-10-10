@@ -28,6 +28,8 @@ import com.pholser.junit.quickcheck.internal.generator.SimpleGenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DataTypeVisitor;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
@@ -61,6 +63,7 @@ public class TestGenDataType
     }
 
     @Test
+    @OnThread(Tag.Simulation)
     public void testVarieties()
     {
         // We check that each nested pair occurs.  We start by putting them all in a set, remove if we find them,

@@ -38,6 +38,8 @@ import test.gui.trait.EnterExpressionTrait.EntryBracketStatus;
 import test.gui.trait.PopupTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.Transformation;
@@ -65,6 +67,7 @@ import static org.junit.Assert.assertTrue;
 
 public class BaseTestExpressionEditorEntry extends FXApplicationTest implements ScrollToTrait, ClickTableLocationTrait, EnterExpressionTrait, PopupTrait
 {
+    @OnThread(Tag.Simulation)
     protected void testEntry_Impl(ExpressionValue expressionValue, Random r, String... qualifiedIdentsToEnterInFull) throws Exception
     {
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet, expressionValue.tableId);

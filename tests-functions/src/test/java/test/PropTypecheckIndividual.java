@@ -33,6 +33,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sosy_lab.common.rationals.Rational;
 import test.functions.TFunctionUtil;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import xyz.columnal.data.KnownLengthRecordSet;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.id.TableAndColumnRenames;
@@ -96,6 +98,7 @@ import static org.junit.Assert.assertNull;
  * Created by neil on 24/01/2017.
  */
 @SuppressWarnings("recorded")
+@OnThread(Tag.Simulation)
 @RunWith(JUnitQuickcheck.class)
 public class PropTypecheckIndividual
 {

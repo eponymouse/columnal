@@ -33,6 +33,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import test.functions.TFunctionUtil;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
@@ -78,6 +80,7 @@ import static org.junit.Assert.assertTrue;
  * Created by neil on 09/12/2016.
  */
 @RunWith(JUnitQuickcheck.class)
+@OnThread(Tag.Simulation)
 public class PropTypecheck
 {
     @Test
