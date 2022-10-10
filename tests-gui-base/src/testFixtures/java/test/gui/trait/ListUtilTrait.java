@@ -32,6 +32,7 @@ import xyz.columnal.utility.Utility;
 
 import java.util.OptionalInt;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -52,7 +53,7 @@ public interface ListUtilTrait extends FxRobotInterface
         push(KeyCode.SPACE);
         sleep(100);
         // If nothing selected, selection will begin when you hit a key:
-        FXPlatformSupplier<Integer> cur = () -> TFXUtil.fx(() -> list.getSelectionModel().getSelectedIndex());
+        Supplier<Integer> cur = () -> TFXUtil.fx(() -> list.getSelectionModel().getSelectedIndex());
         
         while (cur.get() < index)
             push(KeyCode.DOWN);
