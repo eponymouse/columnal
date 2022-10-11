@@ -145,22 +145,24 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     }
 
     @Test
+    @OnThread(Tag.Any)
     public void testNewClick()
     {
         testStartState();
         clickOn("#id-menu-project").clickOn(".id-menu-project-new");
-        assertEquals(2, MainWindow._test_getViews().size());
-        assertTrue(MainWindow._test_getViews().values().stream().allMatch(Stage::isShowing));
+        assertEquals(2, TFXUtil.fx(() -> MainWindow._test_getViews()).size());
+        assertTrue(TFXUtil.fx(() -> MainWindow._test_getViews()).values().stream().allMatch(Stage::isShowing));
     }
 
     @Test
+    @OnThread(Tag.Any)
     public void testCloseMenu()
     {
         testStartState();
         clickOn("#id-menu-project");
         System.err.println("Windows after menu click: " + getWindowList());
         clickOn(".id-menu-project-close");
-        assertTrue(MainWindow._test_getViews().isEmpty());
+        assertTrue(TFXUtil.fx(() -> MainWindow._test_getViews()).isEmpty());
     }
 
     @Test

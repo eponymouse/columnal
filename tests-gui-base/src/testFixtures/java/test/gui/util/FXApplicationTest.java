@@ -45,10 +45,12 @@ import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.testfx.api.FxRobot;
+import org.testfx.api.FxRobotException;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.robot.Motion;
 import org.testfx.service.query.NodeQuery;
+import org.testfx.service.query.PointQuery;
 import org.testfx.util.WaitForAsyncUtils;
 import test.gui.TFXUtil;
 import test.gui.trait.FocusOwnerTrait;
@@ -69,9 +71,12 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertNull;
+import static org.testfx.util.NodeQueryUtils.isVisible;
 
 public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrait, ScreenshotTrait, QueryTrait
 {
@@ -263,10 +268,27 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     }
 
     // TODO fix this properly in the thread checker
+    private PointQuery pointOfVisibleNode(String query) {
+        NodeQuery nodeQuery = lookup(query);
+        Node node = queryVisibleNode(nodeQuery, "the query \"" + query + "\"");
+        return point(node);
+    }
+    private Node queryVisibleNode(NodeQuery nodeQuery, String queryDescription) {
+        Set<Node> resultNodes = nodeQuery.queryAll();
+        if (resultNodes.isEmpty()) {
+            throw new FxRobotException(queryDescription + " returned no nodes.");
+        }
+        Optional<Node> resultNode = from(resultNodes).match(isVisible()).tryQuery();
+        if (!resultNode.isPresent()) {
+            throw new FxRobotException(queryDescription + " returned " + resultNodes.size() + " nodes" +
+                ", but no nodes were visible.");
+        }
+        return resultNode.get();
+    }
     @Override
     public FxRobotInterface clickOn(String query, MouseButton... buttons)
     {
-        return TFXUtil.fx(() -> super.clickOn(query, buttons));
+        return super.clickOn(TFXUtil.fx(() -> pointOfVisibleNode(query)), buttons);
     }
 
     @Override
