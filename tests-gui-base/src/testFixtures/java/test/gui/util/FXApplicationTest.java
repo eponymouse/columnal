@@ -47,6 +47,8 @@ import org.junit.runner.Description;
 import org.testfx.api.FxRobot;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.robot.Motion;
+import org.testfx.service.query.NodeQuery;
 import org.testfx.util.WaitForAsyncUtils;
 import test.gui.TFXUtil;
 import test.gui.trait.FocusOwnerTrait;
@@ -83,7 +85,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         protected void failed(Throwable e, Description description)
         {
             super.failed(e, description);
-            System.err.println("Screenshot of failure, " + targetWindow().toString() + ":");
+            System.err.println("Screenshot of failure, " + TFXUtil.fx(() -> targetWindow()).toString() + ":");
             TFXUtil.fx_(() -> dumpScreenshot());
             e.printStackTrace();
             if (e.getCause() != null)
@@ -109,7 +111,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
 
     protected String getWindowList()
     {
-        return listWindows().stream().map(w -> "  " + showWindow(w)).collect(Collectors.joining("\n"));
+        return TFXUtil.fx(() -> listWindows()).stream().map(w -> "  " + showWindow(w)).collect(Collectors.joining("\n"));
     }
 
     private static String showWindow(Window w)
@@ -260,6 +262,13 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         return key;
     }
 
+    // TODO fix this properly in the thread checker
+    @Override
+    public FxRobotInterface clickOn(String query, MouseButton... buttons)
+    {
+        return TFXUtil.fx(() -> super.clickOn(query, buttons));
+    }
+
     @Override
     public FxRobot write(String text)
     {
@@ -274,7 +283,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
 
     public FxRobotInterface showContextMenu(String nodeQuery)
     {
-        return showContextMenu(lookup(nodeQuery).query(), null);
+        return showContextMenu(waitForOne(nodeQuery), null);
     }
     
     /**

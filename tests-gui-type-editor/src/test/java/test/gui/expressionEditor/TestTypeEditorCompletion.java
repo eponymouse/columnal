@@ -75,7 +75,7 @@ public class TestTypeEditorCompletion extends BaseTestEditorCompletion
         sleep(1000);
         // Start creating column 
         correctTargetWindow();
-        Node expandRight = lookup(".expand-arrow").match(n -> TFXUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right"))).<Node>query();
+        Node expandRight = TFXUtil.fx(() -> lookup(".expand-arrow").match(n -> FXUtility.hasPseudoclass(n, "expand-right")).<Node>query());
         assertNotNull(expandRight);
         // Won't happen, assertion will fail:
         if (expandRight == null) return;

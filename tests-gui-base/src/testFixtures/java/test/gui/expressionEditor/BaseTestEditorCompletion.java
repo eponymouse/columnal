@@ -54,7 +54,7 @@ public abstract class BaseTestEditorCompletion extends FXApplicationTest
 
     protected void checkCompletions(CompletionCheck... checks)
     {
-        EditorDisplay editorDisplay = lookup(".editor-display").query();
+        EditorDisplay editorDisplay = waitForOne(".editor-display");
         // We go from end in case there is a trailing space,
         // which will be removed once we go backwards:
         push(KeyCode.END);
@@ -64,7 +64,7 @@ public abstract class BaseTestEditorCompletion extends FXApplicationTest
         {
             TFXUtil.sleep(500);
             // Check completions here
-            @Nullable LexAutoCompleteWindow window = Utility.filterClass(listWindows().stream(), LexAutoCompleteWindow.class).findFirst().orElse(null);
+            @Nullable LexAutoCompleteWindow window = Utility.filterClass(TFXUtil.fx(() -> listWindows()).stream(), LexAutoCompleteWindow.class).findFirst().orElse(null);
             List<LexCompletion> showing = TFXUtil.fx(() -> window == null ? ImmutableList.<LexCompletion>of() : window._test_getShowing());
             for (CompletionCheck check : checks)
             {

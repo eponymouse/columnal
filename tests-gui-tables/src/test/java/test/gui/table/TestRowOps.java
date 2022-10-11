@@ -223,7 +223,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             TFXUtil.sleep(2000);
             // No rows at all: need to click append button
             CellPosition pos = scrollToRow(srcData.getId(), DataItemPosition.row(0));
-            clickOnItemInBounds(lookup(".expand-arrow" /*".stable-view-row-append-button"*/).match(n -> TFXUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-down"))), virtualGrid, new RectangleBounds(pos, pos));
+            clickOnItemInBounds(TFXUtil.fx(() -> lookup(".expand-arrow" /*".stable-view-row-append-button"*/).match(n -> FXUtility.hasPseudoclass(n, "expand-down"))), virtualGrid, new RectangleBounds(pos, pos));
             TFXUtil.sleep(500);
             originalWasEmpty = true;
         }
@@ -344,7 +344,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             throw new RuntimeException("No row label for zero-based row " + targetRow + " in " + findVisRowLabels(tableId) + "focused: " + TFXUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
         @NonNull Node rowLabelFinal = rowLabel;
         double rowLabelTop = TFXUtil.fx(() -> rowLabelFinal.localToScene(rowLabelFinal.getBoundsInLocal()).getMinY());
-        List<Node> rowCells = queryTableDisplay(tableId).lookup(".document-text-field").match(n -> Math.abs(TFXUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinY()) - rowLabelTop) <= 3).queryAll().stream().sorted(Comparator.comparing(n -> TFXUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinX()))).collect(Collectors.toList());
+        List<Node> rowCells = TFXUtil.fx(() -> queryTableDisplay(tableId).lookup(".document-text-field").match(n -> Math.abs(n.localToScene(n.getBoundsInLocal()).getMinY()) - rowLabelTop <= 3).queryAll().stream().sorted(Comparator.comparing(n -> n.localToScene(n.getBoundsInLocal()).getMinX())).collect(Collectors.toList()));
         for (int i = 0; i < rowCells.size(); i++)
         {
             int iFinal = i;
@@ -379,7 +379,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
     @OnThread(Tag.Any)
     private String findVisRowLabels(TableId id)
     {
-        NodeQuery tableDisplay = queryTableDisplay(id);
+        NodeQuery tableDisplay = TFXUtil.fx(() -> queryTableDisplay(id));
         return tableDisplay.lookup((Node l) -> l instanceof Label).<Label>queryAll().stream().map(l -> TFXUtil.fx(() -> l.getText())).sorted().collect(Collectors.joining(", "));
     }
 
@@ -390,13 +390,13 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         // Move to first cell in that row, which will make row labels visible
         // and ensure we are at correct Y position
         keyboardMoveTo(virtualGrid, tableManager, id, targetRow == 0 ? targetRow : targetRow - TableDataRowIndex.ONE);
-        Set<Node> possibles = 
+        Set<Node> possibles = TFXUtil.fx(() ->  
             lookup(".virt-grid-row-label-pane")
             .match(Node::isVisible)
             .match((RowLabelSupplier.LabelPane p) -> id.equals(TFXUtil.<@Nullable TableId>fx(() -> p._test_getTableId())))
             .lookup(".virt-grid-row-label")
             .match((Label l) -> TFXUtil.fx(() -> l.getText().trim().equals(Integer.toString(1 + targetRow))))
-            .queryAll();
+            .queryAll());
         
         if (possibles.isEmpty())
         {
@@ -410,7 +410,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         return possibles.iterator().next();
     }
 
-    @OnThread(Tag.Any)
+    @OnThread(Tag.FXPlatform)
     private NodeQuery queryTableDisplay(TableId id)
     {
         // TODO This is broken in new scheme

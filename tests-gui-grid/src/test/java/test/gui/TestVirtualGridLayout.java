@@ -284,7 +284,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         for (int i = 0; i < 2; i++)
         {
             // Table begins at 0,0.  Check that cells we can find do match up:
-            for (Label cell : lookup(".simple-cell").match(Label::isVisible).<Label>queryAll())
+            for (Label cell : TFXUtil.fx(() -> lookup(".simple-cell").match(Label::isVisible).<Label>queryAll()))
             {
                 // Find out what position it thinks it is:
                 String content = TFXUtil.fx(() -> cell.getText());

@@ -292,6 +292,30 @@ class TCScanner extends TreePathScanner<Void, Void>
 
         // JUnit Quickcheck runs before any of our code, so count it as being on the Simulation thread:
         methodAnns.add(new MethodRef("com.pholser.junit.quickcheck.generator.Gen", "generate", new LocatedTag(Tag.Simulation, false, true, "Quickcheck")));
+        
+        // TestFX
+        for (String methodName : Arrays.asList(
+            "targetWindow",
+            "listWindows",
+            "listTargetWindows",
+            "window",
+            "fromAll",
+            "from",
+            "rootNode",
+            "lookup",
+            "capture"
+        ))
+        {
+            methodAnns.add(new MethodRef("org.testfx.api.FxRobotInterface", methodName, new LocatedTag(Tag.FXPlatform, false, true, "TestFX")));    
+        }
+        for (String queryClass : Arrays.asList(
+            "org.testfx.service.query.BoundsQuery",
+            "org.testfx.service.query.NodeQuery",
+            "org.testfx.service.query.PointQuery"
+        ))
+        {
+            methodAnns.add(new MethodRef(queryClass, "lookup", new LocatedTag(Tag.FXPlatform, false, true, "TestFX")));
+        }
     }
 
     private static String typeToName(PathAnd<ClassTree> t)

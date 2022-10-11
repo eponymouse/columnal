@@ -154,7 +154,7 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
         TFXUtil.sleep(2000);
         CellPosition targetPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
-        clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+        clickOnItemInBounds(fromNode(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
         TFXUtil.sleep(100);
         clickOn(".id-new-transform");
         TFXUtil.sleep(100);

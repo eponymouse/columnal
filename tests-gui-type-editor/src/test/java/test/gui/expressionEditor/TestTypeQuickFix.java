@@ -187,7 +187,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
             Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(1));
             for (int i = 0; i < 2; i++)
-                clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+                clickOnItemInBounds(fromNode(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             clickOn(".id-new-data");
             write("Table1");
             push(KeyCode.TAB);
@@ -200,7 +200,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
             moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(".ok-button");
             
-            EditorDisplay targetField = lookup(".editor-display").<EditorDisplay>tryQuery().orElse(null);
+            EditorDisplay targetField = waitForOne(".editor-display");
             assertNotNull("Editor Display", targetField);
             if (targetField == null) return;
             @NonNull Node targetFinal = targetField;
@@ -228,18 +228,18 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
             assertEquals(0, TFXUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent)).intValue());
 
             TFXUtil.sleep(500);
-            List<Window> windows = listWindows();
+            List<Window> windows = TFXUtil.fx(() -> listWindows());
             @Nullable Window errorPopup = windows.stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
             assertNotNull(Utility.listToString(windows), errorPopup);
-            assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
-                1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
-            assertEquals("Looking for row that matches " + fixId + ", among: " + lookup(".quick-fix-row").<Node>queryAll().stream().flatMap(n -> TFXUtil.fx(() -> n.getStyleClass()).stream()).collect(Collectors.joining(", ")), 
-                1, lookup(".quick-fix-row" + fixId).queryAll().size());
+            assertEquals(TFXUtil.fx(() -> lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// "))),
+                1L, TFXUtil.fx(() -> lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count()).longValue());
+            assertEquals("Looking for row that matches " + fixId + ", among: " + TFXUtil.fx(() -> lookup(".quick-fix-row").<Node>queryAll().stream().flatMap(n -> n.getStyleClass().stream()).collect(Collectors.joining(", "))), 
+                1, count(".quick-fix-row" + fixId));
             // Get around issue with not being able to get the position of
             // items in the fix popup correctly, by using keyboard:
             //moveTo(".quick-fix-row" + fixId);
             //clickOn(".quick-fix-row" + fixId);
-            Node fixRow = lookup(".quick-fix-row" + fixId).queryAll().iterator().next();
+            Node fixRow = waitForOne(".quick-fix-row" + fixId);
             List<String> fixStyles = TFXUtil.fx(() -> fixRow.getStyleClass());
             String key = fixStyles.stream().filter(c -> c.startsWith("key-")).map(c -> c.substring("key-".length())).findFirst().orElse("");
             assertNotEquals(Utility.listToString(fixStyles), "", key);
@@ -274,6 +274,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
         }
     }
 
+    @OnThread(Tag.Any)
     private String textFlowToString(Node n)
     {
         return TFXUtil.fx(() -> n.toString() + " " + n.localToScreen(n.getBoundsInLocal().getMinX(), n.getBoundsInLocal().getMinY()) + ((TextFlow)n).getChildren().stream().map(c -> ((Text)c).getText()).collect(Collectors.joining(";")));

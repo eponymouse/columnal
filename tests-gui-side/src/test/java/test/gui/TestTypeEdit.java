@@ -194,7 +194,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     @OnThread(Tag.Any)
     private void assertNoErrors()
     {
-        Assert.assertEquals(0, lookup(".error-underline").queryAll().size());
+        Assert.assertEquals(0, count(".error-underline"));
     }
 
     @OnThread(Tag.Any)
@@ -211,7 +211,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     private void deleteExistingInnerValueTags()
     {
         int count = 0;
-        while (lookup(".small-delete").tryQuery().isPresent() && ++count < 30)
+        while (TFXUtil.fx(() -> lookup(".small-delete").tryQuery().isPresent()) && ++count < 30)
         {
             // Click highest one as likely to not be off the screen:
             Node node = TFXUtil.<@Nullable Node>fx(() -> lookup(".small-delete-circle").match(NodeQueryUtils.isVisible()).<Node>queryAll().stream().sorted(Comparator.comparing(n -> n.localToScene(0, 0).getY())).findFirst().orElse(null));
@@ -221,13 +221,13 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
                 TFXUtil.sleep(800);
             }
         }
-        assertTrue(!lookup(".small-delete").tryQuery().isPresent());
+        assertNotShowing("Small delete", ".small-delete");
     }
 
     @OnThread(Tag.Any)
     private void enterNewInnerValueTag(Random r, TypeManager typeManager, TagType<JellyType> tagType) throws InternalException, UserException
     {
-        int count;Optional<ScrollBar> visibleScroll = lookup(".fancy-list > .scroll-bar").match(NodeQueryUtils.isVisible()).match((ScrollBar s) -> TFXUtil.fx(() -> s.getOrientation()).equals(Orientation.VERTICAL)).tryQuery();
+        int count;Optional<ScrollBar> visibleScroll = TFXUtil.fx(() -> lookup(".fancy-list > .scroll-bar").match(NodeQueryUtils.isVisible()).match((ScrollBar s) -> s.getOrientation().equals(Orientation.VERTICAL)).tryQuery());
         if (visibleScroll.isPresent())
         {
             moveTo(visibleScroll.get());
@@ -369,7 +369,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     @OnThread(Tag.Simulation)
     private boolean existsSelectedCell(String content)
     {
-        return lookup(".list-cell").match(t -> {
+        return TFXUtil.fx(() -> lookup(".list-cell").match(t -> {
             if (t instanceof ListCell)
             {
                 ListCell<?> listCell = (ListCell<?>) t;
@@ -379,6 +379,6 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
                 });
             }
             return false;
-        }).tryQuery().isPresent();
+        }).tryQuery().isPresent());
     }
 }

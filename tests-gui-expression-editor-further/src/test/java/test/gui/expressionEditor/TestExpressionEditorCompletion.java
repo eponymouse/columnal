@@ -93,7 +93,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         sleep(1000);
         // Not much more to do -- just edit the expression 
         correctTargetWindow();
-        clickOn(lookup(".column-title").match((Label l) -> TFXUtil.fx(() -> l.getText()).startsWith("My C")).<Label>query());
+        clickOn(TFXUtil.fx(() -> lookup(".column-title").match((Label l) -> TFXUtil.fx(() -> l.getText()).startsWith("My C")).<Label>query()));
         push(KeyCode.TAB);
     }
     
@@ -201,7 +201,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         write("My Nu");
         checkPosition();
         // Click first cell:
-        Node cell = TBasicUtil.checkNonNull(lookup(".lex-completion").<Node>queryAll().stream().min(Comparator.comparing(c -> TFXUtil.fx(() -> c.localToScreen(c.getBoundsInLocal()).getMinY()))).orElse(null));
+        Node cell = TBasicUtil.checkNonNull(TFXUtil.fx(() -> lookup(".lex-completion").<Node>queryAll().stream().min(Comparator.comparing(c -> c.localToScreen(c.getBoundsInLocal()).getMinY())).orElse(null)));
         // Doesn't matter if registered as double click or two single:
         clickOn(point(cell).atOffset(5, 0));
         clickOn(point(cell).atOffset(5, 0));
@@ -243,13 +243,13 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
 
     private void checkPosition()
     {
-        EditorDisplay editorDisplay = lookup(".editor-display").query();
+        EditorDisplay editorDisplay = waitForOne(".editor-display");
         // Caret will update on blink, but let's not wait around for that:
         TFXUtil.fx_(() -> editorDisplay._test_queueUpdateCaret());
         sleep(2000);
-        ImmutableList<LexAutoCompleteWindow> completions = Utility.filterClass(listWindows().stream(), LexAutoCompleteWindow.class).collect(ImmutableList.toImmutableList());
+        ImmutableList<LexAutoCompleteWindow> completions = Utility.filterClass(TFXUtil.fx(() -> listWindows()).stream(), LexAutoCompleteWindow.class).collect(ImmutableList.toImmutableList());
         assertEquals(1, completions.size());
-        Node caret = lookup(".document-caret").query();
+        Node caret = waitForOne(".document-caret");
         double caretBottom = TFXUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()).getMaxY());
         MatcherAssert.assertThat(TFXUtil.fx(() -> completions.get(0).getY()), Matchers.closeTo(caretBottom, 2.0));
         @SuppressWarnings("units") // Because passes through IntStream

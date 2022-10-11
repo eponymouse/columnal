@@ -385,10 +385,10 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     public void testRenameTable(@From(GenTableId.class) TableId newTableId) throws Exception
     {
         // N tables, 2 columns each:
-        assertEquals(tableCount, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(tableCount * 2, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(tableCount, count(".table-display-table-title"));
+        assertEquals(tableCount * 2, count(".table-display-column-title"));
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(0, originalColumns));
-        clickOnItemInBounds(lookup(".table-display-table-title .text-field"), virtualGrid, rectangleBounds);
+        clickOnItemInBounds(".table-display-table-title .text-field", virtualGrid, rectangleBounds);
         selectAllCurrentTextField();
         write(newTableId.getRaw());
         // Different ways of exiting:
@@ -402,8 +402,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
 
         assertEquals(ImmutableSet.copyOf(Utility.prependToList(newTableId.getRaw(), transformPositions.keySet().stream().map(t -> t.getRaw()).collect(ImmutableList.toImmutableList()))), tableManager.getAllTables().stream().map(t -> t.getId().getRaw()).sorted().collect(Collectors.toSet()));
         // Check we haven't amassed multiple tables during the rename re-runs:
-        assertEquals(tableCount, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(tableCount * 2, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(tableCount, count(".table-display-table-title"));
+        assertEquals(tableCount * 2, count(".table-display-column-title"));
     }
 
     @Property(trials = 3)
@@ -411,10 +411,10 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     public void testRenameColumn(@From(GenColumnId.class) ColumnId newColumnId) throws Exception
     {
         // 3 tables, 2 columns each:
-        assertEquals(tableCount, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(tableCount * 2, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(tableCount, count(".table-display-table-title"));
+        assertEquals(tableCount * 2, count(".table-display-column-title"));
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, 0));
-        clickOnItemInBounds(lookup(".table-display-column-title"), virtualGrid, rectangleBounds);
+        clickOnItemInBounds(".table-display-column-title", virtualGrid, rectangleBounds);
         TFXUtil.sleep(1000);
         clickOn(".column-name-text-field");
         selectAllCurrentTextField();
@@ -438,8 +438,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         }
         
         // Check we haven't amassed multiple tables during the rename re-runs:
-        assertEquals(tableCount, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(tableCount * 2, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(tableCount, count(".table-display-table-title"));
+        assertEquals(tableCount * 2, count(".table-display-column-title"));
     }
     
     @Property(trials = 2)
@@ -517,7 +517,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             assertEquals(originalColumns, table.getData().getColumns().size());
         }
         int row = 1 + (Math.abs(n) % (originalRows + 2)); 
-        clickOnItemInBounds(lookup(".expand-arrow"), virtualGrid, new RectangleBounds(originalTableTopLeft.offsetByRowCols(row, 0), originalTableTopLeft.offsetByRowCols(row, originalColumns)));
+        clickOnItemInBounds(".expand-arrow", virtualGrid, new RectangleBounds(originalTableTopLeft.offsetByRowCols(row, 0), originalTableTopLeft.offsetByRowCols(row, originalColumns)));
         
         // We borrow n as a seed:
         ColumnDetails columnDetails = new ColumnDetails(null, name, typeAndValueGen.getType(), typeAndValueGen.makeValue());
@@ -563,8 +563,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     {
         tableManager.getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
         // N tables, 2 columns each:
-        assertEquals(tableCount, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(tableCount * 2, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(tableCount, count(".table-display-table-title"));
+        assertEquals(tableCount * 2, count(".table-display-column-title"));
         // 2 columns which you can add to, 3 rows plus 2 column headers:
         //assertEquals(originalColumns + originalRows + 2, lookup(".expand-arrow").queryAll().stream().filter(Node::isVisible).count());
 
@@ -572,10 +572,10 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         String targetColumnName = Arrays.asList("Boolean", "Number").get(Math.abs(positionIndicator) % originalColumns);
         // Bring up context menu and click item:
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, originalColumns));
-        withItemInBounds(lookup(".column-title").lookup((Label t) -> TFXUtil.fx(() -> t.getText()).equals(targetColumnName)), 
+        withItemInBounds(TFXUtil.fx(() -> lookup(".column-title").lookup((Label t) -> t.getText().equals(targetColumnName))), 
             virtualGrid, rectangleBounds,
                 this::showContextMenu);
-        clickOn(lookup(positionIndicator < 0 ? ".id-virtGrid-column-addBefore" : ".id-virtGrid-column-addAfter").<Node>query());
+        clickOn(positionIndicator < 0 ? ".id-virtGrid-column-addBefore" : ".id-virtGrid-column-addAfter");
 
         // We borrow n as a seed:
         ColumnDetails columnDetails = new ColumnDetails(null, name, typeAndValueGen.getType(), typeAndValueGen.makeValue());
@@ -715,13 +715,13 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         // Check no cells overlap:
         // We don't test column headers because they can overlap through floating when scrolling.
         // Instead, just check fixed cell items:
-        ImmutableList<Pair<Node, BoundingBox>> cells = Stream.<Node>concat(
+        ImmutableList<Pair<Node, BoundingBox>> cells = TFXUtil.fx(() -> Stream.<Node>concat(
             lookup(".table-data-cell").match(Node::isVisible).<Node>queryAll().stream(),
             lookup(".expand-arrow").match(Node::isVisible).<Node>queryAll().stream()
-        ).map(n -> new Pair<>(n, TFXUtil.fx(() -> shave(n.localToScreen(n.getBoundsInLocal())))))
+        ).map(n -> new Pair<>(n, shave(n.localToScreen(n.getBoundsInLocal()))))
             // Put on-screen first as that's easier to debug:
             .sorted(Comparator.comparing(p -> !p.getSecond().intersects(screenBounds)))
-            .collect(ImmutableList.toImmutableList());
+            .collect(ImmutableList.toImmutableList()));
 
         for (Pair<Node, BoundingBox> a : cells)
         {
@@ -762,21 +762,20 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         CellPosition swappedValuePos = originalTableTopLeft.offsetByRowCols(3 + swappedValueIndex, changeBoolean ? 0 : 1);
         TFXUtil.collapseAllTableHats(tableManager, virtualGrid);
         sleep(500);
-        clickOnItemInBounds(lookup(".document-text-field"), virtualGrid, new RectangleBounds(swappedValuePos, swappedValuePos));
+        clickOnItemInBounds(".document-text-field", virtualGrid, new RectangleBounds(swappedValuePos, swappedValuePos));
         push(KeyCode.ENTER);
         enterStructuredValue(swappedType.getDataType(), swappedValue, r, true, true);
         push(KeyCode.ENTER);
         
         
         TFXUtil.collapseAllTableHats(tableManager, virtualGrid);
-        sleep(500);
-        assertNull(lookup(".type-editor").tryQuery().orElse(null));
+        assertNotShowing("Type editor", ".type-editor");
         clickOnItemInBounds(
-            r.nextBoolean() ? lookup(".table-display-column-title") : lookup(".table-display-column-type"),
+            r.nextBoolean() ? ".table-display-column-title" : ".table-display-column-type",
             virtualGrid, new RectangleBounds(originalTableTopLeft.offsetByRowCols(1, changeBoolean ? 0 : 1), originalTableTopLeft.offsetByRowCols(2, changeBoolean ? 0 : 1))
         );
         sleep(300);
-        assertNotNull(lookup(".type-editor").tryQuery().orElse(null));
+        assertShowing("Type editor", ".type-editor");
         sleep(300);
         clickOn(".type-editor");
         sleep(300);
@@ -787,7 +786,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         // Clicking ok while blank type shouldn't work, dialog should stay showing:
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn();
-        assertNotNull(lookup(".type-editor").tryQuery().orElse(null));
+        assertShowing("Type editor", ".type-editor");
         
         clickOn(".type-editor");
         sleep(300);
@@ -796,7 +795,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn();
         sleep(500);
-        assertNull(lookup(".type-editor").tryQuery().orElse(null));
+        assertNotShowing("Type editor", ".type-editor");
 
         SimulationSupplier<DataSource> findOriginal = () -> tableManager.getAllTables().stream().filter(t -> t instanceof DataSource).map(t -> (DataSource)t).findFirst().orElseThrow(() -> new RuntimeException("Could not find data source"));
 
@@ -845,7 +844,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         // Now change type back:
         TFXUtil.collapseAllTableHats(tableManager, virtualGrid);
         clickOnItemInBounds(
-                r.nextBoolean() ? lookup(".table-display-column-title") : lookup(".table-display-column-type"),
+                r.nextBoolean() ? ".table-display-column-title" : ".table-display-column-type",
                 virtualGrid, new RectangleBounds(originalTableTopLeft.offsetByRowCols(1, changeBoolean ? 0 : 1), originalTableTopLeft.offsetByRowCols(2, changeBoolean ? 0 : 1))
         );
         sleep(300);

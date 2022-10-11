@@ -48,7 +48,7 @@ public interface ClickOnTableHeaderTrait extends FxRobotInterface, ScrollToTrait
     {
         keyboardMoveTo(virtualGrid, position);
         
-        Node tableNameField = withItemInBounds(lookup(".table-display-table-title .table-name-text-field"),
+        Node tableNameField = withItemInBounds(".table-display-table-title .table-name-text-field",
             virtualGrid, new RectangleBounds(position, position), (n, p) -> {});
         if (tableNameField == null)
             throw new RuntimeException("Could not find table name field for " + position);

@@ -225,7 +225,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
             Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(1));
             for (int i = 0; i < 2; i++)
-                clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+                clickOnItemInBounds(fromNode(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             clickOn(".id-new-data");
             write("Table1");
             push(KeyCode.TAB);
@@ -242,11 +242,11 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
                 moveAndDismissPopupsAtPos(point(".ok-button"));
                 clickOn(".ok-button");
                 sleep(300);
-                assertFalse(lookup(".type-editor").tryQuery().isPresent());
+                assertNotShowing("Type editor", ".type-editor");
             }
             else
             {
-                EditorDisplay editorDisplay = lookup(".editor-display").<EditorDisplay>query();
+                EditorDisplay editorDisplay = waitForOne(".editor-display");
                 List<ErrorDetails> actualErrors = new ArrayList<>(TFXUtil.fx(() -> editorDisplay._test_getErrors().stream().filter(e -> e.error.getLength() > 0).collect(Collectors.toList())));
                 List<Error> expectedErrors = new ArrayList<>(Arrays.asList(errors));
                 assertEquals(Utility.listToString(actualErrors), expectedErrors.size(), actualErrors.size());
@@ -285,13 +285,13 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
                     moveAndDismissPopupsAtPos(point(".ok-button"));
                     clickOn(".ok-button");
                     sleep(300);
-                    assertTrue("Type editor still showing", lookup(".type-editor").tryQuery().isPresent());
+                    assertShowing("Type editor still showing", ".type-editor");
                     assertErrorShowing(true, null);
                     
                     // Should still show even if you click again:
                     clickOn(".ok-button");
                     sleep(300);
-                    assertTrue("Type editor still showing", lookup(".type-editor").tryQuery().isPresent());
+                    assertShowing("Type editor still showing", ".type-editor");
                 }
                 clickOn(".cancel-button");
             }
@@ -308,7 +308,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     private void assertErrorShowing(boolean underlineShowing, @Nullable Boolean popupShowing)
     {
         Scene dialogScene = TFXUtil.fx(() -> getRealFocusedWindow().getScene());
-        Collection<Path> errorUnderline = lookup(".type-editor .error-underline").<Path>queryAll();
+        Collection<Path> errorUnderline = TFXUtil.fx(() -> lookup(".type-editor .error-underline").<Path>queryAll());
         assertEquals("Underline showing", underlineShowing, errorUnderline.size() > 0);
         if (popupShowing != null)
             assertEquals("Popup showing", popupShowing, isShowingErrorPopup());
@@ -317,7 +317,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
     private boolean isShowingErrorPopup()
     {
         // Important to check the .error part too, as it may be showing information or a prompt and that's fine:
-        return lookup(".expression-info-popup.error").tryQuery().isPresent();
+        return TFXUtil.fx(() -> lookup(".expression-info-popup.error").tryQuery().isPresent());
     }
     
     private static class Error

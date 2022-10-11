@@ -349,7 +349,7 @@ public class TestDocumentTextField extends FXApplicationTest
         clickOn(field);
         push(KeyCode.HOME);
         Bounds fieldBounds = TFXUtil.fx(() -> field.localToScreen(field.getBoundsInLocal()));
-        Node caret = lookup(".document-caret").query();
+        Node caret = waitForOne(".document-caret");
         List<Rectangle2D> allBounds = new ArrayList<>();
         for (int i = 0; i < 50; i++)
         {

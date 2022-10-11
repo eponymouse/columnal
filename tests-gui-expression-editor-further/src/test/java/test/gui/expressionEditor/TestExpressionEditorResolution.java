@@ -76,7 +76,7 @@ public class TestExpressionEditorResolution extends FXApplicationTest implements
             // Not sure why this doesn't work:
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             
-            clickOnItemInBounds(lookup(".table-display-column-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos));
+            clickOnItemInBounds(".table-display-column-title", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos));
             sleep(500);
             push(KeyCode.TAB);
             sleep(100);

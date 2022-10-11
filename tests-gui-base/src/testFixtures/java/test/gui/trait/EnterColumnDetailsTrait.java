@@ -41,14 +41,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrait, EnterStructuredValueTrait
+public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrait, EnterStructuredValueTrait, QueryTrait
 {
     // Call once the dialog is showing.  We will click Ok button before returning.
     @OnThread(Tag.Simulation)
     default public void enterColumnDetails(ColumnDetails columnDetails, Random r) throws InternalException, UserException
     {
         // We should be focused on name initially with the whole field selected, or blank:
-        assertFalse("Should be no errors showing in type editor while unfocused", lookup(".type-editor .error-underline").tryQuery().isPresent());
+        assertNotShowing("Should be no errors showing in type editor while unfocused", ".type-editor .error-underline");
         write(columnDetails.columnId.getRaw(), DELAY);
         Window dialog = TFXUtil.fx(() -> getRealFocusedWindow());
         Log.debug("Pressing TAB on window: " + dialog);
@@ -59,8 +59,7 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
         push(KeyCode.ESCAPE);
         push(KeyCode.ESCAPE);
         //assertTrue(TFXUtil.fx(() -> dialog.isShowing()));
-        Node defValue = lookup(".default-value").<Node>query();
-        assertNotNull(defValue);
+        Node defValue = waitForOne(".default-value");
         if (defValue != null)
         {
             @NonNull Node defValueFinal = defValue;
@@ -75,7 +74,7 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
         clickOn(".ok-button");
         
         // If we can still see the OK button, there was a problem.  Cancel the dialog instead:
-        if (lookup(".ok-button").tryQuery().isPresent())
+        if (TFXUtil.fx(() -> lookup(".ok-button").tryQuery().isPresent()))
         {
             Log.normal("Error in dialog; cancelling");
             // Let us see what the problem is:

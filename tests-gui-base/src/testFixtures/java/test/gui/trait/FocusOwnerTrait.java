@@ -86,14 +86,14 @@ public interface FocusOwnerTrait extends FxRobotInterface
     {
         Node node = getFocusOwner();
         if (!expectedClass.isInstance(node))
-            throw new RuntimeException("Focus owner is " + (node == null ? "null" : node.getClass().toString()) + " but expected " + expectedClass + " Target window: " + targetWindow() + " Real focused window: " + TFXUtil.fx(() -> getRealFocusedWindow()));
+            throw new RuntimeException("Focus owner is " + (node == null ? "null" : node.getClass().toString()) + " but expected " + expectedClass + " Target window: " + TFXUtil.fx(() -> targetWindow()) + " Real focused window: " + TFXUtil.fx(() -> getRealFocusedWindow()));
         return expectedClass.cast(node);
     }
 
     @OnThread(Tag.Any) 
     default FxRobotInterface correctTargetWindow()
     {
-        return targetWindow(TFXUtil.fx(() -> getRealFocusedWindow()));
+        return TFXUtil.fx(() -> targetWindow(getRealFocusedWindow()));
     }
     
     default public void checkDialogFocused(String msg)
