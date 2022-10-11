@@ -134,6 +134,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             return dataType;
         }
 
+        @OnThread(Tag.Simulation)
         public @Value Object makeValue() throws InternalException, UserException
         {
             // Can't ever be null because initialised when first object is created

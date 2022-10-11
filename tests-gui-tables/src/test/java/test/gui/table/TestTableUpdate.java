@@ -253,6 +253,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
         return r;
     }
     
+    @OnThread(Tag.FXPlatform)
     private @Nullable String getGraphicalValue(MainWindowActions details, TableDisplay tableDisplay, int columnIndex, int row)
     {
         @Nullable VersionedSTF cell = details._test_getDataCell(tableDisplay.getPosition().offsetByRowCols(tableDisplay.getHeaderRowCount() + row, columnIndex));

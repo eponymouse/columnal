@@ -80,7 +80,7 @@ public class TestExpressionEditorResolution extends FXApplicationTest implements
             sleep(500);
             push(KeyCode.TAB);
             sleep(100);
-            String content = getEditorDisplay()._test_getEditor()._test_getRawText();
+            String content = TFXUtil.fx(() -> getEditorDisplay()._test_getEditor()._test_getRawText());
 
             assertEquals(expectedLoaded, content);
 
@@ -94,6 +94,7 @@ public class TestExpressionEditorResolution extends FXApplicationTest implements
         }
     }
 
+    @OnThread(Tag.Any)
     private EditorDisplay getEditorDisplay()
     {
         Node focusOwner = getFocusOwner();

@@ -315,6 +315,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         return targetPos;
     }
 
+    @OnThread(Tag.Any)
     private void assertSameLastIdent(ColumnId column, Expression expression)
     {
         assertEquals(column.getRaw(), expression.visit(new ExpressionVisitorFlat<@Nullable @ExpressionIdentifier String>()
@@ -333,12 +334,14 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         }));
     }
 
+    @OnThread(Tag.Any)
     private String ch(Random r)
     {
         return "" + (char)('A' + (char)(r.nextInt(26)));
     }
 
     // unavailableTables points from a table to all its directly derived tables that shouldn't be available to it
+    @OnThread(Tag.Simulation)
     private void checkAvailability(TableManager manager, Multimap<TableId, TableId> unavailableTables)
     {
         ImmutableList<TableId> allTables = manager.getAllTables().stream().map(t -> t.getId()).collect(ImmutableList.toImmutableList());
@@ -353,6 +356,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         }
     }
 
+    @OnThread(Tag.Any)
     private void removeAllMapped(Multimap<TableId, TableId> unavailableTables, HashSet<TableId> available, TableId tableId)
     {
         for (TableId id : unavailableTables.get(tableId))
