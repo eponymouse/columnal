@@ -269,7 +269,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
 
     // TODO fix this properly in the thread checker
     private PointQuery pointOfVisibleNode(String query) {
-        NodeQuery nodeQuery = lookup(query);
+        NodeQuery nodeQuery = TFXUtil.fx(() -> lookup(query));
         Node node = queryVisibleNode(nodeQuery, "the query \"" + query + "\"");
         return point(node);
     }
@@ -278,7 +278,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         if (resultNodes.isEmpty()) {
             throw new FxRobotException(queryDescription + " returned no nodes.");
         }
-        Optional<Node> resultNode = from(resultNodes).match(isVisible()).tryQuery();
+        Optional<Node> resultNode = fromNodes(resultNodes).match(isVisible()).tryQuery();
         if (!resultNode.isPresent()) {
             throw new FxRobotException(queryDescription + " returned " + resultNodes.size() + " nodes" +
                 ", but no nodes were visible.");

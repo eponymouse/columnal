@@ -8,6 +8,7 @@ import test.gui.TFXUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+import java.util.Collection;
 import java.util.Optional;
 
 import static org.junit.Assert.assertFalse;
@@ -65,6 +66,13 @@ public interface QueryTrait extends FxRobotInterface
     public default NodeQuery fromNode(Node node)
     {
         return from(node);
+    }
+
+    @OnThread(Tag.Any)
+    @SuppressWarnings("threadchecker") // The from method is actually thread-safe, having looked at the source code
+    public default NodeQuery fromNodes(Collection<Node> nodes)
+    {
+        return from(nodes);
     }
     
     @OnThread(Tag.Any)
