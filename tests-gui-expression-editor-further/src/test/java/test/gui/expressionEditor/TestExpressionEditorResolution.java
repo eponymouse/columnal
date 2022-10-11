@@ -30,6 +30,8 @@ import org.junit.Test;
 import test.functions.TFunctionUtil;
 import test.gui.TAppUtil;
 import test.gui.TFXUtil;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableRecordSet;
@@ -53,8 +55,10 @@ import test.gui.util.FXApplicationTest;
 
 import static org.junit.Assert.assertEquals;
 
+@OnThread(Tag.Simulation)
 public class TestExpressionEditorResolution extends FXApplicationTest implements ScrollToTrait, ClickTableLocationTrait, EnterExpressionTrait, PopupTrait
 {
+    
     private void testLoadNameResolution(String expressionSrc, String expectedLoaded) throws Exception
     {
         TableManager orig = new DummyManager();
