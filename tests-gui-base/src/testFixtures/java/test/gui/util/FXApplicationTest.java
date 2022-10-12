@@ -40,6 +40,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
@@ -343,5 +344,24 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
             else
                 return clickOn(pointOnScreen, MouseButton.SECONDARY);
         }
+    }
+
+    @OnThread(Tag.Any)
+    protected final void waitForSuccess(Runnable r)
+    {
+        for (int i = 0; i < 80; i++)
+        {
+            try
+            {
+                r.run();
+            }
+            catch (AssertionError e)
+            {
+                // Go round again while we're failing
+            }
+            TFXUtil.sleep(100);
+        }
+        // One last time for the real success/failure:
+        r.run();
     }
 }

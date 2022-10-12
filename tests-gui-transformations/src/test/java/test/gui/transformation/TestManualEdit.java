@@ -584,7 +584,8 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             assertNotEquals(-1, row);
             @TableDataRowIndex int rowFinal = DataItemPosition.row(row);
             replaceKeyColumn = findReplaceKeyColumn.get();
-            assertEquals("Clicking on " + toClick + " key: " + (replaceKeyColumn == null ? "<row>" : replaceKeyColumn.getName()) + " row: " + row + " col: " + col, TFXUtil.fx(() -> manualEditDisplay.getDataPosition(rowFinal, col)), TFXUtil.<@Nullable CellPosition>fx(() -> mainWindowActions._test_getVirtualGrid()._test_getSelection().map(s -> s.getActivateTarget()).orElse(null)));
+            Column replaceKeyColumnFinal = replaceKeyColumn;
+            waitForSuccess(() -> assertEquals("Clicking on " + toClick + " key: " + (replaceKeyColumnFinal == null ? "<row>" : replaceKeyColumnFinal.getName()) + " row: " + rowFinal + " col: " + col, TFXUtil.fx(() -> manualEditDisplay.getDataPosition(rowFinal, col)), TFXUtil.<@Nullable CellPosition>fx(() -> mainWindowActions._test_getVirtualGrid()._test_getSelection().map(s -> s.getActivateTarget()).orElse(null))));
             assertNull(TFXUtil.fx(() -> lookup(".id-create-table").match(Node::isVisible).tryQuery().orElse(null)));
         }
         else
