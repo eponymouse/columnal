@@ -150,13 +150,13 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
     public void checkSelectionOnScreen(String prefix, VirtualGrid virtualGrid)
     {
         assertTrue(prefix, TFXUtil.fx(() -> windowToUse.isFocused()));
-        Node selectionRect = lookup(".virt-grid-selection-overlay").match(Node::isVisible).tryQuery().orElse(null);
+        Node selectionRect = TFXUtil.fx(() -> lookup(".virt-grid-selection-overlay").match(Node::isVisible).tryQuery().orElse(null));
         if (selectionRect == null)
         {
             // In case of a load:
             TFXUtil.sleep(5000);
-            selectionRect = lookup(".virt-grid-selection-overlay").match(Node::isVisible).tryQuery().orElse(null);
-            Log.debug("Window: " + windowToUse + " Target: " + targetWindow() + " rect: " + lookup(".virt-grid-selection-overlay").tryQuery().orElse(null));
+            selectionRect = TFXUtil.fx(() -> lookup(".virt-grid-selection-overlay").match(Node::isVisible).tryQuery().orElse(null));
+            Log.debug("Window: " + windowToUse + " Target: " + TFXUtil.fx(() -> targetWindow()) + " rect: " + TFXUtil.fx(() -> lookup(".virt-grid-selection-overlay").tryQuery().orElse(null)));
         }
         assertTrue(prefix, TFXUtil.fx(() -> windowToUse.isFocused()));
         assertNotNull(prefix, selectionRect);

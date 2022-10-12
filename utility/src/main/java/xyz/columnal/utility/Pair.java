@@ -34,17 +34,10 @@ import java.util.function.Function;
  * Created by neil on 02/11/2016.
  */
 @Covariant({0, 1})
-public final class Pair<A, B>
+public final record Pair<A, B>(A first, B second)
 {
-    private final A first;
-    private final B second;
-
-    public Pair(A first, B second)
-    {
-        this.first = first;
-        this.second = second;
-    }
-
+    // TODO remove these methods in favour of first() and second() once the checker framework bug https://github.com/typetools/checker-framework/issues/5360 is fixed in November
+    // Also potentially relevant: https://bugs.openjdk.org/browse/JDK-8288130
     @Pure
     public A getFirst()
     {
@@ -86,27 +79,6 @@ public final class Pair<A, B>
     {
         return new Pair<A, C>(first, replacement);
     }
-
-    @Override
-    public boolean equals(@Nullable Object o)
-    {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Pair<?, ?> pair = (Pair<?, ?>) o;
-
-        if (first != null ? !first.equals(pair.first) : pair.first != null) return false;
-        return second != null ? second.equals(pair.second) : pair.second == null;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = first != null ? first.hashCode() : 0;
-        result = 31 * result + (second != null ? second.hashCode() : 0);
-        return result;
-    }
-
     @Override
     public String toString()
     {

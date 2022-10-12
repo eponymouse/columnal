@@ -121,6 +121,7 @@ import java.util.TreeSet;
  * then generate the integer values to match.
  */
 @SuppressWarnings("recorded")
+@OnThread(Tag.Simulation)
 public class GenExpressionValueForwards extends GenExpressionValueBase
 {
     @SuppressWarnings("initialization")

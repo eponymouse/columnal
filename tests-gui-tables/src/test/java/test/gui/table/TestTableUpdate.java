@@ -147,7 +147,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
             {
                 int iFinal = i;
                 CellPosition pos = CellPosition.ORIGIN.offsetByRowCols(1 + 3, 1 + 3 * iFinal);
-                assertThrows(RuntimeException.class, () -> withItemInBounds(lookup(".document-text-field"), details._test_getVirtualGrid(), new RectangleBounds(pos, pos), (n, p) -> {}));
+                assertThrows(RuntimeException.class, () -> withItemInBounds(".document-text-field", details._test_getVirtualGrid(), new RectangleBounds(pos, pos), (n, p) -> {}));
             }
             
             // Put table back and check everything updates:
@@ -175,7 +175,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
             {
                 int iFinal = i;
                 CellPosition pos = CellPosition.ORIGIN.offsetByRowCols(1 + 3, 1 + 3 * iFinal);
-                withItemInBounds(lookup(".document-text-field"), details._test_getVirtualGrid(), new RectangleBounds(pos, pos), (n, p) -> {});
+                withItemInBounds(".document-text-field", details._test_getVirtualGrid(), new RectangleBounds(pos, pos), (n, p) -> {});
             }
 
             // Check data matches:
@@ -253,6 +253,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
         return r;
     }
     
+    @OnThread(Tag.FXPlatform)
     private @Nullable String getGraphicalValue(MainWindowActions details, TableDisplay tableDisplay, int columnIndex, int row)
     {
         @Nullable VersionedSTF cell = details._test_getDataCell(tableDisplay.getPosition().offsetByRowCols(tableDisplay.getHeaderRowCount() + row, columnIndex));

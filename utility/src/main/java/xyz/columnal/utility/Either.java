@@ -29,37 +29,26 @@ import xyz.columnal.error.UserException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
- * Immutable Either class
+ * Immutable Either class.  Note that A and B are allowed to be Nullable.
  */
 @Covariant({0, 1})
-public class Either<A, B>
-{
-    private final @Nullable A a;
-    private final @Nullable B b;
-    private final boolean isA;
-
-    // For ComparableEither, this is package-private
-    Either(@Nullable A a, @Nullable B b, boolean isA)
-    {
-        this.a = a;
-        this.b = b;
-        this.isA = isA;
-    }
-    
+public sealed interface Either<A, B> permits Either.Left, Either.Right, ComparableEither
+{    
     public static <A, B> Either<A, B> left(A a)
     {
-        return new Either<>(a, null, true);
+        return new Left<>(a);
     }
-
+    
     public static <A, B> Either<A, B> right(B b)
     {
-        return new Either<>(null, b, false);
+        return new Right<>(b);
     }
 
     public static <A, B> ImmutableList<B> getRights(ImmutableList<Either<A, B>> eithers)
@@ -67,50 +56,15 @@ public class Either<A, B>
         return eithers.stream().flatMap(e -> e.<Stream<B>>either(a -> Stream.<B>of(), b -> Stream.<B>of(b))).collect(ImmutableList.<B>toImmutableList());
     }
 
-    @SuppressWarnings("nullness") // No annotation to explain this is safe
-    public <R> R either(Function<? super A, R> withLeft, Function<? super B, R> withRight)
-    {
-        if (isA)
-            return withLeft.apply(a);
-        else
-            return withRight.apply(b);
-    }
+    public <R> R either(Function<? super A, R> withLeft, Function<? super B, R> withRight);
 
-    @SuppressWarnings("nullness") // No annotation to explain this is safe
-    public <R> R eitherInt(FunctionInt<? super A, R> withLeft, FunctionInt<? super B, R> withRight) throws InternalException
-    {
-        if (isA)
-            return withLeft.apply(a);
-        else
-            return withRight.apply(b);
-    }
+    public <R> R eitherInt(FunctionInt<? super A, R> withLeft, FunctionInt<? super B, R> withRight) throws InternalException;
 
-    @SuppressWarnings("nullness") // No annotation to explain this is safe
-    public <R> R eitherEx(ExFunction<? super A, R> withLeft, ExFunction<? super B, R> withRight) throws InternalException, UserException
-    {
-        if (isA)
-            return withLeft.apply(a);
-        else
-            return withRight.apply(b);
-    }
+    public <R> R eitherEx(ExFunction<? super A, R> withLeft, ExFunction<? super B, R> withRight) throws InternalException, UserException;
 
-    @SuppressWarnings("nullness") // No annotation to explain this is safe
-    public <R, E1 extends Exception, E2 extends Exception> R eitherEx2(FunctionEx2<? super A, R, E1, E2> withLeft, FunctionEx2<? super B, R, E1, E2> withRight) throws E1, E2
-    {
-        if (isA)
-            return withLeft.apply(a);
-        else
-            return withRight.apply(b);
-    }
+    public <R, E1 extends Exception, E2 extends Exception> R eitherEx2(FunctionEx2<? super A, R, E1, E2> withLeft, FunctionEx2<? super B, R, E1, E2> withRight) throws E1, E2;
 
-    @SuppressWarnings("nullness") // No annotation to explain this is safe
-    public <R, E1 extends Exception, E2 extends Exception, E3 extends Exception> R eitherEx3(FunctionEx3<? super A, R, E1, E2, E3> withLeft, FunctionEx3<? super B, R, E1, E2, E3> withRight) throws E1, E2, E3
-    {
-        if (isA)
-            return withLeft.apply(a);
-        else
-            return withRight.apply(b);
-    }
+    public <R, E1 extends Exception, E2 extends Exception, E3 extends Exception> R eitherEx3(FunctionEx3<? super A, R, E1, E2, E3> withLeft, FunctionEx3<? super B, R, E1, E2, E3> withRight) throws E1, E2, E3;
     
     public static interface FunctionEx2<T, R, E1 extends Exception, E2 extends Exception>
     {
@@ -122,32 +76,12 @@ public class Either<A, B>
         public R apply(T t) throws E1, E2, E3;
     }
 
-    @SuppressWarnings("nullness") // No annotation to explain this is safe
-    public void either_(Consumer<? super A> withLeft, Consumer<? super B> withRight)
-    {
-        if (isA)
-            withLeft.accept(a);
-        else
-            withRight.accept(b);
-    }
+    public void either_(Consumer<? super A> withLeft, Consumer<? super B> withRight);
+
+    public void eitherInt_(ConsumerInt<? super A> withLeft, ConsumerInt<? super B> withRight) throws InternalException;
 
     @SuppressWarnings("nullness") // No annotation to explain this is safe
-    public void eitherInt_(ConsumerInt<? super A> withLeft, ConsumerInt<? super B> withRight) throws InternalException
-    {
-        if (isA)
-            withLeft.accept(a);
-        else
-            withRight.accept(b);
-    }
-
-    @SuppressWarnings("nullness") // No annotation to explain this is safe
-    public void eitherEx_(ExConsumer<? super A> withLeft, ExConsumer<? super B> withRight) throws InternalException, UserException
-    {
-        if (isA)
-            withLeft.accept(a);
-        else
-            withRight.accept(b);
-    }
+    public void eitherEx_(ExConsumer<? super A> withLeft, ExConsumer<? super B> withRight) throws InternalException, UserException;
 
     // Bit like liftA2/liftM2 for Either monad, but it does examine both Eithers
     // and it concatenates the errors rather than just using the first one
@@ -159,18 +93,20 @@ public class Either<A, B>
     }
     
     @SuppressWarnings("nullness")
-    public static <E, R, T> Either<E, List<R>> mapMInt(List<T> xs, FunctionInt<? super T, Either<E, R>> applyOne) throws InternalException
+    public static <E, R, T> Either<E, ImmutableList<R>> mapMInt(List<T> xs, FunctionInt<? super T, Either<E, R>> applyOne) throws InternalException
     {
-        List<R> r = new ArrayList<>(xs.size());
+        ImmutableList.Builder<R> r = ImmutableList.builderWithExpectedSize(xs.size());
         for (T x : xs)
         {
             Either<E, R> y = applyOne.apply(x);
-            if (y.a != null)
-                return Either.left(y.a);
-            else
-                r.add(y.b);
+            switch (y)
+            {
+                case Left<E, R> left -> {return Either.left(left.a);}
+                case Right<E, R> right -> r.add(right.b);
+                default -> {} // Null impossible
+            }
         }
-        return Either.right(r);
+        return Either.right(r.build());
     }
 
     // Maps the items to Either, but stops at the first Left and returns it.  If no Lefts, returns all the Rights as list.
@@ -181,10 +117,12 @@ public class Either<A, B>
         for (T x : xs)
         {
             Either<E, R> y = applyOne.apply(x);
-            if (y.a != null)
-                return Either.left(y.a);
-            else
-                r.add(y.b);
+            switch (y)
+            {
+                case Left<E, R> left -> {return Either.left(left.a);}
+                case Right<E, R> right -> r.add(right.b);
+                default -> {} // Null impossible
+            }
         }
         return Either.right(r.build());
     }
@@ -197,170 +135,112 @@ public class Either<A, B>
         for (T x : xs)
         {
             Either<E, R> y = applyOne.apply(x);
-            if (y.a != null)
-                return Either.left(y.a);
-            else
-                r.add(y.b);
+            switch (y)
+            {
+                case Left<E, R> left -> {return Either.left(left.a);}
+                case Right<E, R> right -> r.add(right.b);
+                default -> {} // Null impossible
+            }
         }
         return Either.right(r.build());
     }
 
     // Equivalent to either(Either::left, Either.right . applyRight)
-    @SuppressWarnings("nullness")
-    public <R> Either<A, R> map(Function<? super B, R> applyRight)
+
+    public default <R> Either<A, R> map(Function<? super B, R> applyRight)
     {
-        if (isA)
-            return Either.left(a);
-        else
-            return Either.right(applyRight.apply(b));
+        return either(Either::left, b -> Either.right(applyRight.apply(b)));
     }
 
-    // Equivalent to either(Either::left, Either.right . applyRight)
-    @SuppressWarnings("nullness")
-    public <R> Either<A, R> mapInt(FunctionInt<? super B, R> applyRight) throws InternalException
+    // Equivalent to eitherInt(Either::left, Either.right . applyRight)
+    public default <R> Either<A, R> mapInt(FunctionInt<? super B, R> applyRight) throws InternalException
     {
-        if (isA)
-            return Either.left(a);
-        else
-            return Either.right(applyRight.apply(b));
+        return eitherInt(Either::left, b -> Either.right(applyRight.apply(b)));
     }
 
-    // Equivalent to either(Either::left, Either.right . applyRight)
-    @SuppressWarnings("nullness")
-    public <R> Either<A, R> mapEx(ExFunction<? super B, R> applyRight) throws InternalException, UserException
-    {
-        if (isA)
-            return Either.left(a);
-        else
-            return Either.right(applyRight.apply(b));
-    }
+    // Equivalent to eitherEx(Either::left, Either.right . applyRight)
 
+    public default <R> Either<A, R> mapEx(ExFunction<? super B, R> applyRight) throws InternalException, UserException
+    {
+        return eitherEx(Either::left, b -> Either.right(applyRight.apply(b)));
+    }
+    
     // Equivalent to either(Either::left, applyRight)
-    @SuppressWarnings("nullness")
-    public <R> Either<A, R> flatMap(Function<? super B, Either<A, R>> bind)
+    public default <R> Either<A, R> flatMap(Function<? super B, Either<A, R>> bind)
     {
-        if (isA)
-            return Either.left(a);
-        else
-            return bind.apply(b);
+        return either(Either::left, bind::apply);
     }
 
-    // Equivalent to either(Either::left, applyRight)
-    @SuppressWarnings("nullness")
-    public <R> Either<A, R> flatMapInt(FunctionInt<? super B, Either<A, R>> bind) throws InternalException
+    // Equivalent to eitherInt(Either::left, applyRight)
+    public default <R> Either<A, R> flatMapInt(FunctionInt<? super B, Either<A, R>> bind) throws InternalException
     {
-        if (isA)
-            return Either.left(a);
-        else
-            return bind.apply(b);
+        return eitherInt(Either::left, bind::apply);
     }
-    // Equivalent to either(Either::left, applyRight)
-    @SuppressWarnings("nullness")
-    public <R> Either<A, R> flatMapEx(ExFunction<? super B, Either<A, R>> bind) throws InternalException, UserException
+    // Equivalent to eitherEx(Either::left, applyRight)
+
+    public default <R> Either<A, R> flatMapEx(ExFunction<? super B, Either<A, R>> bind) throws InternalException, UserException
     {
-        if (isA)
-            return Either.left(a);
-        else
-            return bind.apply(b);
+        return eitherEx(Either::left, bind::apply);
     }
     
 
     //Use either/either_ instead if at all possible
-    public A getLeft(String error) throws InternalException
+    public default A getLeft(String error) throws InternalException
     {
-        if (a != null)
-            return a;
-        else
-            throw new InternalException(error);
+        return eitherInt(a -> a, b -> {throw new InternalException(error);});
     }
 
     //Use either/either_ instead if at all possible
-    public B getRight(String error) throws InternalException
+    public default B getRight(String error) throws InternalException
     {
-        if (b != null)
-            return b;
-        else
-            throw new InternalException(error);
+        return eitherInt(a -> {throw new InternalException(error);}, b -> b);
     }
 
     //Use either/either_ instead if at all possible
-    public boolean isLeft()
-    {
-        return isA;
-    }
+    public boolean isLeft();
 
     //Use either/either_ instead if at all possible
-    public boolean isRight()
-    {
-        return !isA;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object o)
-    {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Either<?, ?> either = (Either<?, ?>) o;
-
-        if (isA != either.isA) return false;
-        if (a != null ? !a.equals(either.a) : either.a != null) return false;
-        return b != null ? b.equals(either.b) : either.b == null;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = a != null ? a.hashCode() : 0;
-        result = 31 * result + (b != null ? b.hashCode() : 0);
-        result = 31 * result + (isA ? 1 : 0);
-        return result;
-    }
+    public boolean isRight();
     
-    @Override
-    public String toString()
-    {
-        return isA ? ("Left(" + a + ")") : ("Right(" + b + ")"); 
-    }
 
     // Equivalent to either(l -> null, r -> r), but saves adding the annoying
     // type annotations.
-    public @Nullable B leftToNull()
+    public default @Nullable B leftToNull()
     {
         return this.<@Nullable B>either(l -> null, r -> r);
     }
     
-    public void ifLeft(Consumer<A> withLeft)
+    public default void ifLeft(Consumer<A> withLeft)
     {
         either_(withLeft, b -> {});
     }
 
-    public void ifRight(Consumer<B> withRight)
+    public default void ifRight(Consumer<B> withRight)
     {
         either_(a -> {}, withRight);
     }
 
-    public <C, D> Either<C, D> mapBoth(Function<A, C> withLeft, Function <B, D> withRight)
+    public default <C, D> Either<C, D> mapBoth(Function<A, C> withLeft, Function <B, D> withRight)
     {
         return either(a -> Either.<C, D>left(withLeft.apply(a)), b -> Either.<C, D>right(withRight.apply(b)));
     }
 
-    public <C, D> Either<C, D> mapBothInt(FunctionInt<A, C> withLeft, FunctionInt<B, D> withRight) throws InternalException
+    public default  <C, D> Either<C, D> mapBothInt(FunctionInt<A, C> withLeft, FunctionInt<B, D> withRight) throws InternalException
     {
         return eitherInt(a -> Either.<C, D>left(withLeft.apply(a)), b -> Either.<C, D>right(withRight.apply(b)));
     }
     
-    public <C, D> Either<C, D> mapBothEx(ExFunction<A, C> withLeft, ExFunction<B, D> withRight) throws InternalException, UserException
+    public default <C, D> Either<C, D> mapBothEx(ExFunction<A, C> withLeft, ExFunction<B, D> withRight) throws InternalException, UserException
     {
         return eitherEx(a -> Either.<C, D>left(withLeft.apply(a)), b -> Either.<C, D>right(withRight.apply(b)));
     }
 
-    public <C, D, E1 extends Exception, E2 extends Exception> Either<C, D> mapBothEx2(FunctionEx2<A, C, E1, E2> withLeft, FunctionEx2<B, D, E1, E2> withRight) throws E1, E2
+    public default <C, D, E1 extends Exception, E2 extends Exception> Either<C, D> mapBothEx2(FunctionEx2<A, C, E1, E2> withLeft, FunctionEx2<B, D, E1, E2> withRight) throws E1, E2
     {
         return this.<Either<C, D>, E1, E2>eitherEx2(a -> Either.<C, D>left(withLeft.apply(a)), b -> Either.<C, D>right(withRight.apply(b)));
     }
 
-    public <C, D, E1 extends Exception, E2 extends Exception, E3 extends Exception> Either<C, D> mapBothEx3(FunctionEx3<A, C, E1, E2, E3> withLeft, FunctionEx3<B, D, E1, E2, E3> withRight) throws E1, E2, E3
+    public default <C, D, E1 extends Exception, E2 extends Exception, E3 extends Exception> Either<C, D> mapBothEx3(FunctionEx3<A, C, E1, E2, E3> withLeft, FunctionEx3<B, D, E1, E2, E3> withRight) throws E1, E2, E3
     {
         return this.<Either<C, D>, E1, E2, E3>eitherEx3(a -> Either.<C, D>left(withLeft.apply(a)), b -> Either.<C, D>right(withRight.apply(b)));
     }
@@ -369,5 +249,177 @@ public class Either<A, B>
     public static <A, B> @Nullable Either<@NonNull A, @NonNull B> surfaceNull(Either<@Nullable A, @Nullable B> e)
     {
         return e.<@Nullable Either<@NonNull A, @NonNull B>>either((@Nullable A l) -> l == null ? null : Either.<@NonNull A, @NonNull B>left(l), (@Nullable B r) -> r == null ? null : Either.<@NonNull A, @NonNull B>right(r));
+    }
+    
+    public sealed static class Left<A, B> implements Either<A, B> permits ComparableEither.Left
+    {
+        public final A a;
+
+        // Use Either.left
+        Left(A a)
+        {
+            this.a = a;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (!(o instanceof Left<?, ?> left)) return false;
+
+            return Objects.equals(a, left.a);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return a != null ? a.hashCode() : 0;
+        }
+
+        @Override
+        public <R> R either(Function<? super A, R> withLeft, Function<? super B, R> withRight)
+        {
+            return withLeft.apply(a);
+        }
+
+        @Override
+        public <R> R eitherInt(FunctionInt<? super A, R> withLeft, FunctionInt<? super B, R> withRight) throws InternalException
+        {
+            return withLeft.apply(a);
+        }
+
+        @Override
+        public <R> R eitherEx(ExFunction<? super A, R> withLeft, ExFunction<? super B, R> withRight) throws InternalException, UserException
+        {
+            return withLeft.apply(a);
+        }
+
+        @Override
+        public <R, E1 extends Exception, E2 extends Exception> R eitherEx2(FunctionEx2<? super A, R, E1, E2> withLeft, FunctionEx2<? super B, R, E1, E2> withRight) throws E1, E2
+        {
+            return withLeft.apply(a);
+        }
+
+        @Override
+        public <R, E1 extends Exception, E2 extends Exception, E3 extends Exception> R eitherEx3(FunctionEx3<? super A, R, E1, E2, E3> withLeft, FunctionEx3<? super B, R, E1, E2, E3> withRight) throws E1, E2, E3
+        {
+            return withLeft.apply(a);
+        }
+
+        @Override
+        public void either_(Consumer<? super A> withLeft, Consumer<? super B> withRight)
+        {
+            withLeft.accept(a);
+        }
+
+        @Override
+        public void eitherInt_(ConsumerInt<? super A> withLeft, ConsumerInt<? super B> withRight) throws InternalException
+        {
+            withLeft.accept(a);
+        }
+
+        @Override
+        public void eitherEx_(ExConsumer<? super A> withLeft, ExConsumer<? super B> withRight) throws InternalException, UserException
+        {
+            withLeft.accept(a);
+        }
+
+        @Override
+        public boolean isLeft()
+        {
+            return true;
+        }
+
+        @Override
+        public boolean isRight()
+        {
+            return false;
+        }
+    }
+
+    public sealed static class Right<A, B> implements Either<A, B> permits ComparableEither.Right
+    {
+        public final B b;
+
+        // Use Either.right
+        Right(B b)
+        {
+            this.b = b;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (!(o instanceof Right<?, ?> right)) return false;
+
+            return Objects.equals(b, right.b);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return b != null ? b.hashCode() : 0;
+        }
+
+        @Override
+        public <R> R either(Function<? super A, R> withLeft, Function<? super B, R> withRight)
+        {
+            return withRight.apply(b);
+        }
+
+        @Override
+        public <R> R eitherInt(FunctionInt<? super A, R> withLeft, FunctionInt<? super B, R> withRight) throws InternalException
+        {
+            return withRight.apply(b);
+        }
+
+        @Override
+        public <R> R eitherEx(ExFunction<? super A, R> withLeft, ExFunction<? super B, R> withRight) throws InternalException, UserException
+        {
+            return withRight.apply(b);
+        }
+
+        @Override
+        public <R, E1 extends Exception, E2 extends Exception> R eitherEx2(FunctionEx2<? super A, R, E1, E2> withLeft, FunctionEx2<? super B, R, E1, E2> withRight) throws E1, E2
+        {
+            return withRight.apply(b);
+        }
+
+        @Override
+        public <R, E1 extends Exception, E2 extends Exception, E3 extends Exception> R eitherEx3(FunctionEx3<? super A, R, E1, E2, E3> withLeft, FunctionEx3<? super B, R, E1, E2, E3> withRight) throws E1, E2, E3
+        {
+            return withRight.apply(b);
+        }
+
+        @Override
+        public void either_(Consumer<? super A> withLeft, Consumer<? super B> withRight)
+        {
+            withRight.accept(b);
+        }
+
+        @Override
+        public void eitherInt_(ConsumerInt<? super A> withLeft, ConsumerInt<? super B> withRight) throws InternalException
+        {
+            withRight.accept(b);
+        }
+
+        @Override
+        public void eitherEx_(ExConsumer<? super A> withLeft, ExConsumer<? super B> withRight) throws InternalException, UserException
+        {
+            withRight.accept(b);
+        }
+
+        @Override
+        public boolean isLeft()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isRight()
+        {
+            return true;
+        }
     }
 }

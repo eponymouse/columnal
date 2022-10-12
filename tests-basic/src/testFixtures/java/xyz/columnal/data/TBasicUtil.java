@@ -74,6 +74,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+@OnThread(Tag.Any)
 public class TBasicUtil
 {
     @OnThread(Tag.Any)
@@ -169,6 +170,7 @@ public class TBasicUtil
         }
     }
 
+    @OnThread(Tag.Simulation)
     public static @Value Number generateNumberV(SourceOfRandomness r, GenerationStatus gs)
     {
         return new GenNumber().generate(r, gs);
@@ -188,6 +190,7 @@ public class TBasicUtil
             return DataTypeUtility.valueDate(LocalDate.ofEpochDay(r.nextLong(MIN_DATE.toEpochDay(), MAX_DATE.toEpochDay())));
     }
 
+    @OnThread(Tag.Simulation)
     public static @Value LocalTime generateTime(SourceOfRandomness r, GenerationStatus gs)
     {
         LocalTime localTime = (LocalTime) DataTypeUtility.valueTime(new LocalTimeGenerator().generate(r, gs));
@@ -203,16 +206,19 @@ public class TBasicUtil
         return ret;
     }
 
+    @OnThread(Tag.Simulation)
     public static @Value LocalDateTime generateDateTime(SourceOfRandomness r, GenerationStatus gs)
     {
         return LocalDateTime.of(generateDate(r, gs), generateTime(r, gs));
     }
 
+    @OnThread(Tag.Simulation)
     public static @Value ZonedDateTime generateDateTimeZoned(SourceOfRandomness r, GenerationStatus gs)
     {
         return DataTypeUtility.valueZonedDateTime(ZonedDateTime.of(generateDateTime(r, gs), r.nextBoolean() ? generateZone(r, gs) : generateZoneOffset(r, gs)));
     }
 
+    @OnThread(Tag.Simulation)
     public static ZoneId generateZone(SourceOfRandomness r, GenerationStatus gs)
     {
         return new GenZoneId().generate(r, gs);
@@ -224,6 +230,7 @@ public class TBasicUtil
         return ZoneOffset.ofTotalSeconds(r.nextInt(-12*60, 12*60) * 60);
     }
 
+    @OnThread(Tag.Simulation)
     public static String generateZoneString(SourceOfRandomness r, GenerationStatus gs)
     {
         return generateZone(r, gs).toString();
@@ -304,11 +311,13 @@ public class TBasicUtil
         }
     }
 
+    @OnThread(Tag.Simulation)
     public static @Value String makeStringV(SourceOfRandomness r, GenerationStatus gs)
     {
         return DataTypeUtility.value(makeString(r, gs).replaceAll("\"", ""));
     }
 
+    @OnThread(Tag.Simulation)
     public static String makeString(SourceOfRandomness r, @Nullable GenerationStatus gs)
     {
         // Makes either totally random String from generator, or "awkward" string
@@ -391,6 +400,7 @@ public class TBasicUtil
         }
     }
 
+    @OnThread(Tag.Simulation)
     public static <T> ImmutableList<T> makeList(int len, Generator<? extends T> gen, SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         return Stream.generate(() -> gen.generate(sourceOfRandomness, generationStatus)).limit(len).collect(ImmutableList.toImmutableList());
@@ -462,6 +472,7 @@ public class TBasicUtil
         return s;
     }
 
+    @OnThread(Tag.Simulation)
     public static String makeNonEmptyString(SourceOfRandomness r, GenerationStatus gs)
     {
         String s;
@@ -509,6 +520,7 @@ public class TBasicUtil
         }
     }
 
+    @OnThread(Tag.Any)
     public static void checkedToRuntime_(ExRunnable runnable)
     {
         try

@@ -78,6 +78,6 @@ ext {
 }
 application {
     mainClass = javaMainClass
-    applicationDefaultJvmArgs = ["-Dlog4j.configurationFile=dev-log4j2.xml"]
+    applicationDefaultJvmArgs = ["-Dlog4j.configurationFile=dev-log4j2.xml", "--enable-preview"]
 }
 description = 'app'

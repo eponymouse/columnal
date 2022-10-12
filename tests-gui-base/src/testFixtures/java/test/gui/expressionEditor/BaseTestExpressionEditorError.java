@@ -100,7 +100,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
             Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
             CellPosition targetPos = new CellPosition(CellPosition.row(6), CellPosition.col(3));
             for (int i = 0; i < 2; i++)
-                clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+                clickOnItemInBounds(fromNode(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             // Not sure why this doesn't work:
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             clickOn(".id-new-transform");
@@ -128,11 +128,11 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                 moveAndDismissPopupsAtPos(point(".ok-button"));
                 clickOn(".ok-button");
                 sleep(300);
-                assertFalse(lookup(".expression-editor").tryQuery().isPresent());
+                assertNotShowing("Expression editor", ".expression-editor");
             }
             else
             {
-                EditorDisplay editorDisplay = lookup(".editor-display").<EditorDisplay>query();
+                EditorDisplay editorDisplay = waitForOne(".editor-display");
                 List<ErrorDetails> actualErrors = new ArrayList<>(TFXUtil.fx(() -> editorDisplay._test_getErrors().stream().filter(e -> e.error.getLength() > 0).collect(Collectors.toList())));
                 List<Error> expectedErrors = new ArrayList<>(Arrays.asList(errors));
                 assertEquals(Utility.listToString(actualErrors), expectedErrors.size(), actualErrors.size());
@@ -175,9 +175,10 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                     moveAndDismissPopupsAtPos(point(".ok-button"));
                     clickOn(".ok-button");
                     sleep(300);
-                    assertTrue("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
+                    // Make sure it's still showing:
+                    assertShowing("Expression editor still showing", ".expression-editor");
                     assertErrorShowing(true, null);
-                    assertTrue(lookup(".ok-double-prompt").tryQuery().isPresent());
+                    assertShowing("OK double prompt", ".ok-double-prompt");
                 }
 
                 actualErrors = new ArrayList<>(TFXUtil.fx(() -> editorDisplay._test_getErrors().stream().filter(e -> e.error.getLength() > 0).collect(Collectors.toList())));
@@ -189,12 +190,12 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                 }
                 
                 TFXUtil.doubleOk(this);
-                assertFalse("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
+                assertNotShowing("Expression editor still showing", ".expression-editor");
                 System.out.println("Closed expression editor, opening again");
                 // Show again and check error is showing from the outset:
                 clickOn("DestCol");
                 sleep(2000);
-                assertTrue("Expression editor showing again", lookup(".expression-editor").tryQuery().isPresent());
+                assertShowing("Expression editor showing again", ".expression-editor");
                 assertErrorShowing(true, false);
                 // Check it shows if you move into it:
                 push(KeyCode.TAB);
@@ -212,7 +213,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                 assertTrue("Error popup showed somewhere", seenPopup);
                 
                 TFXUtil.doubleOk(this);
-                assertFalse("Expression editor still showing", lookup(".expression-editor").tryQuery().isPresent());
+                assertNotShowing("Expression editor still showing", ".expression-editor");
             }
             
         }
@@ -227,7 +228,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
     private void assertErrorShowing(boolean underlineShowing, @Nullable Boolean errorPopupShowing)
     {
         Scene dialogScene = TFXUtil.fx(() -> getRealFocusedWindow().getScene());
-        Collection<Path> errorUnderline = lookup(".expression-editor .error-underline").<Path>queryAll();
+        Collection<Path> errorUnderline = TFXUtil.fx(() -> lookup(".expression-editor .error-underline").<Path>queryAll());
         assertEquals("Underline showing", underlineShowing, errorUnderline.size() > 0);
         if (errorPopupShowing != null)
             assertEquals("Popup showing", errorPopupShowing, isShowingErrorPopup());
@@ -236,7 +237,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
     private boolean isShowingErrorPopup()
     {
         // Important to check the .error part too, as it may be showing information or a prompt and that's fine:
-        return lookup(".expression-info-popup.error").tryQuery().isPresent();
+        return TFXUtil.fx(() -> lookup(".expression-info-popup.error").tryQuery().isPresent());
     }
     
     static class Error

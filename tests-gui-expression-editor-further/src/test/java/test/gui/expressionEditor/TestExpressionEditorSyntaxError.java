@@ -222,7 +222,7 @@ public class TestExpressionEditorSyntaxError extends BaseTestExpressionEditorErr
         // Should disappear when OK pressed, and not leave a runtime error:
         testError("ACC1 ");
         TFXUtil.fx_(() -> dumpScreenshot());
-        assertEquals(ImmutableSet.of(), lookup(".table-data-cell").match(c -> TFXUtil.fx(() -> FXUtility.hasPseudoclass(c, "has-error"))).queryAll());
+        assertEquals(ImmutableSet.of(), TFXUtil.fx(() -> lookup(".table-data-cell").match(c -> TFXUtil.fx(() -> FXUtility.hasPseudoclass(c, "has-error"))).queryAll()));
     }
     
     @Test

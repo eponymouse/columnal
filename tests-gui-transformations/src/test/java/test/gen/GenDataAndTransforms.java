@@ -26,6 +26,8 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import test.functions.TFunctionUtil;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import xyz.columnal.data.*;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -53,6 +55,7 @@ import java.util.ArrayList;
 
 // Most of the transformations are currently identity transform or similar,
 // but that's fine for the manual edit test.
+@OnThread(Tag.Simulation)
 public class GenDataAndTransforms extends Generator<TableManager>
 {
     public GenDataAndTransforms()

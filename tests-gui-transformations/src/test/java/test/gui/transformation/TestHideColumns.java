@@ -70,7 +70,7 @@ public class TestHideColumns extends FXApplicationTest implements ScrollToTrait,
 
         CellPosition targetPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(null));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
-        clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+        clickOnItemInBounds(fromNode(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
         TFXUtil.sleep(100);
         clickOn(".id-new-transform");
         TFXUtil.sleep(100);
@@ -92,7 +92,7 @@ public class TestHideColumns extends FXApplicationTest implements ScrollToTrait,
 
         for (ColumnId columnId : toHide)
         {
-            selectGivenListViewItem(lookup(".shown-columns-list-view").<ColumnId>queryListView(), c -> c.equals(columnId));
+            selectGivenListViewItem(waitForOne(".shown-columns-list-view"), c -> c.equals(columnId));
             clickOn(".add-button");
         }
         clickOn(".ok-button");
@@ -110,7 +110,7 @@ public class TestHideColumns extends FXApplicationTest implements ScrollToTrait,
         // Try editing to unhide a column and check it refreshes:
         clickOn(".edit-hide-columns");
         ColumnId unHide = toHide.remove(r.nextInt(toHide.size()));
-        selectGivenListViewItem(lookup(".hidden-columns-list-view").<ColumnId>queryListView(), c -> c.equals(unHide));
+        selectGivenListViewItem(waitForOne(".hidden-columns-list-view"), c -> c.equals(unHide));
         clickOn(".add-button");
         clickOn(".ok-button");
         sleep(500);
@@ -136,7 +136,7 @@ public class TestHideColumns extends FXApplicationTest implements ScrollToTrait,
                 CellPosition pos = TFXUtil.fx(() -> hide.getDisplay().getMostRecentPosition()).offsetByRowCols(1, i);
                 ColumnId columnId = columnIdsLeft.get(i);
                 keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), pos);
-                withItemInBounds(lookup(".table-display-column-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(pos, pos), (n, p) -> assertEquals(columnId.getRaw(), ((Label)n).getText()));
+                withItemInBounds(".table-display-column-title", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(pos, pos), (n, p) -> assertEquals(columnId.getRaw(), ((Label)n).getText()));
                 
             }
         }

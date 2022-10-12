@@ -1,7 +1,7 @@
 name: Build
 on: [push]
 jobs:
-  Ubuntu-Build-Test:
+  Ubuntu-Build-Only:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository code
@@ -26,4 +26,4 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
-          arguments: build -Pcheckers=all -PthreadCheck=true --info --stacktrace --no-daemon --scan -x test
+          arguments: build testClasses -Pcheckers=all -PthreadCheck=true --info --stacktrace --no-daemon --scan -x test

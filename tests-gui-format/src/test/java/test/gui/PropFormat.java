@@ -172,13 +172,13 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         @NonNull ImportChoicesDialog<?, ?> importChoicesDialog = maybeICD;
         checkTrim(importChoicesDialog);
         
-        selectGivenComboBoxItem(lookup(".id-guess-charset").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.charset));
+        selectGivenComboBoxItem(waitForOne(".id-guess-charset"), new PickOrOther<>(formatAndData.format.initialTextFormat.charset));
         TFXUtil.sleep(2000);
         checkTrim(importChoicesDialog);
-        selectGivenComboBoxItem(lookup(".id-guess-separator").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.separator == null ? "" : formatAndData.format.initialTextFormat.separator));
+        selectGivenComboBoxItem(waitForOne(".id-guess-separator"), new PickOrOther<>(formatAndData.format.initialTextFormat.separator == null ? "" : formatAndData.format.initialTextFormat.separator));
         TFXUtil.sleep(2000);
         checkTrim(importChoicesDialog);
-        selectGivenComboBoxItem(lookup(".id-guess-quote").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.quote == null ? "" : formatAndData.format.initialTextFormat.quote));
+        selectGivenComboBoxItem(waitForOne(".id-guess-quote"), new PickOrOther<>(formatAndData.format.initialTextFormat.quote == null ? "" : formatAndData.format.initialTextFormat.quote));
         TFXUtil.sleep(2000);
         checkTrim(importChoicesDialog);
 
@@ -208,8 +208,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         // Find the current top-left corner of the selection rectangle:
         RectangleBounds curBounds = TFXUtil.fx(() -> srcDataDisplay._test_getCurSelectionBounds());
         VisibleBounds visibleBounds = TFXUtil.fx(() -> srcGrid.getVisibleBounds());
-        Region srcGridNode = TFXUtil.fx(() -> srcGrid.getNode());
-        targetWindow(srcGridNode);
+        TFXUtil.fx_(() -> targetWindow(srcGrid.getNode()));
         Point2D startDrag = TFXUtil.fx(() -> visibleBounds._test_localToScreen(new Point2D(
                 visibleBounds.getXCoord(curBounds.topLeftIncl.columnIndex) + 1.0,
                 visibleBounds.getYCoord(curBounds.topLeftIncl.rowIndex) + 1.0)));
@@ -247,8 +246,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         
         // Check the visible bounds of the graphical rectangle:
         VisibleBounds srcVisibleBounds = TFXUtil.fx(() -> importChoicesDialog._test_getSrcGrid().getVisibleBounds());
-        @SuppressWarnings("nullness")
-        @NonNull Rectangle blackRect = lookup(".prospective-import-rectangle").query();
+        @NonNull Rectangle blackRect = waitForOne(".prospective-import-rectangle");
         assertEquals("Graphical left", TFXUtil.fx(() -> srcVisibleBounds.getXCoord(expectedTrimBounds.topLeftIncl.columnIndex)), TFXUtil.fx(() -> blackRect.getLayoutX()), 1.0);
         // Because of clamp visible, we can only do a very weak check on right and bottom:
         MatcherAssert.assertThat("Graphical right", TFXUtil.fx(() -> srcVisibleBounds.getXCoordAfter(expectedTrimBounds.bottomRightIncl.columnIndex)), Matchers.greaterThanOrEqualTo(TFXUtil.fx(() -> blackRect.getLayoutX() + blackRect.getWidth())));

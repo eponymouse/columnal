@@ -30,6 +30,8 @@ import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import test.functions.TFunctionUtil;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.TableManager;
@@ -64,6 +66,7 @@ import java.util.stream.Collectors;
  * Useful for testing loading and saving of expressions.
  */
 @SuppressWarnings("recorded")
+@OnThread(Tag.Simulation)
 public class GenNonsenseExpression extends Generator<Expression>
 {
     private final GenUnit genUnit = new GenUnit();
@@ -294,6 +297,7 @@ public class GenNonsenseExpression extends Generator<Expression>
 
     @SuppressWarnings("nullness") // Some problem with Collectors.toList
     @Override
+    @OnThread(Tag.Any)
     public List<Expression> doShrink(SourceOfRandomness random, Expression larger)
     {
         return larger._test_childMutationPoints().map(p -> p.getFirst()).collect(Collectors.<Expression>toList());

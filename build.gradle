@@ -13,9 +13,11 @@ def projectsToJavaFX = [
   data: ['javafx.base', 'javafx.graphics'],
   expressions: ['javafx.graphics'],
   'gui-utility': ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],
+  identifiers: ['javafx.graphics'],
   'lex-editor': ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],
   stf: ['javafx.base', 'javafx.controls', 'javafx.graphics'],
   transformations:  ['javafx.base', 'javafx.controls', 'javafx.graphics'],
+  types: ['javafx.graphics'],
   utility:  ['javafx.base', 'javafx.graphics']
 ]
 
@@ -70,9 +72,7 @@ subprojects { subproject ->
     }
     javafx {
       version = "13.0.2"
-      // We need at least javafx.base and javafx.graphics everywhere because the threadchecker uses it:
-      // TODO fix this!
-      modules = projectsToJavaFX.getOrDefault(subproject.name, ['javafx.base', 'javafx.graphics'])
+      modules = projectsToJavaFX.getOrDefault(subproject.name, [])
     }
 
     dependencies {
@@ -128,6 +128,10 @@ subprojects { subproject ->
       testImplementation 'org.testfx:openjfx-monocle:jdk-12.0.1+2'
     }
 
+    tasks.withType(JavaCompile) {
+      options.compilerArgs += ("true".equals(project.findProperty("threadCheck")) ? ['-Xplugin:threadchecker.plugin.TCPlugin'] : [])
+    }
+
     test {
       useJUnit()
 
@@ -147,7 +151,8 @@ subprojects { subproject ->
 
       jvmArgs += ['-Xmx2G',
                   '-XX:+HeapDumpOnOutOfMemoryError',
-                  '-XX:+UseCompressedOops'] +
+                  '-XX:+UseCompressedOops',
+                  '--enable-preview'] +
                   // Headless is the default because headed GUI tests are quite a surprise and cause havoc:
                   (("true".equals(project.findProperty("headless")) || project.findProperty("headless") == null) ? [
                     // Headless:
@@ -178,7 +183,7 @@ subprojects { subproject ->
     }
   }
   tasks.withType(JavaCompile) {
-    options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:module", "-Werror", "-parameters"]
+    options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:module", "-Werror", "-parameters", "--enable-preview"]
     options.encoding = 'UTF-8'
     options.release = 17
     options.fork = true

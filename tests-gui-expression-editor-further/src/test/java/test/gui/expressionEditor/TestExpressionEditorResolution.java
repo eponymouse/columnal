@@ -30,6 +30,8 @@ import org.junit.Test;
 import test.functions.TFunctionUtil;
 import test.gui.TAppUtil;
 import test.gui.TFXUtil;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableRecordSet;
@@ -53,8 +55,10 @@ import test.gui.util.FXApplicationTest;
 
 import static org.junit.Assert.assertEquals;
 
+@OnThread(Tag.Simulation)
 public class TestExpressionEditorResolution extends FXApplicationTest implements ScrollToTrait, ClickTableLocationTrait, EnterExpressionTrait, PopupTrait
 {
+    
     private void testLoadNameResolution(String expressionSrc, String expectedLoaded) throws Exception
     {
         TableManager orig = new DummyManager();
@@ -72,11 +76,11 @@ public class TestExpressionEditorResolution extends FXApplicationTest implements
             // Not sure why this doesn't work:
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             
-            clickOnItemInBounds(lookup(".table-display-column-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos));
+            clickOnItemInBounds(".table-display-column-title", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos));
             sleep(500);
             push(KeyCode.TAB);
             sleep(100);
-            String content = getEditorDisplay()._test_getEditor()._test_getRawText();
+            String content = TFXUtil.fx(() -> getEditorDisplay()._test_getEditor()._test_getRawText());
 
             assertEquals(expectedLoaded, content);
 
@@ -90,6 +94,7 @@ public class TestExpressionEditorResolution extends FXApplicationTest implements
         }
     }
 
+    @OnThread(Tag.Any)
     private EditorDisplay getEditorDisplay()
     {
         Node focusOwner = getFocusOwner();

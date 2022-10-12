@@ -179,7 +179,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
     @Test
     public void testCellAllocation()
     {
-        SimpleGridArea simpleGridArea = new SimpleGridArea();
+        SimpleGridArea simpleGridArea = TFXUtil.fx(() -> new SimpleGridArea());
         assertTrue(simpleGridArea.fetches.isEmpty());
         TFXUtil.fx_(() -> {
             SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
@@ -212,7 +212,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
     @Test
     public void testGridLines()
     {
-        SimpleGridArea simpleGridArea = new SimpleGridArea();
+        SimpleGridArea simpleGridArea = TFXUtil.fx(() -> new SimpleGridArea());
         VirtualGridLineSupplier gridLineSupplier = new VirtualGridLineSupplier();
         TFXUtil.fx_(() -> {
             virtualGrid.addGridAreas(ImmutableList.of(simpleGridArea));
@@ -236,10 +236,10 @@ public class TestVirtualGridLayout extends FXApplicationTest
             MatcherAssert.assertThat(columnDividers.size(), Matchers.greaterThanOrEqualTo(expectedLines));
             for (Line columnDivider : columnDividers)
             {
-                assertEquals(0.0, (columnDivider.getLayoutX() + 0.5 + curScrollOffset - 20.0) % 100, 0.01);
+                assertEquals(0.0, (TFXUtil.fx(() -> columnDivider.getLayoutX()) + 0.5 + curScrollOffset - 20.0) % 100, 0.01);
             }
             // Should all be different X:
-            assertEquals(columnDividers.size(), columnDividers.stream().mapToDouble(l -> l.getLayoutX()).distinct().count());
+            assertEquals(columnDividers.size(), columnDividers.stream().mapToDouble(l -> TFXUtil.fx(() -> l.getLayoutX())).distinct().count());
         }
 
         // Same for Y:
@@ -259,17 +259,17 @@ public class TestVirtualGridLayout extends FXApplicationTest
             MatcherAssert.assertThat(rowDividers.size(), Matchers.greaterThanOrEqualTo(expectedLines));
             for (Line rowDivider : rowDividers)
             {
-                assertEquals(0.0, (rowDivider.getLayoutY() + 0.5 + curScrollOffset) % 24, 0.01);
+                assertEquals(0.0, (TFXUtil.fx(() -> rowDivider.getLayoutY()) + 0.5 + curScrollOffset) % 24, 0.01);
             }
             // Should all be different X:
-            assertEquals(rowDividers.size(), rowDividers.stream().mapToDouble(l -> l.getLayoutY()).distinct().count());
+            assertEquals(rowDividers.size(), rowDividers.stream().mapToDouble(l -> TFXUtil.fx(() -> l.getLayoutY())).distinct().count());
         }
     }
     
     @Test
     public void testTableMove()
     {
-        SimpleGridArea simpleGridArea = new SimpleGridArea();
+        SimpleGridArea simpleGridArea = TFXUtil.fx(() -> new SimpleGridArea());
         // Test that when table moves, cells are updated properly
         TFXUtil.fx_(() -> {
             SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
@@ -284,7 +284,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         for (int i = 0; i < 2; i++)
         {
             // Table begins at 0,0.  Check that cells we can find do match up:
-            for (Label cell : lookup(".simple-cell").match(Label::isVisible).<Label>queryAll())
+            for (Label cell : TFXUtil.fx(() -> lookup(".simple-cell").match(Label::isVisible).<Label>queryAll()))
             {
                 // Find out what position it thinks it is:
                 String content = TFXUtil.fx(() -> cell.getText());
@@ -310,6 +310,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
     }
     
+    @OnThread(Tag.FXPlatform)
     private static final class BoundsGridArea extends SimpleGridArea
     {
         private final RectangleBounds origBounds;
@@ -331,17 +332,18 @@ public class TestVirtualGridLayout extends FXApplicationTest
     private void checkOverlap(List<RectangleBounds> bounds)
     {
         List<BoundsGridArea> gridAreas = Utility.mapList(bounds, r -> {
-            return new BoundsGridArea(r);
+            return TFXUtil.fx(() -> new BoundsGridArea(r));
         });
         TFXUtil.fx_(() -> virtualGrid.addGridAreas(gridAreas));
         sleep(1000);
         // Should already not be touching:
         for (BoundsGridArea a : gridAreas)
         {
-            RectangleBounds aBounds = new RectangleBounds(a.getPosition(), a.getBottomRightIncl());
+            RectangleBounds aBounds = TFXUtil.fx(() -> new RectangleBounds(a.getPosition(), a.getBottomRightIncl()));
             for (BoundsGridArea b : gridAreas)
             {
-                RectangleBounds bBounds = new RectangleBounds(b.getPosition(), b.getBottomRightIncl());
+                RectangleBounds bBounds = TFXUtil.fx(() -> new RectangleBounds(b.getPosition(), b.getBottomRightIncl()));
+                // Don't check if grid area overlaps itself:
                 if (a != b)
                 {
                     assertFalse("Bounds " + aBounds + " should not touch " + bBounds, aBounds.touches(bBounds));
@@ -509,6 +511,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
     }
 
+    @OnThread(Tag.FXPlatform)
     private static class SimpleGridArea extends GridArea implements GridCellInfo<Label,String>
     {
         private static int nextId = 0;

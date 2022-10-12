@@ -135,7 +135,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             tableManager.record(new Calculate(tableManager, new InitialLoadDetails(null, null, position, null), tableManager.getAllTables().get(0).getId(), ImmutableMap.of()));
 
             TFXUtil.sleep(3000);
-            NodeQuery arrowQuery = lookup(".expand-arrow").match(n -> TFXUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right")));
+            NodeQuery arrowQuery = TFXUtil.fx(() -> lookup(".expand-arrow").match(n -> FXUtility.hasPseudoclass(n, "expand-right")));
             clickOnItemInBounds(arrowQuery, mainWindowActions._test_getVirtualGrid(), new RectangleBounds(
                 new CellPosition(CellPosition.row(8), CellPosition.col(1)),
                 new CellPosition(CellPosition.row(8), CellPosition.col(20))
@@ -150,9 +150,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(".ok-button");
             
-            EditorDisplay targetField = lookup(".editor-display").<EditorDisplay>tryQuery().orElse(null);
-            assertNotNull("Editor Display", targetField);
-            if (targetField == null) return;
+            EditorDisplay targetField = waitForOne(".editor-display");
             @NonNull Node targetFinal = targetField;
             if (!TFXUtil.fx(() -> targetFinal.isFocused()))
             {
@@ -179,18 +177,18 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             assertEquals(0, TFXUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent)).intValue());
 
             TFXUtil.sleep(2000);
-            List<Window> windows = listWindows();
+            List<Window> windows = TFXUtil.fx(() -> listWindows());
             @Nullable Window errorPopup = windows.stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
             assertNotNull(Utility.listToString(windows), errorPopup);
-            assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
-                1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
-            assertEquals("Looking for row that matches" + showId(fixId) + ", among: " + lookup(".quick-fix-row").<Node>queryAll().stream().map(n -> "{" + TFXUtil.fx(() -> n.getStyleClass()).stream().map(s -> showId(s)).collect(Collectors.joining(", ")) + "}").collect(Collectors.joining(" and ")), 
-                1, lookup(".quick-fix-row" + fixId).queryAll().size());
+            assertEquals(TFXUtil.fx(() -> lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// "))),
+                1L, TFXUtil.fx(() -> lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count()).longValue());
+            assertEquals("Looking for row that matches" + showId(fixId) + ", among: " + TFXUtil.fx(() -> lookup(".quick-fix-row").<Node>queryAll().stream().map(n -> "{" + n.getStyleClass().stream().map(s -> showId(s)).collect(Collectors.joining(", ")) + "}").collect(Collectors.joining(" and "))), 
+                1, TFXUtil.fx(() -> lookup(".quick-fix-row" + fixId).queryAll().size()).intValue());
             // Get around issue with not being able to get the position of
             // items in the fix popup correctly, by using keyboard:
             //moveTo(".quick-fix-row" + fixId);
             //clickOn(".quick-fix-row" + fixId);
-            Node fixRow = lookup(".quick-fix-row" + fixId).queryAll().iterator().next();
+            Node fixRow = waitForOne(".quick-fix-row" + fixId);
             List<String> fixStyles = TFXUtil.fx(() -> fixRow.getStyleClass());
             String key = fixStyles.stream().filter(c -> c.startsWith("key-")).map(c -> c.substring("key-".length())).findFirst().orElse("");
             assertNotEquals(Utility.listToString(fixStyles), "", key);
@@ -227,7 +225,8 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
         }
     }
 
-    private String showId(String fixId)
+    @OnThread(Tag.Any)
+    private static String showId(String fixId)
     {
         int munge = fixId.indexOf("munged-");
         if (munge != -1)
@@ -240,11 +239,12 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
     private boolean isShowingErrorPopup()
     {
         // Important to check the .error part too, as it may be showing information or a prompt and that's fine:
-        return lookup(".expression-info-popup.error").tryQuery().isPresent();
+        return TFXUtil.fx(() -> lookup(".expression-info-popup.error").tryQuery().isPresent());
     }
 
-    private String textFlowToString(Node n)
+    @OnThread(Tag.FXPlatform)
+    private static String textFlowToString(Node n)
     {
-        return TFXUtil.fx(() -> n.toString() + " " + n.localToScreen(n.getBoundsInLocal().getMinX(), n.getBoundsInLocal().getMinY()) + ((TextFlow)n).getChildren().stream().map(c -> ((Text)c).getText()).collect(Collectors.joining(";")));
+        return n.toString() + " " + n.localToScreen(n.getBoundsInLocal().getMinX(), n.getBoundsInLocal().getMinY()) + ((TextFlow)n).getChildren().stream().map(c -> ((Text)c).getText()).collect(Collectors.joining(";"));
     }
 }

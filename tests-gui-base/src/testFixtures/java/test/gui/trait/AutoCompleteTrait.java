@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
-public interface AutoCompleteTrait extends FxRobotInterface
+public interface AutoCompleteTrait extends FxRobotInterface, QueryTrait
 {
     // Completes in LexCompletionWindow
     public default void lexComplete(String completion)
@@ -54,10 +54,10 @@ public interface AutoCompleteTrait extends FxRobotInterface
     @OnThread(Tag.Any)
     default void scrollLexAutoCompleteToOption(String content)
     {
-        List<Window> autos = listTargetWindows().stream().filter(w -> TFXUtil.fx(() -> w.isShowing())).filter(w -> w instanceof LexAutoCompleteWindow).collect(Collectors.toList());
+        List<Window> autos = TFXUtil.fx(() -> listTargetWindows()).stream().filter(w -> TFXUtil.fx(() -> w.isShowing())).filter(w -> w instanceof LexAutoCompleteWindow).collect(Collectors.toList());
         Assert.assertEquals(autos.stream().map(Object::toString).collect(Collectors.joining(";")), 1, autos.size());
 
-        LexAutoCompleteWindow autoComplete = ((LexAutoCompleteWindow)window(w -> w instanceof LexAutoCompleteWindow && TFXUtil.fx(() -> w.isShowing())));
+        LexAutoCompleteWindow autoComplete = TFXUtil.fx(() -> ((LexAutoCompleteWindow)window(w -> w instanceof LexAutoCompleteWindow && w.isShowing())));
 
         // Move to top:
         String prev = "\u0000";
@@ -86,7 +86,7 @@ public interface AutoCompleteTrait extends FxRobotInterface
 
     public default void autoComplete(String completion, boolean useTab)
     {
-        ListView<Completion> listView = lookup(".autocomplete").query();
+        ListView<Completion> listView = waitForOne(".autocomplete");
         int itemCount = TFXUtil.fx(() -> listView.getItems().size());
         for (int i = TFXUtil.fx(() -> listView.getSelectionModel().getSelectedIndex()); i < itemCount; i++)
         {

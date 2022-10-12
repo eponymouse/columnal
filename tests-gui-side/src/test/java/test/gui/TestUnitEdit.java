@@ -240,14 +240,14 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
     @OnThread(Tag.Simulation)
     private boolean existsSelectedCell(String content)
     {
-        return lookup(".table-cell").match(t -> {
+        return TFXUtil.fx(() -> lookup(".table-cell").match(t -> {
             if (t instanceof TableCell)
             {
                 TableCell tableCell = (TableCell) t;
                 return TFXUtil.fx(() -> tableCell.getTableRow().isSelected() && content.equals(tableCell.getText()));
             }
             return false;
-        }).tryQuery().isPresent();
+        }).tryQuery().isPresent());
     }
 
 }

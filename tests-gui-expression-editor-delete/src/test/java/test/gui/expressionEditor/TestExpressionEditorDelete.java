@@ -354,7 +354,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         Region gridNode = TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
         push(KeyCode.SHORTCUT, KeyCode.HOME);
         for (int i = 0; i < 2; i++)
-            clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+            clickOnItemInBounds(fromNode(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
         clickOn(".id-new-transform");
         clickOn(".id-transform-calculate");
         write("Table1");
@@ -366,6 +366,6 @@ public class TestExpressionEditorDelete extends FXApplicationTest
         
         enterExpression(mainWindowActions._test_getTableManager().getTypeManager(), expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r);
 
-        return lookup(".editor-display").<EditorDisplay>query();
+        return waitForOne(".editor-display");
     }
 }

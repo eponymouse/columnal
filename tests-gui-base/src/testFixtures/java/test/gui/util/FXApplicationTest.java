@@ -40,13 +40,18 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.testfx.api.FxRobot;
+import org.testfx.api.FxRobotException;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.robot.Motion;
+import org.testfx.service.query.NodeQuery;
+import org.testfx.service.query.PointQuery;
 import org.testfx.util.WaitForAsyncUtils;
 import test.gui.TFXUtil;
 import test.gui.trait.FocusOwnerTrait;
@@ -67,9 +72,12 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertNull;
+import static org.testfx.util.NodeQueryUtils.isVisible;
 
 public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrait, ScreenshotTrait, QueryTrait
 {
@@ -83,7 +91,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         protected void failed(Throwable e, Description description)
         {
             super.failed(e, description);
-            System.err.println("Screenshot of failure, " + targetWindow().toString() + ":");
+            System.err.println("Screenshot of failure, " + TFXUtil.fx(() -> targetWindow()).toString() + ":");
             TFXUtil.fx_(() -> dumpScreenshot());
             e.printStackTrace();
             if (e.getCause() != null)
@@ -109,7 +117,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
 
     protected String getWindowList()
     {
-        return listWindows().stream().map(w -> "  " + showWindow(w)).collect(Collectors.joining("\n"));
+        return TFXUtil.fx(() -> listWindows()).stream().map(w -> "  " + showWindow(w)).collect(Collectors.joining("\n"));
     }
 
     private static String showWindow(Window w)
@@ -260,6 +268,30 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         return key;
     }
 
+    // TODO fix this properly in the thread checker
+    private PointQuery pointOfVisibleNode(String query) {
+        NodeQuery nodeQuery = TFXUtil.fx(() -> lookup(query));
+        Node node = queryVisibleNode(nodeQuery, "the query \"" + query + "\"");
+        return point(node);
+    }
+    private Node queryVisibleNode(NodeQuery nodeQuery, String queryDescription) {
+        Set<Node> resultNodes = nodeQuery.queryAll();
+        if (resultNodes.isEmpty()) {
+            throw new FxRobotException(queryDescription + " returned no nodes.");
+        }
+        Optional<Node> resultNode = fromNodes(resultNodes).match(isVisible()).tryQuery();
+        if (!resultNode.isPresent()) {
+            throw new FxRobotException(queryDescription + " returned " + resultNodes.size() + " nodes" +
+                ", but no nodes were visible.");
+        }
+        return resultNode.get();
+    }
+    @Override
+    public FxRobotInterface clickOn(String query, MouseButton... buttons)
+    {
+        return super.clickOn(TFXUtil.fx(() -> pointOfVisibleNode(query)), buttons);
+    }
+
     @Override
     public FxRobot write(String text)
     {
@@ -274,7 +306,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
 
     public FxRobotInterface showContextMenu(String nodeQuery)
     {
-        return showContextMenu(lookup(nodeQuery).query(), null);
+        return showContextMenu(waitForOne(nodeQuery), null);
     }
     
     /**
@@ -312,5 +344,24 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
             else
                 return clickOn(pointOnScreen, MouseButton.SECONDARY);
         }
+    }
+
+    @OnThread(Tag.Any)
+    protected final void waitForSuccess(Runnable r)
+    {
+        for (int i = 0; i < 80; i++)
+        {
+            try
+            {
+                r.run();
+            }
+            catch (AssertionError e)
+            {
+                // Go round again while we're failing
+            }
+            TFXUtil.sleep(100);
+        }
+        // One last time for the real success/failure:
+        r.run();
     }
 }

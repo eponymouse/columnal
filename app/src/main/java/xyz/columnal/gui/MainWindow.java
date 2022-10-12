@@ -428,6 +428,7 @@ public class MainWindow
         });
     }
 
+    @OnThread(Tag.FXPlatform)
     public static Map<View, Stage> _test_getViews()
     {
         return views;

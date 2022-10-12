@@ -145,22 +145,24 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     }
 
     @Test
+    @OnThread(Tag.Any)
     public void testNewClick()
     {
         testStartState();
         clickOn("#id-menu-project").clickOn(".id-menu-project-new");
-        assertEquals(2, MainWindow._test_getViews().size());
-        assertTrue(MainWindow._test_getViews().values().stream().allMatch(Stage::isShowing));
+        assertEquals(2, TFXUtil.fx(() -> MainWindow._test_getViews()).size());
+        assertTrue(TFXUtil.fx(() -> MainWindow._test_getViews()).values().stream().allMatch(Stage::isShowing));
     }
 
     @Test
+    @OnThread(Tag.Any)
     public void testCloseMenu()
     {
         testStartState();
         clickOn("#id-menu-project");
         System.err.println("Windows after menu click: " + getWindowList());
         clickOn(".id-menu-project-close");
-        assertTrue(MainWindow._test_getViews().isEmpty());
+        assertTrue(TFXUtil.fx(() -> MainWindow._test_getViews()).isEmpty());
     }
 
     @Test
@@ -188,7 +190,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     {
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
         // Only need to click once as already selected by keyboard:
-        clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+        clickOnItemInBounds(".create-table-grid-button", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
         correctTargetWindow().clickOn(".id-new-data");
         correctTargetWindow();
         if (tableName != null)
@@ -223,11 +225,11 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         testStartState();
         makeNewDataEntryTable(NEW_TABLE_POS);
         assertEquals(1, (int) TFXUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
-        assertEquals(1, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(1, count(".table-display-table-title"));
         clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
         TFXUtil.sleep(1000);
         assertEquals(0, (int) TFXUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
-        assertEquals(0, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(0, count(".table-display-table-title"));
     }
 
     @Property(trials = 2)
@@ -256,7 +258,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 tableIds.remove(tableIds.size() - 1);
             }
             assertEquals(ImmutableSet.copyOf(tableIds), TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getAllTables().stream().map(t -> t.getId()).collect(ImmutableSet.toImmutableSet())));
-            assertEquals(tableIds.size(), lookup(".table-display-table-title").queryAll().size());
+            assertEquals(tableIds.size(), count(".table-display-table-title"));
         }
     }
 
@@ -270,19 +272,19 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertEquals(1, (int) TFXUtil.fx(() -> tableManager.getAllTables().size()));
         assertEquals(0, tableManager.getAllTables().get(0).getData().getLength());
         CellPosition arrowPos = NEW_TABLE_POS.offsetByRowCols(3, 0);
-        clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowPos, arrowPos));
+        clickOnItemInBounds(".expand-arrow", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowPos, arrowPos));
         assertEquals(1, tableManager.getAllTables().get(0).getData().getLength());
-        assertEquals(1, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(1, lookup(".document-text-field").queryAll().size());
+        assertEquals(1, count(".table-display-table-title"));
+        assertEquals(1, count(".document-text-field"));
         
         clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
         TFXUtil.sleep(2000);
         assertEquals(1, (int) TFXUtil.fx(() -> tableManager.getAllTables().size()));
-        assertEquals(1, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(1, count(".table-display-table-title"));
         assertEquals(0, tableManager.getAllTables().get(0).getData().getLength());
         // STF will be retained invisible for re-use, so
         // must check visibility:
-        assertEquals(0, lookup(".document-text-field").match(Node::isVisible).queryAll().size());
+        assertEquals(0, TFXUtil.fx(() -> lookup(".document-text-field").match(Node::isVisible).queryAll().size()).intValue());
     }
 
     @Property(trials = 5)
@@ -311,7 +313,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 // Add a new row
                 CellPosition arrowPos = NEW_TABLE_POS.offsetByRowCols(3 + latest.size(), 0);
                 latest.add(def);
-                clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowPos, arrowPos));
+                clickOnItemInBounds(".expand-arrow", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowPos, arrowPos));
                 TFXUtil.sleep(4000);
             }
             else if (choice <= 5 && dataHistory.size() > 1) // 3 - 5
@@ -376,7 +378,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     private void addNewTableWithColumn(DataType dataType, @Nullable @Value Object value) throws InternalException, UserException
     {
         testNewEntryTable();
-        Node expandRight = lookup(".expand-arrow").match(n -> TFXUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right"))).<Node>query();
+        Node expandRight = TFXUtil.fx(() -> lookup(".expand-arrow").match(n -> FXUtility.hasPseudoclass(n, "expand-right")).<Node>query());
         assertNotNull(expandRight);
         // Won't happen, assertion will fail:
         if (expandRight == null) return;
@@ -524,7 +526,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         push(KeyCode.ESCAPE);
         push(KeyCode.ESCAPE);
         push(KeyCode.SHORTCUT, KeyCode.HOME);
-        final @NonNull DocumentTextField textField = (DocumentTextField) clickOnItemInBounds(lookup(".document-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
+        final @NonNull DocumentTextField textField = (DocumentTextField) clickOnItemInBounds(".document-text-field", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
         // Three ways to enter value:
         // click twice, click once and press enter, click once and start typing
         int choice = random.nextInt(3);
@@ -533,7 +535,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         {
             // Click again
             sleep(500);
-            clickOnItemInBounds(lookup(".document-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
+            clickOnItemInBounds(".document-text-field", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
         }
         if (choice == 1)
             push(KeyCode.ENTER);
@@ -619,7 +621,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     @OnThread(Tag.Any)
     private void addNewRow()
     {
-        Node expandDown = lookup(".expand-arrow").match(n -> TFXUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-down"))).<Node>query();
+        Node expandDown = TFXUtil.fx(() -> lookup(".expand-arrow").match(n -> FXUtility.hasPseudoclass(n, "expand-down")).<Node>query());
         assertNotNull(expandDown);
         // Won't happen, assertion will fail:
         if (expandDown == null) return;

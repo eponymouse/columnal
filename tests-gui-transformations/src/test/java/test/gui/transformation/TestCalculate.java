@@ -189,7 +189,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
     private void enterInfo(MainWindowActions mainWindowActions, Random r, @ExpressionIdentifier String columnNameToReplace)
     {
         sleep(300);
-        assertTrue(lookup(".expression-editor").tryQuery().isPresent());
+        assertShowing("Expression editor", ".expression-editor");
         
         boolean clickedExistingForName = r.nextBoolean(); 
         if (clickedExistingForName)
@@ -226,7 +226,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
-        assertFalse("Exp Editor should be hidden, after: " + clickedExistingForName + " and " + clickedExistingForExpression, lookup(".expression-editor").tryQuery().isPresent());
+        assertNotShowing("Exp Editor should be hidden, after: " + clickedExistingForName + " and " + clickedExistingForExpression, ".expression-editor");
         sleep(500);
         Calculate calculate = getCalculate(mainWindowActions);
         Expression expression = TBasicUtil.checkNonNull(calculate.getCalculatedColumns().get(new ColumnId(columnNameToReplace)));
@@ -241,6 +241,6 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
 
     private NodeQuery findColumnTitle(@ExpressionIdentifier String columnNameToReplace)
     {
-        return lookup(".column-title").match((Label l) -> TFXUtil.fx(() -> l.getText()).equals(columnNameToReplace));
+        return TFXUtil.fx(() -> lookup(".column-title").match((Label l) -> l.getText().equals(columnNameToReplace)));
     }
 }

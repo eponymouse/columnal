@@ -130,7 +130,7 @@ public interface CreateDataTableTrait extends FxRobotInterface, ScrollToTrait, C
         push(KeyCode.SHORTCUT, KeyCode.V);
         TFXUtil.sleep(3000);
         // Enter table name:
-        clickOnItemInBounds(lookup(".table-display-table-title .table-name-text-field"), virtualGrid, new RectangleBounds(targetPos, targetPos));
+        clickOnItemInBounds(".table-display-table-title .table-name-text-field", virtualGrid, new RectangleBounds(targetPos, targetPos));
         selectAllCurrentTextField();
         write(tableName, 1);
         push(KeyCode.ENTER);

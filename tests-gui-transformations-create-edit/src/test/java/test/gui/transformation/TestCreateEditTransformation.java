@@ -207,7 +207,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             // Now add the actual aggregate:
             CellPosition aggTarget = CellPosition.ORIGIN.offsetByRowCols(1, columns.size() + 2);
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), aggTarget);
-            clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(aggTarget, aggTarget), MouseButton.PRIMARY);
+            clickOnItemInBounds(fromNode(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(aggTarget, aggTarget), MouseButton.PRIMARY);
             TFXUtil.sleep(100);
             clickOn(".id-new-transform");
             TFXUtil.sleep(100);
@@ -235,7 +235,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                 TextField field = getFocusOwner(TextField.class);
                 assertEquals("Split Col", TFXUtil.fx(() -> field.getText()));
                 assertEquals((Integer)"Split Col".length(), TFXUtil.<Integer>fx(() -> field.getCaretPosition()));
-                MatcherAssert.assertThat(listWindows(), Matchers.everyItem(new BaseMatcher<Window>()
+                MatcherAssert.assertThat(TFXUtil.fx(() -> listWindows()), Matchers.everyItem(new BaseMatcher<Window>()
                 {
                     @Override
                     public boolean matches(Object o)
@@ -275,7 +275,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                     }
                     CellPosition arrowLoc = aggTarget.offsetByRowCols(2, colCount++);
                     keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), arrowLoc);
-                    clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowLoc, arrowLoc));
+                    clickOnItemInBounds(".expand-arrow", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowLoc, arrowLoc));
                     // Now enter column name and expression:
                     TFXUtil.sleep(500);
                     checkDialogFocused("New column dialog");
@@ -609,7 +609,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         TFXUtil.sleep(300);
 
         Log.debug("Aiming for " + targetPos);
-        clickOnItemInBounds(from(TFXUtil.fx(() -> virtualGrid.getNode())), virtualGrid, new RectangleBounds(targetPos, targetPos));
+        clickOnItemInBounds(fromNode(TFXUtil.fx(() -> virtualGrid.getNode())), virtualGrid, new RectangleBounds(targetPos, targetPos));
 
         TFXUtil.sleep(300);
         clickOn(".id-new-check");
@@ -617,7 +617,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         write(srcTable.getId().getRaw());
         push(KeyCode.ENTER);
 
-        selectGivenComboBoxItem(lookup(".check-type-combo").query(), checkType);
+        selectGivenComboBoxItem(waitForOne(".check-type-combo"), checkType);
 
         push(KeyCode.TAB);
         
@@ -630,7 +630,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         sleep(500);
 
         CellPosition labelPos = targetPos.offsetByRowCols(1, 0);
-        Label label = (Label)withItemInBounds(lookup(".check-result"), virtualGrid, new RectangleBounds(targetPos, labelPos), (n, p) -> {});
+        Label label = (Label)withItemInBounds(".check-result", virtualGrid, new RectangleBounds(targetPos, labelPos), (n, p) -> {});
         
         assertEquals(expectedPass ? "OK" : "Fail", TFXUtil.fx(() -> label.getText()));
 
@@ -638,13 +638,13 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         {
             // Test out the clicking to see the explanation:
             keyboardMoveTo(virtualGrid, labelPos);
-            assertNull(lookup(".explanation-flow").tryQuery().orElse(null));
+            assertNotShowing("Explanation", ".explanation-flow");
             if (r.nextBoolean())
                 clickOn(label);
             else
                 push(KeyCode.ENTER);
             sleep(500);
-            assertNotNull(lookup(".explanation-flow").tryQuery().orElse(null));
+            assertShowing("Explanation", ".explanation-flow");
         }
     }
 }

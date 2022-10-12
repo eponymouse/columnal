@@ -41,7 +41,7 @@ public interface CheckWindowBoundsTrait extends FxRobotInterface
     @OnThread(Tag.Any)
     public default void checkWindowWithinScreen()
     {
-        for (Window window : listWindows())
+        for (Window window : TFXUtil.fx(() -> listWindows()))
         {
             double windowX = TFXUtil.fx(() -> window.getX());
             double windowY = TFXUtil.fx(() -> window.getY());

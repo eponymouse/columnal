@@ -356,7 +356,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
     @OnThread(Tag.Any)
     private void assertErrorShowing(CellPosition cellPos, boolean expectError)
     {
-        Node field = withItemInBounds(lookup(".document-text-field"), virtualGrid, new RectangleBounds(cellPos, cellPos), (n, p) -> {});
+        Node field = withItemInBounds(".document-text-field", virtualGrid, new RectangleBounds(cellPos, cellPos), (n, p) -> {});
         Assert.assertEquals(expectError, TFXUtil.fx(() -> FXUtility.hasPseudoclass(field, "has-error")));
     }
 

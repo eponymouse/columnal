@@ -233,7 +233,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
                 }
 
                 write(")");
-                return DataTypeUtility.valueToString(value);
+                return DataTypeUtility.valueToStringFX(value);
             }
 
             @Override

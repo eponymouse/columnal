@@ -38,6 +38,8 @@ import test.gui.trait.EnterExpressionTrait.EntryBracketStatus;
 import test.gui.trait.PopupTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.Transformation;
@@ -65,6 +67,7 @@ import static org.junit.Assert.assertTrue;
 
 public class BaseTestExpressionEditorEntry extends FXApplicationTest implements ScrollToTrait, ClickTableLocationTrait, EnterExpressionTrait, PopupTrait
 {
+    @OnThread(Tag.Simulation)
     protected void testEntry_Impl(ExpressionValue expressionValue, Random r, String... qualifiedIdentsToEnterInFull) throws Exception
     {
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet, expressionValue.tableId);
@@ -75,7 +78,7 @@ public class BaseTestExpressionEditorEntry extends FXApplicationTest implements 
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
             // Only need to click once as already selected by keyboard:
             for (int i = 0; i < 1; i++)
-                clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+                clickOnItemInBounds(fromNode(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             // Not sure why this doesn't work:
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             correctTargetWindow().clickOn(".id-new-transform");
@@ -95,14 +98,10 @@ public class BaseTestExpressionEditorEntry extends FXApplicationTest implements 
                 // Get rid of popups:
                 TFXUtil.doubleOk(this);
                 // Now close dialog, and check for equality;
-                View view = correctTargetWindow().lookup(".view").query();
-                if (view == null)
-                {
-                    assertNotNull(view);
-                    return;
-                }
+                correctTargetWindow();
+                View view = waitForOne(".view");
                 TFXUtil.sleep(500);
-                assertNull(lookup(".ok-button").tryQuery().orElse(null));
+                assertNotShowing("No OK buttong", ".ok-button");
                 Calculate calculate = (Calculate) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
     
                 // Check expressions match:

@@ -110,7 +110,7 @@ public class TestExpressionEditor extends BaseTestExpressionEditorEntry implemen
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
             // Only need to click once as already selected by keyboard:
             for (int i = 0; i < 1; i++)
-                clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+                clickOnItemInBounds(fromNode(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             // Not sure why this doesn't work:
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             correctTargetWindow().clickOn(".id-new-transform");
@@ -126,14 +126,9 @@ public class TestExpressionEditor extends BaseTestExpressionEditorEntry implemen
             // Close dialog, ignoring errors:
             TFXUtil.doubleOk(this);
             // Now close dialog, and check for equality;
-            View view = correctTargetWindow().lookup(".view").query();
-            if (view == null)
-            {
-                assertNotNull(view);
-                return null;
-            }
-            TFXUtil.sleep(500);
-            assertNull(lookup(".ok-button").tryQuery().orElse(null));
+            correctTargetWindow();
+            View view = waitForOne(".view");
+            assertNotShowing("OK button", ".ok-button");
             Calculate calculate = (Calculate) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
 
             // Check expressions match:

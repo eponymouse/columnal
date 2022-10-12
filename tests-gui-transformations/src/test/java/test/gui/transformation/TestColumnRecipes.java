@@ -99,7 +99,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
         
         CellPosition title = keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), table.getId(), srcColumn.getName(), TableDataRowIndex.ZERO).offsetByRowCols(-2, 0);
         
-        withItemInBounds(lookup(".column-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(title, title), this::showContextMenu);
+        withItemInBounds(".column-title", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(title, title), this::showContextMenu);
         boolean sum = r.nextBoolean();
         clickOn(sum ? ".id-recipe-sum" : ".id-recipe-average");
         sleep(1000);
@@ -131,12 +131,12 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
 
         CellPosition title = keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), table.getId(), srcColumn.getName(), TableDataRowIndex.ZERO).offsetByRowCols(-2, 0);
 
-        withItemInBounds(lookup(".column-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(title, title), this::showContextMenu);
+        withItemInBounds(".column-title", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(title, title), this::showContextMenu);
         clickOn(".id-recipe-transformType");
         sleep(1500);
 
         // Now check the options in the dialog:
-        ListView<TypeTransform> listView = lookup(".destination-type-list").<TypeTransform>queryListView();
+        ListView<TypeTransform> listView = waitForOne(".destination-type-list");
         if (to != null && expression != null)
         {
             selectGivenListViewItem(listView, t -> t._test_hasDestinationType(to));

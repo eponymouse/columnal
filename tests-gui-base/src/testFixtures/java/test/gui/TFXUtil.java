@@ -174,6 +174,7 @@ public class TFXUtil
         }
     }
 
+    @OnThread(Tag.Any)
     public static void sleep(int millis)
     {
         try
@@ -186,6 +187,7 @@ public class TFXUtil
         }
     }
 
+    @OnThread(Tag.Any)
     public static KeyCode ctrlCmd()
     {
         return SystemUtils.IS_OS_MAC_OSX ? KeyCode.COMMAND : KeyCode.CONTROL;
@@ -203,7 +205,7 @@ public class TFXUtil
         robot.moveAndDismissPopupsAtPos(robot.point(".ok-button"));
         robot.clickOn(".ok-button");
         sleep(300);
-        if (robot.lookup(".ok-button").tryQuery().isPresent())
+        if (TFXUtil.fx(() -> robot.lookup(".ok-button").tryQuery().isPresent()))
             robot.clickOn(".ok-button");
     }
 

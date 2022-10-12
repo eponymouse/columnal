@@ -134,6 +134,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             return dataType;
         }
 
+        @OnThread(Tag.Simulation)
         public @Value Object makeValue() throws InternalException, UserException
         {
             // Can't ever be null because initialised when first object is created
@@ -170,7 +171,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         @SuppressWarnings("nullness")
         @NonNull TableDisplayBase firstSortDisplay = TFXUtil.fx(() -> findSrc.get().getDisplay());
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), firstSortDisplay.getMostRecentPosition());
-        showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(firstSortDisplay.getMostRecentPosition(), firstSortDisplay.getMostRecentPosition()), (n, p) -> {
+        showContextMenu(withItemInBounds(".table-display-table-title.transformation-table-title", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(firstSortDisplay.getMostRecentPosition(), firstSortDisplay.getMostRecentPosition()), (n, p) -> {
         }), null)
             .clickOn(".id-tableDisplay-menu-copyValues");
         TFXUtil.sleep(1000);
@@ -283,10 +284,10 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 enterStructuredValue(columnTypes.get(col).getDataType(), value, r, true, false);
                 push(KeyCode.ENTER);
 
-                assertTrue("Alert should be showing asking whether to create manual edit after editing " + findSrc.get().getClass() + " column " + findSrc.get().getData().getColumnIds().get(col).getRaw(), lookup(".alert").tryQuery().isPresent());
+                assertShowing("Alert should be showing asking whether to create manual edit after editing " + findSrc.get().getClass() + " column " + findSrc.get().getData().getColumnIds().get(col).getRaw(), ".alert");
                 clickOn(".yes-button");
                 sleep(500);
-                assertFalse("Alert should be dismissed", lookup(".alert").tryQuery().isPresent());
+                assertNotShowing("Alert should be dismissed", ".alert");
 
                 sleep(1000);
                 VersionedSTF newCell = TBasicUtil.checkNonNull(TFXUtil.<@Nullable VersionedSTF>fx(() -> mainWindowActions._test_getDataCell(cellPos)));
@@ -307,7 +308,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
 
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
-            clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+            clickOnItemInBounds(fromNode(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             TFXUtil.sleep(100);
             clickOn(".id-new-transform");
             TFXUtil.sleep(100);
@@ -344,7 +345,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         CellPosition targetSortPos = TFXUtil.fx(() -> mainWindowActions._test_getTableManager().getNextInsertPosition(manualEditId).offsetByRowCols(2, 0));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetSortPos);
         System.out.println("Focused: " + getFocusOwner() + " aiming for " + targetSortPos);
-        clickOnItemInBounds(from(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetSortPos, targetSortPos), MouseButton.PRIMARY);
+        clickOnItemInBounds(fromNode(TFXUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetSortPos, targetSortPos), MouseButton.PRIMARY);
         TFXUtil.sleep(1000);
         clickOn(".id-new-transform");
         TFXUtil.sleep(1000);
@@ -388,24 +389,24 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                         .put(new ComparableValue(replaceKey), toEnter);
             }
 
-            assertFalse("Alert should not be showing yet", lookup(".alert").tryQuery().isPresent());
+            assertNotShowing("Alert should not be showing yet", ".alert");
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), manualEditId, row, col);
             sleep(500);
 
-            assertFalse("Alert should not be showing yet", lookup(".alert").tryQuery().isPresent());
+            assertNotShowing("Alert should not be showing yet", ".alert");
             push(KeyCode.ENTER);
             // If key has an error, we should get a dialog.
             if (replaceKey == null)
             {
                 sleep(1500);
                 Column replaceKeyColumn = findReplaceKeyColumn.get();
-                assertTrue("Alert should be showing about invalid key for column " + (replaceKeyColumn == null ? " <row>" : replaceKeyColumn.getName().getRaw()), lookup(".alert").tryQuery().isPresent());
+                assertShowing("Alert should be showing about invalid key for column " + (replaceKeyColumn == null ? " <row>" : replaceKeyColumn.getName().getRaw()), ".alert");
                 clickOn(".ok-button");
-                assertFalse("Alert still showing after OK", lookup(".alert").tryQuery().isPresent());
+                assertNotShowing("Alert still showing after OK", ".alert");
             }
             else
             {
-                assertFalse("False alert showing, but valid key", lookup(".alert").tryQuery().isPresent());
+                assertNotShowing("False alert showing, but valid key", ".alert");
                 toEnter.eitherEx_(s -> {
                     push(TFXUtil.ctrlCmd(), KeyCode.A);
                     push(KeyCode.DELETE);
@@ -431,10 +432,10 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             // Change sort order of source:
             // We might see both sort edit links on screen, so pick the closest one:
             // Sometimes the table hats overlap, so click programmatically:
-            Node editLink = lookup(".edit-sort-by").queryAll().stream().min(Comparator.comparing((Node n) -> {
-                Bounds bounds = TFXUtil.fx(() -> n.localToScreen(n.getBoundsInLocal()));
+            Node editLink = TFXUtil.fx(() -> lookup(".edit-sort-by").queryAll().stream().min(Comparator.comparing((Node n) -> {
+                Bounds bounds = n.localToScreen(n.getBoundsInLocal());
                 return Math.hypot(FXUtility.getCentre(bounds).getX() - selScreenPos.getX(), FXUtility.getCentre(bounds).getY() - selScreenPos.getY());
-            })).get();
+            })).get());
             clickLinkSafely(editLink);
             sleep(200);
             clickOn(".small-delete");
@@ -491,7 +492,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         // Now check output values by getting them from clipboard:
         TFXUtil.sleep(500);
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), manualEditDisplay.getMostRecentPosition());
-        showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(manualEditDisplay.getMostRecentPosition(), manualEditDisplay.getMostRecentPosition()), (n, p) -> {}), null)
+        showContextMenu(withItemInBounds(".table-display-table-title.transformation-table-title", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(manualEditDisplay.getMostRecentPosition(), manualEditDisplay.getMostRecentPosition()), (n, p) -> {}), null)
                 .clickOn(".id-tableDisplay-menu-copyValues");
         TFXUtil.sleep(1000);
 
@@ -511,7 +512,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         Sort secondSort = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort && t.getId().equals(secondSortId)).map(t -> (Sort)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
         TableDisplay secondSortDisplay = (TableDisplay) TBasicUtil.checkNonNull(TFXUtil.<@Nullable TableDisplayBase>fx(() -> secondSort.getDisplay()));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), secondSortDisplay.getMostRecentPosition());
-        showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(secondSortDisplay.getMostRecentPosition(), secondSortDisplay.getMostRecentPosition()), (n, p) -> {}), null)
+        showContextMenu(withItemInBounds(".table-display-table-title.transformation-table-title", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(secondSortDisplay.getMostRecentPosition(), secondSortDisplay.getMostRecentPosition()), (n, p) -> {}), null)
                 .clickOn(".id-tableDisplay-menu-copyValues");
         TFXUtil.sleep(1000);
 
@@ -524,9 +525,9 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         checkEqual(expectedSecondSort, getGraphicalContent(mainWindowActions, secondSort));
         
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), manualEditId, DataItemPosition.row(0), DataItemPosition.col(findManualEdit.get().getData().getColumns().size() - 1));
-        clickLinkSafely(lookup(".manual-edit-entries").query());
+        clickLinkSafely(waitForOne(".manual-edit-entries"));
         sleep(500);
-        FancyList<ManualEditEntriesDialog.Entry, ?> listEntries = TBasicUtil.checkNonNull(lookup(".fancy-list").<FancyList<ManualEditEntriesDialog.Entry, ?>.FancyListScrollPane>tryQuery().orElse(null))._test_getList();
+        FancyList<ManualEditEntriesDialog.Entry, ?> listEntries = this.<FancyList<ManualEditEntriesDialog.Entry, ?>.FancyListScrollPane>waitForOne(".fancy-list")._test_getList();
         
         Supplier<List<ManualEditEntriesDialog.Entry>> getEntries = () -> replacementsSoFar.entrySet().stream().flatMap(e -> e.getValue().entrySet().stream().map(e2 -> new ManualEditEntriesDialog.Entry(e2.getKey(), e.getKey(), e2.getValue()))).collect(ImmutableList.toImmutableList());
         
@@ -553,8 +554,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             Entry toClick = entries.get(r.nextInt(entries.size()));
             @NonNull Node cell = TBasicUtil.checkNonNull(TFXUtil.fx(() -> listEntries._test_scrollToItem(toClick)));
             clickOn(TFXUtil.fx(() -> cell.lookup(".jump-to-link")));
-            sleep(700);
-            assertNull(lookup(".fancy-list").tryQuery().orElse(null));
+            assertNotShowing("List", ".fancy-list");
             @TableDataColIndex int col = DataItemPosition.col(Utility.findFirstIndex(findManualEdit.get().getData().getColumnIds(), c -> c.equals(toClick.getReplacementColumn())).orElseThrow(() -> new RuntimeException("Could not find replacement column: " + toClick.getReplacementColumn())));
             int row = -1;
             replaceKeyColumn = findReplaceKeyColumn.get();
@@ -584,8 +584,9 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             assertNotEquals(-1, row);
             @TableDataRowIndex int rowFinal = DataItemPosition.row(row);
             replaceKeyColumn = findReplaceKeyColumn.get();
-            assertEquals("Clicking on " + toClick + " key: " + (replaceKeyColumn == null ? "<row>" : replaceKeyColumn.getName()) + " row: " + row + " col: " + col, TFXUtil.fx(() -> manualEditDisplay.getDataPosition(rowFinal, col)), TFXUtil.<@Nullable CellPosition>fx(() -> mainWindowActions._test_getVirtualGrid()._test_getSelection().map(s -> s.getActivateTarget()).orElse(null)));
-            assertNull(lookup(".id-create-table").match(Node::isVisible).tryQuery().orElse(null));
+            Column replaceKeyColumnFinal = replaceKeyColumn;
+            waitForSuccess(() -> assertEquals("Clicking on " + toClick + " key: " + (replaceKeyColumnFinal == null ? "<row>" : replaceKeyColumnFinal.getName()) + " row: " + rowFinal + " col: " + col, TFXUtil.fx(() -> manualEditDisplay.getDataPosition(rowFinal, col)), TFXUtil.<@Nullable CellPosition>fx(() -> mainWindowActions._test_getVirtualGrid()._test_getSelection().map(s -> s.getActivateTarget()).orElse(null))));
+            assertNull(TFXUtil.fx(() -> lookup(".id-create-table").match(Node::isVisible).tryQuery().orElse(null)));
         }
         else
         {
@@ -597,7 +598,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         assertEquals(replacementsSoFar, findManualEdit.get()._test_getReplacements());
 
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), manualEditDisplay.getMostRecentPosition());
-        showContextMenu(withItemInBounds(lookup(".table-display-table-title.transformation-table-title"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(manualEditDisplay.getMostRecentPosition(), manualEditDisplay.getMostRecentPosition()), (n, p) -> {}), null)
+        showContextMenu(withItemInBounds(".table-display-table-title.transformation-table-title", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(manualEditDisplay.getMostRecentPosition(), manualEditDisplay.getMostRecentPosition()), (n, p) -> {}), null)
                 .clickOn(".id-tableDisplay-menu-copyValues");
         
         editViaClip = TFXUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(mainWindowActions._test_getTableManager().getTypeManager()));

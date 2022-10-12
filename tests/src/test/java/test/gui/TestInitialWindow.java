@@ -54,13 +54,14 @@ public class TestInitialWindow extends FXApplicationTest
 
     @Test
     @RequiresNonNull("initialWindow")
+    @OnThread(Tag.Any)
     public void testNew()
     {
-        assertTrue(initialWindow.isShowing());
-        assertTrue(MainWindow._test_getViews().isEmpty());
+        assertTrue(TFXUtil.fx(() -> initialWindow.isShowing()));
+        assertTrue(TFXUtil.fx(() -> MainWindow._test_getViews()).isEmpty());
         clickOn(".id-initial-new");
-        assertFalse(initialWindow.isShowing());
-        assertEquals(1, MainWindow._test_getViews().size());
-        assertTrue(MainWindow._test_getViews().entrySet().iterator().next().getValue().isShowing());
+        assertFalse(TFXUtil.fx(() -> initialWindow.isShowing()));
+        assertEquals(1, TFXUtil.fx(() -> MainWindow._test_getViews()).size());
+        assertTrue(TFXUtil.fx(() -> MainWindow._test_getViews().entrySet().iterator().next().getValue().isShowing()));
     }
 }

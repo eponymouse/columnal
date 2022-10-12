@@ -360,7 +360,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
             // Only need to click once as already selected by keyboard:
             for (int i = 0; i < 1; i++)
-                clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+                clickOnItemInBounds(fromNode(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             // Not sure why this doesn't work:
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             correctTargetWindow().clickOn(".id-new-transform");
@@ -519,7 +519,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
             // Only need to click once as already selected by keyboard:
             for (int i = 0; i < 1; i++)
-                clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+                clickOnItemInBounds(fromNode(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             // Not sure why this doesn't work:
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             correctTargetWindow().clickOn(".id-new-transform");

@@ -209,7 +209,7 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
         TFXUtil.fx_(() -> mainWindowActions._test_getVirtualGrid().findAndSelect(Either.left(CellPosition.ORIGIN.offsetByRowCols(1, 1))));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), CHECK_POS);
         CellPosition resultPos = CHECK_POS.offsetByRowCols(1, 0);
-        clickOnItemInBounds(lookup(".check-result"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(resultPos, resultPos));
+        clickOnItemInBounds(".check-result", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(resultPos, resultPos));
         TextFlow textFlow = waitForOne(".explanation-flow");
         assertNotNull(textFlow);
         String allText = TFXUtil.fx(() -> textFlow.getChildren().stream().filter(t -> t instanceof Text).map(t -> ((Text)t).getText()).collect(Collectors.joining()));

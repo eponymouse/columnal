@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU General Public License along
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
+package test;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;

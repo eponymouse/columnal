@@ -75,6 +75,7 @@ public class GenDataTypeMaker extends GenValueBase<DataTypeMaker>
             this.dataType = dataType;
         }
 
+        @OnThread(Tag.Any)
         public DataType getDataType()
         {
             return dataType;

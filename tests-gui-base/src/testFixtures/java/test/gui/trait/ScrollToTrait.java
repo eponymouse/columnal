@@ -57,20 +57,20 @@ import java.util.Random;
 
 import static org.junit.Assert.*;
 
-public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
+public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryTrait
 {
     // Scrolls until the entire node is on screen
     @OnThread(Tag.Any)
     default public void scrollTo(String nodeLocator)
     {
-        scrollTo(lookup(nodeLocator));
+        scrollTo(TFXUtil.fx(() -> lookup(nodeLocator)));
     }
 
     // Scrolls until the entire node is on screen
     @OnThread(Tag.Any)
     default public void scrollTo(NodeQuery nodeLocator)
     {
-        @Nullable Node targetQ = nodeLocator.query();
+        @Nullable Node targetQ = TFXUtil.fx(() -> nodeLocator.query());
         if (targetQ == null)
         {
             System.err.println("No such node to scroll to: " + nodeLocator);
@@ -109,26 +109,26 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
         for (int i = 0;i < 100 && TFXUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMaxX()) > viewBounds.getMaxX(); i++)
         {
             System.out.println("Scrolling RIGHT");
-            clickOrScroll(from(horizScroll).lookup(".increment-button"), () -> scroll(HorizontalDirection.RIGHT));
+            clickOrScroll(TFXUtil.fx(() -> from(horizScroll).lookup(".increment-button")), () -> scroll(HorizontalDirection.RIGHT));
             //scroll(HorizontalDirection.RIGHT);
         }
         for (int i = 0; i < 100 && TFXUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinX()) < viewBounds.getMinX(); i++)
         {
             System.out.println("Scrolling LEFT");
-            clickOrScroll(from(horizScroll).lookup(".decrement-button"), () -> scroll(HorizontalDirection.LEFT));
+            clickOrScroll(TFXUtil.fx(() -> from(horizScroll).lookup(".decrement-button")), () -> scroll(HorizontalDirection.LEFT));
             //scroll(HorizontalDirection.LEFT);
         }
         for (int i = 0; i < 100 && TFXUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMaxY()) > viewBounds.getMaxY(); i++)
         {
             System.out.println("Scrolling DOWN");
             //scroll(VerticalDirection.DOWN);
-            clickOrScroll(from(vertScroll).lookup(".increment-button"), () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN));
+            clickOrScroll(TFXUtil.fx(() -> from(vertScroll).lookup(".increment-button")), () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN));
         }
         for (int i = 0; i < 100 && TFXUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinY()) < viewBounds.getMinY(); i++)
         {
             System.out.println("Scrolling UP");
             //scroll(VerticalDirection.UP);
-            clickOrScroll(from(vertScroll).lookup(".decrement-button"), () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.DOWN : VerticalDirection.UP));
+            clickOrScroll(TFXUtil.fx(() -> from(vertScroll).lookup(".decrement-button")), () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.DOWN : VerticalDirection.UP));
         }
         Bounds targetScreenBounds = TFXUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()));
         assertTrue("View bounds: " + viewBounds + " target: " + targetScreenBounds + " target before scroll: " + targetBeforeScroll, viewBounds.contains(targetScreenBounds));
@@ -199,12 +199,12 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
         if (usingMenu)
         {
             clickOn("#id-menu-view").clickOn(".id-menu-view-goto-row");
-            assertTrue("Zero-based row: " + row, lookup(".ok-button").tryQuery().isPresent());
+            assertShowing("Zero-based row: " + row, ".ok-button");
             TFXUtil.sleep(200);
             // UI expects one-based:
             write(Integer.toString(row + 1));
             push(KeyCode.ENTER);
-            assertFalse("Zero-based row: " + row, lookup(".ok-button").tryQuery().isPresent());
+            assertNotShowing("Zero-based row: " + row, ".ok-button");
         }
         // Wait for complete refresh:
         TFXUtil.sleep(1000);
@@ -228,7 +228,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait
     @OnThread(Tag.Any)
     default public void clickOrScroll(NodeQuery nodeQuery, Runnable scroll)
     {
-        Node scrollButton = nodeQuery.tryQuery().orElse(null);
+        Node scrollButton = TFXUtil.fx(() -> nodeQuery.tryQuery()).orElse(null);
         if (scrollButton != null)
             clickOn(scrollButton, MouseButton.PRIMARY);
         else
