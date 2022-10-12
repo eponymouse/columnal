@@ -12,7 +12,7 @@ module xyz.columnal.utility.gui
     requires com.google.common;
     requires com.sun.jna;
     requires com.sun.jna.platform;
-    requires controlsfx;
+    requires org.controlsfx.controls;
     requires javafx.base;
     requires javafx.controls;
     requires javafx.graphics;
