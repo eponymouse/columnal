@@ -334,6 +334,10 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
                 {
                     ((Control)node).getContextMenu().show(node, screenMid.getX(), screenMid.getY());
                 }
+                else
+                {
+                    Log.error("No context menu to trigger for " + node);
+                }
             });
             return this;
         }
