@@ -185,7 +185,19 @@ public class GenDataTypeMaker extends GenValueBase<DataTypeMaker>
             @Override
             public Boolean tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
-                return !tags.isEmpty();
+                if (tags.isEmpty())
+                {
+                    return false;
+                }
+                else
+                {
+                    for (TagType<DataType> tag : tags)
+                    {
+                        if (tag.getInner() != null && !hasValues(tag.getInner()))
+                            return false;
+                    }
+                    return true;
+                }
             }
 
             @Override
