@@ -553,7 +553,7 @@ public class TBasicUtil
             {
                 String expectedLine = i < expectedLines.length ? expectedLines[i] : null;
                 String actualLine = i < actualLines.length ? actualLines[i] : null;
-                assertEquals(prefix + "\nExpected line " + i + ": " + (expectedLine == null ? "null" : stringAsHexChars(expectedLine)) + "\nActual: " + (actualLine == null ? "null" : stringAsHexChars(actualLine)), expectedLine, actualLine);
+                assertEquals(prefix + "\nExpected line " + i + ": " + (expectedLine == null ? "null" : stringAsHexChars(expectedLine) + "\n" + expectedLine) + "\nActual: " + (actualLine == null ? "null" : stringAsHexChars(actualLine) + "\n" + actualLine), expectedLine, actualLine);
             }
         }
     }
