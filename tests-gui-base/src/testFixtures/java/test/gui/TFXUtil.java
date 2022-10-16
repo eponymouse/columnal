@@ -19,11 +19,25 @@
  */
 package test.gui;
 
+import com.sun.javafx.PlatformUtil;
+import com.sun.javafx.tk.Toolkit;
+import javafx.application.Platform;
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.event.EventType;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.image.WritableImage;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
+import javafx.util.Duration;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.testfx.api.FxRobotInterface;
 import org.testfx.util.WaitForAsyncUtils;
 import test.gui.trait.PopupTrait;
 import threadchecker.OnThread;
@@ -38,18 +52,29 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.gui.grid.VirtualGrid;
 import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.id.TableId;
+import xyz.columnal.log.Log;
 import xyz.columnal.utility.Either;
 import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.SimulationRunnable;
 import xyz.columnal.utility.SimulationSupplier;
 import xyz.columnal.utility.Workers;
+import xyz.columnal.utility.gui.FXUtility;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class TFXUtil
 {
@@ -234,6 +259,81 @@ public class TFXUtil
             });
         }
         fx_(() -> virtualGrid.redoLayoutAfterScroll());
+    }
+
+    /**
+     * Adds event filters on all nodes under the target location,
+     * and tracks which if any receive the given event type
+     * while executing during.
+     */
+    @OnThread(Tag.Any)
+    public static <E extends Event> void debugEventRecipient_(FxRobotInterface robot, @Nullable Point2D target, EventType<E> eventType, Runnable during)
+    {
+        Set<Node> allNodes = robot.lookup(n -> {
+            Bounds screen = fx(() -> n.localToScreen(n.getBoundsInLocal()));
+            return target == null || screen.contains(target);
+        }).queryAll();
+
+        List<Pair<Node, EventType<?>>> received = new ArrayList<>();
+        Map<Node, EventHandler<E>> listeners = new HashMap<>(); 
+        for (Node node : allNodes)
+        {
+            EventHandler<E> eventHandler = e -> {
+                received.add(new Pair<>(node, e.getEventType()));
+            };
+            fx_(() -> node.addEventFilter(eventType, eventHandler));
+            listeners.put(node, eventHandler);
+        }
+        
+        during.run();
+
+        listeners.forEach((n, l) ->
+        {
+            fx_(() -> n.removeEventFilter(eventType, l));
+        });
+        
+        Log.normal("Events received:\n" + received.stream().map(n -> "  " + n.toString()).collect(Collectors.joining("\n")));
+    }
+
+    public static void fxYieldUntil(FXPlatformSupplier<Boolean> waitUntilTrue)
+    {
+        Object finish = new Object();
+        FXPlatformRunnable repeat = new FXPlatformRunnable()
+        {
+            int attempts = 0;
+            
+            @Override
+            public void run()
+            {
+                if (waitUntilTrue.get() || attempts >= 10)
+                {
+                    com.sun.javafx.tk.Toolkit.getToolkit().exitNestedEventLoop(finish, "");
+                }
+                else
+                {
+                    attempts += 1;
+                    FXUtility.runAfterDelay(Duration.millis(300), this);
+                }
+            }
+        };
+        Platform.runLater(repeat::run);
+        Toolkit.getToolkit().enterNestedEventLoop(finish);
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static void copySnapshotToClipboard(Node node)
+    {
+        WritableImage img = node.snapshot(null, null);
+        ClipboardContent clipboardContent = new ClipboardContent();
+        clipboardContent.putImage(img);
+        Clipboard.getSystemClipboard().setContent(clipboardContent);
+    }
+
+    // WOuld be nice to get this working, but doesn't currently work
+    public static void writePaste_doesntwork(FxRobotInterface robot, String string)
+    {
+        fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, string)));
+        robot.push(PlatformUtil.isMac() ? KeyCode.COMMAND : KeyCode.CONTROL, KeyCode.V);
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>

@@ -69,7 +69,7 @@ import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.gui.dtf.DocumentTextField;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.transformations.expression.type.TypeExpression;
-import test.TestUtil;
+import test.MatcherUtil;
 import test.gen.GenNumber;
 import test.gen.GenRandom;
 import test.gen.type.GenDataTypeMaker;
@@ -496,7 +496,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             values.add(entry.<@Value Object>map(p -> p.getSecond()));
             DocumentTextField field = enterValue(NEW_TABLE_POS.offsetByRowCols(3 + i, 1), entry, r);
             if (entry.isLeft())
-                MatcherAssert.assertThat(TFXUtil.fx(() -> field._test_getStyleSpans(invalidPos, invalidPos + invalidChar.length())), Matchers.everyItem(TestUtil.matcherOn(Matchers.hasItem("input-error"), s -> s.getFirst())));
+                MatcherAssert.assertThat(TFXUtil.fx(() -> field._test_getStyleSpans(invalidPos, invalidPos + invalidChar.length())), Matchers.everyItem(MatcherUtil.matcherOn(Matchers.hasItem("input-error"), s -> s.getFirst())));
         }
         // Now test for equality:
         RecordSet recordSet = TFXUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());

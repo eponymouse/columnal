@@ -141,8 +141,6 @@ subprojects { subproject ->
         includeTestsMatching "Prop*"
         // Don't want inner classes to be scanned:
         excludeTestsMatching "*\$*"
-        // TODO rename the class and remove this rule:
-        excludeTestsMatching "test.TestUtil*"
       }
       
       // This stops failing tests tripping others up, and generally
@@ -152,7 +150,7 @@ subprojects { subproject ->
       jvmArgs += ['-Xmx2G',
                   '-XX:+HeapDumpOnOutOfMemoryError',
                   '-XX:+UseCompressedOops',
-                  "-Dlog4j.configurationFile=$rootDir/tests/src/test/resources/log4j2-test.xml",
+                  "-Dlog4j.configurationFile=$rootDir/tests-gui-central/src/test/resources/log4j2-test.xml",
                   '--enable-preview'] +
                   // Headless is the default because headed GUI tests are quite a surprise and cause havoc:
                   (("true".equals(project.findProperty("headless")) || project.findProperty("headless") == null) ? [
