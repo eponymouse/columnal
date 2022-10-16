@@ -23,7 +23,7 @@ module xyz.columnal.app
     requires javafx.graphics;
     requires javafx.web;
     
-    requires controlsfx;
+    requires org.controlsfx.controls;
     requires com.google.common;
     requires static org.checkerframework.checker.qual;
     requires org.jsoup;

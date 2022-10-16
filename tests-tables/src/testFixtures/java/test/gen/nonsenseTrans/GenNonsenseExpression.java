@@ -26,7 +26,6 @@ import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
-import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import test.functions.TFunctionUtil;
@@ -341,6 +340,29 @@ public class GenNonsenseExpression extends Generator<Expression>
                 indexOfFirstOp = group;
 
             return sourceOfRandomness.<@NonNull String>choose(opGroups.get(group));
+        }
+    }
+
+    private static class EnumGenerator extends Generator<Enum> {
+        private final Class<?> enumType;
+
+        private EnumGenerator(Class<?> enumType) {
+            super(Enum.class);
+
+            this.enumType = enumType;
+        }
+
+        @Override public Enum<?> generate(
+                SourceOfRandomness random,
+                GenerationStatus status) {
+
+            Object[] values = enumType.getEnumConstants();
+            int index = random.nextInt(0, values.length - 1);
+            return (Enum<?>) values[index];
+        }
+
+        @Override public boolean canShrink(Object larger) {
+            return enumType.isInstance(larger);
         }
     }
 }
