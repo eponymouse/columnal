@@ -86,6 +86,8 @@ dependencyResolutionManagement {
             library('junit-quickcheck-generators', 'com.pholser:junit-quickcheck-generators:1.0')
             library('junit', 'junit:junit:4.13.2')
             bundle('junitWithQuickcheck', ['junit', 'junit-quickcheck-core', 'junit-quickcheck-generators'])
+            library('testfx-core', 'org.testfx:testfx-core:4.0.16-alpha')
+            library('testfx-junit', 'org.testfx:testfx-junit:4.0.15-alpha')
         }
     }
 }
