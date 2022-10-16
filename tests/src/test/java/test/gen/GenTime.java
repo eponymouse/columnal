@@ -23,10 +23,8 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import test.TestUtil;
 
 import java.time.LocalTime;
-import java.time.OffsetTime;
 
 /**
  * Created by neil on 15/12/2016.

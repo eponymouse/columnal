@@ -141,8 +141,6 @@ subprojects { subproject ->
         includeTestsMatching "Prop*"
         // Don't want inner classes to be scanned:
         excludeTestsMatching "*\$*"
-        // TODO rename the class and remove this rule:
-        excludeTestsMatching "test.TestUtil*"
       }
       
       // This stops failing tests tripping others up, and generally
