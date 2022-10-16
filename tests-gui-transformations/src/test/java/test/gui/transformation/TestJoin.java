@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
@@ -69,7 +70,11 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
     @Property(trials=5)
     @SuppressWarnings("identifier")
     @OnThread(Tag.Simulation)
-    public void testJoin(@MustHaveValues @From(GenDataTypeMaker.class) DataTypeMaker dataTypeMaker, @From(GenRandom.class) Random r) throws Exception
+    public void testJoin(
+            @When(seed=-1772520647539087083L)
+            @MustHaveValues @From(GenDataTypeMaker.class) DataTypeMaker dataTypeMaker,
+            @When(seed=-1376018762097782143L)
+            @From(GenRandom.class) Random r) throws Exception
     {
         // We make four types for columns (T1-T4), where table A has
         // T1-T3 and table B has T2-T4.  Table A has 
