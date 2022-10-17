@@ -22,6 +22,7 @@ package xyz.columnal.error;
 
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import xyz.columnal.error.style.ExceptionWithStyle;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;

@@ -98,7 +98,7 @@ import xyz.columnal.data.datatype.DataTypeValue.GetValue;
 import xyz.columnal.data.datatype.NumberInfo;
 import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.data.unit.Unit;
-import xyz.columnal.error.ExceptionWithStyle;
+import xyz.columnal.error.style.ExceptionWithStyle;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.error.expressions.ExpressionErrorException;

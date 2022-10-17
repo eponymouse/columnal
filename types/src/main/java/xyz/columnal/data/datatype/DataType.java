@@ -54,7 +54,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import xyz.columnal.data.datatype.DataTypeValue.GetValue;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
-import xyz.columnal.error.ParseException;
+import xyz.columnal.error.parse.ParseException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.DataLexer2;
 import xyz.columnal.grammar.DataParser;

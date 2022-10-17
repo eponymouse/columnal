@@ -7,6 +7,8 @@ module xyz.columnal.utility
     exports xyz.columnal.utility.function.simulation;
     exports xyz.columnal.utility.function.fx;
     exports xyz.columnal.utility.function;
+    exports xyz.columnal.error.parse;
+    exports xyz.columnal.error.style;
 
     requires static anns;
     requires static annsthreadchecker;

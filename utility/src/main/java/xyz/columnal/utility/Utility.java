@@ -59,7 +59,7 @@ import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
 import xyz.columnal.error.InternalException;
-import xyz.columnal.error.ParseException;
+import xyz.columnal.error.parse.ParseException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.DataLexer;
 import xyz.columnal.grammar.DataLexer2;

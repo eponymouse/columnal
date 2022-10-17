@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.error;
+package xyz.columnal.error.style;
 
 import org.checkerframework.dataflow.qual.Pure;
 import xyz.columnal.styled.StyledString;

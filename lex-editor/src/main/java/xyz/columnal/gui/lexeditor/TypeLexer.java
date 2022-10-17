@@ -39,7 +39,7 @@ import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.data.datatype.TaggedTypeDefinition;
 import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.data.datatype.TypeManager;
-import xyz.columnal.error.ExceptionWithStyle;
+import xyz.columnal.error.style.ExceptionWithStyle;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.FormatLexer;

@@ -20,6 +20,7 @@
 
 package xyz.columnal.error;
 
+import xyz.columnal.error.style.ExceptionWithStyle;
 import xyz.columnal.styled.StyledString;
 
 /**
