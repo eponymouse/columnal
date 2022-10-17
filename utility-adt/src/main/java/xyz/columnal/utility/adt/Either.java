@@ -26,7 +26,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.framework.qual.Covariant;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.function.ConsumerInt;
 import xyz.columnal.utility.function.ExConsumer;
 import xyz.columnal.utility.function.ExFunction;
@@ -92,10 +91,18 @@ public sealed interface Either<A, B> permits Either.Left, Either.Right, Comparab
     // Right is only returned if both inputs are right, otherwise Left will be returned.
     public static <E, A, B, C> Either<List<E>, C> combineConcatError(Either<List<E>, ? extends A> ea, Either<List<E>, ? extends B> eb, BiFunction<A, B, C> combine)
     {
-        return ea.either(errsA -> Either.<List<E>, C>left(eb.<List<E>>either(errsB -> Utility.<E>concat(errsA, errsB), bx -> errsA)),
+        return ea.either(errsA -> Either.<List<E>, C>left(eb.<List<E>>either(errsB -> concat(errsA, errsB), bx -> errsA)),
                   ax -> eb.either(errsB -> Either.<List<E>, C>left(errsB), bx -> Either.<List<E>, C>right(combine.apply(ax, bx))));
     }
-    
+
+    private static <E> List<E> concat(List<E> errsA, List<E> errsB)
+    {
+        ImmutableList.Builder<E> b = ImmutableList.builderWithExpectedSize(errsA.size() + errsB.size());
+        b.addAll(errsA);
+        b.addAll(errsB);
+        return b.build();
+    }
+
     @SuppressWarnings("nullness")
     public static <E, R, T> Either<E, ImmutableList<R>> mapMInt(List<T> xs, FunctionInt<? super T, Either<E, R>> applyOne) throws InternalException
     {

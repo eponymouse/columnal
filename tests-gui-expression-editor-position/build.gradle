@@ -12,6 +12,7 @@ dependencies {
     testImplementation project(':transformations')
     testImplementation project(':types')
     testImplementation project(':utility')
+    testImplementation project(':utility-adt')
     testImplementation project(':utility-error')
     testImplementation project(':utility-functional')
     testImplementation libs.commons.lang3

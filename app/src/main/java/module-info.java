@@ -7,6 +7,7 @@ module xyz.columnal.app
     requires xyz.columnal.data;
     requires xyz.columnal.expressions;
     requires xyz.columnal.functions;
+    requires xyz.columnal.utility.adt;
     requires xyz.columnal.utility.gui;
     requires xyz.columnal.identifiers;
     requires xyz.columnal.lexeditor;

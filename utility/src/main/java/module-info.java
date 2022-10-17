@@ -3,13 +3,12 @@ module xyz.columnal.utility
     exports xyz.columnal.log;
     exports xyz.columnal.utility;
     exports xyz.columnal.error.parse;
-    exports xyz.columnal.utility.adt;
-
 
     requires static anns;
     requires static annsthreadchecker;
     requires static org.checkerframework.checker.qual;
     requires xyz.columnal.parsers;
+    requires xyz.columnal.utility.adt;
     requires xyz.columnal.utility.error;
     requires xyz.columnal.utility.functional;
 

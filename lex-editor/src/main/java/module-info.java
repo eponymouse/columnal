@@ -12,6 +12,7 @@ module xyz.columnal.lexeditor
     requires xyz.columnal.utility.gui;
     requires xyz.columnal.parsers;
     requires xyz.columnal.utility;
+    requires xyz.columnal.utility.adt;
     requires xyz.columnal.utility.error;
     requires xyz.columnal.utility.functional;
 

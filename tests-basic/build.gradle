@@ -8,6 +8,7 @@ dependencies {
     testFixturesImplementation project(":parsers")
     testFixturesImplementation project(":types") // For DataTypeUtility
     testFixturesImplementation project(":utility")
+    testFixturesImplementation project(":utility-adt")
     testFixturesImplementation project(":utility-error")
     testFixturesImplementation project(":utility-functional")
     testFixturesImplementation libs.guava

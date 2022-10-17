@@ -1,5 +1,6 @@
 dependencies {
     implementation project(':parsers')
+    implementation project(':utility-adt')
     implementation project(':utility-error')
     implementation project(':utility-functional')
     implementation libs.guava

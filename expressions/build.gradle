@@ -3,6 +3,7 @@ dependencies {
     implementation project(':parsers')
     implementation project(':types')
     implementation project(':utility')
+    implementation project(':utility-adt')
     implementation project(':utility-error')
     implementation project(':utility-functional')
     implementation libs.javaSMT
