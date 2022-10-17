@@ -20,39 +20,30 @@
 
 package xyz.columnal.error;
 
-import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import xyz.columnal.error.style.ExceptionWithStyle;
+import org.checkerframework.dataflow.qual.Pure;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
-/**
- * Created by neil on 22/10/2016.
- */
-@OnThread(Tag.Any)
-public class UserException extends ExceptionWithStyle
+public class ExceptionWithStyle extends Exception
 {
-    public UserException(String message)
+    private final StyledString styledMessage;
+    
+    protected ExceptionWithStyle(StyledString styledMessage)
     {
-        this(StyledString.s(message));
+        super(styledMessage.toPlain());
+        this.styledMessage = styledMessage;
     }
 
-    public UserException(String message, Throwable cause)
+    public ExceptionWithStyle(StyledString styledMessage, Throwable e)
     {
-        super(StyledString.s(message), cause);
+        super(styledMessage.toPlain(), e);
+        this.styledMessage = styledMessage;
     }
 
-    public UserException(StyledString styledString)
+    @OnThread(Tag.Any)
+    @Pure public final StyledString getStyledMessage()
     {
-        super(styledString);
-    }
-
-    @SuppressWarnings({"nullness", "i18n"}) // Given our constructors require non-null, this can't return null.
-    // Also, putting @Localized on Exception.getLocalizedMessage doesn't seem to prevent error here, so suppress i18n warning.
-    @Override
-    public @NonNull @Localized String getLocalizedMessage()
-    {
-        return super.getLocalizedMessage();
+        return styledMessage;
     }
 }

@@ -27,7 +27,6 @@ import javafx.scene.text.Text;
 import xyz.columnal.styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Utility;
 
 /**
  * A Style for StyledString that applies a set of CSS classes.

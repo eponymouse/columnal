@@ -22,9 +22,6 @@ package xyz.columnal.utility;
 
 import org.checkerframework.dataflow.qual.Pure;
 import org.checkerframework.framework.qual.Covariant;
-import xyz.columnal.error.InternalException;
-import xyz.columnal.error.UserException;
-import xyz.columnal.utility.function.ExFunction;
 
 import java.util.Comparator;
 import java.util.function.Function;
@@ -55,11 +52,6 @@ public final record Pair<A, B>(A first, B second)
     }
 
     public <C> Pair<C, B> mapFirst(Function<A, C> map)
-    {
-        return new Pair<>(map.apply(first), second);
-    }
-
-    public <C> Pair<C, B> mapFirstEx(ExFunction<A, C> map) throws InternalException, UserException
     {
         return new Pair<>(map.apply(first), second);
     }

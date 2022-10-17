@@ -9,6 +9,8 @@ module xyz.columnal.data
     requires xyz.columnal.parsers;
     requires xyz.columnal.types;
     requires xyz.columnal.utility;
+    requires xyz.columnal.utility.error;
+    requires xyz.columnal.utility.functional;
     
 
     requires org.antlr.antlr4.runtime;

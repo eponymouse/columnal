@@ -18,32 +18,22 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.error.style;
+package xyz.columnal.error;
 
-import org.checkerframework.dataflow.qual.Pure;
 import xyz.columnal.styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 
-public class ExceptionWithStyle extends Exception
+/**
+ * Created by neil on 22/10/2016.
+ */
+public final class InternalException extends ExceptionWithStyle
 {
-    private final StyledString styledMessage;
-    
-    protected ExceptionWithStyle(StyledString styledMessage)
+    public InternalException(String message)
     {
-        super(styledMessage.toPlain());
-        this.styledMessage = styledMessage;
+        super(StyledString.s(message));
     }
 
-    public ExceptionWithStyle(StyledString styledMessage, Throwable e)
+    public InternalException(String message, Exception e)
     {
-        super(styledMessage.toPlain(), e);
-        this.styledMessage = styledMessage;
-    }
-
-    @OnThread(Tag.Any)
-    @Pure public final StyledString getStyledMessage()
-    {
-        return styledMessage;
+        super(StyledString.s(message), e);
     }
 }

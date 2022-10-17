@@ -1,5 +1,7 @@
 dependencies {
     implementation project(':utility')
+    implementation project(':utility-error')
+    implementation project(':utility-functional')
     implementation project(':types')
     implementation project(':expressions')
     implementation project(':parsers')

@@ -11,6 +11,8 @@ dependencies {
     testFixturesImplementation project(":transformations")
     testFixturesImplementation project(":types")
     testFixturesImplementation project(":utility")
+    testFixturesImplementation project(":utility-error")
+    testFixturesImplementation project(":utility-functional")
     testFixturesImplementation libs.commons.io
     testFixturesImplementation libs.commons.lang3
     testFixturesImplementation libs.controlsfx

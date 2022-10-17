@@ -8,6 +8,8 @@ dependencies {
     testImplementation project(':stf')
     testImplementation project(':types')
     testImplementation project(':utility')
+    testImplementation project(':utility-error')
+    testImplementation project(':utility-functional')
     testImplementation libs.guava
     testImplementation libs.testfx.core
     testImplementation libs.testfx.junit

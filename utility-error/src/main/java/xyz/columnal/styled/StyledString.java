@@ -29,17 +29,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-public final class StyledString
+public final record StyledString(ImmutableList<StyledSegment> members)
 {
     public static Builder builder()
     {
@@ -92,50 +92,35 @@ public final class StyledString
     
     // I got VerifyError items (14th March 2018) when using Guava's ImmutableClassToInstanceMap, so this is
     // my own simple equivalent, specialised to Style.  To be honest, it's a lot simpler by being specialised anyway:
-    private static class ImmutableStyleMap
+    // Only one style per class type in the styleMembers list:
+    private static record ImmutableStyleMap(ImmutableList<Style<?>> styleMembers)
     {
         public static final ImmutableStyleMap EMPTY = new ImmutableStyleMap(ImmutableList.of());
-        // Only one style per class type in this list:
-        private final ImmutableList<Style<?>> styleMembers;
-
-        // Warning: do not pass a list which has more than one entry per Style subclass.
-        private ImmutableStyleMap(ImmutableList<Style<?>> styleMembers)
-        {
-            this.styleMembers = styleMembers;
-        }
-
-        @Override
-        public boolean equals(@Nullable Object o)
-        {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ImmutableStyleMap that = (ImmutableStyleMap) o;
-            return styleMembers.equals(that.styleMembers);
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return Objects.hash(styleMembers);
-        }
     }
     
-    private final ImmutableList<Pair<ImmutableStyleMap, String>> members;
+    // We don't use Pair because we don't want the dependency:
+    private static record StyledSegment(ImmutableStyleMap styleMap, String text)
+    {
+        public StyledSegment mapFirst(Function<ImmutableStyleMap, ImmutableStyleMap> f)
+        {
+            return new StyledSegment(f.apply(styleMap), text);
+        }
+
+        public StyledSegment mapSecond(Function<String, String> f)
+        {
+            return new StyledSegment(styleMap, f.apply(text));
+        }
+    }
     
     private StyledString(String normal)
     {
-        members = ImmutableList.of(new Pair<>(ImmutableStyleMap.EMPTY, normal));
-    }
-    
-    private StyledString(ImmutableList<Pair<ImmutableStyleMap, String>> items)
-    {
-        members = items;
+        this(ImmutableList.of(new StyledSegment(ImmutableStyleMap.EMPTY, normal)));
     }
 
     @Pure
     public static <S extends Style<S>> StyledString styled(String content, S style)
     {
-        return new StyledString(ImmutableList.of(new Pair<>(new ImmutableStyleMap(ImmutableList.of(style)), content)));
+        return new StyledString(ImmutableList.of(new StyledSegment(new ImmutableStyleMap(ImmutableList.of(style)), content)));
     }
 
     /**
@@ -144,7 +129,7 @@ public final class StyledString
      */
     @Pure public <S extends Style<S>> StyledString withStyle(S newStyle)
     {
-        return new StyledString(Utility.mapListI(members, p -> p.mapFirst(prevStyles -> {
+        return new StyledString(members.stream().map(p -> p.mapFirst(prevStyles -> {
             ImmutableList.Builder<Style<?>> newStyles = ImmutableList.builder();
             boolean added = false;
             for (Style<?> prevStyleMember : prevStyles.styleMembers)
@@ -165,13 +150,13 @@ public final class StyledString
                 newStyles.add(newStyle);
             }
             return new ImmutableStyleMap(newStyles.build());
-        })));
+        })).collect(ImmutableList.toImmutableList()));
     }
 
     @SuppressWarnings("i18n")
     public @Localized String toPlain()
     {
-        return members.stream().map(p -> p.getSecond()).collect(Collectors.joining());
+        return members.stream().map(StyledSegment::text).collect(Collectors.joining());
     }
 
     @Override
@@ -197,7 +182,7 @@ public final class StyledString
      */
     public static StyledString intercalate(StyledString divider, List<StyledString> items)
     {
-        ImmutableList.Builder<Pair<ImmutableStyleMap, String>> l = ImmutableList.builder();
+        ImmutableList.Builder<StyledSegment> l = ImmutableList.builder();
         boolean addDivider = false;
         for (StyledString item : items)
         {
@@ -212,12 +197,12 @@ public final class StyledString
     @OnThread(Tag.FXPlatform)
     public ImmutableList<Text> toGUI()
     {
-        return Utility.mapListI(members, p -> {
-            Text t = new Text(p.getSecond());
+        return members.stream().map(p -> {
+            Text t = new Text(p.text());
             t.getStyleClass().add("styled-text");
-            p.getFirst().styleMembers.forEach(style -> style.style(t));
+            p.styleMap().styleMembers.forEach(style -> style.style(t));
             return t;
-        });
+        }).collect(ImmutableList.toImmutableList());
     }
 
     public static Collector<StyledString, ?, StyledString> joining(String s)
@@ -232,9 +217,9 @@ public final class StyledString
     {
         return new StyledString(
             Arrays.<StyledString>stream(items)
-                .<Pair<ImmutableStyleMap, String>>flatMap(ss -> ss.members.stream())
-                .filter(ss -> !ss.getSecond().isEmpty())
-                .collect(ImmutableList.<Pair<ImmutableStyleMap, String>>toImmutableList())
+                .<StyledSegment>flatMap(ss -> ss.members.stream())
+                .filter(ss -> !ss.text().isEmpty())
+                .collect(ImmutableList.<StyledSegment>toImmutableList())
         );
     }
     
@@ -261,17 +246,17 @@ public final class StyledString
     
     public int getLength()
     {
-        return members.stream().mapToInt(p -> p.getSecond().length()).sum();
+        return members.stream().mapToInt(p -> p.text().length()).sum();
     }
     
     public StyledString substring(int startIndexIncl, int endIndexExcl)
     {
-        ImmutableList.Builder<Pair<ImmutableStyleMap, String>> r = ImmutableList.builder();
+        ImmutableList.Builder<StyledSegment> r = ImmutableList.builder();
         int curPos = 0;
         int curIndex = 0;
         while (curIndex < members.size() && curPos < startIndexIncl)
         {
-            curPos += members.get(curIndex).getSecond().length();
+            curPos += members.get(curIndex).text().length();
             
             if (curPos > startIndexIncl)
             {
@@ -286,31 +271,19 @@ public final class StyledString
         {
             int maxLen = endIndexExcl - curPos;
             r.add(members.get(curIndex).mapSecond(s -> s.substring(0, Math.min(maxLen, s.length()))));
-            curPos += members.get(curIndex).getSecond().length();
+            curPos += members.get(curIndex).text().length();
             curIndex += 1;
         }
         
         return new StyledString(r.build());
     }
 
-    public ImmutableList<Pair<ImmutableList<Style<?>>, String>> getMembers()
+    public void forEach(BiConsumer<ImmutableList<Style<?>>, String> doForEach)
     {
-        return Utility.mapListI(members, m -> m.mapFirst(sm -> sm.styleMembers));
-    }
-
-    @Override
-    public boolean equals(@Nullable Object o)
-    {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        StyledString that = (StyledString) o;
-        return Objects.equals(members, that.members);
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(members);
+        for (StyledSegment member : members())
+        {
+            doForEach.accept(member.styleMap().styleMembers(), member.text());
+        }
     }
 
     public static class Builder

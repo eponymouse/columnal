@@ -47,6 +47,7 @@ import xyz.columnal.gui.lexeditor.completion.LexCompletion;
 import xyz.columnal.gui.lexeditor.TopLevelEditor.Focus;
 import xyz.columnal.gui.lexeditor.completion.LexCompletionGroup;
 import xyz.columnal.gui.lexeditor.completion.LexCompletionListener;
+import xyz.columnal.styled.StyledString;
 import xyz.columnal.styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -64,6 +65,7 @@ import java.awt.Desktop;
 import java.net.URL;
 import java.util.BitSet;
 import java.util.OptionalInt;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @OnThread(Tag.FXPlatform)
@@ -596,19 +598,23 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     public @OnThread(Tag.FXPlatform) ImmutableList<BackgroundInfo> getBackgrounds()
     {
         ImmutableList.Builder<BackgroundInfo> r = ImmutableList.builder();
-        int curPos = 0;
-        for (Pair<ImmutableList<Style<?>>, String> member : content.getDisplay().getMembers())
+        content.getDisplay().forEach(new BiConsumer<ImmutableList<StyledString.Style<?>>, String>()
         {
-            for (Style<?> style : member.getFirst())
+            int curPos = 0;
+            @Override
+            public void accept(ImmutableList<StyledString.Style<?>> styles, String text)
             {
-                if (style instanceof TokenBackground)
+                for (StyledString.Style<?> style : styles)
                 {
-                    r.add(new BackgroundInfo(curPos, curPos + member.getSecond().length(), ((TokenBackground)style).styleClasses));
+                    if (style instanceof TokenBackground)
+                    {
+                        r.add(new BackgroundInfo(curPos, curPos + text.length(), ((TokenBackground)style).styleClasses));
+                    }
                 }
+
+                curPos += text.length();
             }
-            
-            curPos += member.getSecond().length();
-        }
+        });
         return r.build();
     }
 

@@ -11,7 +11,9 @@ dependencies {
     implementation project(':stf')
     implementation project(':transformations')
     implementation project(':types')
-    implementation project(':utility')
+    testImplementation project(':utility')
+    testImplementation project(':utility-error')
+    testImplementation project(':utility-functional')
     testImplementation libs.hamcrest
     implementation libs.commons.io
     implementation libs.poi.ooxml

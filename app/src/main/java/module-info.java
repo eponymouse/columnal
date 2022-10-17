@@ -16,6 +16,8 @@ module xyz.columnal.app
     requires xyz.columnal.transformations;
     requires xyz.columnal.types;
     requires xyz.columnal.utility;
+    requires xyz.columnal.utility.error;
+    requires xyz.columnal.utility.functional;
     
     requires java.desktop;
     requires javafx.base;

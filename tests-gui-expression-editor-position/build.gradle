@@ -12,6 +12,8 @@ dependencies {
     testImplementation project(':transformations')
     testImplementation project(':types')
     testImplementation project(':utility')
+    testImplementation project(':utility-error')
+    testImplementation project(':utility-functional')
     testImplementation libs.commons.lang3
     testImplementation libs.controlsfx
     testImplementation libs.guava

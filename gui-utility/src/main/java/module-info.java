@@ -8,6 +8,8 @@ module xyz.columnal.utility.gui
     requires static annsthreadchecker;
     requires xyz.columnal.parsers;
     requires xyz.columnal.utility;
+    requires xyz.columnal.utility.error;
+    requires xyz.columnal.utility.functional;
 
     requires com.google.common;
     requires com.sun.jna;

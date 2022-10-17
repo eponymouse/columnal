@@ -18,7 +18,8 @@ def projectsToJavaFX = [
   stf: ['javafx.base', 'javafx.controls', 'javafx.graphics'],
   transformations:  ['javafx.base', 'javafx.controls', 'javafx.graphics'],
   types: ['javafx.graphics'],
-  utility:  ['javafx.base', 'javafx.graphics']
+  utility:  ['javafx.base', 'javafx.graphics'],
+  'utility-error':  ['javafx.base', 'javafx.graphics']
 ]
 
 subprojects { subproject ->
