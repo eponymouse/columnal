@@ -34,7 +34,7 @@ import xyz.columnal.jellytype.JellyTypeRecord;
 import xyz.columnal.jellytype.JellyTypeRecord.Field;
 import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.HashMap;

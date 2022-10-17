@@ -53,7 +53,7 @@ import xyz.columnal.rinterop.ConvertFromR;
 import xyz.columnal.rinterop.RPrettyPrint;
 import xyz.columnal.rinterop.RValue;
 import xyz.columnal.rinterop.RExecution;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.TaggedValue;
 import xyz.columnal.utility.Utility;

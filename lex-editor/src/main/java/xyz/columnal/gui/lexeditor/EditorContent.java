@@ -39,7 +39,7 @@ import xyz.columnal.gui.lexeditor.completion.InsertListener;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
 import xyz.columnal.utility.function.fx.FXPlatformRunnable;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;

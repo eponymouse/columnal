@@ -28,7 +28,6 @@ import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.transformations.expression.CanonicalSpan;
 import xyz.columnal.gui.lexeditor.TypeLexer.Keyword;
@@ -49,8 +48,8 @@ import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.FXUtility;
 

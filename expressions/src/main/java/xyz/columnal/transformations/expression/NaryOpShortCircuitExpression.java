@@ -20,13 +20,10 @@
 
 package xyz.columnal.transformations.expression;
 
-import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import xyz.columnal.error.InternalException;
-import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
 
 import java.util.List;
 

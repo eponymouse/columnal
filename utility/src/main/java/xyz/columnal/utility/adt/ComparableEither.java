@@ -18,10 +18,9 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.adt;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public sealed interface ComparableEither<A extends Comparable<?super A>, B extends Comparable<? super B>> extends Either<A, B>, Comparable<ComparableEither<A, B>> permits ComparableEither.Left, ComparableEither.Right 
 {

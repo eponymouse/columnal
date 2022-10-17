@@ -65,7 +65,7 @@ import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.function.FunctionInt;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.TaggedValue;

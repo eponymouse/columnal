@@ -45,7 +45,7 @@ import xyz.columnal.data.TableManager;
 import xyz.columnal.importers.Importer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.function.simulation.SimulationConsumerNoError;
 import xyz.columnal.utility.gui.ErrorableDialog;
 import xyz.columnal.utility.gui.FXUtility;

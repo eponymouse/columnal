@@ -25,8 +25,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.grammar.GrammarUtility;
 import xyz.columnal.gui.dtf.Recogniser;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.ParseProgress;
 
 public class StringRecogniser extends Recogniser<@ImmediateValue String>

@@ -20,15 +20,11 @@
 
 package xyz.columnal.transformations.expression;
 
-import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import xyz.columnal.error.InternalException;
-import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.Utility;
 
 import java.util.List;
 

@@ -42,7 +42,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 import xyz.columnal.utility.function.fx.FXPlatformSupplier;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.ResourceUtility;
 import xyz.columnal.utility.gui.FXUtility;
 

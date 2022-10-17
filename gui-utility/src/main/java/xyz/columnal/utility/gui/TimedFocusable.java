@@ -23,7 +23,7 @@ package xyz.columnal.utility.gui;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
 import java.util.Arrays;
 import java.util.Comparator;

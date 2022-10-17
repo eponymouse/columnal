@@ -45,7 +45,7 @@ import xyz.columnal.gui.MainWindow.MainWindowActions;
 import test.DummyManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.function.simulation.SimulationSupplier;
 import xyz.columnal.utility.gui.FXUtility;
 

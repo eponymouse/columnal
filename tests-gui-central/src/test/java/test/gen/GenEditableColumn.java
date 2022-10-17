@@ -35,7 +35,7 @@ import xyz.columnal.error.UserException;
 import test.gen.type.GenDataType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.function.simulation.SimulationFunction;
 
 import java.util.ArrayList;

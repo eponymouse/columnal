@@ -21,10 +21,8 @@
 package xyz.columnal.gui.lexeditor;
 
 import annotation.recorded.qual.Recorded;
-import annotation.recorded.qual.UnknownIfRecorded;
 import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -36,7 +34,6 @@ import xyz.columnal.transformations.expression.CanonicalSpan;
 import xyz.columnal.gui.lexeditor.UnitLexer.UnitBracket;
 import xyz.columnal.gui.lexeditor.UnitLexer.UnitOp;
 import xyz.columnal.gui.lexeditor.completion.InsertListener;
-import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.expression.InvalidOperatorUnitExpression;
 import xyz.columnal.transformations.expression.InvalidSingleUnitExpression;
 import xyz.columnal.transformations.expression.SingleUnitExpression;
@@ -47,15 +44,14 @@ import xyz.columnal.transformations.expression.UnitRaiseExpression;
 import xyz.columnal.transformations.expression.UnitTimesExpression;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 
 public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, UnitBracket, Void>// implements ErrorAndTypeRecorder

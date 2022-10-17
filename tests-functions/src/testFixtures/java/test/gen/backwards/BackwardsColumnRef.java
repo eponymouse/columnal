@@ -47,7 +47,7 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.IdentExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.TaggedValue;

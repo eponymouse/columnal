@@ -51,7 +51,7 @@ import xyz.columnal.gui.lexeditor.TypeEditor;
 import xyz.columnal.transformations.expression.type.TypeExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.function.ExBiFunction;
 import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 import xyz.columnal.utility.Utility;

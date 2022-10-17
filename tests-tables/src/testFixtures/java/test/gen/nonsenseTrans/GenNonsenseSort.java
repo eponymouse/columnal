@@ -36,7 +36,7 @@ import test.DummyManager;
 import test.Transformation_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assume.assumeNoException;

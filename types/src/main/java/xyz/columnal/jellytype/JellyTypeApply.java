@@ -20,7 +20,6 @@
 
 package xyz.columnal.jellytype;
 
-import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -31,14 +30,13 @@ import xyz.columnal.data.datatype.TypeId;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
-import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.FormatLexer;
 import xyz.columnal.loadsave.OutputBuilder;
 import xyz.columnal.typeExp.MutVar;
 import xyz.columnal.typeExp.TypeCons;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.units.MutUnitVar;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.UnitType;
 import xyz.columnal.utility.Utility;
 

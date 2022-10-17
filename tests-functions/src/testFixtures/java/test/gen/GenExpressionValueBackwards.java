@@ -36,8 +36,8 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.function.simulation.SimulationFunction;
 
 import java.util.Arrays;

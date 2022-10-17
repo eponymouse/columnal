@@ -36,7 +36,7 @@ import xyz.columnal.typeExp.MutVar;
 import xyz.columnal.typeExp.RecordTypeExp;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.units.MutUnitVar;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.Utility;
 
 import java.util.Comparator;

@@ -31,10 +31,9 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import xyz.columnal.transformations.expression.visitor.ExpressionVisitor;
 import xyz.columnal.typeExp.TypeExp;
-import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.Optional;

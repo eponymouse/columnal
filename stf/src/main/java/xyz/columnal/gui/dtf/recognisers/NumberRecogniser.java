@@ -21,14 +21,13 @@
 package xyz.columnal.gui.dtf.recognisers;
 
 import annotation.qual.ImmediateValue;
-import annotation.qual.Value;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.dtf.Recogniser;
 import xyz.columnal.log.Log;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.ParseProgress;
 import xyz.columnal.utility.Utility;
 

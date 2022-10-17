@@ -43,7 +43,7 @@ import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.InvalidImmediateValueException;
 import xyz.columnal.error.UserException;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.function.simulation.SimulationFunctionInt;
 import xyz.columnal.utility.function.simulation.SimulationRunnable;

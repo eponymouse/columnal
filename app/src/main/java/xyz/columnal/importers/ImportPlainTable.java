@@ -37,7 +37,7 @@ import xyz.columnal.importers.GuessFormat.TrimChoice;
 import xyz.columnal.importers.ImportPlainTable.PlainImportInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.UnitType;
 
 import java.util.List;

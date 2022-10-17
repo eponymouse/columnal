@@ -35,7 +35,7 @@ import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
 import java.math.BigDecimal;
 import java.util.IdentityHashMap;

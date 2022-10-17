@@ -27,7 +27,7 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.DataParser;
 import xyz.columnal.grammar.DataParser2;
 import xyz.columnal.utility.function.BiFunctionInt;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.function.ExBiConsumer;
 import xyz.columnal.utility.function.ExFunction;
 import xyz.columnal.utility.function.simulation.SimulationFunctionInt;

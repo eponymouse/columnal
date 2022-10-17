@@ -26,7 +26,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.expression.Expression.SaveDestination.ToEditor;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;

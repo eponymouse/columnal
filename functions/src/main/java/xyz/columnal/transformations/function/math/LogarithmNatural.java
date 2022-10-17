@@ -32,7 +32,7 @@ import xyz.columnal.transformations.function.FunctionDefinition;
 import xyz.columnal.transformations.function.ValueFunction1;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.transformations.expression.function.ValueFunction;

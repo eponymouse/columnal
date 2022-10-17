@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.adt;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -26,6 +26,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.framework.qual.Covariant;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
+import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.function.ConsumerInt;
 import xyz.columnal.utility.function.ExConsumer;
 import xyz.columnal.utility.function.ExFunction;

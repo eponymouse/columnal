@@ -49,7 +49,7 @@ import xyz.columnal.grammar.TableParser2;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.SaveTag;
 import xyz.columnal.id.TableId;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.Utility;

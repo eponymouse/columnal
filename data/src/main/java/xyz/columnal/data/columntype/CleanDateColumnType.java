@@ -25,7 +25,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.error.InternalException;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.Utility;
 
 import java.time.LocalDate;

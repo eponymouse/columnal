@@ -3,7 +3,8 @@ module xyz.columnal.utility
     exports xyz.columnal.log;
     exports xyz.columnal.utility;
     exports xyz.columnal.error.parse;
-    
+    exports xyz.columnal.utility.adt;
+
 
     requires static anns;
     requires static annsthreadchecker;

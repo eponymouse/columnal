@@ -50,7 +50,7 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.FXUtility.DragHandler;

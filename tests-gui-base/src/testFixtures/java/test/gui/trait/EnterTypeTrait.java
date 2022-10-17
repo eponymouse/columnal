@@ -37,8 +37,8 @@ import xyz.columnal.transformations.expression.type.TypeExpression;
 import xyz.columnal.transformations.expression.type.TypePrimitiveLiteral;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.UnitType;
 
 import java.util.Random;

@@ -31,9 +31,9 @@ import xyz.columnal.typeExp.TypeConcretisationError;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.function.ExConsumer;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;

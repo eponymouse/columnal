@@ -28,15 +28,14 @@ import org.checkerframework.dataflow.qual.Pure;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.transformations.expression.Expression.CheckedExp;
-import xyz.columnal.transformations.expression.Expression.ExpressionKind;
 import xyz.columnal.transformations.expression.function.FunctionLookup;
 import xyz.columnal.typeExp.TypeConcretisationError;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.TypeExp.TypeError;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 
 import java.util.List;
 import java.util.function.Consumer;

@@ -29,7 +29,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.gui.stable.SmoothScroller.ScrollClamp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.IdentityHashMap;

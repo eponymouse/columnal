@@ -34,7 +34,6 @@ import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.trait.EnterExpressionTrait;
-import test.gui.trait.EnterExpressionTrait.EntryBracketStatus;
 import test.gui.trait.PopupTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
@@ -52,7 +51,7 @@ import xyz.columnal.importers.ClipboardUtils.LoadedColumnInfo;
 import xyz.columnal.log.Log;
 import xyz.columnal.transformations.Calculate;
 import xyz.columnal.transformations.expression.Expression;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.Utility;
 
 import java.util.List;

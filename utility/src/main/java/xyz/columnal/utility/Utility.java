@@ -71,6 +71,7 @@ import xyz.columnal.grammar.MainParser2;
 import xyz.columnal.grammar.TableParser2;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.function.ExBiFunction;
 import xyz.columnal.utility.function.ExConsumer;
 import xyz.columnal.utility.function.ExFunction;

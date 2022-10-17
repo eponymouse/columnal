@@ -58,7 +58,7 @@ import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.function.fx.FXPlatformRunnable;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
 import java.util.ArrayList;
 import java.util.Optional;

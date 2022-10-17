@@ -21,7 +21,6 @@
 package test.gen.backwards;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.unit.Unit;
@@ -31,8 +30,6 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.CallExpression;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.function.FunctionList;
-import test.DummyManager;
-import xyz.columnal.utility.Pair;
 
 import java.util.List;
 

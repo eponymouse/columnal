@@ -35,7 +35,7 @@ import xyz.columnal.transformations.expression.Expression;
 import test.DummyManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
 /**
  * Created by neil on 27/11/2016.

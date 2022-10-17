@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.adt;
 
 import org.checkerframework.dataflow.qual.Pure;
 import org.checkerframework.framework.qual.Covariant;

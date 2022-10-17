@@ -46,7 +46,6 @@ import xyz.columnal.exporters.RExporter;
 import xyz.columnal.exporters.manager.ExporterManager;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.importers.RImporter;
-import xyz.columnal.plugins.PluginManager;
 import xyz.columnal.utility.gui.Clickable;
 import xyz.columnal.importers.ExcelImporter;
 import xyz.columnal.importers.HTMLImporter;
@@ -56,7 +55,7 @@ import xyz.columnal.styled.StyledCSS;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.ResourceUtility;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.FXUtility;
@@ -76,7 +75,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Created by neil on 18/10/2016.

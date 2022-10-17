@@ -94,9 +94,9 @@ import xyz.columnal.styled.StyledString.Builder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.transformations.expression.visitor.ExpressionVisitorStream;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.function.fx.FXPlatformFunction;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.Clickable;
 

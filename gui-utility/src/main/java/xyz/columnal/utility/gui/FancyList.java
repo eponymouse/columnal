@@ -51,7 +51,7 @@ import threadchecker.Tag;
 import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 import xyz.columnal.utility.function.fx.FXPlatformSupplier;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;

@@ -42,7 +42,7 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.function.core.AsUnit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.transformations.expression.function.ValueFunction;
 

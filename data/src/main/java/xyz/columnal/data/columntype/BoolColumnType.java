@@ -22,7 +22,7 @@ package xyz.columnal.data.columntype;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 
 import java.util.Objects;
 

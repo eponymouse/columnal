@@ -48,7 +48,7 @@ import xyz.columnal.importers.gui.ImportChoicesDialog;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.IdentifierUtility;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.function.simulation.SimulationConsumerNoError;
 import xyz.columnal.utility.function.simulation.SimulationSupplier;
 import xyz.columnal.utility.UnitType;

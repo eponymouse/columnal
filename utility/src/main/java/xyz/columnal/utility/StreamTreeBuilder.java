@@ -20,9 +20,10 @@
 
 package xyz.columnal.utility;
 
+import xyz.columnal.utility.adt.Either;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**

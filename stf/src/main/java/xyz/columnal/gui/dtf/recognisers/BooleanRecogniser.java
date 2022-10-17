@@ -21,11 +21,10 @@
 package xyz.columnal.gui.dtf.recognisers;
 
 import annotation.qual.ImmediateValue;
-import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.gui.dtf.Recogniser;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.ParseProgress;
 
 public class BooleanRecogniser extends Recogniser<@ImmediateValue Boolean>

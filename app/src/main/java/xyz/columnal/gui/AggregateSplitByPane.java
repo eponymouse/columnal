@@ -62,7 +62,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.function.fx.FXPlatformSupplier;
 import xyz.columnal.utility.function.fx.FXPlatformSupplierInt;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.DoubleOKLightDialog.Validity;

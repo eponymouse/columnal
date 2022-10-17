@@ -33,7 +33,6 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.TranslationUtility;
 
 import java.io.File;

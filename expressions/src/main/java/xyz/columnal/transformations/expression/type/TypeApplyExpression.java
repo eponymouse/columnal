@@ -42,7 +42,7 @@ import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.expression.UnitExpression;
 import xyz.columnal.transformations.expression.UnitExpression.UnitLookupException;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;

@@ -36,7 +36,7 @@ import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.function.ExBiConsumer;
 import xyz.columnal.utility.function.ExFunction;
 import xyz.columnal.utility.function.FunctionInt;

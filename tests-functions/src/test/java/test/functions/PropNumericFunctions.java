@@ -47,7 +47,7 @@ import test.gen.GenNumbers;
 import test.gen.GenUnit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.transformations.expression.function.ValueFunction;
 

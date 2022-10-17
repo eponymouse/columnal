@@ -62,7 +62,7 @@ import xyz.columnal.importers.gui.ImportChoicesDialog;
 import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 import xyz.columnal.utility.function.fx.FXPlatformSupplier;
 import xyz.columnal.utility.IdentifierUtility;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.function.simulation.SimulationConsumer;
 import xyz.columnal.utility.function.simulation.SimulationConsumerNoError;
 import xyz.columnal.utility.function.simulation.SimulationSupplier;

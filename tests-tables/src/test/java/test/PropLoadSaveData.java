@@ -34,7 +34,6 @@ import xyz.columnal.data.Column;
 import xyz.columnal.data.GridComment;
 import xyz.columnal.data.ImmediateDataSource;
 import xyz.columnal.data.TBasicUtil;
-import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.Table;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.data.TableManager.Loaded;
@@ -48,8 +47,8 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.id.SaveTag;
 import xyz.columnal.id.TableId;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
