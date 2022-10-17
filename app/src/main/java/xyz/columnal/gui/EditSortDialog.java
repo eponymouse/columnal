@@ -57,7 +57,7 @@ import xyz.columnal.transformations.Sort.Direction;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
-import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.function.fx.FXPlatformSupplier;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.UnitType;

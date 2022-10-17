@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.function;
 
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -26,7 +26,8 @@ import xyz.columnal.error.UserException;
 /**
  * Created by neil on 16/11/2016.
  */
-public interface BiFunctionInt<S, T, R>
+@FunctionalInterface
+public interface ExSupplier<R>
 {
-    public R apply(S s, T t) throws InternalException;
+    public R get() throws UserException, InternalException;
 }

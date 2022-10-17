@@ -32,7 +32,7 @@ import xyz.columnal.transformations.expression.explanation.ExplanationLocation;
 import xyz.columnal.transformations.expression.function.ValueFunction;
 import xyz.columnal.transformations.function.FunctionDefinition;
 import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Utility.ListEx;
 

@@ -33,8 +33,8 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.Versions.ExpressionVersion;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformSupplier;
-import xyz.columnal.utility.SimulationSupplier;
+import xyz.columnal.utility.function.fx.FXPlatformSupplier;
+import xyz.columnal.utility.function.simulation.SimulationSupplier;
 
 import java.util.List;
 import java.util.Optional;

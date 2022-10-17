@@ -31,7 +31,7 @@ import xyz.columnal.transformations.function.FunctionDefinition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.transformations.expression.function.ValueFunction;
 
 public class AsType extends FunctionDefinition

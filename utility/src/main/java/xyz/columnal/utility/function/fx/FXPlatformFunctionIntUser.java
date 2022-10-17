@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.function.fx;
 
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -28,8 +28,8 @@ import threadchecker.Tag;
 /**
  * Created by neil on 24/10/2016.
  */
-public interface SimulationFunctionInt<T, R>
+public interface FXPlatformFunctionIntUser<T, R>
 {
-    @OnThread(Tag.Simulation)
-    public R apply(T t) throws InternalException;
+    @OnThread(Tag.FXPlatform)
+    public R apply(T t) throws InternalException, UserException;
 }

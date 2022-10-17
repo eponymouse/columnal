@@ -18,15 +18,19 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.function.simulation;
 
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 /**
- * A version of Runnable which throws exceptions
+ * Created by neil on 02/11/2016.
  */
-public interface ExRunnable
+@FunctionalInterface
+@OnThread(Tag.Simulation)
+public interface SimulationConsumerNoError<T>
 {
-    public void run() throws InternalException, UserException;
+    public void consume(T t);
 }

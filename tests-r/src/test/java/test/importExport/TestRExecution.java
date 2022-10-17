@@ -54,7 +54,7 @@ import xyz.columnal.rinterop.RPrettyPrint;
 import xyz.columnal.rinterop.RValue;
 import xyz.columnal.rinterop.RExecution;
 import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.TaggedValue;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Utility.ListEx;

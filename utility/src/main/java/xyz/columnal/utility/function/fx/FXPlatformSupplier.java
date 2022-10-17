@@ -18,19 +18,16 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.function.fx;
 
-import xyz.columnal.error.InternalException;
-import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
 /**
- * Created by neil on 02/11/2016.
+ * Created by neil on 24/10/2016.
  */
-@FunctionalInterface
-@OnThread(Tag.Simulation)
-public interface SimulationRunnableNoError
+public interface FXPlatformSupplier<T>
 {
-    public void run();
+    @OnThread(Tag.FXPlatform)
+    public T get();
 }

@@ -18,16 +18,18 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.function.fx;
 
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
 /**
- * Created by neil on 24/10/2016.
+ * Created by neil on 18/11/2016.
  */
-public interface FXPlatformBiConsumer<S, T>
+public interface FXPlatformRunnable
 {
     @OnThread(Tag.FXPlatform)
-    public void consume(S s, T t);
+    public void run();
+
+    public static FXPlatformRunnable EMPTY = () -> {};
 }

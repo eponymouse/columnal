@@ -44,7 +44,7 @@ import test.gen.type.GenTypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationRunnable;
+import xyz.columnal.utility.function.simulation.SimulationRunnable;
 
 import javax.swing.*;
 import java.util.Collections;

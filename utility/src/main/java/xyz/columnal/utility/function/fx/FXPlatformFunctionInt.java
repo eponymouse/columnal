@@ -18,18 +18,17 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.function.fx;
 
 import xyz.columnal.error.InternalException;
-import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
 /**
  * Created by neil on 24/10/2016.
  */
-public interface SimulationFunction<T, R>
+public interface FXPlatformFunctionInt<T, R>
 {
-    @OnThread(Tag.Simulation)
-    public R apply(T t) throws InternalException, UserException;
+    @OnThread(Tag.FXPlatform)
+    public R apply(T t) throws InternalException;
 }

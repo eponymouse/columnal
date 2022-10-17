@@ -28,7 +28,7 @@ import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.expression.type.TypeExpression;
-import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 
 public class TypeEditor extends TopLevelEditor<TypeExpression, TypeLexer, CodeCompletionContext>
 {

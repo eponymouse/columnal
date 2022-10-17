@@ -25,7 +25,7 @@ import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformFunction;
+import xyz.columnal.utility.function.fx.FXPlatformFunction;
 
 public interface DimmableParent
 {

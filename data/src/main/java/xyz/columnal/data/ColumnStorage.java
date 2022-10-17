@@ -30,10 +30,8 @@ import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationRunnable;
+import xyz.columnal.utility.function.simulation.SimulationRunnable;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 

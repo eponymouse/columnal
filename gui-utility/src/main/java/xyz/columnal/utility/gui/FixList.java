@@ -32,7 +32,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 
 /**
  * A GUI list of quick-fix suggestions.  Like a ListView, but sizes to fit properly

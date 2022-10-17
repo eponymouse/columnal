@@ -18,19 +18,15 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.function.simulation;
 
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
-/**
- * Created by neil on 02/11/2016.
- */
-@FunctionalInterface
-@OnThread(Tag.Simulation)
-public interface SimulationConsumerNoError<T>
+public interface SimulationEx
 {
-    public void consume(T t);
+    @OnThread(Tag.Simulation)
+    public void run() throws UserException, InternalException;
 }

@@ -26,7 +26,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.expression.UnitExpression;
-import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 
 public class UnitEditor extends TopLevelEditor<UnitExpression, UnitLexer, CodeCompletionContext>
 {

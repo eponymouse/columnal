@@ -22,8 +22,6 @@ package xyz.columnal.gui.grid;
 
 import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
-import annotation.units.TableDataRowIndex;
-import javafx.geometry.Point2D;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -33,9 +31,9 @@ import xyz.columnal.data.CellPosition;
 import xyz.columnal.error.InternalException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformConsumer;
-import xyz.columnal.utility.FXPlatformFunction;
-import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformFunction;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 import xyz.columnal.utility.Utility;
 
 import java.util.Optional;

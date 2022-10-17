@@ -23,8 +23,7 @@ package xyz.columnal.data;
 import annotation.units.TableDataRowIndex;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import xyz.columnal.utility.ExFunction;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 
 import java.util.List;
 

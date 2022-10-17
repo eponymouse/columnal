@@ -18,19 +18,16 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.function;
 
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 
 /**
- * Created by neil on 02/11/2016.
+ * Created by neil on 30/11/2016.
  */
 @FunctionalInterface
-@OnThread(Tag.Simulation)
-public interface SimulationRunnable
+public interface ConsumerInt<A>
 {
-    public void run() throws InternalException;
+    public void accept(A a) throws InternalException;
 }

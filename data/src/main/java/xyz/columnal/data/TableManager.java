@@ -74,8 +74,8 @@ import xyz.columnal.utility.Either;
 import xyz.columnal.utility.GraphUtility;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationConsumer;
-import xyz.columnal.utility.SimulationFunctionInt;
+import xyz.columnal.utility.function.simulation.SimulationConsumer;
+import xyz.columnal.utility.function.simulation.SimulationFunctionInt;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
 

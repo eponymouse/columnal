@@ -30,19 +30,14 @@ import xyz.columnal.transformations.expression.explanation.Explanation;
 import xyz.columnal.transformations.expression.explanation.ExplanationLocation;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FunctionInt;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationSupplierInt;
+import xyz.columnal.utility.function.FunctionInt;
+import xyz.columnal.utility.function.simulation.SimulationSupplierInt;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Utility.ValueFunctionBase;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 // I want to label this class @Value but I don't seem able to.  Perhaps because it is abstract?

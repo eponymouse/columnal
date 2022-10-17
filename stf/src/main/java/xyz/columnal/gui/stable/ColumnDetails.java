@@ -25,7 +25,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.datatype.DataType;
-import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 
 public class ColumnDetails
 {

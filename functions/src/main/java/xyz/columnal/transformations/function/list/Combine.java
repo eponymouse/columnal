@@ -22,7 +22,6 @@ package xyz.columnal.transformations.function.list;
 
 import annotation.qual.Value;
 import xyz.columnal.data.datatype.DataType;
-import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
@@ -31,7 +30,7 @@ import xyz.columnal.transformations.function.FunctionDefinition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.Utility.ListEx;
 import xyz.columnal.transformations.expression.function.ValueFunction;
 

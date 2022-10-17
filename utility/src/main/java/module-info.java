@@ -4,6 +4,9 @@ module xyz.columnal.utility
     exports xyz.columnal.error;
     exports xyz.columnal.styled;
     exports xyz.columnal.utility;
+    exports xyz.columnal.utility.function.simulation;
+    exports xyz.columnal.utility.function.fx;
+    exports xyz.columnal.utility.function;
 
     requires static anns;
     requires static annsthreadchecker;

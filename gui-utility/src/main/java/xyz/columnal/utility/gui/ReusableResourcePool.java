@@ -22,11 +22,10 @@ package xyz.columnal.utility.gui;
 
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformConsumer;
-import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformSupplier;
 
 import java.util.ArrayList;
-import java.util.function.Supplier;
 
 /**
  * Allows re-use of an expensive-to-construct resource, like WebView.

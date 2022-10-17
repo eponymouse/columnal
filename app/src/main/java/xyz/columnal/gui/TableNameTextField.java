@@ -31,7 +31,7 @@ import xyz.columnal.data.TableManager;
 import xyz.columnal.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.gui.ErrorableTextField;
 

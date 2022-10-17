@@ -26,8 +26,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.framework.qual.Covariant;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
+import xyz.columnal.utility.function.ConsumerInt;
+import xyz.columnal.utility.function.ExConsumer;
+import xyz.columnal.utility.function.ExFunction;
+import xyz.columnal.utility.function.FunctionInt;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;

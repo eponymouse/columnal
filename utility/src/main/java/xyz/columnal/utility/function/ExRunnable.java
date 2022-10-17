@@ -18,16 +18,15 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.function;
 
-import threadchecker.OnThread;
-import threadchecker.Tag;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
 
 /**
- * Created by neil on 24/10/2016.
+ * A version of Runnable which throws exceptions
  */
-public interface FXPlatformConsumer<T>
+public interface ExRunnable
 {
-    @OnThread(Tag.FXPlatform)
-    public void consume(T t);
+    public void run() throws InternalException, UserException;
 }

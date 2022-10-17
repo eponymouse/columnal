@@ -34,7 +34,7 @@ import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.grid.VirtualGrid;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformBiConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformBiConsumer;
 import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.Set;

@@ -25,15 +25,12 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.geometry.Insets;
 import javafx.scene.control.ListCell;
-import javafx.scene.control.SkinBase;
 import javafx.util.Duration;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformRunnable;
-import xyz.columnal.utility.Utility;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 
 import java.util.List;
 

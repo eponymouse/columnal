@@ -18,15 +18,20 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.function.simulation;
 
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 /**
- * Created by neil on 16/11/2016.
+ * Created by neil on 02/11/2016.
  */
-public interface ExBiFunction<S, T, R>
+@FunctionalInterface
+@OnThread(Tag.Simulation)
+public interface SimulationSupplier<T>
 {
-    public R apply(S s, T t) throws UserException, InternalException;
+    @OnThread(Tag.Simulation)
+    public T get() throws InternalException, UserException;
 }

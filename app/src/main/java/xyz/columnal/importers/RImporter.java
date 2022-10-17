@@ -46,7 +46,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationConsumerNoError;
+import xyz.columnal.utility.function.simulation.SimulationConsumerNoError;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Workers;

@@ -46,7 +46,7 @@ import test.DummyManager;
 import test.gen.GenTypecheckFail.TypecheckInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.ExFunction;
+import xyz.columnal.utility.function.ExFunction;
 import xyz.columnal.utility.Pair;
 
 import java.util.ArrayList;

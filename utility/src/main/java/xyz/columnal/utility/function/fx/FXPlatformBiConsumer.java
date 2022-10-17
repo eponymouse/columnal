@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.function.fx;
 
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -26,8 +26,8 @@ import threadchecker.Tag;
 /**
  * Created by neil on 24/10/2016.
  */
-public interface FXPlatformSupplier<T>
+public interface FXPlatformBiConsumer<S, T>
 {
     @OnThread(Tag.FXPlatform)
-    public T get();
+    public void consume(S s, T t);
 }

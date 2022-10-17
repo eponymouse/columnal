@@ -28,7 +28,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.gui.dtf.Document.TrackedPosition.Bias;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 import xyz.columnal.utility.Pair;
 
 import java.util.ArrayList;

@@ -74,7 +74,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationFunctionInt;
+import xyz.columnal.utility.function.simulation.SimulationFunctionInt;
 import xyz.columnal.utility.Utility;
 
 import java.io.File;

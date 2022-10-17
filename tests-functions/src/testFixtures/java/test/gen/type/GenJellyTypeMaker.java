@@ -48,7 +48,7 @@ import test.gen.type.GenJellyTypeMaker.JellyTypeMaker;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Either;
-import xyz.columnal.utility.ExSupplier;
+import xyz.columnal.utility.function.ExSupplier;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
 

@@ -50,10 +50,10 @@ import xyz.columnal.styled.StyledCSS;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.ExSupplier;
-import xyz.columnal.utility.FXPlatformConsumer;
-import xyz.columnal.utility.FXPlatformFunction;
-import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.function.ExSupplier;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformFunction;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.TranslationUtility;
 

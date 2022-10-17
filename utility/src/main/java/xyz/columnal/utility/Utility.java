@@ -71,6 +71,12 @@ import xyz.columnal.grammar.MainParser2;
 import xyz.columnal.grammar.TableParser2;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.utility.function.ExBiFunction;
+import xyz.columnal.utility.function.ExConsumer;
+import xyz.columnal.utility.function.ExFunction;
+import xyz.columnal.utility.function.ExSupplier;
+import xyz.columnal.utility.function.FunctionInt;
+import xyz.columnal.utility.function.simulation.SimulationSupplier;
 
 import java.io.File;
 import java.io.FileInputStream;

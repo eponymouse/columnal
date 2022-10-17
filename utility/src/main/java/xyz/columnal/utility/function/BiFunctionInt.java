@@ -18,16 +18,15 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.utility;
+package xyz.columnal.utility.function;
 
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 
 /**
- * Created by neil on 30/11/2016.
+ * Created by neil on 16/11/2016.
  */
-@FunctionalInterface
-public interface ExConsumer<A>
+public interface BiFunctionInt<S, T, R>
 {
-    public void accept(A a) throws UserException, InternalException;
+    public R apply(S s, T t) throws InternalException;
 }

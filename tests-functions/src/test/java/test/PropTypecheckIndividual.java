@@ -78,7 +78,7 @@ import test.gen.type.GenDataType;
 import test.gen.GenUnit;
 import test.gen.type.GenDataTypeMaker;
 import xyz.columnal.utility.Either;
-import xyz.columnal.utility.ExFunction;
+import xyz.columnal.utility.function.ExFunction;
 import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
 
