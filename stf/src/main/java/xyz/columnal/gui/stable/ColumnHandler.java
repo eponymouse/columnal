@@ -30,8 +30,8 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.gui.dtf.DocumentTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformBiConsumer;
-import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformBiConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 
 import java.util.Collection;
 

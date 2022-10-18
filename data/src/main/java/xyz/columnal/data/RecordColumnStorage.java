@@ -22,9 +22,7 @@ package xyz.columnal.data;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
@@ -35,8 +33,8 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationRunnable;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.simulation.SimulationRunnable;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Utility.Record;
 import xyz.columnal.utility.Utility.RecordMap;
@@ -44,7 +42,6 @@ import xyz.columnal.utility.Utility.RecordMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**

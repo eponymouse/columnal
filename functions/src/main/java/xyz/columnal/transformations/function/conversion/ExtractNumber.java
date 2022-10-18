@@ -25,7 +25,6 @@ import annotation.qual.Value;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import xyz.columnal.data.datatype.DataType;
-import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
@@ -35,8 +34,8 @@ import xyz.columnal.transformations.function.FunctionDefinition;
 import xyz.columnal.transformations.function.ValueFunction1;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.Utility;
 
 public class ExtractNumber extends FunctionDefinition

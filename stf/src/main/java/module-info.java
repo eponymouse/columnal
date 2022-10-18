@@ -11,6 +11,9 @@ module xyz.columnal.stf
     requires xyz.columnal.types;
     requires xyz.columnal.parsers;
     requires xyz.columnal.utility;
+    requires xyz.columnal.utility.adt;
+    requires xyz.columnal.utility.error;
+    requires xyz.columnal.utility.functional;
     requires xyz.columnal.utility.gui;
     
 

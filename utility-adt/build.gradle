@@ -1,0 +1,6 @@
+dependencies {
+    implementation project(':utility-error')
+    implementation project(':utility-functional')
+    implementation libs.guava
+}
+description = 'utility-error'

@@ -14,6 +14,9 @@ module xyz.columnal.functions
     requires xyz.columnal.parsers;
     requires xyz.columnal.types;
     requires xyz.columnal.utility;
+    requires xyz.columnal.utility.adt;
+    requires xyz.columnal.utility.error;
+    requires xyz.columnal.utility.functional;
 
     requires ch.obermuhlner.math.big;
     requires com.google.common;

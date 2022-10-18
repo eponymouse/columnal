@@ -31,7 +31,7 @@ import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
 import test.gen.nonsenseTrans.GenNonsenseExpression;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
 import java.util.List;
 import java.util.function.Function;

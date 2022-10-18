@@ -25,7 +25,7 @@ import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.transformations.expression.function.ValueFunction;
 
 public class StringRight //extends FunctionDefinition

@@ -6,6 +6,9 @@ dependencies {
     testImplementation project(':stf')
     testImplementation project(':types')
     testImplementation project(':utility')
+    testImplementation project(':utility-adt')
+    testImplementation project(':utility-error')
+    testImplementation project(':utility-functional')
     testImplementation libs.commons.io
     testImplementation libs.commons.lang3
     testImplementation libs.guava
@@ -17,6 +20,7 @@ dependencies {
     testFixturesImplementation project(':identifiers')
     testFixturesImplementation project(':types')
     testFixturesImplementation project(':utility')
+    testFixturesImplementation project(':utility-error')
     testFixturesImplementation libs.guava
     testFixturesImplementation libs.commons.lang3
     testFixturesImplementation libs.commons.text

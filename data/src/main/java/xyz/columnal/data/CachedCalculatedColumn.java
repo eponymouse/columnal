@@ -29,9 +29,9 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.ExFunction;
-import xyz.columnal.utility.FunctionInt;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.ExFunction;
+import xyz.columnal.utility.function.FunctionInt;
 import xyz.columnal.utility.Utility;
 
 import java.util.stream.Stream;

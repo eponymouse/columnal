@@ -28,12 +28,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.unit.SingleUnit;
 import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
-import xyz.columnal.typeExp.MutVar;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.ComparableEither;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.ComparableEither;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -42,7 +41,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.TreeMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 

@@ -40,11 +40,10 @@ import xyz.columnal.grammar.UnitParser.UnbracketedUnitContext;
 import xyz.columnal.grammar.UnitParser.UnitContext;
 import xyz.columnal.loadsave.OutputBuilder;
 import xyz.columnal.typeExp.MutVar;
-import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.units.MutUnitVar;
 import xyz.columnal.typeExp.units.UnitExp;
-import xyz.columnal.utility.ComparableEither;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.ComparableEither;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.Utility;
 

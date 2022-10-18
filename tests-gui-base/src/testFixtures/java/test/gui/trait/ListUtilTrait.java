@@ -20,14 +20,12 @@
 
 package test.gui.trait;
 
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import org.testfx.api.FxRobotInterface;
 import test.gui.TFXUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformSupplier;
 import xyz.columnal.utility.Utility;
 
 import java.util.OptionalInt;

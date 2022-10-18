@@ -25,9 +25,7 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.data.datatype.DataType;
-import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.*;
@@ -38,7 +36,7 @@ import xyz.columnal.transformations.expression.type.TypeExpression;
 import xyz.columnal.transformations.expression.visitor.ExpressionVisitorFlat;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;

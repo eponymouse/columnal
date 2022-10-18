@@ -31,8 +31,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformRunnable;
-import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 import xyz.columnal.utility.TranslationUtility;
 
 @OnThread(Tag.FXPlatform)

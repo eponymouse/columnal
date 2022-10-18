@@ -23,7 +23,6 @@ package xyz.columnal.transformations.expression;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -32,15 +31,13 @@ import xyz.columnal.typeExp.TypeConcretisationError;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.ExConsumer;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.ExConsumer;
+import xyz.columnal.utility.adt.Pair;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**

@@ -29,7 +29,7 @@ import xyz.columnal.gui.lexeditor.EditorDisplay;
 import xyz.columnal.gui.lexeditor.completion.LexAutoCompleteWindow;
 import xyz.columnal.gui.lexeditor.completion.LexCompletion;
 import test.gui.util.FXApplicationTest;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.List;

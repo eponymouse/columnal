@@ -37,7 +37,7 @@ import xyz.columnal.transformations.expression.UnitExpressionIntLiteral;
 import xyz.columnal.transformations.expression.UnitRaiseExpression;
 import xyz.columnal.transformations.expression.UnitTimesExpression;
 import xyz.columnal.transformations.function.FunctionList;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;

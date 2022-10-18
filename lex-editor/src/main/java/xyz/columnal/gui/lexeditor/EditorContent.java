@@ -25,7 +25,6 @@ import annotation.units.DisplayLocation;
 import annotation.units.RawInputLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import javafx.scene.Node;
 import javafx.scene.text.Text;
@@ -39,15 +38,12 @@ import xyz.columnal.gui.lexeditor.TopLevelEditor.Focus;
 import xyz.columnal.gui.lexeditor.completion.InsertListener;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.FXPlatformConsumer;
-import xyz.columnal.utility.FXPlatformRunnable;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.OptionalInt;
 
 public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext> implements InsertListener
 {

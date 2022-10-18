@@ -43,7 +43,7 @@ import test.gen.type.GenTypeAndValueGen.TypeAndValueGen;
 import test.gen.UnicodeStringGenerator;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.transformations.expression.function.ValueFunction;
 
 import java.util.Random;

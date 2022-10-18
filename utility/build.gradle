@@ -1,5 +1,8 @@
 dependencies {
     implementation project(':parsers')
+    implementation project(':utility-adt')
+    implementation project(':utility-error')
+    implementation project(':utility-functional')
     implementation libs.guava
     //implementation 'com.google.code.findbugs:jsr305:3.0.2'
     implementation libs.antlr
@@ -9,16 +12,5 @@ dependencies {
     implementation libs.log4j.api
     implementation libs.log4j.core
     implementation libs.stringsimilarity
-    
-    testImplementation libs.bundles.junitWithQuickcheck
-    testImplementation libs.testfx.core
-    testImplementation libs.testfx.junit
-    testImplementation 'org.testfx:openjfx-monocle:jdk-12.0.1+2'
-    testAnnotationProcessor project(':anns')
-    testAnnotationProcessor project(':anns-threadchecker')
-    testAnnotationProcessor project(':threadchecker')
-    testCompileOnly project(':anns')
-    testCompileOnly project(':anns-threadchecker')
-    testCompileOnly project(':threadchecker')
 }
 description = 'utility'

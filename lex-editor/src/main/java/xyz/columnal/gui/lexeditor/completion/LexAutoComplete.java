@@ -29,7 +29,6 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import xyz.columnal.gui.lexeditor.EditorDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformConsumer;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.FXUtility;
 

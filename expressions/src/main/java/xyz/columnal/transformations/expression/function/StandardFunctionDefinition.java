@@ -34,9 +34,9 @@ import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.units.MutUnitVar;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 
 import java.util.Map;
 

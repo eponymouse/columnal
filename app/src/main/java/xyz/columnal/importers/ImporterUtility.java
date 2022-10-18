@@ -27,7 +27,6 @@ import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.units.qual.UnitsBottom;
-import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableColumn;
 import xyz.columnal.data.EditableRecordSet;
 import xyz.columnal.data.MemoryBooleanColumn;
@@ -53,8 +52,8 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.TaggedValue;
 import xyz.columnal.utility.Utility;
 

@@ -28,11 +28,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.gui.grid.CellSelection;
 import xyz.columnal.gui.grid.GridArea;
-import xyz.columnal.styled.StyledString;
 import test.gen.GenGridAreaList.GridAreaList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 
 public class GenGridAreaList extends Generator<GridAreaList>
 {

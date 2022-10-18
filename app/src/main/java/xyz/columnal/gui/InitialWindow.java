@@ -47,7 +47,7 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.gui.Main.UpgradeInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.DimmableParent.Undimmed;
@@ -58,7 +58,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 /**

@@ -30,7 +30,7 @@ import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.FieldAccessExpression;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility.RecordMap;
 
 import java.util.ArrayList;

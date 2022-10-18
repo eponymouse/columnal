@@ -37,21 +37,17 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
-import xyz.columnal.gui.lexeditor.completion.LexCompletionList;
 import xyz.columnal.gui.lexeditor.completion.LexAutoComplete.LexSelectionBehaviour;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformConsumer;
-import xyz.columnal.utility.FXPlatformRunnable;
-import xyz.columnal.utility.FXPlatformSupplier;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
+import xyz.columnal.utility.function.fx.FXPlatformSupplier;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.ResourceUtility;
-import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.FXUtility;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
 
 

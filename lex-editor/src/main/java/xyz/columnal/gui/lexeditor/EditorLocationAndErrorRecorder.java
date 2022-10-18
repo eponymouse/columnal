@@ -52,9 +52,9 @@ import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.FXPlatformFunction;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.fx.FXPlatformFunction;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;

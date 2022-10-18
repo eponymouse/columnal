@@ -48,7 +48,7 @@ import test.gui.trait.TextFieldTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import static org.junit.Assert.assertEquals;

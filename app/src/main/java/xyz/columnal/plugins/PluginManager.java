@@ -26,8 +26,8 @@ import xyz.columnal.log.Log;
 import xyz.columnal.data.PluggedContentHandler;
 import xyz.columnal.id.SaveTag;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationConsumer;
+import xyz.columnal.utility.adt.Pair;
+import xyz.columnal.utility.function.simulation.SimulationConsumer;
 import xyz.columnal.utility.Utility;
 
 import java.io.File;

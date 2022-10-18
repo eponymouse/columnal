@@ -26,11 +26,11 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.grammar.DataParser;
 import xyz.columnal.grammar.DataParser2;
-import xyz.columnal.utility.BiFunctionInt;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.ExBiConsumer;
-import xyz.columnal.utility.ExFunction;
-import xyz.columnal.utility.SimulationFunctionInt;
+import xyz.columnal.utility.function.BiFunctionInt;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.ExBiConsumer;
+import xyz.columnal.utility.function.ExFunction;
+import xyz.columnal.utility.function.simulation.SimulationFunctionInt;
 import xyz.columnal.utility.Utility;
 
 public class ColumnMaker<C extends EditableColumn, V> implements SimulationFunctionInt<RecordSet, EditableColumn>

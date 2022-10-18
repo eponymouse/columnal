@@ -37,12 +37,11 @@ import xyz.columnal.transformations.expression.TypeState;
 import xyz.columnal.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformSupplierInt;
+import xyz.columnal.utility.function.fx.FXPlatformSupplierInt;
 import xyz.columnal.utility.gui.DialogPaneWithSideButtons;
 import xyz.columnal.utility.gui.DoubleOKLightDialog;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.GUI;
-import xyz.columnal.utility.gui.LightDialog;
 
 import java.util.Optional;
 

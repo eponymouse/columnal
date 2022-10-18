@@ -81,9 +81,9 @@ import xyz.columnal.typeExp.MutVar;
 import xyz.columnal.typeExp.TypeCons;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.units.MutUnitVar;
-import xyz.columnal.utility.ComparableEither;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.ComparableEither;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.Arrays;

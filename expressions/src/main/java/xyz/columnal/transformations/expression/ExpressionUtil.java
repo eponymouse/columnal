@@ -110,10 +110,10 @@ import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.ExFunction;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.ExFunction;
 import xyz.columnal.utility.IdentifierUtility;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
 

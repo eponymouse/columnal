@@ -31,8 +31,8 @@ import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationFunctionInt;
+import xyz.columnal.utility.adt.Pair;
+import xyz.columnal.utility.function.simulation.SimulationFunctionInt;
 
 import java.util.function.Predicate;
 

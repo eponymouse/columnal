@@ -44,7 +44,7 @@ import test.gen.GenDate;
 import test.gen.GenZoneId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.transformations.expression.function.ValueFunction;
 
 import java.time.LocalDate;

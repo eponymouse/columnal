@@ -26,15 +26,14 @@ import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import xyz.columnal.id.TableAndColumnRenames;
-import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.explanation.ExplanationLocation;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.TypeExp.TypeError;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;

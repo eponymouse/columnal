@@ -30,12 +30,8 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.grammar.GrammarUtility;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.ResourceUtility;
+import xyz.columnal.utility.adt.Pair;
 
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.concurrent.ExecutionException;

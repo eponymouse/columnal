@@ -22,13 +22,11 @@ package xyz.columnal.exporters;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
-import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.Table;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
 
 import java.io.File;
 

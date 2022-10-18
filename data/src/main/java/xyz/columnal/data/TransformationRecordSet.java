@@ -22,8 +22,8 @@ package xyz.columnal.data;
 
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import xyz.columnal.utility.SimulationFunction;
-import xyz.columnal.utility.SimulationFunctionInt;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
+import xyz.columnal.utility.function.simulation.SimulationFunctionInt;
 
 import java.util.List;
 

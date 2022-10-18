@@ -7,6 +7,9 @@ apply plugin: 'java'
 
 dependencies {
     implementation project(':utility')
+    implementation project(':utility-adt')
+    implementation project(':utility-error')
+    implementation project(':utility-functional')
     implementation project(':gui-utility')
     implementation project(':parsers')
     implementation project(':data')

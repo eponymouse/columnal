@@ -23,7 +23,6 @@ package test;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.embed.swing.JFXPanel;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -38,7 +37,7 @@ import test.gen.GenEditableColumn;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.SimulationRunnable;
+import xyz.columnal.utility.function.simulation.SimulationRunnable;
 import xyz.columnal.utility.Utility;
 
 import javax.swing.SwingUtilities;

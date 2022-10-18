@@ -32,18 +32,16 @@ import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.Token;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.grammar.ExpressionLexer;
-import xyz.columnal.grammar.ExpressionParser.IdentContext;
 import xyz.columnal.grammar.UnitLexer;
 import xyz.columnal.grammar.UnitParser.SingleUnitContext;
 import xyz.columnal.utility.Utility.DescriptiveErrorListener;
+import xyz.columnal.utility.adt.Pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class IdentifierUtility
 {

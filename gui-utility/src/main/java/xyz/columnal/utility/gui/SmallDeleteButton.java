@@ -20,7 +20,6 @@
 
 package xyz.columnal.utility.gui;
 
-import javafx.css.PseudoClass;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Circle;
@@ -30,8 +29,8 @@ import javafx.scene.shape.Path;
 import javafx.scene.shape.Shape;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformConsumer;
-import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 
 /**
  * A cross shape, like the close on a web browser tab header

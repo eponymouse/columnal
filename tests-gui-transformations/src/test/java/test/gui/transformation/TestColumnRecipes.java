@@ -72,8 +72,8 @@ import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.TaggedValue;
 import xyz.columnal.utility.Utility;
 

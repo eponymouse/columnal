@@ -28,7 +28,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.Utility;
 
 /**

@@ -87,9 +87,9 @@ import test.gui.trait.TextFieldTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.IdentifierUtility;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.FXUtility;
 

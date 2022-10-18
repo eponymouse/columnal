@@ -61,7 +61,7 @@ import test.gui.trait.AutoCompleteTrait;
 import test.gui.trait.PopupTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.SimulationSupplier;
+import xyz.columnal.utility.function.simulation.SimulationSupplier;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.FXUtility;
 

@@ -6,6 +6,9 @@ dependencies {
     testImplementation project(":transformations")
     testImplementation project(":types")
     testImplementation project(":utility")
+    testImplementation project(":utility-adt")
+    testImplementation project(":utility-error")
+    testImplementation project(":utility-functional")
     testImplementation project(":xml")
     testImplementation libs.guava
     testImplementation libs.streamex
@@ -17,6 +20,9 @@ dependencies {
     testFixturesImplementation project(":transformations")
     testFixturesImplementation project(":types")
     testFixturesImplementation project(":utility")
+    testFixturesImplementation project(":utility-adt")
+    testFixturesImplementation project(":utility-error")
+    testFixturesImplementation project(":utility-functional")
     testFixturesImplementation libs.guava
     testFixturesImplementation libs.streamex
 

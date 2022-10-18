@@ -32,7 +32,7 @@ import xyz.columnal.id.TableId;
 import xyz.columnal.log.Log;
 import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.Expression.ColumnLookup;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
 import java.util.stream.Stream;
 

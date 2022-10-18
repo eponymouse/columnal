@@ -22,6 +22,7 @@ package xyz.columnal.utility;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import xyz.columnal.utility.adt.Pair;
 
 public class ParseProgress
 {

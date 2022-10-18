@@ -34,7 +34,7 @@ import xyz.columnal.transformations.expression.visitor.ExpressionVisitor;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.TypeExp.TypeError;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.Utility;
 
 import java.util.List;

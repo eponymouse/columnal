@@ -25,7 +25,6 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import xyz.columnal.data.datatype.ProgressListener;;
@@ -36,8 +35,8 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationRunnable;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.simulation.SimulationRunnable;
 import xyz.columnal.utility.Utility;
 
 import java.math.BigDecimal;

@@ -23,15 +23,12 @@ package xyz.columnal.importers;
 import com.google.common.collect.ImmutableList;
 import javafx.stage.Window;
 import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.DataSource;
 import xyz.columnal.data.TableManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformConsumer;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationConsumerNoError;
+import xyz.columnal.utility.function.simulation.SimulationConsumerNoError;
 
 import java.io.File;
 import java.net.URL;

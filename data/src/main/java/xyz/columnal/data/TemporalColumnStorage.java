@@ -32,8 +32,8 @@ import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.DumbObjectPool;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationRunnable;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.simulation.SimulationRunnable;
 import xyz.columnal.utility.Utility;
 
 import java.time.temporal.TemporalAccessor;

@@ -29,8 +29,8 @@ import xyz.columnal.id.ColumnId;
 import xyz.columnal.gui.dtf.ReadOnlyDocument;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformBiConsumer;
-import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformBiConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 
 public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
 {

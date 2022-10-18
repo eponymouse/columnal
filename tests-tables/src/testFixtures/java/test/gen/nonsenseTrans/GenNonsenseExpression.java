@@ -48,9 +48,9 @@ import xyz.columnal.transformations.expression.MatchExpression.MatchClause;
 import xyz.columnal.transformations.function.FunctionList;
 import test.DummyManager;
 import test.gen.GenUnit;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.ExSupplier;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.ExSupplier;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;

@@ -21,7 +21,6 @@
 package xyz.columnal.transformations.function.text;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.TypeManager;
@@ -33,11 +32,10 @@ import xyz.columnal.transformations.function.FunctionDefinition;
 import xyz.columnal.transformations.function.ValueFunction2;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Utility.ListEx;
-import xyz.columnal.utility.Utility.ListExList;
 
 import java.util.regex.Pattern;
 

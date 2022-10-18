@@ -29,12 +29,11 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.gui.stable.EditorKitCache;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformConsumer;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.FXUtility;
 

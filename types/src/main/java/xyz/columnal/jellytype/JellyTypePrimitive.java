@@ -38,8 +38,7 @@ import xyz.columnal.loadsave.OutputBuilder;
 import xyz.columnal.typeExp.MutVar;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.units.MutUnitVar;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Utility;
+import xyz.columnal.utility.adt.Either;
 
 import java.util.Objects;
 import java.util.function.Consumer;

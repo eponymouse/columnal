@@ -27,7 +27,7 @@ import xyz.columnal.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.id.ColumnId;
-import xyz.columnal.utility.SimulationRunnable;
+import xyz.columnal.utility.function.simulation.SimulationRunnable;
 
 /**
  * Created by neil on 29/05/2017.

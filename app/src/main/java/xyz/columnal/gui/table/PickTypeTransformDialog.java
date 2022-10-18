@@ -32,7 +32,7 @@ import xyz.columnal.gui.table.PickTypeTransformDialog.TypeTransform;
 import xyz.columnal.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.function.fx.FXPlatformSupplier;
 import xyz.columnal.utility.gui.DialogPaneWithSideButtons;
 import xyz.columnal.utility.gui.DimmableParent;
 import xyz.columnal.utility.gui.FXUtility;

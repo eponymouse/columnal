@@ -35,7 +35,7 @@ import xyz.columnal.data.TableManager;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.gui.MainWindow;
 import xyz.columnal.id.TableId;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.gui.FXUtility;
 
 import java.io.File;

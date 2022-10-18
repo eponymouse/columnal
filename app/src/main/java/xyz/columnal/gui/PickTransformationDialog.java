@@ -32,11 +32,10 @@ import xyz.columnal.transformations.TransformationInfo;
 import xyz.columnal.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.gui.DimmableParent;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.LightDialog;
-import xyz.columnal.utility.gui.ScrollPaneFill;
 
 import java.util.Optional;
 

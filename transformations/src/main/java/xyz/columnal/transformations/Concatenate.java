@@ -49,12 +49,12 @@ import threadchecker.Tag;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.id.TableId;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.FXPlatformSupplier;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.fx.FXPlatformSupplier;
 import xyz.columnal.utility.IdentifierUtility;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationFunction;
-import xyz.columnal.utility.SimulationSupplier;
+import xyz.columnal.utility.adt.Pair;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
+import xyz.columnal.utility.function.simulation.SimulationSupplier;
 import xyz.columnal.utility.Utility;
 
 import java.io.File;

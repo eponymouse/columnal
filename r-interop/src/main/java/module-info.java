@@ -8,6 +8,9 @@ module xyz.columnal.rinterop
     requires xyz.columnal.identifiers;
     requires xyz.columnal.types;
     requires xyz.columnal.utility;
+    requires xyz.columnal.utility.adt;
+    requires xyz.columnal.utility.error;
+    requires xyz.columnal.utility.functional;
     
     requires com.google.common;
     requires org.apache.commons.io;

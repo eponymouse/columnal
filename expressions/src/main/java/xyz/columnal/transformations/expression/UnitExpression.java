@@ -38,13 +38,10 @@ import xyz.columnal.jellytype.JellyUnit;
 import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.ComparableEither;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.ComparableEither;
 import xyz.columnal.utility.IdentifierUtility;
-import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
 
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 

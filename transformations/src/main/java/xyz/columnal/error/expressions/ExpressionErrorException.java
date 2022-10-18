@@ -32,7 +32,7 @@ import xyz.columnal.transformations.expression.TypeState;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformSupplierInt;
+import xyz.columnal.utility.function.fx.FXPlatformSupplierInt;
 
 public class ExpressionErrorException extends UserException
 {

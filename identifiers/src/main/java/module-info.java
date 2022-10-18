@@ -5,7 +5,8 @@ module xyz.columnal.identifiers
     requires static anns;
     requires static annsthreadchecker;
     requires xyz.columnal.parsers;
-    requires xyz.columnal.utility;
+    requires xyz.columnal.utility.adt;
+    requires xyz.columnal.utility.error;
 
     requires com.google.common;
     requires javafx.graphics;

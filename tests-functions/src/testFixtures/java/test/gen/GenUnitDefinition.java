@@ -29,8 +29,8 @@ import org.sosy_lab.common.rationals.Rational;
 import test.gen.GenUnitDefinition.UnitDetails;
 import xyz.columnal.data.unit.SingleUnit;
 import xyz.columnal.data.unit.UnitDeclaration;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

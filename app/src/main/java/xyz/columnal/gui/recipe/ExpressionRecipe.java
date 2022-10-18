@@ -28,7 +28,6 @@ import xyz.columnal.gui.lexeditor.ExpressionEditor.ColumnPicker;
 import xyz.columnal.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformSupplier;
 import xyz.columnal.utility.TranslationUtility;
 
 @OnThread(Tag.FXPlatform)

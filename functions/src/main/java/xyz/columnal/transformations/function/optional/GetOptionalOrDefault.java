@@ -29,12 +29,11 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.function.ValueFunction;
 import xyz.columnal.transformations.function.FunctionDefinition;
-import xyz.columnal.transformations.function.ValueFunction1;
 import xyz.columnal.transformations.function.ValueFunction2;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.TaggedValue;
 
 public class GetOptionalOrDefault extends FunctionDefinition

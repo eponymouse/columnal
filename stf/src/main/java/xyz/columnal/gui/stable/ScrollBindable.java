@@ -20,13 +20,9 @@
 
 package xyz.columnal.gui.stable;
 
-import annotation.units.AbsColIndex;
-import annotation.units.AbsRowIndex;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.gui.stable.ScrollGroup.Token;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
 
 // An item which can have its scrolling bound to VirtScrollStrTextGrid
 @OnThread(Tag.FXPlatform)

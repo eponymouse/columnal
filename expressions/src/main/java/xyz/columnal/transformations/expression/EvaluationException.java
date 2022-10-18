@@ -31,7 +31,6 @@ import xyz.columnal.transformations.expression.explanation.Explanation;
 import xyz.columnal.transformations.expression.explanation.Explanation.ExecutionType;
 import xyz.columnal.transformations.expression.explanation.ExplanationLocation;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.Set;

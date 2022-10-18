@@ -37,16 +37,14 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.jellytype.JellyType.UnknownTypeException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.TaggedValue;
-import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Utility.ListEx;
 import xyz.columnal.utility.Utility.Record;
 
 import java.time.temporal.TemporalAccessor;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 

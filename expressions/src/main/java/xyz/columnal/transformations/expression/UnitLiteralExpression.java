@@ -27,7 +27,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.id.TableAndColumnRenames;
 import xyz.columnal.data.datatype.DataType.TagType;
 import xyz.columnal.data.datatype.DataTypeUtility;
-import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -36,8 +35,8 @@ import xyz.columnal.transformations.expression.UnitExpression.UnitLookupExceptio
 import xyz.columnal.transformations.expression.visitor.ExpressionVisitor;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.TaggedValue;
 
 import java.util.Objects;

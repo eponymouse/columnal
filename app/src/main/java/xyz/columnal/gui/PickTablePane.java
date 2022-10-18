@@ -37,7 +37,7 @@ import xyz.columnal.gui.AutoComplete.SimpleCompletion;
 import xyz.columnal.gui.AutoComplete.WhitespacePolicy;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.Instruction;

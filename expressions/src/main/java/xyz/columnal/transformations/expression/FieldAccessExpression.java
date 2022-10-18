@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.TableAndColumnRenames;
-import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -42,7 +41,7 @@ import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Utility.Record;
 

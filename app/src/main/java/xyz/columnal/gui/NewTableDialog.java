@@ -32,7 +32,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import xyz.columnal.gui.NewTableDialog.DataOrTransform;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.gui.DimmableParent;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.GUI;

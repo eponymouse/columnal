@@ -1,25 +1,18 @@
 dependencies {
-    implementation project(':app')
-    implementation project(':data')
-    implementation project(':expressions')
-    implementation project(':functions')
-    implementation project(':gui-utility')
-    implementation project(':identifiers')
-    implementation project(':lex-editor')
-    implementation project(':parsers')
-    implementation project(':r-interop')
-    implementation project(':stf')
-    implementation project(':transformations')
-    implementation project(':types')
-    implementation project(':utility')
+    testImplementation project(':app')
+    testImplementation project(':data')
+    testImplementation project(':expressions')
+    testImplementation project(':functions')
+    testImplementation project(':identifiers')
+    testImplementation project(':stf')
+    testImplementation project(':transformations')
+    testImplementation project(':types')
+    testImplementation project(':utility')
+    testImplementation project(':utility-adt')
+    testImplementation project(':utility-error')
+    testImplementation project(':utility-functional')
+    testImplementation libs.guava
     testImplementation libs.hamcrest
-    implementation libs.commons.io
-    implementation libs.poi.ooxml
-    implementation libs.guava
-    implementation libs.streamex
-    implementation libs.javaSMT
-    implementation libs.commons.lang3
-    implementation libs.controlsfx
     testImplementation libs.testfx.core
     testImplementation libs.testfx.junit
 

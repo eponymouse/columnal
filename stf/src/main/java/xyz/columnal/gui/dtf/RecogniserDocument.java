@@ -20,8 +20,6 @@
 
 package xyz.columnal.gui.dtf;
 
-import annotation.qual.ImmediateValue;
-import annotation.qual.UnknownIfValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import javafx.application.Platform;
@@ -39,17 +37,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.gui.dtf.Recogniser.ErrorDetails;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.FXPlatformConsumer;
-import xyz.columnal.utility.FXPlatformFunction;
-import xyz.columnal.utility.FXPlatformRunnable;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformFunction;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.ParseProgress;
 import xyz.columnal.gui.dtf.Recogniser.SuccessDetails;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.ParseProgress;
-import xyz.columnal.utility.SimulationSupplierInt;
+import xyz.columnal.utility.function.simulation.SimulationSupplierInt;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.Workers.Priority;

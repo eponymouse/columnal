@@ -35,7 +35,7 @@ import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.typeExp.units.MutUnitVar;
 import xyz.columnal.typeExp.units.UnitExp;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Utility.EpsilonType;
 

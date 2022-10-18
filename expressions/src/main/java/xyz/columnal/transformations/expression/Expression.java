@@ -61,8 +61,8 @@ import xyz.columnal.transformations.expression.visitor.ExpressionVisitor;
 import xyz.columnal.transformations.expression.visitor.ExpressionVisitorStream;
 import xyz.columnal.typeExp.ExpressionBase;
 import xyz.columnal.typeExp.TypeExp;
-import xyz.columnal.utility.ExFunction;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.function.ExFunction;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.math.BigDecimal;

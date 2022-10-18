@@ -31,7 +31,7 @@ import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.table.HeadedDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 
 public class EntireTableSelection implements CellSelection
 {

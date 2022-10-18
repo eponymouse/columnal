@@ -22,8 +22,7 @@ package xyz.columnal.gui.lexeditor;
 
 import annotation.units.CanonicalLocation;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.styled.StyledShowable;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
 import java.util.ArrayList;
 

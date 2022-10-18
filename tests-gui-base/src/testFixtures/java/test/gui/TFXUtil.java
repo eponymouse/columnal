@@ -53,12 +53,12 @@ import xyz.columnal.gui.grid.VirtualGrid;
 import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.id.TableId;
 import xyz.columnal.log.Log;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.FXPlatformRunnable;
-import xyz.columnal.utility.FXPlatformSupplier;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationRunnable;
-import xyz.columnal.utility.SimulationSupplier;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
+import xyz.columnal.utility.function.fx.FXPlatformSupplier;
+import xyz.columnal.utility.adt.Pair;
+import xyz.columnal.utility.function.simulation.SimulationRunnable;
+import xyz.columnal.utility.function.simulation.SimulationSupplier;
 import xyz.columnal.utility.Workers;
 import xyz.columnal.utility.gui.FXUtility;
 

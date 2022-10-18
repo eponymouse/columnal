@@ -20,7 +20,7 @@
 
 package xyz.columnal.gui.stable;
 
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
 public class ScrollResult<T extends Integer>
 {

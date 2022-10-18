@@ -29,7 +29,7 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.styled.CommonStyles;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 
 /**
  * Named MutVar after the Sheard paper.  Essentially, any time there

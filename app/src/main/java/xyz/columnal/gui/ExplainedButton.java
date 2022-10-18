@@ -35,7 +35,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 import xyz.columnal.utility.ResourceUtility;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.GUI;

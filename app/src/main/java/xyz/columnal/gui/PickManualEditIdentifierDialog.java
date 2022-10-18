@@ -38,7 +38,7 @@ import xyz.columnal.gui.AutoComplete.CompletionListener;
 import xyz.columnal.gui.AutoComplete.WhitespacePolicy;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.IdentifierUtility;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.gui.ErrorableLightDialog;

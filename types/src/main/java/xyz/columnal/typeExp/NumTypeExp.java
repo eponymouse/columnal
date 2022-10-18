@@ -30,7 +30,7 @@ import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.typeExp.units.UnitExp;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 
 import java.util.Objects;
 

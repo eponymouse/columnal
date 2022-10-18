@@ -20,24 +20,16 @@
 
 package xyz.columnal.gui.stable;
 
-import annotation.units.AbsColIndex;
-import annotation.units.AbsRowIndex;
 import com.google.common.collect.ImmutableList;
-import javafx.beans.binding.IntegerExpression;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.input.ScrollEvent;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.units.qual.A;
 import xyz.columnal.gui.stable.SmoothScroller.ScrollClamp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformBiFunction;
-import xyz.columnal.utility.FXPlatformFunction;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.IdentityHashMap;

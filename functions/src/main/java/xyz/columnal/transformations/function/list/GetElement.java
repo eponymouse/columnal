@@ -22,9 +22,6 @@ package xyz.columnal.transformations.function.list;
 
 import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
-import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.transformations.expression.explanation.Explanation;
 import xyz.columnal.transformations.expression.explanation.ExplanationLocation;
 import xyz.columnal.transformations.expression.function.ValueFunction;
 import xyz.columnal.data.datatype.DataType;
@@ -34,14 +31,10 @@ import xyz.columnal.data.unit.Unit;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.function.FunctionDefinition;
-import threadchecker.OnThread;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Utility.ListEx;
-
-import java.util.stream.Collectors;
 
 /**
  * Created by neil on 17/01/2017.

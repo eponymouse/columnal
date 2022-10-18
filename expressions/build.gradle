@@ -2,7 +2,10 @@ dependencies {
     implementation project(':identifiers')
     implementation project(':parsers')
     implementation project(':types')
-    implementation project(':utility')    
+    implementation project(':utility')
+    implementation project(':utility-adt')
+    implementation project(':utility-error')
+    implementation project(':utility-functional')
     implementation libs.javaSMT
     implementation libs.guava
     implementation libs.commons.lang3

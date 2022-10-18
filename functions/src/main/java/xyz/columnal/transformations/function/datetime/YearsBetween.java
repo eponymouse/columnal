@@ -31,8 +31,8 @@ import xyz.columnal.transformations.expression.function.ValueFunction;
 import xyz.columnal.transformations.function.FunctionDefinition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -40,7 +40,6 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
-import java.time.temporal.TemporalField;
 
 public class YearsBetween extends FunctionDefinition
 {

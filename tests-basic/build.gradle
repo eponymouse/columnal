@@ -1,12 +1,16 @@
 dependencies {
     testImplementation project(":types")
     testImplementation project(":utility")
+    testImplementation project(":utility-error")
     testImplementation libs.javaSMT
 
     testFixturesImplementation project(":identifiers")
     testFixturesImplementation project(":parsers")
     testFixturesImplementation project(":types") // For DataTypeUtility
     testFixturesImplementation project(":utility")
+    testFixturesImplementation project(":utility-adt")
+    testFixturesImplementation project(":utility-error")
+    testFixturesImplementation project(":utility-functional")
     testFixturesImplementation libs.guava
     testFixturesImplementation libs.javaSMT
 }

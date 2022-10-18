@@ -47,8 +47,8 @@ import xyz.columnal.transformations.expression.Expression.ColumnLookup;
 import xyz.columnal.transformations.expression.IdentExpression;
 import xyz.columnal.transformations.expression.QuickFix;
 import xyz.columnal.transformations.expression.QuickFix.QuickFixAction;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationConsumer;
+import xyz.columnal.utility.adt.Pair;
+import xyz.columnal.utility.function.simulation.SimulationConsumer;
 
 import java.util.Objects;
 import java.util.function.Function;

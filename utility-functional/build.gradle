@@ -1,0 +1,5 @@
+dependencies {
+    implementation project(':utility-error')
+    implementation libs.guava // For checker stubs rather than the actual module
+}
+description = 'utility-functional'

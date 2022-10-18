@@ -33,8 +33,8 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.typeExp.units.MutUnitVar;
 import xyz.columnal.typeExp.units.UnitExp;
 import test.gen.GenUnit;
-import xyz.columnal.utility.ExConsumer;
-import xyz.columnal.utility.ExRunnable;
+import xyz.columnal.utility.function.ExConsumer;
+import xyz.columnal.utility.function.ExRunnable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

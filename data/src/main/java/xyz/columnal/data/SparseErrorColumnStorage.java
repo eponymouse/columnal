@@ -33,8 +33,8 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.SimulationRunnable;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.simulation.SimulationRunnable;
 
 import java.util.ArrayList;
 import java.util.HashMap;

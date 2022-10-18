@@ -22,16 +22,14 @@ package xyz.columnal.gui.dtf.recognisers;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.ImmediateValue;
-import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.gui.dtf.Recogniser;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.IdentifierUtility;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.ParseProgress;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Utility.Record;

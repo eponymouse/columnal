@@ -20,14 +20,11 @@
 
 package xyz.columnal.data.unit;
 
-import annotation.identifier.qual.UnitIdentifier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 /**

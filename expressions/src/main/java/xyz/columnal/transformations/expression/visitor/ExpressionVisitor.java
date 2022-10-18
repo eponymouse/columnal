@@ -25,9 +25,7 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.id.TableId;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import xyz.columnal.data.datatype.TypeManager.TagInfo;
 import xyz.columnal.transformations.expression.AddSubtractExpression;
 import xyz.columnal.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import xyz.columnal.transformations.expression.AndExpression;
@@ -66,8 +64,8 @@ import xyz.columnal.transformations.expression.UnitExpression;
 import xyz.columnal.transformations.expression.UnitLiteralExpression;
 import xyz.columnal.transformations.expression.type.TypeExpression;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.adt.Pair;
 
 import java.time.temporal.TemporalAccessor;
 

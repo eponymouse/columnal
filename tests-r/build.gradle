@@ -7,6 +7,9 @@ dependencies {
     testImplementation project(":transformations")
     testImplementation project(":types")
     testImplementation project(":utility")
+    testImplementation project(":utility-adt")
+    testImplementation project(":utility-error")
+    testImplementation project(":utility-functional")
     testImplementation project(":xml")
     testImplementation libs.guava
     testImplementation libs.commons.io

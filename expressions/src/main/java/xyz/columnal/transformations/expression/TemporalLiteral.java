@@ -29,13 +29,12 @@ import xyz.columnal.data.datatype.DataType.DateTimeInfo;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.data.datatype.DataTypeUtility;
 import xyz.columnal.data.datatype.DataTypeUtility.StringView;
-import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.visitor.ExpressionVisitor;
 import xyz.columnal.typeExp.TypeExp;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Objects;

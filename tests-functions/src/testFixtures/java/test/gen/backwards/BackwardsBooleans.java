@@ -37,7 +37,7 @@ import xyz.columnal.transformations.expression.Expression;
 import xyz.columnal.transformations.expression.NotEqualExpression;
 import xyz.columnal.transformations.expression.OrExpression;
 import xyz.columnal.transformations.function.FunctionList;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;

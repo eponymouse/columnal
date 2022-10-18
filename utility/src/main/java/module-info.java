@@ -1,14 +1,16 @@
 module xyz.columnal.utility
 {
     exports xyz.columnal.log;
-    exports xyz.columnal.error;
-    exports xyz.columnal.styled;
     exports xyz.columnal.utility;
+    exports xyz.columnal.error.parse;
 
     requires static anns;
     requires static annsthreadchecker;
     requires static org.checkerframework.checker.qual;
     requires xyz.columnal.parsers;
+    requires xyz.columnal.utility.adt;
+    requires xyz.columnal.utility.error;
+    requires xyz.columnal.utility.functional;
 
     requires com.google.common;
     requires javafx.base;

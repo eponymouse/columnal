@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableList;
 import javafx.scene.text.Text;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.id.TableAndColumnRenames;
-import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.data.unit.UnitManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
@@ -35,7 +34,7 @@ import xyz.columnal.styled.StyledString.Builder;
 import xyz.columnal.styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.Random;

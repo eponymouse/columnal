@@ -29,7 +29,6 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -79,8 +78,8 @@ import test.gui.trait.ScreenshotTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformConsumer;
-import xyz.columnal.utility.SimulationConsumer;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
+import xyz.columnal.utility.function.simulation.SimulationConsumer;
 import xyz.columnal.utility.TaggedValue;
 import xyz.columnal.utility.Utility;
 

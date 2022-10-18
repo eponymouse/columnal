@@ -26,7 +26,7 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import xyz.columnal.utility.Either;
+import xyz.columnal.utility.adt.Either;
 
 import java.util.function.Function;
 

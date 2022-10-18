@@ -7,6 +7,7 @@ module xyz.columnal.app
     requires xyz.columnal.data;
     requires xyz.columnal.expressions;
     requires xyz.columnal.functions;
+    requires xyz.columnal.utility.adt;
     requires xyz.columnal.utility.gui;
     requires xyz.columnal.identifiers;
     requires xyz.columnal.lexeditor;
@@ -16,6 +17,8 @@ module xyz.columnal.app
     requires xyz.columnal.transformations;
     requires xyz.columnal.types;
     requires xyz.columnal.utility;
+    requires xyz.columnal.utility.error;
+    requires xyz.columnal.utility.functional;
     
     requires java.desktop;
     requires javafx.base;

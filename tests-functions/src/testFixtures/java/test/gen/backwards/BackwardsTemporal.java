@@ -33,7 +33,7 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.expression.DivideExpression;
 import xyz.columnal.transformations.expression.NumericLiteral;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

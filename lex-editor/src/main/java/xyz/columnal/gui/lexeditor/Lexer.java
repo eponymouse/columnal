@@ -39,9 +39,9 @@ import xyz.columnal.gui.lexeditor.completion.LexCompletionGroup;
 import xyz.columnal.styled.StyledCSS;
 import xyz.columnal.styled.StyledShowable;
 import xyz.columnal.styled.StyledString;
-import xyz.columnal.utility.FXPlatformBiFunction;
+import xyz.columnal.utility.function.fx.FXPlatformBiFunction;
 import xyz.columnal.utility.IdentifierUtility.Consumed;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.Utility;
 
 import java.util.ArrayList;

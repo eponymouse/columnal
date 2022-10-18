@@ -30,7 +30,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.controlsfx.control.SegmentedButton;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.TranslationUtility;
 
 import java.util.IdentityHashMap;

@@ -22,8 +22,8 @@ package xyz.columnal.plugins;
 
 import com.google.common.collect.ImmutableMap;
 import xyz.columnal.id.SaveTag;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationConsumer;
+import xyz.columnal.utility.adt.Pair;
+import xyz.columnal.utility.function.simulation.SimulationConsumer;
 
 public abstract class Plugin
 {

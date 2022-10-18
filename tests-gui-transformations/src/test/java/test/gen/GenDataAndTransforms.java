@@ -45,11 +45,11 @@ import test.DummyManager;
 import test.gen.type.GenDataTypeMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeAndValueMaker;
 import test.gen.type.GenDataTypeMaker.DataTypeMaker;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.ExSupplier;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.ExSupplier;
 import xyz.columnal.utility.IdentifierUtility;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationFunction;
+import xyz.columnal.utility.adt.Pair;
+import xyz.columnal.utility.function.simulation.SimulationFunction;
 
 import java.util.ArrayList;
 

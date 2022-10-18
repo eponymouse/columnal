@@ -26,7 +26,6 @@ import com.google.common.collect.MapMaker;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import xyz.columnal.log.Log;
@@ -41,7 +40,7 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.transformations.Check;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.FXPlatformRunnable;
+import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.Workers;
@@ -54,7 +53,6 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.WeakHashMap;
 
 @OnThread(Tag.FXPlatform)
 public final class CheckSummaryLabel extends BorderPane

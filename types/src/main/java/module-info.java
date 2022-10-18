@@ -12,6 +12,9 @@ module xyz.columnal.types
     requires static org.checkerframework.checker.qual;
     requires xyz.columnal.parsers;
     requires xyz.columnal.utility;
+    requires xyz.columnal.utility.adt;
+    requires xyz.columnal.utility.error;
+    requires xyz.columnal.utility.functional;
     requires xyz.columnal.identifiers;
 
     requires org.antlr.antlr4.runtime;

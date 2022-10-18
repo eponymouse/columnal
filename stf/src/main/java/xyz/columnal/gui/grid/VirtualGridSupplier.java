@@ -33,7 +33,7 @@ import xyz.columnal.data.CellPosition;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 
 import java.util.Optional;
 import java.util.OptionalDouble;

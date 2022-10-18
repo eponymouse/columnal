@@ -34,7 +34,7 @@ import xyz.columnal.transformations.function.Not;
 import xyz.columnal.transformations.function.Xor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.transformations.expression.function.ValueFunction;
 
 import static org.junit.Assert.assertEquals;

@@ -20,7 +20,6 @@
 
 package xyz.columnal.importers.manager;
 
-import com.google.common.collect.ImmutableList;
 import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -46,10 +45,8 @@ import xyz.columnal.data.TableManager;
 import xyz.columnal.importers.Importer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.FXPlatformConsumer;
-import xyz.columnal.utility.Pair;
-import xyz.columnal.utility.SimulationConsumerNoError;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.simulation.SimulationConsumerNoError;
 import xyz.columnal.utility.gui.ErrorableDialog;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.GUI;
@@ -62,7 +59,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
 public class ImporterManager

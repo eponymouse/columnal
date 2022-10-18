@@ -23,16 +23,12 @@ package xyz.columnal.gui.lexeditor;
 import annotation.units.CanonicalLocation;
 import annotation.units.DisplayLocation;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.control.MenuItem;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.DataFormat;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -40,10 +36,7 @@ import javafx.scene.shape.Path;
 import javafx.scene.text.HitInfo;
 import javafx.scene.text.Text;
 import xyz.columnal.log.Log;
-import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.gui.lexeditor.EditorContent.CaretMoveReason;
@@ -54,12 +47,13 @@ import xyz.columnal.gui.lexeditor.completion.LexCompletion;
 import xyz.columnal.gui.lexeditor.TopLevelEditor.Focus;
 import xyz.columnal.gui.lexeditor.completion.LexCompletionGroup;
 import xyz.columnal.gui.lexeditor.completion.LexCompletionListener;
+import xyz.columnal.styled.StyledString;
 import xyz.columnal.styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.Either;
-import xyz.columnal.utility.FXPlatformConsumer;
-import xyz.columnal.utility.Pair;
+import xyz.columnal.utility.adt.Either;
+import xyz.columnal.utility.function.fx.FXPlatformConsumer;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.ResourceUtility;
 import xyz.columnal.utility.Utility;
 import xyz.columnal.utility.gui.FXUtility;
@@ -68,12 +62,10 @@ import xyz.columnal.utility.gui.TimedFocusable;
 
 import javax.swing.SwingUtilities;
 import java.awt.Desktop;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
 import java.util.BitSet;
 import java.util.OptionalInt;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @OnThread(Tag.FXPlatform)
@@ -606,19 +598,23 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     public @OnThread(Tag.FXPlatform) ImmutableList<BackgroundInfo> getBackgrounds()
     {
         ImmutableList.Builder<BackgroundInfo> r = ImmutableList.builder();
-        int curPos = 0;
-        for (Pair<ImmutableList<Style<?>>, String> member : content.getDisplay().getMembers())
+        content.getDisplay().forEach(new BiConsumer<ImmutableList<StyledString.Style<?>>, String>()
         {
-            for (Style<?> style : member.getFirst())
+            int curPos = 0;
+            @Override
+            public void accept(ImmutableList<StyledString.Style<?>> styles, String text)
             {
-                if (style instanceof TokenBackground)
+                for (StyledString.Style<?> style : styles)
                 {
-                    r.add(new BackgroundInfo(curPos, curPos + member.getSecond().length(), ((TokenBackground)style).styleClasses));
+                    if (style instanceof TokenBackground)
+                    {
+                        r.add(new BackgroundInfo(curPos, curPos + text.length(), ((TokenBackground)style).styleClasses));
+                    }
                 }
+
+                curPos += text.length();
             }
-            
-            curPos += member.getSecond().length();
-        }
+        });
         return r.build();
     }
 
