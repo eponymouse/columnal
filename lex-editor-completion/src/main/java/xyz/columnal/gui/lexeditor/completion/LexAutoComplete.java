@@ -20,13 +20,15 @@
 
 package xyz.columnal.gui.lexeditor.completion;
 
+import annotation.units.CanonicalLocation;
 import com.google.common.collect.ImmutableList;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.util.Duration;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import xyz.columnal.gui.lexeditor.EditorDisplay;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Utility;
@@ -38,8 +40,18 @@ import java.util.Optional;
 @OnThread(Tag.FXPlatform)
 public class LexAutoComplete
 {
+    @OnThread(Tag.FXPlatform)
+    public interface EditorDisplayInterface
+    {
+        Node asNode();
+        
+        public @CanonicalLocation int getCaretPosition();
+
+        public @Nullable Point2D getCaretBottomOnScreen(@CanonicalLocation int caretPos);
+    }
+    
     private final LexAutoCompleteWindow window;
-    private final EditorDisplay editor;
+    private final EditorDisplayInterface editor;
     private final Timeline updatePosition;
 
     // When the user clicks on the code completion, they can sometimes click more than is needed, especially using
@@ -49,7 +61,7 @@ public class LexAutoComplete
     // item beneath.  This value is for comparing to System.currentTimeMillis()
     private long clickImmuneUntil = -1L;
 
-    public LexAutoComplete(@UnknownInitialization EditorDisplay editor, LexCompletionListener triggerCompletion)
+    public LexAutoComplete(@UnknownInitialization EditorDisplayInterface editor, LexCompletionListener triggerCompletion)
     {
         this.window = new LexAutoCompleteWindow(triggerCompletion);
         this.editor = Utility.later(editor);
@@ -71,7 +83,7 @@ public class LexAutoComplete
         Point2D caretBottom = editor.getCaretBottomOnScreen(completions.stream().mapToInt(c -> c.startPos).min().orElse(editor.getCaretPosition()));
         double labelPad = window.listView.getTotalTextLeftPad() + 1;
         if (caretBottom != null && !completions.isEmpty())
-            window.show(editor, caretBottom.getX() - labelPad, caretBottom.getY());
+            window.show(editor.asNode(), caretBottom.getX() - labelPad, caretBottom.getY());
         else
             hide(false);
     }

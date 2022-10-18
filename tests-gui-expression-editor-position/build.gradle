@@ -6,6 +6,7 @@ dependencies {
     testImplementation project(':gui-utility')
     testImplementation project(':identifiers')
     testImplementation project(':lex-editor')
+    testImplementation project(':lex-editor-completion')
     testImplementation project(':parsers')
     testImplementation project(':r-interop')
     testImplementation project(':stf')

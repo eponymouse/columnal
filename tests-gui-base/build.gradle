@@ -6,6 +6,7 @@ dependencies {
     testFixturesImplementation project(":gui-utility")
     testFixturesImplementation project(":identifiers")
     testFixturesImplementation project(":lex-editor")
+    testFixturesImplementation project(":lex-editor-completion")
     testFixturesImplementation project(":parsers")
     testFixturesImplementation project(":stf")
     testFixturesImplementation project(":transformations")
