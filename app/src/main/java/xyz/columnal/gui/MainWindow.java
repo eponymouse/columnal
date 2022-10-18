@@ -51,6 +51,7 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.CheckSummaryLabel.ChecksStateListener;
 import xyz.columnal.gui.Main.UpgradeInfo;
+import xyz.columnal.gui.dialog.AboutDialog;
 import xyz.columnal.gui.grid.VirtualGrid;
 import xyz.columnal.gui.table.HeadedDisplay;
 import xyz.columnal.importers.manager.ImporterManager;

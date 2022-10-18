@@ -18,14 +18,14 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui;
+package xyz.columnal.gui.dialog;
 
 import com.google.common.collect.ImmutableList;
 import javafx.scene.control.ButtonType;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.transformations.HideColumns;
-import xyz.columnal.transformations.HideColumnsPanel;
+import xyz.columnal.gui.dialog.HideColumnsPanel;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.gui.DimmableParent;

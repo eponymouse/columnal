@@ -31,10 +31,12 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import xyz.columnal.data.Table;
+import xyz.columnal.data.TableManager;
+import xyz.columnal.gui.dialog.AutoComplete;
 import xyz.columnal.id.TableId;
-import xyz.columnal.gui.AutoComplete.CompletionListener;
-import xyz.columnal.gui.AutoComplete.SimpleCompletion;
-import xyz.columnal.gui.AutoComplete.WhitespacePolicy;
+import xyz.columnal.gui.dialog.AutoComplete.CompletionListener;
+import xyz.columnal.gui.dialog.AutoComplete.SimpleCompletion;
+import xyz.columnal.gui.dialog.AutoComplete.WhitespacePolicy;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.function.fx.FXPlatformConsumer;
@@ -54,13 +56,13 @@ public class PickTablePane extends BorderPane implements TimedFocusable
     private long lastEditTimeMillis = -1;
     private final Instruction instruction;
 
-    public PickTablePane(View view, ImmutableSet<Table> exclude, String initial, FXPlatformConsumer<Table> setResultAndFinishEditing)
+    public PickTablePane(TableManager tableManager, ImmutableSet<Table> exclude, String initial, FXPlatformConsumer<Table> setResultAndFinishEditing)
     {
         this.setResultAndClose = setResultAndFinishEditing;
         tableField.setText(initial);
         autoComplete = new AutoComplete<TableCompletion>(tableField,
-            s -> view.getManager().getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new),
-            getListener(view.getManager().getAllTables()), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM);
+            s -> tableManager.getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new),
+            getListener(tableManager.getAllTables()), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM);
         
         setCenter(tableField);
         instruction = new Instruction("pick.table.instruction");

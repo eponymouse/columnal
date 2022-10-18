@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui;
+package xyz.columnal.gui.dialog;
 
 import javafx.geometry.Pos;
 import javafx.scene.Node;

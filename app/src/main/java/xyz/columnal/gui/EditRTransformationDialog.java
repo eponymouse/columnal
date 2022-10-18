@@ -301,7 +301,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
             if (!original.isPresent())
                 original = Optional.of("");
             SimpleObjectProperty<String> curValue = new SimpleObjectProperty<>(original.get());
-            PickTablePane pickTablePane = new PickTablePane(parent, ImmutableSet.of(existing), original.get(), t -> {
+            PickTablePane pickTablePane = new PickTablePane(parent.getManager(), ImmutableSet.of(existing), original.get(), t -> {
                 curValue.set(t.getId().getRaw());
                 focusAddButton();
             });

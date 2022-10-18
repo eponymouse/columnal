@@ -22,5 +22,4 @@ module xyz.columnal.functions
     requires com.google.common;
     requires org.apache.commons.lang3;
     requires static org.checkerframework.checker.qual;
-    //requires static org.checkerframework.checker;
 }

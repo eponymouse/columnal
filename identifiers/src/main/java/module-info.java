@@ -9,5 +9,4 @@ module xyz.columnal.identifiers
     requires xyz.columnal.utility.error;
 
     requires com.google.common;
-    requires javafx.graphics;
 }

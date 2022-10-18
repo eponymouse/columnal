@@ -5,8 +5,10 @@ module xyz.columnal.app
     requires static anns;
     requires static annsthreadchecker;
     requires xyz.columnal.data;
+    requires xyz.columnal.exporters;
     requires xyz.columnal.expressions;
     requires xyz.columnal.functions;
+    requires xyz.columnal.gui.dialog;
     requires xyz.columnal.utility.adt;
     requires xyz.columnal.utility.gui;
     requires xyz.columnal.identifiers;
@@ -34,6 +36,5 @@ module xyz.columnal.app
     requires org.apache.poi.ooxml;
     requires org.antlr.antlr4.runtime;
     requires org.apache.commons.io;
-    requires org.apache.commons.text;
     requires common;
 }

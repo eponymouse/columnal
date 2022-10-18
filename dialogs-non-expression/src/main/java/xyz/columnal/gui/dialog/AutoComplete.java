@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui;
+package xyz.columnal.gui.dialog;
 
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.Bindings;
@@ -54,8 +54,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
-import xyz.columnal.gui.AutoComplete.Completion;
-import xyz.columnal.gui.AutoComplete.Completion.CompletionContent;
+import xyz.columnal.gui.dialog.AutoComplete.Completion;
+import xyz.columnal.gui.dialog.AutoComplete.Completion.CompletionContent;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.function.fx.FXPlatformConsumer;

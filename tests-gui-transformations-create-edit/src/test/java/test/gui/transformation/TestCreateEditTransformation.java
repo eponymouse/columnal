@@ -64,7 +64,7 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.MainWindow;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
-import xyz.columnal.gui.AutoComplete;
+import xyz.columnal.gui.dialog.AutoComplete;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.grid.VirtualGrid;
 import xyz.columnal.gui.table.HeadedDisplay;

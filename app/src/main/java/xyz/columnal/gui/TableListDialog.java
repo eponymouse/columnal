@@ -120,7 +120,7 @@ public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>
             if (!original.isPresent())
                 original = Optional.of("");
             SimpleObjectProperty<String> curValue = new SimpleObjectProperty<>(original.get());
-            PickTablePane pickTablePane = new PickTablePane(parent, excludeTables, original.get(), t -> {
+            PickTablePane pickTablePane = new PickTablePane(parent.getManager(), excludeTables, original.get(), t -> {
                 curValue.set(t.getId().getRaw());
                 focusAddButton();
             });

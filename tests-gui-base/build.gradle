@@ -1,6 +1,7 @@
 dependencies {
     testFixturesImplementation project(":app")
     testFixturesImplementation project(":data")
+    testFixturesImplementation project(":dialogs-non-expression")
     testFixturesImplementation project(":expressions")
     testFixturesImplementation project(":functions")
     testFixturesImplementation project(":utility-gui")

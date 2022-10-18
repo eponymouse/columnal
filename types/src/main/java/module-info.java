@@ -19,7 +19,6 @@ module xyz.columnal.types
 
     requires org.antlr.antlr4.runtime;
     requires com.google.common;
-    requires javafx.graphics;
     requires one.util.streamex;
     requires org.apache.commons.io;
     requires common;

@@ -27,7 +27,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
 import org.testfx.api.FxRobotInterface;
 import test.gui.TFXUtil;
-import xyz.columnal.gui.AutoComplete.Completion;
+import xyz.columnal.gui.dialog.AutoComplete.Completion;
 import xyz.columnal.gui.lexeditor.completion.LexAutoCompleteWindow;
 import threadchecker.OnThread;
 import threadchecker.Tag;

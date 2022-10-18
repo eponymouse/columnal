@@ -1,0 +1,16 @@
+dependencies {
+    // This module should never depend on :lex-editor
+    implementation project(':data')
+    implementation project(':identifiers')
+    implementation project(':parsers')
+    implementation project(':transformations')
+    implementation project(':utility')
+    implementation project(':utility-adt')
+    implementation project(':utility-error')
+    implementation project(':utility-functional')
+    implementation project(':utility-gui')
+    implementation libs.controlsfx
+    implementation libs.guava
+}
+
+description = 'dialogs-non-expression'

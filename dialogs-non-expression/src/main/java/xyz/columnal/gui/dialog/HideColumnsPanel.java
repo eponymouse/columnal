@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.transformations;
+package xyz.columnal.gui.dialog;
 
 import com.google.common.collect.ImmutableList;
 import javafx.collections.FXCollections;
