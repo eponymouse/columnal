@@ -26,7 +26,7 @@ import javafx.scene.control.Dialog;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.TableId;
 import xyz.columnal.data.TableManager;
-import xyz.columnal.transformations.HideColumnsPanel;
+import xyz.columnal.gui.dialog.HideColumnsPanel;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.gui.FXUtility;

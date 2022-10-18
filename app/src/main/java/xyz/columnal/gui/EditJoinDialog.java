@@ -81,10 +81,10 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
         isLeftJoin.setSelected(join.isKeepPrimaryWithNoMatch());
         joinOn = new ColumnList((ImmutableList<Pair<@Nullable ColumnId, @Nullable ColumnId>>)join.getColumnsToMatch());
         ImmutableSet<Table> exclude = ImmutableSet.of(join); 
-        secondaryTableNamePane = new PickTablePane(parent, exclude, join.getSecondarySource().getRaw(), t -> {
+        secondaryTableNamePane = new PickTablePane(parent.getManager(), exclude, join.getSecondarySource().getRaw(), t -> {
             joinOn.focusAddButton();
         });
-        primaryTableNamePane = new PickTablePane(parent, exclude, join.getPrimarySource().getRaw(), t -> {
+        primaryTableNamePane = new PickTablePane(parent.getManager(), exclude, join.getPrimarySource().getRaw(), t -> {
             secondaryTableNamePane.focusEntryField();
         });
         

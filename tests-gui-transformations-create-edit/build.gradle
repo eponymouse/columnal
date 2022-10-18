@@ -1,6 +1,7 @@
 dependencies {
     testImplementation project(':app')
     testImplementation project(':data')
+    testImplementation project(':dialogs-non-expression')
     testImplementation project(':expressions')
     testImplementation project(':functions')
     testImplementation project(':identifiers')

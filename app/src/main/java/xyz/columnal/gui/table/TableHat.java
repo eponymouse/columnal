@@ -40,7 +40,7 @@ import xyz.columnal.gui.EditJoinDialog;
 import xyz.columnal.gui.EditRTransformationDialog;
 import xyz.columnal.gui.EditSortDialog;
 import xyz.columnal.gui.EntireTableSelection;
-import xyz.columnal.gui.HideColumnsDialog;
+import xyz.columnal.gui.dialog.HideColumnsDialog;
 import xyz.columnal.gui.ManualEditEntriesDialog;
 import xyz.columnal.gui.PickManualEditIdentifierDialog;
 import xyz.columnal.gui.PickTableDialog;

@@ -1,0 +1,17 @@
+dependencies {
+    implementation project(':data')
+    implementation project(':identifiers')
+    implementation project(':r-interop')
+    implementation project(':types')
+    implementation project(':utility')
+    implementation project(':utility-adt')
+    implementation project(':utility-error')
+    implementation project(':utility-functional')
+    implementation project(':utility-gui')
+    
+    implementation libs.commons.text;
+    implementation libs.guava
+    implementation libs.poi.ooxml
+}
+
+description = 'exporters'

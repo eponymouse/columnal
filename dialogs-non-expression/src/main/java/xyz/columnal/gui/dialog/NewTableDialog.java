@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui;
+package xyz.columnal.gui.dialog;
 
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
@@ -29,11 +29,12 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import xyz.columnal.gui.NewTableDialog.DataOrTransform;
+import xyz.columnal.gui.dialog.NewTableDialog.DataOrTransform;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.gui.DimmableParent;
+import xyz.columnal.utility.gui.ExplainedButton;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.GUI;
 import xyz.columnal.utility.gui.LightDialog;

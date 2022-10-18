@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui;
+package xyz.columnal.utility.gui;
 
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -38,7 +38,6 @@ import threadchecker.Tag;
 import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 import xyz.columnal.utility.ResourceUtility;
 import xyz.columnal.utility.Utility;
-import xyz.columnal.utility.gui.GUI;
 import xyz.columnal.utility.TranslationUtility;
 
 import java.net.URL;
@@ -47,7 +46,7 @@ import java.net.URL;
  * A button with a title, an explanation, and optionally an image.
  */
 @OnThread(Tag.FXPlatform)
-final class ExplainedButton extends Button
+public final class ExplainedButton extends Button
 {
     private @Nullable Point2D lastMouseScreenPos;
     

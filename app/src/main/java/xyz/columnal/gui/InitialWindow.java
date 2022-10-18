@@ -47,6 +47,7 @@ import xyz.columnal.error.UserException;
 import xyz.columnal.gui.Main.UpgradeInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.gui.dialog.AboutDialog;
 import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.Utility;

@@ -14,6 +14,8 @@ dependencies {
     implementation project(':parsers')
     implementation project(':data')
     implementation project(':stf')
+    implementation project(':dialogs-non-expression')
+    implementation project(':exporters')
     implementation project(':expressions')
     implementation project(':functions')
     implementation project(':identifiers')
@@ -23,13 +25,11 @@ dependencies {
     implementation project(':types')
     implementation libs.guava
     implementation libs.wellbehavedfx
-    //implementation 'com.google.code.findbugs:jsr305:3.0.2'
     implementation libs.controlsfx
     implementation libs.poi.ooxml
     implementation libs.jsoup
     implementation libs.commons.io
     implementation libs.commons.lang3
-    implementation libs.commons.text
     implementation libs.javaSMT
     implementation libs.jna
     implementation libs.jna.platform

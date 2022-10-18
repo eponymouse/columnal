@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui;
+package xyz.columnal.gui.dialog;
 
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
@@ -34,6 +34,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.gui.DimmableParent;
+import xyz.columnal.utility.gui.ExplainedButton;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.LightDialog;
 
