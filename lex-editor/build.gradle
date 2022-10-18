@@ -3,7 +3,7 @@ dependencies {
     implementation project(':utility-adt')
     implementation project(':utility-error')
     implementation project(':utility-functional')
-    implementation project(':gui-utility')
+    implementation project(':utility-gui')
     implementation project(':expressions')
     implementation project(':identifiers')
     implementation project(':lex-editor-completion')

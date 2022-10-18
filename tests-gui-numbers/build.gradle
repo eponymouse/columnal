@@ -2,7 +2,7 @@ dependencies {
     testImplementation project(':app')
     testImplementation project(':data')
     testImplementation project(':expressions')
-    testImplementation project(':gui-utility')
+    testImplementation project(':utility-gui')
     testImplementation project(':identifiers')
     testImplementation project(':parsers')
     testImplementation project(':stf')

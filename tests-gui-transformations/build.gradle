@@ -3,7 +3,7 @@ dependencies {
     implementation project(':data')
     implementation project(':expressions')
     implementation project(':functions')
-    implementation project(':gui-utility')
+    implementation project(':utility-gui')
     implementation project(':identifiers')
     implementation project(':lex-editor')
     implementation project(':parsers')

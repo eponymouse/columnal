@@ -12,7 +12,7 @@ def projectsToJavaFX = [
   app: ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],
   data: ['javafx.base', 'javafx.graphics'],
   expressions: ['javafx.graphics'],
-  'gui-utility': ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],
+  'utility-gui': ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],
   identifiers: ['javafx.graphics'],
   'lex-editor': ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],
   'lex-editor-completion': ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],

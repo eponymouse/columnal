@@ -3,7 +3,7 @@ dependencies {
     testFixturesImplementation project(":data")
     testFixturesImplementation project(":expressions")
     testFixturesImplementation project(":functions")
-    testFixturesImplementation project(":gui-utility")
+    testFixturesImplementation project(":utility-gui")
     testFixturesImplementation project(":identifiers")
     testFixturesImplementation project(":lex-editor")
     testFixturesImplementation project(":lex-editor-completion")

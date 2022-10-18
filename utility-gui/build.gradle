@@ -12,4 +12,4 @@ dependencies {
     implementation libs.jna.platform
 }
 
-description = 'gui-utility'
+description = 'utility-gui'
