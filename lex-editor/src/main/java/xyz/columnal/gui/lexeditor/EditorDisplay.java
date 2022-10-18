@@ -28,6 +28,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
+import javafx.scene.Node;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -69,7 +70,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @OnThread(Tag.FXPlatform)
-public final class EditorDisplay extends TextEditorBase implements TimedFocusable
+public final class EditorDisplay extends TextEditorBase implements TimedFocusable, LexAutoComplete.EditorDisplayInterface
 {
     private boolean hasBeenFocused = false;
     private long lastFocusLeft;
@@ -482,11 +483,18 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             caretAndSelectionNodes.queueUpdateCaretShape(true);
     }
 
+    @Override
+    public Node asNode()
+    {
+        return this;
+    }
+
     public @Nullable Point2D getCaretBottomOnScreen()
     {
         return getCaretBottomOnScreen(content.getCaretPosition());
     }
 
+    @Override
     public @Nullable Point2D getCaretBottomOnScreen(@CanonicalLocation int caretPos)
     {
         // localToScreen can return null if not in window, hence the @Nullable return
@@ -499,6 +507,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     }
     
     @OnThread(Tag.FXPlatform)
+    @Override
     public @CanonicalLocation int getCaretPosition()
     {
         return content.getCaretPosition();

@@ -3,7 +3,7 @@ dependencies {
     testImplementation project(':data')
     testImplementation project(':expressions')
     testImplementation project(':functions')
-    testImplementation project(':gui-utility')
+    testImplementation project(':utility-gui')
     testImplementation project(':identifiers')
     testImplementation project(':lex-editor')
     testImplementation project(':parsers')

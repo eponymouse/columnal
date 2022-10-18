@@ -4,7 +4,7 @@ dependencies {
     implementation project(':utility-adt')
     implementation project(':utility-error')
     implementation project(':utility-functional')
-    implementation project(':gui-utility')
+    implementation project(':utility-gui')
     implementation project(':data')
     implementation project(':parsers')
     implementation project(':types')

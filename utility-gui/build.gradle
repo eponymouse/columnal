@@ -3,17 +3,13 @@ dependencies {
     implementation project(':utility-adt')
     implementation project(':utility-error')
     implementation project(':utility-functional')
-    implementation project(':utility-gui')
-    implementation project(':expressions')
-    implementation project(':identifiers')
-    implementation project(':lex-editor-completion')
-    implementation project(':types')
-    implementation project(':data')
     implementation project(':parsers')
     implementation libs.guava
     implementation libs.commons.lang3
     implementation libs.controlsfx
-    implementation libs.stringsimilarity
+    implementation libs.wellbehavedfx
+    implementation libs.thumbnailator
+    implementation libs.jna.platform
 }
 
-description = 'lex-editor'
+description = 'utility-gui'
