@@ -468,6 +468,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     }
 
     @Override
+    @OnThread(Tag.Any)
     public Table getTable()
     {
         return check;
