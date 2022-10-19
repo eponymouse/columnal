@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui.table;
+package xyz.columnal.gui.table.app;
 
 import com.google.common.collect.ImmutableList;
 import javafx.geometry.Insets;
@@ -28,7 +28,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import xyz.columnal.data.datatype.DataType;
-import xyz.columnal.gui.table.PickTypeTransformDialog.TypeTransform;
+import xyz.columnal.gui.table.app.PickTypeTransformDialog.TypeTransform;
 import xyz.columnal.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;

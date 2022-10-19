@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui;
+package xyz.columnal.gui.table;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
@@ -43,15 +43,15 @@ import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.Table.TableDisplayBase;
 import xyz.columnal.id.TableId;
-import xyz.columnal.gui.RowLabelSupplier.LabelPane;
+import xyz.columnal.gui.table.RowLabelSupplier.LabelPane;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.grid.RectangleOverlayItem;
 import xyz.columnal.gui.grid.VirtualGrid;
 import xyz.columnal.gui.grid.VirtualGrid.ListenerOutcome;
 import xyz.columnal.gui.grid.VirtualGridSupplier;
 import xyz.columnal.gui.grid.VirtualGridSupplierFloating;
-import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -400,7 +400,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     }
 
     @OnThread(Tag.FXPlatform)
-    public void removeGrid(TableDisplay display, ContainerChildren containerChildren)
+    public void removeGrid(DataDisplay display, ContainerChildren containerChildren)
     {
         @Nullable RowLabels rowLabels = currentRowLabels.remove(display);
         if (rowLabels != null)
@@ -522,9 +522,9 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         public @Nullable TableId _test_getTableId()
         {
             DataDisplay dataDisplay = rowLabels.dataDisplay;
-            if (dataDisplay instanceof TableDisplay)
+            if (dataDisplay instanceof TableDisplayBase)
             {
-                return ((TableDisplay)dataDisplay).getTable().getId();
+                return ((TableDisplayBase)dataDisplay).getTable().getId();
             }
             return null;
         }

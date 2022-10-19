@@ -43,7 +43,7 @@ import xyz.columnal.data.datatype.DataTypeValue;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
-import xyz.columnal.gui.RowLabelSupplier;
+import xyz.columnal.gui.table.RowLabelSupplier;
 import xyz.columnal.gui.dtf.DocumentTextField;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.grid.VirtualGrid;

@@ -14,10 +14,12 @@ def projectsToJavaFX = [
   'dialogs-non-expression': ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],
   'exporters': ['javafx.base', 'javafx.controls', 'javafx.graphics'],
   'expressions': ['javafx.graphics'],
+  'importers': ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],
   'utility-gui': ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],
   'lex-editor': ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],
   'lex-editor-completion': ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.web'],
   'stf': ['javafx.base', 'javafx.controls', 'javafx.graphics'],
+  'table-gui':  ['javafx.base', 'javafx.controls', 'javafx.graphics'],
   'transformations':  ['javafx.base', 'javafx.controls', 'javafx.graphics'],
   'utility':  ['javafx.base', 'javafx.graphics'],
   'utility-error':  ['javafx.base', 'javafx.graphics']

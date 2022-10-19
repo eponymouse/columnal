@@ -437,6 +437,9 @@ public abstract class Table
          */
         @OnThread(Tag.FXPlatform)
         void promptForTransformationEdit(int index, Pair<ColumnId, DataType> column, Either<String, @Value Object> value);
+
+        @OnThread(Tag.Any)
+        Table getTable();
     }
 
     @OnThread(Tag.Any)

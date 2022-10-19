@@ -40,7 +40,7 @@ import xyz.columnal.data.MemoryNumericColumn;
 import xyz.columnal.data.RecordSet;
 import xyz.columnal.data.datatype.NumberInfo;
 import xyz.columnal.data.unit.Unit;
-import xyz.columnal.gui.DataCellSupplier.VersionedSTF;
+import xyz.columnal.gui.table.DataCellSupplier.VersionedSTF;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import test.gen.GenRandom;
 import test.gui.util.FXApplicationTest;

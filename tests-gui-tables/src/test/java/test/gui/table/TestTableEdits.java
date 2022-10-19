@@ -68,7 +68,7 @@ import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.grid.VirtualGrid;
 import xyz.columnal.gui.lexeditor.EditorDisplay;
-import xyz.columnal.gui.table.TableDisplay;
+import xyz.columnal.gui.table.app.TableDisplay;
 import xyz.columnal.transformations.Aggregate;
 import xyz.columnal.transformations.Calculate;
 import xyz.columnal.transformations.Filter;

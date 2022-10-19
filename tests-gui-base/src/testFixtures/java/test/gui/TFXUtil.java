@@ -50,7 +50,7 @@ import xyz.columnal.data.TableManager;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.grid.VirtualGrid;
-import xyz.columnal.gui.table.TableDisplay;
+import xyz.columnal.gui.table.app.TableDisplay;
 import xyz.columnal.id.TableId;
 import xyz.columnal.log.Log;
 import xyz.columnal.utility.adt.Either;

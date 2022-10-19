@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui.table;
+package xyz.columnal.gui.table.app;
 
 import annotation.units.AbsColIndex;
 import annotation.units.GridAreaRowIndex;
@@ -37,6 +37,8 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Window;
+import xyz.columnal.gui.table.EntireTableSelection;
+import xyz.columnal.gui.table.HeadedDisplay;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -47,7 +49,7 @@ import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.TableOperations.RenameTable;
 import xyz.columnal.data.datatype.DataType;
-import xyz.columnal.gui.EntireTableSelection;
+import xyz.columnal.gui.table.EntireTableSelection;
 import xyz.columnal.transformations.expression.explanation.Explanation;
 import xyz.columnal.data.Table;
 import xyz.columnal.data.Table.Display;
@@ -463,6 +465,12 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     protected ImmutableList<String> getExtraTitleStyleClasses()
     {
         return ImmutableList.of("check-table-title");
+    }
+
+    @Override
+    public Table getTable()
+    {
+        return check;
     }
 
     @Override

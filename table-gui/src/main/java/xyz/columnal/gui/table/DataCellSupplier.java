@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui;
+package xyz.columnal.gui.table;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
@@ -31,8 +31,9 @@ import javafx.scene.effect.GaussianBlur;
 import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import xyz.columnal.data.CellPosition;
-import xyz.columnal.gui.DataCellSupplier.CellStyle;
-import xyz.columnal.gui.DataCellSupplier.VersionedSTF;
+import xyz.columnal.data.Table.TableDisplayBase;
+import xyz.columnal.gui.table.DataCellSupplier.CellStyle;
+import xyz.columnal.gui.table.DataCellSupplier.VersionedSTF;
 import xyz.columnal.gui.dtf.Document;
 import xyz.columnal.gui.dtf.DocumentTextField;
 import xyz.columnal.gui.dtf.ReadOnlyDocument;
@@ -50,7 +51,6 @@ import xyz.columnal.gui.guidance.GuidanceWindow.Guidance;
 import xyz.columnal.gui.guidance.GuidanceWindow.LookupCondition;
 import xyz.columnal.gui.guidance.GuidanceWindow.LookupKeyCondition;
 import xyz.columnal.gui.stable.ColumnDetails;
-import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -274,7 +274,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
                         if (window != null)
                         {
                             GridArea gridArea = getGridFor(VersionedSTF.this);
-                            new GuidanceWindow(makeTransformGuidance(window, virtualGrid, gridArea instanceof TableDisplay ? (TableDisplay)gridArea : null, document.getText().substring(1)), window).show();
+                            new GuidanceWindow(makeTransformGuidance(window, virtualGrid, gridArea instanceof DataDisplay && gridArea instanceof TableDisplayBase ? (DataDisplay & TableDisplayBase) gridArea : null, document.getText().substring(1)), window).show();
                         }
                     }
                 }
@@ -287,7 +287,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     }
 
     @OnThread(Tag.FXPlatform)
-    private Guidance makeTransformGuidance(Window mainWindow, VirtualGrid virtualGrid, @Nullable TableDisplay srcTable, String content)
+    private <T extends DataDisplay & TableDisplayBase> Guidance makeTransformGuidance(Window mainWindow, VirtualGrid virtualGrid, @Nullable T srcTable, String content)
     {
         // TODO make them choose upfront calculate vs aggregate?
         

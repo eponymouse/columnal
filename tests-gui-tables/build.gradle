@@ -9,6 +9,7 @@ dependencies {
     implementation project(':parsers')
     implementation project(':r-interop')
     implementation project(':stf')
+    implementation project(':table-gui')
     implementation project(':transformations')
     implementation project(':types')
     testImplementation project(':utility')
