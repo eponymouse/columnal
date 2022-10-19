@@ -52,6 +52,9 @@ compileSass {
 }
 
 task makeLogo(type: Exec) {
+    doFirst {
+        mkdir("build/resources/main")
+    }
     workingDir "build/resources/main"
     // Sizes from https://docs.microsoft.com/en-us/windows/desktop/uxguide/vis-icons
     commandLine "magick", \
