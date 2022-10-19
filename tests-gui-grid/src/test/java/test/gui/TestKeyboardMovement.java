@@ -37,7 +37,7 @@ import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.DataItemPosition;
 import xyz.columnal.data.Table;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
-import xyz.columnal.gui.table.TableDisplay;
+import xyz.columnal.gui.table.app.TableDisplay;
 import xyz.columnal.gui.grid.CellSelection;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.grid.VirtualGrid;

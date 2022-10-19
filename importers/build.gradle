@@ -1,0 +1,21 @@
+dependencies {
+    implementation project(':data')
+    implementation project(':identifiers')
+    implementation project(':parsers')
+    implementation project(':r-interop')
+    implementation project(':stf')
+    implementation project(':table-gui')
+    implementation project(':types')
+    implementation project(':utility')
+    implementation project(':utility-adt')
+    implementation project(':utility-error')
+    implementation project(':utility-functional')
+    implementation project(':utility-gui')
+    
+    implementation libs.commons.text;
+    implementation libs.guava
+    implementation libs.jsoup    
+    implementation libs.poi.ooxml
+}
+
+description = 'importers'

@@ -53,7 +53,7 @@ import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.gui.grid.RectangleBounds;
-import xyz.columnal.gui.table.PickTypeTransformDialog.TypeTransform;
+import xyz.columnal.gui.table.app.PickTypeTransformDialog.TypeTransform;
 import xyz.columnal.transformations.Aggregate;
 import xyz.columnal.transformations.Calculate;
 import xyz.columnal.transformations.expression.*;

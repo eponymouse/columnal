@@ -6,6 +6,7 @@ dependencies {
     testImplementation project(':identifiers')
     testImplementation project(':parsers')
     testImplementation project(':stf')
+    testImplementation project(':table-gui')
     testImplementation project(':types')
     testImplementation project(':utility')
     testImplementation project(':utility-error')

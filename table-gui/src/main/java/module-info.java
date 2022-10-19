@@ -1,6 +1,5 @@
-module xyz.columnal.app
-{
-    exports xyz.columnal.gui;
+module xyz.columnal.table.gui {
+    exports xyz.columnal.gui.table;
 
     requires static anns;
     requires static annsthreadchecker;
@@ -12,7 +11,6 @@ module xyz.columnal.app
     requires xyz.columnal.utility.adt;
     requires xyz.columnal.utility.gui;
     requires xyz.columnal.identifiers;
-    requires xyz.columnal.importers;
     requires xyz.columnal.lexeditor;
     requires xyz.columnal.parsers;
     requires xyz.columnal.rinterop;
@@ -22,20 +20,13 @@ module xyz.columnal.app
     requires xyz.columnal.utility;
     requires xyz.columnal.utility.error;
     requires xyz.columnal.utility.functional;
-    
+
     requires java.desktop;
     requires javafx.base;
     requires javafx.controls;
     requires javafx.graphics;
-    requires javafx.web;
-    
-    requires org.controlsfx.controls;
+
     requires com.google.common;
     requires static org.checkerframework.checker.qual;
-    requires org.apache.poi.poi;
-    requires org.apache.poi.ooxml;
-    requires org.antlr.antlr4.runtime;
-    requires org.apache.commons.io;
     requires common;
-    requires xyz.columnal.table.gui;
 }

@@ -1,6 +1,7 @@
 module xyz.columnal.utility.gui
 {
     exports xyz.columnal.utility.gui;
+    exports xyz.columnal.gui.guidance;
     // Need to be opens for JNA access on Windows:
     opens xyz.columnal.utility.gui;
 

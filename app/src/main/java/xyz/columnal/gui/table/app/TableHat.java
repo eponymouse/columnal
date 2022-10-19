@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui.table;
+package xyz.columnal.gui.table.app;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,13 +39,15 @@ import xyz.columnal.gui.EditExpressionDialog;
 import xyz.columnal.gui.EditJoinDialog;
 import xyz.columnal.gui.EditRTransformationDialog;
 import xyz.columnal.gui.EditSortDialog;
-import xyz.columnal.gui.EntireTableSelection;
+import xyz.columnal.gui.table.EntireTableSelection;
 import xyz.columnal.gui.dialog.HideColumnsDialog;
 import xyz.columnal.gui.ManualEditEntriesDialog;
 import xyz.columnal.gui.PickManualEditIdentifierDialog;
 import xyz.columnal.gui.PickTableDialog;
 import xyz.columnal.gui.TableListDialog;
 import xyz.columnal.gui.View;
+import xyz.columnal.gui.table.EntireTableSelection;
+import xyz.columnal.gui.table.HeadedDisplay;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -71,7 +73,7 @@ import xyz.columnal.gui.grid.VirtualGridSupplier.VisibleBounds;
 import xyz.columnal.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import xyz.columnal.gui.highlights.TableHighlights.HighlightType;
 import xyz.columnal.gui.highlights.TableHighlights.PickResult;
-import xyz.columnal.gui.table.TableHat.TableHatDisplay;
+import xyz.columnal.gui.table.app.TableHat.TableHatDisplay;
 import xyz.columnal.transformations.Aggregate;
 import xyz.columnal.transformations.Calculate;
 import xyz.columnal.transformations.Check;

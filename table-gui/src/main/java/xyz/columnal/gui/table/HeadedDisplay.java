@@ -59,10 +59,10 @@ import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Table;
 import xyz.columnal.id.TableId;
 import xyz.columnal.data.TableManager;
-import xyz.columnal.gui.EntireTableSelection;
+import xyz.columnal.gui.table.EntireTableSelection;
 import xyz.columnal.utility.TranslationUtility;
 import xyz.columnal.utility.gui.ErrorableTextField;
-import xyz.columnal.gui.TableNameTextField;
+import xyz.columnal.gui.table.TableNameTextField;
 import xyz.columnal.gui.grid.CellSelection;
 import xyz.columnal.gui.grid.GridArea;
 import xyz.columnal.gui.grid.RectangleBounds;
@@ -423,7 +423,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
     {
     }
 
-    void relayoutGrid()
+    public void relayoutGrid()
     {
         withParent_(VirtualGrid::positionOrAreaChanged);
     }
@@ -586,7 +586,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
             updateClip(visibleBounds);
         }
 
-        protected void updateClip(VisibleBounds visibleBounds)
+        public void updateClip(VisibleBounds visibleBounds)
         {
             if (getNode() != null)
                 calcClip(getNode(), visibleBounds);

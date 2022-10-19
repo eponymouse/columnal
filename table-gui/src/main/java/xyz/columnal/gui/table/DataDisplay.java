@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui;
+package xyz.columnal.gui.table;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
@@ -62,9 +62,9 @@ import xyz.columnal.id.TableId;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.data.TableOperations;
 import xyz.columnal.data.datatype.DataType;
-import xyz.columnal.gui.DataCellSupplier.CellStyle;
-import xyz.columnal.gui.DataCellSupplier.VersionedSTF;
-import xyz.columnal.gui.DataDisplay.ColumnHeaderOps.EditTarget;
+import xyz.columnal.gui.table.DataCellSupplier.CellStyle;
+import xyz.columnal.gui.table.DataCellSupplier.VersionedSTF;
+import xyz.columnal.gui.table.DataDisplay.ColumnHeaderOps.EditTarget;
 import xyz.columnal.utility.gui.ErrorableTextField;
 import xyz.columnal.utility.gui.ErrorableTextField.ConversionResult;
 import xyz.columnal.gui.dtf.ReadOnlyDocument;
@@ -83,8 +83,6 @@ import xyz.columnal.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import xyz.columnal.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import xyz.columnal.gui.stable.ColumnDetails;
 import xyz.columnal.gui.stable.ColumnOperation;
-import xyz.columnal.gui.table.HeadedDisplay;
-import xyz.columnal.gui.table.TableDisplay;
 import xyz.columnal.styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;

@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui.table;
+package xyz.columnal.gui.table.app;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.ImmediateValue;
@@ -66,6 +66,8 @@ import xyz.columnal.data.Table;
 import xyz.columnal.data.TableManager;
 import xyz.columnal.data.TableOperations;
 import xyz.columnal.data.Transformation;
+import xyz.columnal.gui.table.DataCellSupplier.VersionedSTF;
+import xyz.columnal.gui.table.DataDisplay;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.TableId;
 import xyz.columnal.log.ErrorHandler.RunOrError;
@@ -105,8 +107,8 @@ import xyz.columnal.error.expressions.ExpressionErrorException;
 import xyz.columnal.error.expressions.ExpressionErrorException.EditableExpression;
 import xyz.columnal.exporters.manager.ExporterManager;
 import xyz.columnal.gui.AggregateSplitByPane;
-import xyz.columnal.gui.DataCellSupplier;
-import xyz.columnal.gui.DataDisplay;
+import xyz.columnal.gui.table.DataCellSupplier;
+import xyz.columnal.gui.table.DataDisplay;
 import xyz.columnal.gui.EditColumnExpressionDialog;
 import xyz.columnal.gui.EditExpressionDialog;
 import xyz.columnal.gui.EditImmediateColumnDialog;
@@ -127,7 +129,7 @@ import xyz.columnal.gui.grid.VirtualGridSupplierFloating;
 import xyz.columnal.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import xyz.columnal.gui.stable.ColumnOperation;
 import xyz.columnal.gui.stable.SimpleColumnOperation;
-import xyz.columnal.gui.table.PickTypeTransformDialog.TypeTransform;
+import xyz.columnal.gui.table.app.PickTypeTransformDialog.TypeTransform;
 import xyz.columnal.importers.ClipboardUtils;
 import xyz.columnal.importers.ClipboardUtils.RowRange;
 import xyz.columnal.transformations.Aggregate;
@@ -246,6 +248,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     private boolean queuedUpdateRows = false;
 
     @OnThread(Tag.Any)
+    @Override
     public Table getTable()
     {
         return table;
@@ -1836,7 +1839,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                         {
                             String string = DataTypeUtility.valueToString(defaultValue);
                             Platform.runLater(() -> {
-                                DataCellSupplier.@Nullable VersionedSTF cell = parent.getDataCellSupplier().getItemAt(getDataPosition(rowIndex, colIndex));
+                                @Nullable VersionedSTF cell = parent.getDataCellSupplier().getItemAt(getDataPosition(rowIndex, colIndex));
                                 if (cell != null)
                                 {
                                     cell.replaceAll(string, true);

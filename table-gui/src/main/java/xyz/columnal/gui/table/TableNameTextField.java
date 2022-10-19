@@ -18,7 +18,7 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.columnal.gui;
+package xyz.columnal.gui.table;
 
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.NonNull;

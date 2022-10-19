@@ -19,15 +19,16 @@ dependencies {
     implementation project(':expressions')
     implementation project(':functions')
     implementation project(':identifiers')
+    implementation project(':importers')
     implementation project(':lex-editor')
     implementation project(':transformations')
     implementation project(':r-interop')
+    implementation project(':table-gui')
     implementation project(':types')
     implementation libs.guava
     implementation libs.wellbehavedfx
     implementation libs.controlsfx
     implementation libs.poi.ooxml
-    implementation libs.jsoup
     implementation libs.commons.io
     implementation libs.commons.lang3
     implementation libs.javaSMT
