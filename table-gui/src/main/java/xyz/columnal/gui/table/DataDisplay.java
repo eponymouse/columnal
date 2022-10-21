@@ -914,7 +914,7 @@ public abstract class DataDisplay extends HeadedDisplay
         public GotoRowDialog(Window parent)
         {
             initOwner(parent);
-            initModality(Modality.WINDOW_MODAL);
+            initModality(FXUtility.windowModal());
             this.textField = new ErrorableTextField<@TableDataRowIndex Integer>(this::parseRowNumber);
             setResultConverter(bt -> {
                 if (bt == ButtonType.OK)

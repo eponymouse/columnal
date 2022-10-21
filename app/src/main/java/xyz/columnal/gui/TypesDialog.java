@@ -88,7 +88,7 @@ public class TypesDialog extends Dialog<Void>
     {
         this.owner = owner;
         this.typeManager = typeManager;
-        initModality(Modality.WINDOW_MODAL);
+        initModality(FXUtility.windowModal());
         initOwner(owner.dimWhileShowing(this));
         setTitle(TranslationUtility.getString("types.title"));
         setResizable(true);
@@ -192,7 +192,7 @@ public class TypesDialog extends Dialog<Void>
             Scene parentScene = TypesDialog.this.getDialogPane().getScene();
             if (parentScene != null && parentScene.getWindow() != null)
                 initOwner(parentScene.getWindow());
-            initModality(Modality.WINDOW_MODAL);
+            initModality(FXUtility.windowModal());
             setTitle(TranslationUtility.getString("types.edit.title"));
 
             typeName = new TextField();

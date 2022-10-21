@@ -97,7 +97,7 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
         this.owner = owner;
         this.typeManager = typeManager;
         this.unitManager = typeManager.getUnitManager();
-        initModality(Modality.WINDOW_MODAL);
+        initModality(FXUtility.windowModal());
         initOwner(owner.dimWhileShowing(this));
         setTitle(TranslationUtility.getString("units.title"));
         setResizable(true);
@@ -273,7 +273,7 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
             setTitle(TranslationUtility.getString("units.edit.title"));
             this.unitManager = typeManager.getUnitManager();
             initOwner(parent.dimWhileShowing(this));
-            initModality(Modality.WINDOW_MODAL);
+            initModality(FXUtility.windowModal());
             
             AlignedLabels alignedLabels = new AlignedLabels(Pos.CENTER_LEFT);
             unitNameField = new TextField(initialValue == null ? "" : initialValue.getFirst());

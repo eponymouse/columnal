@@ -1548,6 +1548,15 @@ public class FXUtility
         webViewReusableResourcePool.returnToPool(webView);
     }
 
+    public static Modality windowModal()
+    {
+        // window modal doesn't seem to work well with xvfb and icewm:
+        if (testingMode)
+            return Modality.APPLICATION_MODAL;
+        else
+            return Modality.WINDOW_MODAL;
+    }
+    
     public static interface GenOrError<T>
     {
         @OnThread(Tag.Simulation)

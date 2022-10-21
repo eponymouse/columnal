@@ -479,7 +479,7 @@ public class HTMLImporter implements Importer
         public PickHTMLTableDialog(Window parent, Document doc)
         {
             initOwner(parent);
-            initModality(Modality.WINDOW_MODAL);
+            initModality(FXUtility.windowModal());
             setTitle(TranslationUtility.getString("import.html.picktable.title"));
             getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);
             setResizable(true);

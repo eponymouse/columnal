@@ -60,7 +60,7 @@ public abstract class LightDialog<R> extends Dialog<R>
     {
         initOwner(parent.dimWhileShowing(this));
         initStyle(StageStyle.TRANSPARENT);
-        initModality(Modality.WINDOW_MODAL);
+        initModality(FXUtility.windowModal());
         
         if (customDialogPane != null)
             setDialogPane(customDialogPane);
