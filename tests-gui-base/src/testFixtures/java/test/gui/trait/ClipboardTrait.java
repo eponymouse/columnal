@@ -36,7 +36,7 @@ public interface ClipboardTrait extends FxRobotInterface
             TFXUtil.sleep(100);
             count--;
         }
-        while (!BLANK_CLIPBOARD.equals(r) && count >= 0);
+        while (BLANK_CLIPBOARD.equals(r) && count >= 0);
         assertThat(r, Matchers.not(BLANK_CLIPBOARD));
         return r;
     }
