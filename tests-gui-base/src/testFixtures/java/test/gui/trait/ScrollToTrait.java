@@ -216,7 +216,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryT
             assertNotShowing("Zero-based row: " + row, ".ok-button");
         }
         // Wait for complete refresh:
-        TFXUtil.sleep(1000);
+        TFXUtil.sleep(3000);
         return TFXUtil.fx(() -> tableDisplay.getDataPosition(row, col));
     }
 
