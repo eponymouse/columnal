@@ -207,7 +207,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryT
         }));
         if (usingMenu)
         {
-            clickOn("#id-menu-view").clickOn(".id-menu-view-goto-row");
+            clickOn("#id-menu-view").moveTo(".id-menu-view-goto-row", Motion.VERTICAL_FIRST).clickOn();
             assertShowing("Zero-based row: " + row, ".ok-button");
             TFXUtil.sleep(200);
             // UI expects one-based:

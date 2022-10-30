@@ -20,6 +20,7 @@
 
 package test.gui;
 
+import com.eponymouse.testjavafx.Motion;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -84,7 +85,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, new DummyManager()).get();
             TFXUtil.sleep(1000);
 
-            clickOn("#id-menu-view").clickOn(".id-menu-view-types");
+            clickOn("#id-menu-view").moveTo(".id-menu-view-types", Motion.VERTICAL_FIRST).clickOn();
             TFXUtil.sleep(200);
             Window typeWindow = fxGetRealFocusedWindow();
             clickOn(".id-types-add");
@@ -264,7 +265,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, initial).get();
             TFXUtil.sleep(1000);
 
-            clickOn("#id-menu-view").clickOn(".id-menu-view-types");
+            clickOn("#id-menu-view").moveTo(".id-menu-view-types", Motion.VERTICAL_FIRST).clickOn();
             TFXUtil.sleep(200);
             clickOn(".types-list");
             push(KeyCode.DOWN);
@@ -295,7 +296,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, initial).get();
             TFXUtil.sleep(1000);
 
-            clickOn("#id-menu-view").clickOn(".id-menu-view-types");
+            clickOn("#id-menu-view").moveTo(".id-menu-view-types", Motion.VERTICAL_FIRST).clickOn();
             TFXUtil.sleep(200);
             clickOn(".types-list");
             push(KeyCode.DOWN);
@@ -330,7 +331,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, prevManager).get();
             TFXUtil.sleep(1000);
 
-            clickOn("#id-menu-view").clickOn(".id-menu-view-types");
+            clickOn("#id-menu-view").moveTo(".id-menu-view-types", Motion.VERTICAL_FIRST).clickOn();
             TFXUtil.sleep(200);
             clickOn(".types-list");
             push(KeyCode.DOWN);

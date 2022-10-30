@@ -20,6 +20,7 @@
 
 package test.gui;
 
+import com.eponymouse.testjavafx.Motion;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -64,7 +65,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, new DummyManager()).get();
         TFXUtil.sleep(1000);
         
-        clickOn("#id-menu-view").clickOn(".id-menu-view-units");
+        clickOn("#id-menu-view").moveTo(".id-menu-view-units", Motion.VERTICAL_FIRST).clickOn();
         TFXUtil.sleep(200);
         clickOn(".id-units-userDeclared-add");
         TFXUtil.sleep(500);
@@ -149,7 +150,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, prevManager).get();
         TFXUtil.sleep(1000);
 
-        clickOn("#id-menu-view").clickOn(".id-menu-view-units");
+        clickOn("#id-menu-view").moveTo(".id-menu-view-units", Motion.VERTICAL_FIRST).clickOn();
         TFXUtil.sleep(200);
         clickOn(".user-unit-list");
         push(KeyCode.HOME);
@@ -182,7 +183,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, prevManager).get();
         TFXUtil.sleep(1000);
 
-        clickOn("#id-menu-view").clickOn(".id-menu-view-units");
+        clickOn("#id-menu-view").moveTo(".id-menu-view-units", Motion.VERTICAL_FIRST).clickOn();
         TFXUtil.sleep(200);
         clickOn(".user-unit-list");
         push(KeyCode.HOME);
@@ -216,7 +217,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, prevManager).get();
         TFXUtil.sleep(1000);
 
-        clickOn("#id-menu-view").clickOn(".id-menu-view-units");
+        clickOn("#id-menu-view").moveTo(".id-menu-view-units", Motion.VERTICAL_FIRST).clickOn();
         TFXUtil.sleep(200);
         clickOn(".user-unit-list");
         push(KeyCode.HOME);
