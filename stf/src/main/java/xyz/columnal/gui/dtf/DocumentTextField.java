@@ -127,10 +127,14 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     {
         //if (mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED)
         //    Log.debug("Got mouse event: " + mouseEvent);
-        
+
+        // Note: on Linux especially, we don't always get a drag event with the final
+        // mouse position before release, so it's important we listen for the mouse
+        // release event here to get the accurate final position:
         if ((mouseEvent.getEventType() == MouseEvent.MOUSE_PRESSED
             //|| (mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED && mouseEvent.isStillSincePress())
-            || mouseEvent.getEventType() == MouseEvent.MOUSE_DRAGGED)
+            || mouseEvent.getEventType() == MouseEvent.MOUSE_DRAGGED
+            || mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED)
                 && mouseEvent.getButton() == MouseButton.PRIMARY)
         {
             //Log.debug("Got mouse event: " + mouseEvent + " " + mouseEvent.isStillSincePress());
@@ -149,7 +153,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             {
                 // And important to map caret pos after change:
                 caretPosition.moveTo(Math.min(document.getLength(), document.mapCaretPos(hitInfo.getInsertionIndex())));
-                if (mouseEvent.getEventType() != MouseEvent.MOUSE_DRAGGED && !mouseEvent.isShiftDown())
+                if (mouseEvent.getEventType() == MouseEvent.MOUSE_PRESSED && !mouseEvent.isShiftDown())
                     moveAnchorToCaret();
             }
         }
