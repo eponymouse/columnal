@@ -62,7 +62,11 @@ public class PickTableDialog extends LightDialog<Table>
                 FXUtility.mouse(this).setResult(t);
                 close();
             });
-            pickTablePane.focusEntryField();
+        });
+        
+        setOnShown(e -> {
+            // Have to use runAfter to combat ButtonBarSkin grabbing focus:
+            FXUtility.runAfter(pickTablePane::focusEntryField);
         });
         setOnHiding(e -> {
             view.disablePickingMode();
