@@ -82,6 +82,7 @@ public class BaseTestExpressionEditorEntry extends FXApplicationTest implements 
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             correctTargetWindow().clickOn(".id-new-transform");
             correctTargetWindow().clickOn(".id-transform-calculate");
+            waitUntil(focused(".text-field"));
             correctTargetWindow().write(expressionValue.tableId.getRaw());
             push(KeyCode.ENTER);
             TFXUtil.sleep(200);
