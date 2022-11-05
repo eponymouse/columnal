@@ -1557,6 +1557,11 @@ public class FXUtility
             return Modality.WINDOW_MODAL;
     }
     
+    public static boolean useSystemMenuBar()
+    {
+        return !testingMode;
+    }
+    
     public static interface GenOrError<T>
     {
         @OnThread(Tag.Simulation)
