@@ -123,15 +123,18 @@ public class Log
     @Pure
     public static void logStackTrace(String s)
     {
-        String trace = getStackTrace(1, 1000);
-        debug(s + "\n" + trace);
+        if (getLogger().isDebugEnabled())
+        {
+            String trace = getStackTrace(1, 1000);
+            debug(s + "\n" + trace);
+        }
     }
 
     @Pure
     public static void normalStackTrace(String message, int maxLevels)
     {
         String trace = getStackTrace(1, maxLevels);
-        debug(message + "\n" + trace);
+        normal(message + "\n" + trace);
     }
 
     private static String getStackTrace(int excludeFromTop, int maxItems)
