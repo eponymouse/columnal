@@ -538,6 +538,8 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
             @NonNull Node cell = TBasicUtil.checkNonNull(TFXUtil.fx(() -> listEntries._test_scrollToItem(toDelete)));
             clickOn(TFXUtil.fx(() -> cell.lookup(".small-delete")));
+            // They animate out so we need to give it some time:
+            TFXUtil.sleep(1000);
 
             TreeMap<ComparableValue, ComparableEither<String, ComparableValue>> map = TBasicUtil.checkNonNull(replacementsSoFar.get(toDelete.getReplacementColumn()));
             map.remove(toDelete.getIdentifierValue());
