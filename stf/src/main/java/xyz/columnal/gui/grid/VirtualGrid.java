@@ -1433,7 +1433,10 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
             {
                 @Nullable CellSelection possibleSel = gridArea.getSelectionForSingleCell(topLeft);
                 if (possibleSel != null)
+                {
                     select(possibleSel);
+                    return;
+                }
             }
             select(new EmptyCellSelection(topLeft));
         }

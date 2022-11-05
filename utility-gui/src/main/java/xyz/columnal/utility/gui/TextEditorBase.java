@@ -118,6 +118,7 @@ public abstract class TextEditorBase extends Region
             selectionPane = new Pane(selectionShape);
             selectionPane.getStyleClass().add("selection-pane");
             selectionPane.setBlendMode(BlendMode.LIGHTEN);
+            selectionPane.setMouseTransparent(true);
             inverter = new Path();
             inverter.setMouseTransparent(true);
             //inverter.setManaged(false);
@@ -126,6 +127,7 @@ public abstract class TextEditorBase extends Region
             inverterPane = new Pane(inverter);
             inverterPane.getStyleClass().add("inverter-pane");
             inverterPane.setBlendMode(BlendMode.DIFFERENCE);
+            inverterPane.setMouseTransparent(true);
             
             errorUnderlinePane = new Pane();
             errorUnderlinePane.setMouseTransparent(true);

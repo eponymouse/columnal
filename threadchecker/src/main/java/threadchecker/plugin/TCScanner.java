@@ -279,6 +279,7 @@ class TCScanner extends TreePathScanner<Void, Void>
         methodAnns.add(new MethodRef("java.lang.Thread", "setDaemon", new LocatedTag(Tag.Any, false, true, "<Thread>")));
         methodAnns.add(new MethodRef("java.lang.Thread", "setName", new LocatedTag(Tag.Any, false, true, "<Thread>")));
         methodAnns.add(new MethodRef("java.lang.Thread", "isAlive", new LocatedTag(Tag.Any, false, true, "<Thread>")));
+        methodAnns.add(new MethodRef("java.lang.Thread", "getId", new LocatedTag(Tag.Any, false, true, "<Thread>")));
         methodAnns.add(new MethodRef("java.lang.Thread", "<init>", new LocatedTag(Tag.Any, false, true, "<Thread>")));
 
 
