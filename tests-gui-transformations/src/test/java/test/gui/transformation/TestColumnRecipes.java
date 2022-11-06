@@ -162,7 +162,7 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
         else 
         {
             assertEquals(ImmutableList.of(), TFXUtil.fx(() -> listView.getItems()));
-            assertTrue(TFXUtil.fx(() -> lookup(".ok-button").queryButton().isDisabled()));
+            assertTrue(TFXUtil.fx(() -> lookup(".ok-button").query().isDisabled()));
             clickOn(".cancel-button");
         }
     }

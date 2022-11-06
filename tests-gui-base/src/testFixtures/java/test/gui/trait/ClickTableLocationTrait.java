@@ -20,6 +20,7 @@
 
 package test.gui.trait;
 
+import org.testjavafx.node.NodeQuery;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -28,8 +29,7 @@ import javafx.scene.Node;
 import javafx.scene.input.MouseButton;
 import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
-import org.testfx.api.FxRobotInterface;
-import org.testfx.service.query.NodeQuery;
+import org.testjavafx.FxRobotInterface;
 import xyz.columnal.gui.grid.RectangleBounds;
 import xyz.columnal.gui.grid.VirtualGrid;
 import threadchecker.OnThread;
@@ -70,7 +70,7 @@ public interface ClickTableLocationTrait extends FxRobotInterface
         
         Log.debug("Bounds for " + rectangleBounds + " on screen are " + box);
         
-        Set<Node> target = nodeQuery.match((Predicate<Node>)(node -> {
+        Set<Node> target = nodeQuery.filter((Predicate<Node>)(node -> {
             return TFXUtil.fx(() -> box.intersects(node.localToScreen(node.getBoundsInLocal())));
         })).queryAll(); 
         if (target.isEmpty())

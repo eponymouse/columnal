@@ -34,7 +34,7 @@ import org.junit.Assert;
 import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.testfx.api.FxRobotInterface;
+import org.testjavafx.FxRobotInterface;
 import org.testfx.util.WaitForAsyncUtils;
 import xyz.columnal.data.datatype.DataType;
 import xyz.columnal.data.datatype.DataType.DataTypeVisitor;

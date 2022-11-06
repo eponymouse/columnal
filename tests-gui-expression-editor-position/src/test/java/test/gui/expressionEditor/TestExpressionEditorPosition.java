@@ -443,7 +443,7 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                         continue;
                     System.out.println("Clicking on " + clickIndex + ": " + caretCentre);
                     //TFXUtil.fx_(() -> dumpScreenshot());
-                    moveAndDismissPopupsAtPos(point(caretCentre));
+                    moveAndDismissPopupsAtPos(caretCentre);
                     sleep(400);
                     clickOn(caretCentre.add(1, 0));
                     assertEquals("Clicked: " + caretCentre.add(1, 0), internalCaretPos[clickIndex], getPosition().getSecond().intValue());

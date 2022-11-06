@@ -130,6 +130,11 @@ subprojects { subproject ->
       testFixturesCompileOnly project(':threadchecker')
       
       testImplementation 'org.testfx:openjfx-monocle:jdk-12.0.1+2'
+
+      testImplementation files("${rootProject.projectDir}/lib/testjavafx-core.jar")
+      testFixturesImplementation files("${rootProject.projectDir}/lib/testjavafx-core.jar")
+      testImplementation files("${rootProject.projectDir}/lib/testjavafx-junit4.jar")
+      testFixturesImplementation files("${rootProject.projectDir}/lib/testjavafx-junit4.jar")
     }
 
     tasks.withType(JavaCompile) {

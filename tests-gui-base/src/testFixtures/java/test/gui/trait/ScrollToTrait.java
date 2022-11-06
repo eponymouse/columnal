@@ -22,6 +22,8 @@ package test.gui.trait;
 
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
+import org.testjavafx.Motion;
+import org.testjavafx.node.NodeQuery;
 import javafx.geometry.Bounds;
 import javafx.geometry.HorizontalDirection;
 import javafx.geometry.Orientation;
@@ -33,11 +35,13 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.testfx.api.FxRobotInterface;
-import org.testfx.service.query.NodeQuery;
+import org.testfx.api.FxRobotException;
+import org.testjavafx.FxRobotInterface;
+import org.testfx.service.query.PointQuery;
 import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.TBasicUtil;
+import xyz.columnal.error.InternalException;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.id.DataItemPosition;
 import xyz.columnal.data.Table;
@@ -50,12 +54,16 @@ import xyz.columnal.gui.grid.CellSelection;
 import xyz.columnal.gui.grid.VirtualGrid;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.log.Log;
 import xyz.columnal.utility.Utility;
+import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 
 import static org.junit.Assert.*;
+import static org.testfx.util.NodeQueryUtils.isVisible;
 
 public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryTrait
 {
@@ -151,6 +159,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryT
 
             int pageHeight = TFXUtil.fx(() -> virtualGrid.calcPageHeight());
 
+            // Control-Home goes to 1,1 not 0,0 hence the -1 in the subsequent loops:
             push(KeyCode.SHORTCUT, KeyCode.HOME);
             // First go to correct row:
             for (int i = 0; i < (target.rowIndex - 1) / pageHeight; i++)

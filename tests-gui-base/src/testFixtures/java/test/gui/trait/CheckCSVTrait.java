@@ -24,7 +24,7 @@ import com.google.common.primitives.Ints;
 import javafx.scene.input.KeyCode;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
-import org.testfx.api.FxRobotInterface;
+import org.testjavafx.FxRobotInterface;
 import org.testfx.util.WaitForAsyncUtils;
 import test.gui.TFXUtil;
 import xyz.columnal.data.TBasicUtil;

@@ -434,7 +434,7 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
         final @Nullable AnimationTimer[] timer = new AnimationTimer[1];
         try
         {
-            moveTo(node);
+            moveTo(point(node));
             final ArrayList<Double> yCoords = new ArrayList<>();
             TFXUtil.fx_(() -> {
                 timer[0] = new AnimationTimer()

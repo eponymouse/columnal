@@ -25,7 +25,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
-import org.testfx.api.FxRobotInterface;
+import org.testjavafx.FxRobotInterface;
 import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;

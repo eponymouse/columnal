@@ -22,6 +22,7 @@ package test.gui;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
+import org.testjavafx.Motion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,8 +45,6 @@ import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.testfx.robot.Motion;
-import org.testfx.service.query.impl.NodeQueryImpl;
 import org.testfx.util.WaitForAsyncUtils;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.TBasicUtil;
@@ -226,7 +225,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         makeNewDataEntryTable(NEW_TABLE_POS);
         assertEquals(1, (int) TFXUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
         assertEquals(1, count(".table-display-table-title"));
-        clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
+        clickOn("#id-menu-edit").moveBy(5, 0).moveTo(".id-menu-edit-undo", Motion.VERTICAL_FIRST).clickOn();
         TFXUtil.sleep(1000);
         assertEquals(0, (int) TFXUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
         assertEquals(0, count(".table-display-table-title"));
@@ -253,7 +252,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             else
             {
                 //System.out.println("###\n# Undoing " + Instant.now() + "\n###\n");
-                clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
+                clickOn("#id-menu-edit").moveBy(5, 0).moveTo(".id-menu-edit-undo", Motion.VERTICAL_FIRST).clickOn();
                 TFXUtil.sleep(1000);
                 tableIds.remove(tableIds.size() - 1);
             }
@@ -276,8 +275,8 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertEquals(1, tableManager.getAllTables().get(0).getData().getLength());
         assertEquals(1, count(".table-display-table-title"));
         assertEquals(1, count(".document-text-field"));
-        
-        clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
+
+        clickOn("#id-menu-edit").moveBy(5, 0).moveTo(".id-menu-edit-undo", Motion.VERTICAL_FIRST).clickOn();
         TFXUtil.sleep(2000);
         assertEquals(1, (int) TFXUtil.fx(() -> tableManager.getAllTables().size()));
         assertEquals(1, count(".table-display-table-title"));
@@ -326,7 +325,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 dataHistory.remove(dataHistory.size() - 1);
                 clickOn("#id-menu-edit").moveBy(5, 0);
                 TFXUtil.sleep(500);
-                clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
+                moveTo(".id-menu-edit-undo", Motion.VERTICAL_FIRST).clickOn();
                 TFXUtil.sleep(4000);
             }
             else // 6 - 9
@@ -411,7 +410,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     private void clickOnSub(Node root, String subQuery)
     {
         assertTrue(subQuery.startsWith("."));
-        @Nullable Node sub = new NodeQueryImpl().from(root).lookup(subQuery).<Node>query();
+        @Nullable Node sub = from(root).lookup(subQuery).<Node>query();
         assertNotNull(subQuery, sub);
         if (sub != null)
             clickOn(sub);

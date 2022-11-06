@@ -22,6 +22,7 @@ package test.gui.table;
 
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
+import org.testjavafx.node.NodeQuery;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
@@ -32,7 +33,6 @@ import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
-import org.testfx.service.query.NodeQuery;
 import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.*;
@@ -341,7 +341,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         // Find the row label.  Should be visible based on previous actions:
         Node rowLabel = findRowLabel(tableId, targetRow);
         if (rowLabel == null)
-            throw new RuntimeException("No row label for zero-based row " + targetRow + " in " + findVisRowLabels(tableId) + "focused: " + TFXUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
+            throw new RuntimeException("No row label for zero-based row " + targetRow + " in " + findVisRowLabels(tableId) + "focused: " + TFXUtil.fx(() -> focusedWindows()));
         @NonNull Node rowLabelFinal = rowLabel;
         double rowLabelTop = TFXUtil.fx(() -> rowLabelFinal.localToScene(rowLabelFinal.getBoundsInLocal()).getMinY());
         List<Node> rowCells = TFXUtil.fx(() -> queryTableDisplay(tableId).lookup(".document-text-field").match(n -> Math.abs(n.localToScene(n.getBoundsInLocal()).getMinY()) - rowLabelTop <= 3).queryAll().stream().sorted(Comparator.comparing(n -> n.localToScene(n.getBoundsInLocal()).getMinX())).collect(Collectors.toList()));

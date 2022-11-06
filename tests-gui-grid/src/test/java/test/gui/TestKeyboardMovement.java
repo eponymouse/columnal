@@ -156,7 +156,7 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
             // In case of a load:
             TFXUtil.sleep(5000);
             selectionRect = TFXUtil.fx(() -> lookup(".virt-grid-selection-overlay").match(Node::isVisible).tryQuery().orElse(null));
-            Log.debug("Window: " + windowToUse + " Target: " + TFXUtil.fx(() -> targetWindow()) + " rect: " + TFXUtil.fx(() -> lookup(".virt-grid-selection-overlay").tryQuery().orElse(null)));
+            Log.debug("Window: " + windowToUse + " Target: " + TFXUtil.fx(() -> focusedWindows()) + " rect: " + TFXUtil.fx(() -> lookup(".virt-grid-selection-overlay").tryQuery().orElse(null)));
         }
         assertTrue(prefix, TFXUtil.fx(() -> windowToUse.isFocused()));
         assertNotNull(prefix, selectionRect);

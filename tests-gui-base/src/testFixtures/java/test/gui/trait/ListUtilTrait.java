@@ -22,7 +22,7 @@ package test.gui.trait;
 
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
-import org.testfx.api.FxRobotInterface;
+import org.testjavafx.FxRobotInterface;
 import test.gui.TFXUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;

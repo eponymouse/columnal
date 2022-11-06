@@ -230,7 +230,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         int count;Optional<ScrollBar> visibleScroll = TFXUtil.fx(() -> lookup(".fancy-list > .scroll-bar").match(NodeQueryUtils.isVisible()).match((ScrollBar s) -> s.getOrientation().equals(Orientation.VERTICAL)).tryQuery());
         if (visibleScroll.isPresent())
         {
-            moveTo(visibleScroll.get());
+            moveTo(point(visibleScroll.get()));
             count = 0;
             while (TFXUtil.fx(() -> visibleScroll.get().getValue()) < 0.99 && ++count < 100)
                 scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN);
