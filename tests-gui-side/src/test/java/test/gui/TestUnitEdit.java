@@ -20,7 +20,7 @@
 
 package test.gui;
 
-import com.eponymouse.testjavafx.Motion;
+import org.testjavafx.Motion;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
