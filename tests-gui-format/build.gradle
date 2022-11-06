@@ -14,8 +14,6 @@ dependencies {
     testImplementation libs.commons.io
     testImplementation libs.commons.lang3
     testImplementation libs.guava
-    testImplementation libs.testfx.core
-    testImplementation libs.testfx.junit
 
     testFixturesImplementation project(':app')
     testFixturesImplementation project(':data')

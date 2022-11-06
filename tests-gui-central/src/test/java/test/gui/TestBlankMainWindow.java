@@ -45,7 +45,7 @@ import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.testfx.util.WaitForAsyncUtils;
+import org.testjavafx.FxThreadUtils;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.RecordSet;
@@ -396,7 +396,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         }
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
-        WaitForAsyncUtils.waitForFxEvents();
+        FxThreadUtils.waitForFxEvents();
         try
         {
             Thread.sleep(2000);
@@ -625,7 +625,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         // Won't happen, assertion will fail:
         if (expandDown == null) return;
         clickOn(expandDown);
-        WaitForAsyncUtils.waitForFxEvents();
+        FxThreadUtils.waitForFxEvents();
     }
 /*
     @OnThread(Tag.Any)

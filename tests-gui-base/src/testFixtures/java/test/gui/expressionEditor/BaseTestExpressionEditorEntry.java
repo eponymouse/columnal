@@ -28,7 +28,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
-import org.testfx.util.WaitForAsyncUtils;
+import org.testjavafx.FxThreadUtils;
 import test.gen.ExpressionValue;
 import test.gui.TAppUtil;
 import test.gui.TFXUtil;
@@ -131,10 +131,7 @@ public class BaseTestExpressionEditorEntry extends FXApplicationTest implements 
             List<Either<String, @Value Object>> actual = clip.get().stream().filter((LoadedColumnInfo p) -> Objects.equals(p.columnName, new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).dataValues;
             TBasicUtil.assertValueListEitherEqual("Transformed", Utility.<@Value Object, Either<String, @Value Object>>mapList(expressionValue.value, x -> Either.<String, @Value Object>right(x)), actual);
             
-            // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
-            // Shouldn't really need this code but test is flaky without it due to some JavaFX animation-related exceptions:
             TFXUtil.sleep(2000);
-            WaitForAsyncUtils.clearExceptions();
         }
         finally
         {

@@ -11,8 +11,6 @@ dependencies {
     testImplementation project(':utility-error')
     testImplementation project(':utility-functional')
     testImplementation libs.guava
-    testImplementation libs.testfx.core
-    testImplementation libs.testfx.junit
 
     testImplementation(testFixtures(project(":tests-basic")))
     testImplementation(testFixtures(project(":tests-gui-base")))

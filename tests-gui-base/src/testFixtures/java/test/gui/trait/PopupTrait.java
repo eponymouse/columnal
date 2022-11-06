@@ -22,14 +22,10 @@ package test.gui.trait;
 
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
 import javafx.scene.input.MouseButton;
 import javafx.stage.PopupWindow;
-import javafx.stage.Window;
-import test.gui.TFXUtil;
-import xyz.columnal.log.Log;
 import org.testjavafx.FxRobotInterface;
-import org.testfx.service.query.PointQuery;
+import test.gui.TFXUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Utility;

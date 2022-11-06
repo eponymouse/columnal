@@ -20,8 +20,6 @@
 
 package test.gui.util;
 
-import org.testjavafx.FxRobot;
-import org.testjavafx.FxRobotInterface;
 import com.sun.javafx.application.ParametersImpl;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -31,7 +29,6 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.Control;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
@@ -42,16 +39,12 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
-import org.apache.commons.lang3.SystemUtils;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
-import org.testfx.api.FxRobotException;
-import org.testfx.service.query.NodeQuery;
-import org.testfx.service.query.PointQuery;
-import org.testfx.util.WaitForAsyncUtils;
+import org.testjavafx.FxRobot;
+import org.testjavafx.FxRobotInterface;
 import test.gui.TFXUtil;
 import test.gui.trait.FocusOwnerTrait;
 import test.gui.trait.QueryTrait;
@@ -73,12 +66,9 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertNull;
-import static org.testfx.util.NodeQueryUtils.isVisible;
 
 public class FXApplicationTest extends org.testjavafx.junit4.ApplicationTest implements FocusOwnerTrait, ScreenshotTrait, QueryTrait
 {

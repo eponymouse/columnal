@@ -37,7 +37,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.testfx.util.WaitForAsyncUtils;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.KnownLengthRecordSet;
@@ -139,7 +138,7 @@ public class TestExpressionEditor extends BaseTestExpressionEditorEntry implemen
             // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
             // Shouldn't really need this code but test is flaky without it due to some JavaFX animation-related exceptions:
             TFXUtil.sleep(2000);
-            WaitForAsyncUtils.clearExceptions();
+            //FxThreadUtils.clearExceptions();
             return expression;
         }
         finally

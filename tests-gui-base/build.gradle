@@ -22,8 +22,6 @@ dependencies {
     testFixturesImplementation libs.commons.lang3
     testFixturesImplementation libs.controlsfx
     testFixturesImplementation libs.guava
-    testFixturesImplementation libs.testfx.core
-    testFixturesImplementation libs.testfx.junit
 
     testFixturesImplementation(testFixtures(project(":tests-basic")))
     testFixturesImplementation(testFixtures(project(":tests-functions")))

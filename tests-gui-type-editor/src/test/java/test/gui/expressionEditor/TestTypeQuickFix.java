@@ -40,7 +40,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.testfx.util.WaitForAsyncUtils;
+import org.testjavafx.FxThreadUtils;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.ImmediateDataSource;
 import xyz.columnal.data.datatype.DataType;
@@ -248,10 +248,10 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
             // Check that popup vanishes pretty much straight away:
             TFXUtil.sleep(200);
             assertTrue("Popup still showing: "+ errorPopup, TFXUtil.fx(() -> errorPopup != null && !errorPopup.isShowing()));
-            WaitForAsyncUtils.waitForFxEvents();
+            FxThreadUtils.waitForFxEvents();
             TFXUtil.doubleOk(this);
             TFXUtil.sleep(1000);
-            WaitForAsyncUtils.waitForFxEvents();
+            FxThreadUtils.waitForFxEvents();
             @Nullable ImmediateDataSource dataSource = Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), ImmediateDataSource.class).findFirst().orElse(null);
             assertNotNull(dataSource);
             if (dataSource == null)

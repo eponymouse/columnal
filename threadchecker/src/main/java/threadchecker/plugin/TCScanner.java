@@ -1029,7 +1029,7 @@ class TCScanner extends TreePathScanner<Void, Void>
     private LocatedTag fromSpecial(String typeName, String call, Optional<LocatedTag> calledFrom_, Tree errorLocation)
     {
         Tag calledFrom = calledFrom_.map(lt -> lt.tag).orElse(Tag.Any);
-        if (Arrays.asList("Platform.runLater", "WaitForAsyncUtils.asyncFx").contains(call))
+        if (Arrays.asList("Platform.runLater", "FxThreadUtils.asyncFx").contains(call))
         {
             if (calledFrom == Tag.FXPlatform || calledFrom == Tag.FX)
                 issueError("\nCalling runLater from thread " + calledFrom, errorLocation);

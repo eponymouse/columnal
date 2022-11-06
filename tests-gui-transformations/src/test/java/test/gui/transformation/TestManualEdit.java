@@ -39,7 +39,7 @@ import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.text.Text;
-import org.testfx.util.WaitForAsyncUtils;
+import org.testjavafx.FxThreadUtils;
 import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.id.ColumnId;
@@ -613,7 +613,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
     {
         Text t = Utility.cast(editLink, Text.class);
         // Need to use asyncFx because it may show a modal dialog; we don't want to wait:
-        WaitForAsyncUtils.asyncFx(() -> {
+        FxThreadUtils.asyncFx(() -> {
             if (t.getUserData() instanceof Clickable)
             {
                 Bounds screenBounds = editLink.localToScreen(editLink.getBoundsInLocal());
