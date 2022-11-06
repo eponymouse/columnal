@@ -83,7 +83,7 @@ public class TFXUtil
     {
         try
         {
-            return FxThreadUtils.asyncFx(action).get(60, TimeUnit.SECONDS);
+            return FxThreadUtils.syncFx(action);
         }
         catch (Exception e)
         {
@@ -97,7 +97,7 @@ public class TFXUtil
     {
         try
         {
-            FxThreadUtils.asyncFx(action::run).get(60, TimeUnit.SECONDS);
+            FxThreadUtils.syncFx(action::run);
             FxThreadUtils.waitForFxEvents();
         }
         catch (Exception e)
