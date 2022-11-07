@@ -21,12 +21,18 @@ public interface ClipboardTrait extends FxRobotInterface
     @OnThread(Tag.Simulation)
     public default String copyToClipboard()
     {
+        return copyToClipboard(() -> push(KeyCode.F11));
+    }
+
+    // Action will be run from the current thread!
+    @OnThread(Tag.Simulation)
+    public default String copyToClipboard(Runnable doCopyAction)
+    {
         final String BLANK_CLIPBOARD = "@TEST";
         // Clear clipboard to give a blank slate to compare against:
         TFXUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, BLANK_CLIPBOARD)));
-        // Check original has the right string:
-        push(KeyCode.F11);
-        
+        // Do the copy action:
+        doCopyAction.run();
 
         String r;
         int count = 80;

@@ -36,6 +36,7 @@ import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import test.gui.TAppUtil;
 import test.gui.TFXUtil;
+import test.gui.trait.ClipboardTrait;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.TBasicUtil;
@@ -72,7 +73,7 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestSort extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, PopupTrait, ClickTableLocationTrait
+public class TestSort extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, PopupTrait, ClickTableLocationTrait, ClipboardTrait
 {
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
@@ -141,12 +142,11 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
         TFXUtil.sleep(500);
         assertEquals(pickedColumns, Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), Sort.class).findFirst().get().getSortBy());
 
-        // Now check output values by getting them from clipboard:
-        showContextMenu(".table-display-table-title.transformation-table-title")
+        copyToClipboard(() -> {
+            // Now check output values by getting them from clipboard:
+            showContextMenu(".table-display-table-title.transformation-table-title")
                 .clickOn(".id-tableDisplay-menu-copyValues");
-        TFXUtil.sleep(1000);
-
-        
+        });        
                 
         Optional<ImmutableList<LoadedColumnInfo>> clip = TFXUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
         assertTrue(clip.isPresent());
