@@ -410,6 +410,9 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     @OnThread(Tag.Simulation)
     public void testRenameColumn(@From(GenColumnId.class) ColumnId newColumnId) throws Exception
     {
+        if (tableManager.getSingleTableOrThrow(srcId).getData().getColumnIds().contains(newColumnId))
+            return; // In the rare case we try to rename to an existing column name, skip
+        
         // 3 tables, 2 columns each:
         assertEquals(tableCount, count(".table-display-table-title"));
         assertEquals(tableCount * 2, count(".table-display-column-title"));

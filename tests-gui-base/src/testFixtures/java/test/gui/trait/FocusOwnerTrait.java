@@ -56,9 +56,6 @@ public interface FocusOwnerTrait extends FxRobotInterface
     @OnThread(Tag.FXPlatform)
     default Window getRealFocusedWindow()
     {
-        
-        return focusedWindows().stream().filter(w -> w.getScene() != null && w.getScene().getFocusOwner() != null).findFirst().orElse(null);
-        /*
         // The only children of Window are PopupWindow, Stage and EmbeddedWindow.
         // We are not interested in popup or embedded so we may as well
         // filter down to Stage:
@@ -81,8 +78,7 @@ public interface FocusOwnerTrait extends FxRobotInterface
             });
         }
         // Fall back to targetWindow if we still haven't narrowed it down:
-        return curWindow.size() == 1 ? curWindow.get(0) : focusedWindow();
-         */
+        return curWindow.size() == 1 ? curWindow.get(0) : focusedWindows().get(0);
     }
 
     @OnThread(Tag.Any)
