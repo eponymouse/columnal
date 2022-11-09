@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import test.gui.TAppUtil;
@@ -91,7 +92,7 @@ public class TestRTransformation extends FXApplicationTest implements ScrollToTr
         sleep(200_000);
         
         // Now check table exists, with correct output
-        assertEquals(2, mainWindowActions._test_getTableManager().getAllTables().size());
+        Assert.assertEquals(2, mainWindowActions._test_getTableManager().getAllTables().size());
         RTransformation rTransformation = (RTransformation) TBasicUtil.checkNonNull(mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof RTransformation).findFirst().orElse(null));
         assertEquals(ImmutableList.of(new ColumnId("Result")), rTransformation.getData().getColumnIds());
         assertEquals("497859090e5f950944a1e8cf3989dd8d", rTransformation.getData().getColumns().get(0).getType().getCollapsed(0));
