@@ -58,7 +58,7 @@ public class TestRTransformation extends FXApplicationTest implements ScrollToTr
     public void testR() throws Exception
     {
         // Uninstall one package first to check installation works:
-        Runtime.getRuntime().exec(new String[] {"R", "CMD", "REMOVE", "digest"});
+        Runtime.getRuntime().exec(new String[] {"R", "CMD", "REMOVE", "digest"}).waitFor();
         
         RecordSet original = new KnownLengthRecordSet(ImmutableList.of(ColumnUtility.makeImmediateColumn(DataType.TEXT, new ColumnId("The Strings"), ImmutableList.of(Either.right("Hello"), Either.right("There")), "")), 2);
         
@@ -73,7 +73,7 @@ public class TestRTransformation extends FXApplicationTest implements ScrollToTr
         scrollTo(".id-transform-runr");
         clickOn(".id-transform-runr");
         // First run can take quite a while:
-        TFXUtil.sleep(200_000);
+        TFXUtil.sleep(300_000);
         // Focus should begin in the expression, so let's do that first:
         write("digest(str_c(Table1$\"The Strings\"))");
         
