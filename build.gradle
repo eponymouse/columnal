@@ -183,20 +183,32 @@ subprojects { subproject ->
       timeout = Duration.ofMinutes(40)
       
       int index = allSubprojects.findAll{p -> p.name.contains("tests-gui")}.collect {p -> p.name}.sort().indexOf(subproject.name) - 1
+      int display = 42 + index
 
       if ("true".equals(project.findProperty("xvfb"))) {
-        environment "DISPLAY", ":" + (42 + index) + ".0"
+        environment "DISPLAY", ":" + display + ".0"
       }
       
       doFirst {
         if (index >= 0 && "true".equals(project.findProperty("xvfb"))) {
-          if ("true".equals(project.findProperty("screenrecord"))) {
-            new File(subproject.name + ".ffmpegpid").write("" + new ProcessBuilder("ffmpeg", "-nostdin", "-y", "-video_size", "1280x1024", "-framerate", "8", "-f", "x11grab", "-i", ":" + (42 + index) + ".0", "-codec:v", "libx264rgb", "-preset", "ultrafast", "-vf", "drawtext=text='%{localtime\\:%T}':x=100:y=50:fontcolor=white:fontsize=30", "recording-" + subproject.name + ".mp4").redirectOutput(new File(subproject.name + ".out.ffmpeg.log")).redirectError(new File(subproject.name + ".err.ffmpeg.log")).start().pid())
-          }
+          new ProcessBuilder("bash", "manage-xvfb-screens.sh", "start", Integer.toString(display), subproject.name).start().waitFor()
         }
       }
 
     }
+
+
+    // Can't use doLast because it doesn't run if the test fails:  
+    task stopXvfb {
+      doLast {
+        int index = allSubprojects.findAll{p -> p.name.contains("tests-gui")}.collect {p -> p.name}.sort().indexOf(subproject.name) - 1
+        int display = 42 + index
+        if (index >= 0 && "true".equals(project.findProperty("xvfb"))) {
+          new ProcessBuilder("bash", "manage-xvfb-screens.sh", "stop", Integer.toString(display), subproject.name).start().waitFor()
+        }
+      }
+    }
+    test.finalizedBy(stopXvfb)
 
     processTestResources.dependsOn ':xml:build'
   }
