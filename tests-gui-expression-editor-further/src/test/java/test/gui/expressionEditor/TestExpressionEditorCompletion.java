@@ -94,6 +94,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         // Not much more to do -- just edit the expression 
         correctTargetWindow();
         clickOn(TFXUtil.fx(() -> lookup(".column-title").match((Label l) -> TFXUtil.fx(() -> l.getText()).startsWith("My C")).<Label>query()));
+        waitUntil(focused(".column-name-text-field"));
         push(KeyCode.TAB);
     }
     
