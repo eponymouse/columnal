@@ -23,15 +23,15 @@
 #   bash manage-xvfb-screens.sh start N videoSlug
 #   bash manage-xvfb-screens.sh stop N videoSlug
 # Where N is the number of the X display.  It will automatically start/stop
-# Xvfb, icewm, and ffmpeg for that display number, using videoSlug to name the output file
+# Xvfb, sawfish, and ffmpeg for that display number, using videoSlug to name the output file
 
 case $1 in
   start)
     Xvfb :"$2" -screen 0 1280x1024x24 &
     echo $! > processes-"$2"-xvfb.pid
     sleep 5
-    icewm -d :"$2".0 &
-    echo $! > processes-"$2"-icewm.pid
+    sawfish --display=:"$2".0 &
+    echo $! > processes-"$2"-sawfish.pid
     sleep 5
     ffmpeg -nostdin -y -video_size 1280x1024 -framerate 8 -f x11grab -i :"$2".0 -codec:v libx264rgb -preset ultrafast -vf drawtext=text='%{localtime\:%T}':x=100:y=50:fontcolor=white:fontsize=30 recording-"$3".mp4 > "$3".out.ffmpeg.log 2> "$3".err.ffmpeg.log &
     echo $! > processes-"$2"-ffmpeg.pid
@@ -41,7 +41,7 @@ case $1 in
     kill -SIGINT $(cat processes-"$2"-ffmpeg.pid)
     # Give it time to finish:
     sleep 10
-    kill $(cat processes-"$2"-icewm.pid)
+    kill $(cat processes-"$2"-sawfish.pid)
     sleep 5
     kill $(cat processes-"$2"-xvfb.pid)
     ;;
