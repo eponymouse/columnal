@@ -204,6 +204,9 @@ public class TestDocumentTextField extends FXApplicationTest
     {
         TFXUtil.fx_(() ->{
             windowToUse.setScene(new Scene(field));
+            windowToUse.getScene().getStylesheets().addAll(
+                FXUtility.getStylesheet("general.css")
+            );
             windowToUse.show();
             windowToUse.sizeToScene();
             field.setDocument(new DisplayDocument(initialText) {
