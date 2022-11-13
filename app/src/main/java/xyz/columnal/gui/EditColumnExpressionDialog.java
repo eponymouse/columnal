@@ -310,7 +310,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         };
         curValue = expressionEditor.save(true);
         // Tab doesn't seem to work right by itself:
-        nameField.getNode().addEventHandler(KeyEvent.KEY_PRESSED, e -> {
+        nameField.getNode().addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.TAB)
             {
                 expressionEditor.focus(Focus.LEFT);

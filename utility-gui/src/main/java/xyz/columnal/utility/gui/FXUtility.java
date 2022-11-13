@@ -1550,11 +1550,7 @@ public class FXUtility
 
     public static Modality windowModal()
     {
-        // window modal doesn't seem to work well with xvfb and icewm:
-        if (testingMode)
-            return Modality.APPLICATION_MODAL;
-        else
-            return Modality.WINDOW_MODAL;
+        return Modality.WINDOW_MODAL;
     }
     
     public static boolean useSystemMenuBar()

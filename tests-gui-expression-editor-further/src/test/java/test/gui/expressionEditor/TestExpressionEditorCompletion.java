@@ -95,6 +95,8 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         correctTargetWindow();
         clickOn(TFXUtil.fx(() -> lookup(".column-title").match((Label l) -> TFXUtil.fx(() -> l.getText()).startsWith("My C")).<Label>query()));
         retryUntil(focused(".column-name-text-field"));
+        // Close auto-complete:
+        tap(KeyCode.ESCAPE);
         push(KeyCode.TAB);
     }
     
