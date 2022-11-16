@@ -1356,8 +1356,11 @@ public class FXUtility
         if (testingMode)
         {
             TextInputDialog textInputDialog = new TextInputDialog();
+            textInputDialog.initModality(Modality.APPLICATION_MODAL);
+            textInputDialog.getEditor().getStyleClass().add("fake-file-chooser-dialog");
             if (parent != null)
                 textInputDialog.initOwner(parent);
+            textInputDialog.setOnShown(ev -> Platform.runLater(() -> textInputDialog.getEditor().requestFocus()));
             return textInputDialog.showAndWait().map(File::new).orElse(null);
         }
         
