@@ -78,7 +78,7 @@ public interface FocusOwnerTrait extends FxRobotInterface
             });
         }
         // Fall back to targetWindow if we still haven't narrowed it down:
-        return curWindow.size() == 1 ? curWindow.get(0) : focusedWindows().get(0);
+        return curWindow.size() == 1 ? curWindow.get(0) : targetWindow();
     }
 
     @OnThread(Tag.Any)
