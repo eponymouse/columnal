@@ -26,7 +26,7 @@ import javafx.stage.Window;
 import test.gui.TFXUtil;
 import xyz.columnal.log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.testfx.api.FxRobotInterface;
+import org.testjavafx.FxRobotInterface;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.error.UserException;
 import xyz.columnal.gui.EditImmediateColumnDialog.ColumnDetails;

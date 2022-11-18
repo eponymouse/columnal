@@ -24,8 +24,6 @@ dependencies {
     implementation libs.javaSMT
     implementation libs.commons.lang3
     implementation libs.controlsfx
-    testImplementation libs.testfx.core
-    testImplementation libs.testfx.junit
 
     // From https://stackoverflow.com/questions/5644011/multi-project-test-dependencies-with-gradle/60138176#60138176
     testImplementation(testFixtures(project(":tests-basic")))

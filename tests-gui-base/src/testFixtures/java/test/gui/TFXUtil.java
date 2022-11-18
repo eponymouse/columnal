@@ -37,8 +37,8 @@ import javafx.scene.input.KeyCode;
 import javafx.util.Duration;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.testfx.api.FxRobotInterface;
-import org.testfx.util.WaitForAsyncUtils;
+import org.testjavafx.FxRobotInterface;
+import org.testjavafx.FxThreadUtils;
 import test.gui.trait.PopupTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -83,7 +83,7 @@ public class TFXUtil
     {
         try
         {
-            return WaitForAsyncUtils.asyncFx(action).get(60, TimeUnit.SECONDS);
+            return FxThreadUtils.syncFx(action);
         }
         catch (Exception e)
         {
@@ -97,8 +97,8 @@ public class TFXUtil
     {
         try
         {
-            WaitForAsyncUtils.asyncFx(action::run).get(60, TimeUnit.SECONDS);
-            WaitForAsyncUtils.waitForFxEvents();
+            FxThreadUtils.syncFx(action::run);
+            FxThreadUtils.waitForFxEvents();
         }
         catch (Exception e)
         {
@@ -110,7 +110,7 @@ public class TFXUtil
     @OnThread(Tag.Any)
     public static void asyncFx_(FXPlatformRunnable action)
     {
-        WaitForAsyncUtils.asyncFx(action::run);
+        FxThreadUtils.asyncFx(action::run);
     }
 
     @OnThread(Tag.Any)
@@ -118,7 +118,7 @@ public class TFXUtil
     {
         try
         {
-            WaitForAsyncUtils.<Optional<Throwable>>asyncFx(new Callable<Optional<Throwable>>()
+            FxThreadUtils.<Optional<Throwable>>asyncFx(new Callable<Optional<Throwable>>()
             {
                 @Override
                 @OnThread(value = Tag.FXPlatform, ignoreParent = true)

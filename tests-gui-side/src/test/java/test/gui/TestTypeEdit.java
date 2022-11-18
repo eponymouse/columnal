@@ -31,14 +31,24 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Window;
-import org.junit.Assert;
-import xyz.columnal.data.TBasicUtil;
-import xyz.columnal.log.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.junit.Assert;
 import org.junit.runner.RunWith;
-import org.testfx.util.NodeQueryUtils;
+import org.testjavafx.Motion;
+import test.DummyManager;
+import test.gen.GenRandom;
+import test.gen.GenTaggedTypeDefinition;
+import test.gui.trait.CheckWindowBoundsTrait;
+import test.gui.trait.EnterTypeTrait;
+import test.gui.trait.PopupTrait;
+import test.gui.trait.ScrollToTrait;
+import test.gui.trait.TextFieldTrait;
+import test.gui.util.FXApplicationTest;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import xyz.columnal.data.TBasicUtil;
 import xyz.columnal.data.datatype.DataType.TagType;
 import xyz.columnal.data.datatype.TaggedTypeDefinition;
 import xyz.columnal.data.datatype.TaggedTypeDefinition.TypeVariableKind;
@@ -51,18 +61,8 @@ import xyz.columnal.grammar.MainLexer2;
 import xyz.columnal.grammar.MainParser2;
 import xyz.columnal.gui.MainWindow.MainWindowActions;
 import xyz.columnal.jellytype.JellyType;
+import xyz.columnal.log.Log;
 import xyz.columnal.transformations.expression.type.TypeExpression;
-import test.DummyManager;
-import test.gen.GenRandom;
-import test.gen.GenTaggedTypeDefinition;
-import test.gui.trait.CheckWindowBoundsTrait;
-import test.gui.trait.EnterTypeTrait;
-import test.gui.trait.PopupTrait;
-import test.gui.trait.ScrollToTrait;
-import test.gui.trait.TextFieldTrait;
-import test.gui.util.FXApplicationTest;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import xyz.columnal.utility.Utility;
 
 import java.util.Comparator;
@@ -71,7 +71,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, EnterTypeTrait, CheckWindowBoundsTrait, ScrollToTrait, PopupTrait
@@ -84,7 +84,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, new DummyManager()).get();
             TFXUtil.sleep(1000);
 
-            clickOn("#id-menu-view").clickOn(".id-menu-view-types");
+            clickOn("#id-menu-view").moveTo(".id-menu-view-types", Motion.VERTICAL_FIRST).clickOn();
             TFXUtil.sleep(200);
             Window typeWindow = fxGetRealFocusedWindow();
             clickOn(".id-types-add");
@@ -214,7 +214,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         while (TFXUtil.fx(() -> lookup(".small-delete").tryQuery().isPresent()) && ++count < 30)
         {
             // Click highest one as likely to not be off the screen:
-            Node node = TFXUtil.<@Nullable Node>fx(() -> lookup(".small-delete-circle").match(NodeQueryUtils.isVisible()).<Node>queryAll().stream().sorted(Comparator.comparing(n -> n.localToScene(0, 0).getY())).findFirst().orElse(null));
+            Node node = TFXUtil.<@Nullable Node>fx(() -> lookup(".small-delete-circle").match(Node::isVisible).<Node>queryAll().stream().sorted(Comparator.comparing(n -> n.localToScene(0, 0).getY())).findFirst().orElse(null));
             if (node != null)
             {
                 clickOn(node);
@@ -227,10 +227,10 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     @OnThread(Tag.Any)
     private void enterNewInnerValueTag(Random r, TypeManager typeManager, TagType<JellyType> tagType) throws InternalException, UserException
     {
-        int count;Optional<ScrollBar> visibleScroll = TFXUtil.fx(() -> lookup(".fancy-list > .scroll-bar").match(NodeQueryUtils.isVisible()).match((ScrollBar s) -> s.getOrientation().equals(Orientation.VERTICAL)).tryQuery());
+        int count;Optional<ScrollBar> visibleScroll = TFXUtil.fx(() -> lookup(".fancy-list > .scroll-bar").match(Node::isVisible).match((ScrollBar s) -> s.getOrientation().equals(Orientation.VERTICAL)).tryQuery());
         if (visibleScroll.isPresent())
         {
-            moveTo(visibleScroll.get());
+            moveTo(point(visibleScroll.get()));
             count = 0;
             while (TFXUtil.fx(() -> visibleScroll.get().getValue()) < 0.99 && ++count < 100)
                 scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN);
@@ -264,7 +264,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, initial).get();
             TFXUtil.sleep(1000);
 
-            clickOn("#id-menu-view").clickOn(".id-menu-view-types");
+            clickOn("#id-menu-view").moveTo(".id-menu-view-types", Motion.VERTICAL_FIRST).clickOn();
             TFXUtil.sleep(200);
             clickOn(".types-list");
             push(KeyCode.DOWN);
@@ -295,7 +295,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, initial).get();
             TFXUtil.sleep(1000);
 
-            clickOn("#id-menu-view").clickOn(".id-menu-view-types");
+            clickOn("#id-menu-view").moveTo(".id-menu-view-types", Motion.VERTICAL_FIRST).clickOn();
             TFXUtil.sleep(200);
             clickOn(".types-list");
             push(KeyCode.DOWN);
@@ -330,7 +330,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, prevManager).get();
             TFXUtil.sleep(1000);
 
-            clickOn("#id-menu-view").clickOn(".id-menu-view-types");
+            clickOn("#id-menu-view").moveTo(".id-menu-view-types", Motion.VERTICAL_FIRST).clickOn();
             TFXUtil.sleep(200);
             clickOn(".types-list");
             push(KeyCode.DOWN);

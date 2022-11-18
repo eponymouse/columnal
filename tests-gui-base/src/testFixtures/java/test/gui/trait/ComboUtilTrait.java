@@ -24,7 +24,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.ComboBox;
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.testfx.api.FxRobotInterface;
+import org.testjavafx.FxRobotInterface;
 import test.gui.TFXUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -39,7 +39,7 @@ public interface ComboUtilTrait extends FxRobotInterface
 {
     @OnThread(Tag.Any)
     default <T> void selectNextComboBoxItem(final ComboBox<T> combo) {
-        clickOn(combo).type(KeyCode.DOWN).type(KeyCode.ENTER);
+        clickOn(combo).push(KeyCode.DOWN).push(KeyCode.ENTER);
     }
 
     @OnThread(Tag.Any)
@@ -55,11 +55,11 @@ public interface ComboUtilTrait extends FxRobotInterface
 
         if(index > indexSel)
             for(int i = indexSel; i < index; i++)
-                type(KeyCode.DOWN);
+                push(KeyCode.DOWN);
         else if(index < indexSel)
             for(int i = indexSel; i > index; i--)
-                type(KeyCode.UP);
+                push(KeyCode.UP);
 
-        type(KeyCode.ENTER);
+        push(KeyCode.ENTER);
     }
 }

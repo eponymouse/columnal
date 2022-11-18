@@ -196,7 +196,7 @@ public class MainWindow
                         GUI.menuItem("menu.help.about", () -> new AboutDialog(v).showAndWait())
                 )
         );
-        menuBar.setUseSystemMenuBar(true);
+        menuBar.setUseSystemMenuBar(FXUtility.useSystemMenuBar());
 
         curLeftPaneType = LeftPaneType.NONE;
         viewLeftToggleGroup.selectToggle(viewLeftNone);

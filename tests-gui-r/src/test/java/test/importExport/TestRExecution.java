@@ -262,13 +262,13 @@ public class TestRExecution
         long start = System.currentTimeMillis();
         try
         {
-            RExecution.runRExpression("Sys.sleep(240)");
+            RExecution.runRExpression("Sys.sleep(330)");
             Assert.fail("Should have thrown timeout exception");
         }
         catch (UserException e)
         {
             // This is the expected outcome.  Check it did actually cut off, and give the right reason:
-            MatcherAssert.assertThat(System.currentTimeMillis(), Matchers.<Long>lessThan(start + 260 * 1000));
+            MatcherAssert.assertThat(System.currentTimeMillis(), Matchers.<Long>lessThan(start + 320 * 1000));
             MatcherAssert.assertThat(e.getLocalizedMessage(), CoreMatchers.containsString("too long"));
         }
     }

@@ -207,7 +207,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         // Find the current top-left corner of the selection rectangle:
         RectangleBounds curBounds = TFXUtil.fx(() -> srcDataDisplay._test_getCurSelectionBounds());
         VisibleBounds visibleBounds = TFXUtil.fx(() -> srcGrid.getVisibleBounds());
-        TFXUtil.fx_(() -> targetWindow(srcGrid.getNode()));
+        //TFXUtil.fx_(() -> targetWindow(srcGrid.getNode()));
         Point2D startDrag = TFXUtil.fx(() -> visibleBounds._test_localToScreen(new Point2D(
                 visibleBounds.getXCoord(curBounds.topLeftIncl.columnIndex) + 1.0,
                 visibleBounds.getYCoord(curBounds.topLeftIncl.rowIndex) + 1.0)));

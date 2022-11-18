@@ -21,6 +21,7 @@
 package test.gui.transformation;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import org.testjavafx.node.NodeQuery;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
@@ -33,7 +34,6 @@ import javafx.scene.input.KeyCode;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
-import org.testfx.service.query.NodeQuery;
 import test.gui.TAppUtil;
 import test.gui.TFXUtil;
 import xyz.columnal.data.CellPosition;

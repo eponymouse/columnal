@@ -20,8 +20,6 @@ dependencies {
     testImplementation libs.controlsfx
     testImplementation libs.guava
     testImplementation libs.hamcrest
-    testImplementation libs.testfx.core
-    testImplementation libs.testfx.junit
 
 
     // From https://stackoverflow.com/questions/5644011/multi-project-test-dependencies-with-gradle/60138176#60138176

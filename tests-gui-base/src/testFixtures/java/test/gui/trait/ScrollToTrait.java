@@ -33,29 +33,32 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.testfx.api.FxRobotInterface;
-import org.testfx.service.query.NodeQuery;
+import org.testjavafx.FxRobotInterface;
+import org.testjavafx.Motion;
+import org.testjavafx.node.NodeQuery;
 import test.gui.TFXUtil;
-import xyz.columnal.data.CellPosition;
-import xyz.columnal.data.TBasicUtil;
-import xyz.columnal.id.ColumnId;
-import xyz.columnal.id.DataItemPosition;
-import xyz.columnal.data.Table;
-import xyz.columnal.data.Table.TableDisplayBase;
-import xyz.columnal.id.TableId;
-import xyz.columnal.data.TableManager;
-import xyz.columnal.error.UserException;
-import xyz.columnal.gui.table.app.TableDisplay;
-import xyz.columnal.gui.grid.CellSelection;
-import xyz.columnal.gui.grid.VirtualGrid;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.TBasicUtil;
+import xyz.columnal.data.Table;
+import xyz.columnal.data.Table.TableDisplayBase;
+import xyz.columnal.data.TableManager;
+import xyz.columnal.error.UserException;
+import xyz.columnal.gui.grid.CellSelection;
+import xyz.columnal.gui.grid.VirtualGrid;
+import xyz.columnal.gui.table.app.TableDisplay;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.DataItemPosition;
+import xyz.columnal.id.TableId;
 import xyz.columnal.utility.Utility;
 
 import java.util.Optional;
 import java.util.Random;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryTrait
 {
@@ -151,6 +154,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryT
 
             int pageHeight = TFXUtil.fx(() -> virtualGrid.calcPageHeight());
 
+            // Control-Home goes to 1,1 not 0,0 hence the -1 in the subsequent loops:
             push(KeyCode.SHORTCUT, KeyCode.HOME);
             // First go to correct row:
             for (int i = 0; i < (target.rowIndex - 1) / pageHeight; i++)
@@ -198,7 +202,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryT
         }));
         if (usingMenu)
         {
-            clickOn("#id-menu-view").clickOn(".id-menu-view-goto-row");
+            clickOn("#id-menu-view").moveTo(".id-menu-view-goto-row", Motion.VERTICAL_FIRST).clickOn();
             assertShowing("Zero-based row: " + row, ".ok-button");
             TFXUtil.sleep(200);
             // UI expects one-based:
@@ -207,7 +211,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryT
             assertNotShowing("Zero-based row: " + row, ".ok-button");
         }
         // Wait for complete refresh:
-        TFXUtil.sleep(1000);
+        TFXUtil.sleep(3000);
         return TFXUtil.fx(() -> tableDisplay.getDataPosition(row, col));
     }
 

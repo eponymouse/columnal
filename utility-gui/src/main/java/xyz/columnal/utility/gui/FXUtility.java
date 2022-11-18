@@ -1356,8 +1356,11 @@ public class FXUtility
         if (testingMode)
         {
             TextInputDialog textInputDialog = new TextInputDialog();
+            textInputDialog.initModality(Modality.APPLICATION_MODAL);
+            textInputDialog.getEditor().getStyleClass().add("fake-file-chooser-dialog");
             if (parent != null)
                 textInputDialog.initOwner(parent);
+            textInputDialog.setOnShown(ev -> FXUtility.runAfter(() -> textInputDialog.getEditor().requestFocus()));
             return textInputDialog.showAndWait().map(File::new).orElse(null);
         }
         
@@ -1548,6 +1551,16 @@ public class FXUtility
         webViewReusableResourcePool.returnToPool(webView);
     }
 
+    public static Modality windowModal()
+    {
+        return Modality.WINDOW_MODAL;
+    }
+    
+    public static boolean useSystemMenuBar()
+    {
+        return !testingMode;
+    }
+    
     public static interface GenOrError<T>
     {
         @OnThread(Tag.Simulation)

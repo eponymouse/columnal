@@ -20,6 +20,7 @@
 
 package test.gui.expressionEditor;
 
+import org.testjavafx.node.NodeQuery;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
@@ -35,8 +36,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver;
 import org.junit.runner.RunWith;
-import org.testfx.service.query.NodeQuery;
-import org.testfx.util.WaitForAsyncUtils;
+import org.testjavafx.FxThreadUtils;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.EditableColumn;
@@ -135,7 +135,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             tableManager.record(new Calculate(tableManager, new InitialLoadDetails(null, null, position, null), tableManager.getAllTables().get(0).getId(), ImmutableMap.of()));
 
             TFXUtil.sleep(3000);
-            NodeQuery arrowQuery = TFXUtil.fx(() -> lookup(".expand-arrow").match(n -> FXUtility.hasPseudoclass(n, "expand-right")));
+            NodeQuery arrowQuery = TFXUtil.fx(() -> lookup(".expand-arrow").filter(n -> FXUtility.hasPseudoclass(n, "expand-right")));
             clickOnItemInBounds(arrowQuery, mainWindowActions._test_getVirtualGrid(), new RectangleBounds(
                 new CellPosition(CellPosition.row(8), CellPosition.col(1)),
                 new CellPosition(CellPosition.row(8), CellPosition.col(20))
@@ -158,7 +158,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
                 // Get rid of any popups in the way:
                 moveAndDismissPopupsAtPos(point(targetField));
                 clickOn(point(targetField));
-                assertTrue("Clicked " + point(targetField).query().toString() + " focus is: " + TFXUtil.<@Nullable Node>fx(() -> getFocusOwner()), TFXUtil.fx(() -> targetFinal.isFocused()));
+                assertTrue("Clicked " + point(targetField).toString() + " focus is: " + TFXUtil.<@Nullable Node>fx(() -> getFocusOwner()), TFXUtil.fx(() -> targetFinal.isFocused()));
             }
             // Now need to move to right position:
             int moveDist = TFXUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent));
@@ -194,7 +194,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             assertNotEquals(Utility.listToString(fixStyles), "", key);
             Log.debug("Pressing: SHIFT-" + key);
             push(KeyCode.SHIFT, KeyCode.valueOf(key));
-            WaitForAsyncUtils.waitForFxEvents();
+            FxThreadUtils.waitForFxEvents();
             TFXUtil.sleep(500);
             afterClick.run();
             // Check that popup vanishes pretty much straight away:
@@ -202,7 +202,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             assertFalse("Popup still showing: " + errorPopup, isShowingErrorPopup());
             TFXUtil.doubleOk(this);
             TFXUtil.sleep(1000);
-            WaitForAsyncUtils.waitForFxEvents();
+            FxThreadUtils.waitForFxEvents();
             @Nullable Calculate calculate = Utility.filterClass(tableManager.getAllTables().stream(), Calculate.class).findFirst().orElse(null);
             assertNotNull(calculate);
             if (calculate == null)

@@ -30,8 +30,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 
 /**
- * A cell position is a location in the overall grid, independent
- * of any individual table bounds.
+ * A grid area cell position is a location in a particular subgrid (e.g. table)
  */
 /* package-visible */
 @OnThread(Tag.Any)

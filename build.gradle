@@ -25,6 +25,8 @@ def projectsToJavaFX = [
   'utility-error':  ['javafx.base', 'javafx.graphics']
 ]
 
+def allSubprojects = subprojects
+
 subprojects { subproject ->
   if (!subproject.name.startsWith("ann") && !subproject.name.contains("checker") && !subproject.name.contains("tests") && !subproject.name.equals("xml")) {
     apply plugin: 'java-library'
@@ -130,6 +132,11 @@ subprojects { subproject ->
       testFixturesCompileOnly project(':threadchecker')
       
       testImplementation 'org.testfx:openjfx-monocle:jdk-12.0.1+2'
+
+      testImplementation files("${rootProject.projectDir}/lib/testjavafx-core.jar")
+      testFixturesImplementation files("${rootProject.projectDir}/lib/testjavafx-core.jar")
+      testImplementation files("${rootProject.projectDir}/lib/testjavafx-junit4.jar")
+      testFixturesImplementation files("${rootProject.projectDir}/lib/testjavafx-junit4.jar")
     }
 
     tasks.withType(JavaCompile) {
@@ -150,7 +157,9 @@ subprojects { subproject ->
       // This stops failing tests tripping others up, and generally
       // helps keep the GUI tests isolated:
       forkEvery = 1
-
+      // This stops trying to run parallel GUI tests within the same JVM:
+      maxParallelForks = 1
+      
       jvmArgs += ['-Xmx2G',
                   '-XX:+HeapDumpOnOutOfMemoryError',
                   '-XX:+UseCompressedOops',
@@ -160,21 +169,46 @@ subprojects { subproject ->
                   (("true".equals(project.findProperty("headless")) || project.findProperty("headless") == null) ? [
                     // Headless:
                     '-Djava.awt.headless=true',
-                    '-Dtestfx.robot=glass',
-                    '-Dtestfx.headless=true',
                     '-Dprism.order=sw',
                     '-Dprism.text=t2k',
                     '-Dglass.platform=Monocle',
                     '-Dmonocle.platform=Headless',
                     '-Dheadless.geometry=1920x1200-32'] : [
                     // Headed:
-                    '-Dtestfx.robot=glass',
+                    '-Djava.awt.headless=true',
                     '-Dprism.text=t2k',
                   ])
 
       // If it goes beyond this in normal execution, we should split the module(s) up further:
       timeout = Duration.ofMinutes(40)
+      
+      int index = allSubprojects.findAll{p -> p.name.contains("tests-gui")}.collect {p -> p.name}.sort().indexOf(subproject.name) - 1
+      int display = 42 + index
+
+      if ("true".equals(project.findProperty("xvfb"))) {
+        environment "DISPLAY", ":" + display + ".0"
+      }
+      
+      doFirst {
+        if (index >= 0 && "true".equals(project.findProperty("xvfb"))) {
+          new ProcessBuilder("bash", "manage-xvfb-screens.sh", "start", Integer.toString(display), subproject.name).start().waitFor()
+        }
+      }
+
     }
+
+
+    // Can't use doLast because it doesn't run if the test fails:  
+    task stopXvfb {
+      doLast {
+        int index = allSubprojects.findAll{p -> p.name.contains("tests-gui")}.collect {p -> p.name}.sort().indexOf(subproject.name) - 1
+        int display = 42 + index
+        if (index >= 0 && "true".equals(project.findProperty("xvfb"))) {
+          new ProcessBuilder("bash", "manage-xvfb-screens.sh", "stop", Integer.toString(display), subproject.name).start().waitFor()
+        }
+      }
+    }
+    test.finalizedBy(stopXvfb)
 
     processTestResources.dependsOn ':xml:build'
   }

@@ -20,6 +20,9 @@
 
 package test.gui.expressionEditor;
 
+import javafx.stage.Window;
+import org.testjavafx.FxRobot;
+import org.testjavafx.FxRobotInterface;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
@@ -34,8 +37,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.testfx.api.FxRobot;
-import org.testfx.util.WaitForAsyncUtils;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.id.ColumnId;
 import xyz.columnal.data.KnownLengthRecordSet;
@@ -76,7 +77,7 @@ public class TestExpressionEditor extends BaseTestExpressionEditorEntry implemen
 {
     @Override
     @OnThread(value = Tag.Any)
-    public FxRobot write(char character)
+    public FxRobotInterface write(char character)
     {
         Log.normal("Pressing: {{{" + character + "}}}");
         return super.write(character);
@@ -84,7 +85,7 @@ public class TestExpressionEditor extends BaseTestExpressionEditorEntry implemen
 
     @Override
     @OnThread(value = Tag.Any)
-    public FxRobot write(String text)
+    public FxRobotInterface write(String text)
     {
         //Log.normal("Writing: {{{" + text + "}}}");
         return super.write(text);
@@ -137,7 +138,7 @@ public class TestExpressionEditor extends BaseTestExpressionEditorEntry implemen
             // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
             // Shouldn't really need this code but test is flaky without it due to some JavaFX animation-related exceptions:
             TFXUtil.sleep(2000);
-            WaitForAsyncUtils.clearExceptions();
+            //FxThreadUtils.clearExceptions();
             return expression;
         }
         finally

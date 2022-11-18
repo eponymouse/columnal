@@ -24,7 +24,7 @@ import javafx.scene.Node;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import org.apache.commons.lang3.SystemUtils;
-import org.testfx.api.FxRobotInterface;
+import org.testjavafx.FxRobotInterface;
 import test.gui.TFXUtil;
 import test.gui.trait.FocusOwnerTrait;
 import threadchecker.OnThread;
@@ -40,7 +40,7 @@ public interface TextFieldTrait extends FxRobotInterface, FocusOwnerTrait
         Node focusOwner = getFocusOwner();
         if (!(focusOwner instanceof TextInputControl))
             throw new RuntimeException("Focus owner is " + (focusOwner == null ? "null" : focusOwner.getClass().toString()) 
-                + "\nTarget window is " + TFXUtil.fx(() -> targetWindow()) + " " + TFXUtil.fx(() -> targetWindow().isFocused())
+                + "\nTarget window is " + TFXUtil.fx(() -> focusedWindows())
                 //+ "\nOut of " + TFXUtil.fx(() -> Streams.stream(Window.impl_getWindows()).map(w -> w.toString() + ":" + w.isFocused()).collect(Collectors.joining("/")))
             );
         TextInputControl textField = (TextInputControl) focusOwner;

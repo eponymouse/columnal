@@ -24,7 +24,7 @@ import javafx.geometry.Rectangle2D;
 import javafx.stage.Screen;
 import javafx.stage.Window;
 import org.hamcrest.MatcherAssert;
-import org.testfx.api.FxRobotInterface;
+import org.testjavafx.FxRobotInterface;
 import test.gui.TFXUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;

@@ -22,15 +22,13 @@ package test.gui;
 
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.junit.Test;
-import org.testfx.framework.junit.ApplicationTest;
-import xyz.columnal.gui.InitialWindow;
-import xyz.columnal.gui.MainWindow;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import xyz.columnal.gui.InitialWindow;
+import xyz.columnal.gui.MainWindow;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -24,6 +24,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -36,6 +37,7 @@ import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import test.gui.TAppUtil;
 import test.gui.TFXUtil;
+import test.gui.trait.ClipboardTrait;
 import xyz.columnal.data.CellPosition;
 import xyz.columnal.data.Column;
 import xyz.columnal.data.TBasicUtil;
@@ -72,12 +74,14 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestSort extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, PopupTrait, ClickTableLocationTrait
+public class TestSort extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, PopupTrait, ClickTableLocationTrait, ClipboardTrait
 {
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
     public void propSort(
+            @When(seed=8654547839924125953L)
             @CanHaveErrorValues @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
+            @When(seed=4262804225929162744L)
             @From(GenRandom.class) Random r) throws Exception
     {
         // Save the table, then open GUI and load it, then add a sort transformation
@@ -141,12 +145,11 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
         TFXUtil.sleep(500);
         assertEquals(pickedColumns, Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), Sort.class).findFirst().get().getSortBy());
 
-        // Now check output values by getting them from clipboard:
-        showContextMenu(".table-display-table-title.transformation-table-title")
+        copyToClipboard(() -> {
+            // Now check output values by getting them from clipboard:
+            showContextMenu(".table-display-table-title.transformation-table-title")
                 .clickOn(".id-tableDisplay-menu-copyValues");
-        TFXUtil.sleep(1000);
-
-        
+        });        
                 
         Optional<ImmutableList<LoadedColumnInfo>> clip = TFXUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
         assertTrue(clip.isPresent());

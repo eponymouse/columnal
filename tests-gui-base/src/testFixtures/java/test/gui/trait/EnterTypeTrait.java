@@ -23,7 +23,7 @@ package test.gui.trait;
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import javafx.scene.input.KeyCode;
-import org.testfx.api.FxRobotInterface;
+import org.testjavafx.FxRobotInterface;
 import xyz.columnal.error.InternalException;
 import xyz.columnal.transformations.expression.Expression.SaveDestination;
 import xyz.columnal.transformations.expression.UnitExpression;

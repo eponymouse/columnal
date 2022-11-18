@@ -22,14 +22,10 @@ package test.gui.trait;
 
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
 import javafx.scene.input.MouseButton;
 import javafx.stage.PopupWindow;
-import javafx.stage.Window;
+import org.testjavafx.FxRobotInterface;
 import test.gui.TFXUtil;
-import xyz.columnal.log.Log;
-import org.testfx.api.FxRobotInterface;
-import org.testfx.service.query.PointQuery;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.Utility;
@@ -39,9 +35,8 @@ import java.util.function.Supplier;
 public interface PopupTrait extends FxRobotInterface
 {
     @OnThread(Tag.Any)
-    default public void moveAndDismissPopupsAtPos(PointQuery pointQuery)
+    default public void moveAndDismissPopupsAtPos(Point2D p)
     {
-        Point2D p = pointQuery.query();
         Supplier<Boolean> popupAtMousePos = () -> {
             return TFXUtil.fx(() -> {
                 return Utility.filterClass(listWindows().stream(), PopupWindow.class).anyMatch(w -> {

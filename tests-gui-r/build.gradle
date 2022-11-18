@@ -1,9 +1,11 @@
 dependencies {
+    testImplementation project(":app")
     testImplementation project(":data")
     testImplementation project(":expressions")
     testImplementation project(":functions")
     testImplementation project(":identifiers")
     testImplementation project(":r-interop")
+    testImplementation project(":stf")
     testImplementation project(":transformations")
     testImplementation project(":types")
     testImplementation project(":utility")
@@ -17,9 +19,15 @@ dependencies {
     // From https://stackoverflow.com/questions/5644011/multi-project-test-dependencies-with-gradle/60138176#60138176
     testImplementation(testFixtures(project(":tests-basic")))
     testImplementation(testFixtures(project(":tests-functions")))
+    testImplementation(testFixtures(project(":tests-gui-base")))
 }
 
-description = 'tests-r'
+javafx {
+    modules = [ 'javafx.base', 'javafx.controls', 'javafx.swing' ]
+    configuration = "testImplementation"
+}
+
+description = 'tests-gui-r'
 
 sourceSets.test.resources.srcDirs('../xml/build/resources/main', '../app/src/main/resources', '../tests/src/test/resources')
 

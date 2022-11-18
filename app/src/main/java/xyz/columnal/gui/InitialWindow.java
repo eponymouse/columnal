@@ -89,7 +89,7 @@ public class InitialWindow
                 GUI.menuItem("menu.help.about", () -> new AboutDialog(new Undimmed(stage)).showAndWait())
             )
         );
-        menuBar.setUseSystemMenuBar(true);
+        menuBar.setUseSystemMenuBar(FXUtility.useSystemMenuBar());
         Button newButton = GUI.button("initial.new", () -> {
             newProject(stage, upgradeInfo);
             stage.hide();

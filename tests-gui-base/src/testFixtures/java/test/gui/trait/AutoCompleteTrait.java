@@ -25,7 +25,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
-import org.testfx.api.FxRobotInterface;
+import org.testjavafx.FxRobotInterface;
 import test.gui.TFXUtil;
 import xyz.columnal.gui.dialog.AutoComplete.Completion;
 import xyz.columnal.gui.lexeditor.completion.LexAutoCompleteWindow;
@@ -54,10 +54,10 @@ public interface AutoCompleteTrait extends FxRobotInterface, QueryTrait
     @OnThread(Tag.Any)
     default void scrollLexAutoCompleteToOption(String content)
     {
-        List<Window> autos = TFXUtil.fx(() -> listTargetWindows()).stream().filter(w -> TFXUtil.fx(() -> w.isShowing())).filter(w -> w instanceof LexAutoCompleteWindow).collect(Collectors.toList());
+        List<Window> autos = TFXUtil.fx(() -> listWindows()).stream().filter(w -> TFXUtil.fx(() -> w.isShowing())).filter(w -> w instanceof LexAutoCompleteWindow).collect(Collectors.toList());
         Assert.assertEquals(autos.stream().map(Object::toString).collect(Collectors.joining(";")), 1, autos.size());
 
-        LexAutoCompleteWindow autoComplete = TFXUtil.fx(() -> ((LexAutoCompleteWindow)window(w -> w instanceof LexAutoCompleteWindow && w.isShowing())));
+        LexAutoCompleteWindow autoComplete = TFXUtil.fx(() -> ((LexAutoCompleteWindow)listWindows().stream().filter(w -> w instanceof LexAutoCompleteWindow && w.isShowing()).findFirst().orElse(null)));
 
         // Move to top:
         String prev = "\u0000";

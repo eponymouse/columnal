@@ -54,7 +54,7 @@ public class GenNonsenseRTransform extends Generator<Transformation_Mgr>
 
             ImmutableList<TableId> srcIds = TBasicUtil.makeList(sourceOfRandomness, 0, 5, () -> TBasicUtil.generateTableId(sourceOfRandomness));
             ImmutableList<String> pkgs = TBasicUtil.makeList(sourceOfRandomness, 0, 10, () -> TBasicUtil.generateIdent(sourceOfRandomness));
-            String rExpression = TBasicUtil.makeNonEmptyString(sourceOfRandomness, generationStatus);
+            String rExpression = TBasicUtil.generateNumberV(sourceOfRandomness, generationStatus).toString();
             
             return new Transformation_Mgr(mgr, new RTransformation(mgr, TFunctionUtil.ILD, srcIds, pkgs, rExpression));
         }

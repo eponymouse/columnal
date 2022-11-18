@@ -168,7 +168,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                     addTransformation(details._test_getTableManager(), "T1", "T2", CellPosition.ORIGIN.offsetByRowCols(1, 7), r);
                     break;
             }
-            sleep(1000);
+            sleep(3000);
             
             // Check all cells are found this time, will throw if not:
             for (int i = tableToDelete; i < 3; i++)

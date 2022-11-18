@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import test.gui.TAppUtil;
@@ -58,7 +59,7 @@ public class TestRTransformation extends FXApplicationTest implements ScrollToTr
     public void testR() throws Exception
     {
         // Uninstall one package first to check installation works:
-        Runtime.getRuntime().exec(new String[] {"R", "CMD", "REMOVE", "digest"});
+        Runtime.getRuntime().exec(new String[] {"R", "CMD", "REMOVE", "digest"}).waitFor();
         
         RecordSet original = new KnownLengthRecordSet(ImmutableList.of(ColumnUtility.makeImmediateColumn(DataType.TEXT, new ColumnId("The Strings"), ImmutableList.of(Either.right("Hello"), Either.right("There")), "")), 2);
         
@@ -73,7 +74,7 @@ public class TestRTransformation extends FXApplicationTest implements ScrollToTr
         scrollTo(".id-transform-runr");
         clickOn(".id-transform-runr");
         // First run can take quite a while:
-        TFXUtil.sleep(200_000);
+        TFXUtil.sleep(300_000);
         // Focus should begin in the expression, so let's do that first:
         write("digest(str_c(Table1$\"The Strings\"))");
         
@@ -91,7 +92,7 @@ public class TestRTransformation extends FXApplicationTest implements ScrollToTr
         sleep(200_000);
         
         // Now check table exists, with correct output
-        assertEquals(2, mainWindowActions._test_getTableManager().getAllTables().size());
+        Assert.assertEquals(2, mainWindowActions._test_getTableManager().getAllTables().size());
         RTransformation rTransformation = (RTransformation) TBasicUtil.checkNonNull(mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof RTransformation).findFirst().orElse(null));
         assertEquals(ImmutableList.of(new ColumnId("Result")), rTransformation.getData().getColumnIds());
         assertEquals("497859090e5f950944a1e8cf3989dd8d", rTransformation.getData().getColumns().get(0).getType().getCollapsed(0));

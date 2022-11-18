@@ -32,27 +32,7 @@ import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
-import org.testfx.service.query.NodeQuery;
-import test.gui.TAppUtil;
-import test.gui.TFXUtil;
-import xyz.columnal.data.*;
-import xyz.columnal.data.Table.InitialLoadDetails;
-import xyz.columnal.data.datatype.DataType;
-import xyz.columnal.data.datatype.DataTypeUtility;
-import xyz.columnal.data.datatype.DataTypeValue;
-import xyz.columnal.error.InternalException;
-import xyz.columnal.error.UserException;
-import xyz.columnal.gui.MainWindow.MainWindowActions;
-import xyz.columnal.gui.table.RowLabelSupplier;
-import xyz.columnal.gui.dtf.DocumentTextField;
-import xyz.columnal.gui.grid.RectangleBounds;
-import xyz.columnal.gui.grid.VirtualGrid;
-import xyz.columnal.id.ColumnId;
-import xyz.columnal.id.DataItemPosition;
-import xyz.columnal.id.TableId;
-import xyz.columnal.transformations.Calculate;
-import xyz.columnal.transformations.Sort;
-import xyz.columnal.transformations.Sort.Direction;
+import org.testjavafx.node.NodeQuery;
 import test.DummyManager;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
@@ -60,14 +40,44 @@ import test.gen.GenExpressionValueForwards;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.ImmediateData_Mgr;
 import test.gen.GenRandom;
+import test.gui.TAppUtil;
+import test.gui.TFXUtil;
 import test.gui.trait.CheckCSVTrait;
 import test.gui.trait.ClickOnTableHeaderTrait;
 import test.gui.trait.ClickTableLocationTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import xyz.columnal.utility.adt.Pair;
+import xyz.columnal.data.CellPosition;
+import xyz.columnal.data.Column;
+import xyz.columnal.data.EditableRecordSet;
+import xyz.columnal.data.ImmediateDataSource;
+import xyz.columnal.data.RecordSet;
+import xyz.columnal.data.TBasicUtil;
+import xyz.columnal.data.Table;
+import xyz.columnal.data.Table.InitialLoadDetails;
+import xyz.columnal.data.TableManager;
+import xyz.columnal.data.datatype.DataType;
+import xyz.columnal.data.datatype.DataTypeUtility;
+import xyz.columnal.data.datatype.DataTypeValue;
+import xyz.columnal.error.InternalException;
+import xyz.columnal.error.UserException;
+import xyz.columnal.gui.MainWindow.MainWindowActions;
+import xyz.columnal.gui.dtf.DocumentTextField;
+import xyz.columnal.gui.grid.RectangleBounds;
+import xyz.columnal.gui.grid.VirtualGrid;
+import xyz.columnal.gui.table.RowLabelSupplier;
+import xyz.columnal.id.ColumnId;
+import xyz.columnal.id.DataItemPosition;
+import xyz.columnal.id.TableId;
+import xyz.columnal.transformations.Calculate;
+import xyz.columnal.transformations.Sort;
+import xyz.columnal.transformations.Sort.Direction;
+import xyz.columnal.transformations.expression.Expression;
+import xyz.columnal.transformations.expression.FieldAccessExpression;
+import xyz.columnal.transformations.expression.visitor.ExpressionVisitorStream;
 import xyz.columnal.utility.Utility;
+import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.gui.FXUtility;
 
 import java.io.IOException;
@@ -77,8 +87,11 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, ClickOnTableHeaderTrait, ClickTableLocationTrait
@@ -106,6 +119,18 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             return; // Can't delete if there's no rows!
         if (expressionValue.recordSet.getColumns().isEmpty())
             return; // Likewise if there's no columns
+        // Special case: if the expression has a reference to the whole source column that we're deleting a row
+        // from, we're going to get a different result.  Simplest is just to skip that case:
+        if (expressionValue.expression.visit(new ExpressionVisitorStream<Boolean>()
+        {
+
+            @Override
+            public Stream<Boolean> field(FieldAccessExpression self, Expression lhsRecord, String fieldName)
+            {
+                return Stream.of(fieldName.equals("GEV Col 0"));
+            }
+        }).anyMatch(x -> x))
+            return;
 
         TableManager manager = new DummyManager();
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);
@@ -341,7 +366,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         // Find the row label.  Should be visible based on previous actions:
         Node rowLabel = findRowLabel(tableId, targetRow);
         if (rowLabel == null)
-            throw new RuntimeException("No row label for zero-based row " + targetRow + " in " + findVisRowLabels(tableId) + "focused: " + TFXUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
+            throw new RuntimeException("No row label for zero-based row " + targetRow + " in " + findVisRowLabels(tableId) + "focused: " + TFXUtil.fx(() -> focusedWindows()));
         @NonNull Node rowLabelFinal = rowLabel;
         double rowLabelTop = TFXUtil.fx(() -> rowLabelFinal.localToScene(rowLabelFinal.getBoundsInLocal()).getMinY());
         List<Node> rowCells = TFXUtil.fx(() -> queryTableDisplay(tableId).lookup(".document-text-field").match(n -> Math.abs(n.localToScene(n.getBoundsInLocal()).getMinY()) - rowLabelTop <= 3).queryAll().stream().sorted(Comparator.comparing(n -> n.localToScene(n.getBoundsInLocal()).getMinX())).collect(Collectors.toList()));

@@ -94,6 +94,9 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         // Not much more to do -- just edit the expression 
         correctTargetWindow();
         clickOn(TFXUtil.fx(() -> lookup(".column-title").match((Label l) -> TFXUtil.fx(() -> l.getText()).startsWith("My C")).<Label>query()));
+        retryUntil(focused(".column-name-text-field"));
+        // Close auto-complete:
+        tap(KeyCode.ESCAPE);
         push(KeyCode.TAB);
     }
     
@@ -203,8 +206,8 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         // Click first cell:
         Node cell = TBasicUtil.checkNonNull(TFXUtil.fx(() -> lookup(".lex-completion").<Node>queryAll().stream().min(Comparator.comparing(c -> c.localToScreen(c.getBoundsInLocal()).getMinY())).orElse(null)));
         // Doesn't matter if registered as double click or two single:
-        clickOn(point(cell).atOffset(5, 0));
-        clickOn(point(cell).atOffset(5, 0));
+        clickOn(point(cell).add(5, 0));
+        clickOn(point(cell).add(5, 0));
         assertEquals(IdentExpression.column(new ColumnId("My Number")), finish());
     }
 

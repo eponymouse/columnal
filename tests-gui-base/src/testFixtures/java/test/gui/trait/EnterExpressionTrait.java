@@ -26,7 +26,7 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.testfx.api.FxRobotInterface;
+import org.testjavafx.FxRobotInterface;
 import xyz.columnal.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import xyz.columnal.data.datatype.TypeManager;
 import xyz.columnal.error.InternalException;

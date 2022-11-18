@@ -410,6 +410,9 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     @OnThread(Tag.Simulation)
     public void testRenameColumn(@From(GenColumnId.class) ColumnId newColumnId) throws Exception
     {
+        if (tableManager.getSingleTableOrThrow(srcId).getData().getColumnIds().contains(newColumnId))
+            return; // In the rare case we try to rename to an existing column name, skip
+        
         // 3 tables, 2 columns each:
         assertEquals(tableCount, count(".table-display-table-title"));
         assertEquals(tableCount * 2, count(".table-display-column-title"));
@@ -572,7 +575,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         String targetColumnName = Arrays.asList("Boolean", "Number").get(Math.abs(positionIndicator) % originalColumns);
         // Bring up context menu and click item:
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, originalColumns));
-        withItemInBounds(TFXUtil.fx(() -> lookup(".column-title").lookup((Label t) -> t.getText().equals(targetColumnName))), 
+        withItemInBounds(TFXUtil.fx(() -> lookup(".column-title").lookup(n -> n instanceof Label t && t.getText().equals(targetColumnName))), 
             virtualGrid, rectangleBounds,
                 this::showContextMenu);
         clickOn(positionIndicator < 0 ? ".id-virtGrid-column-addBefore" : ".id-virtGrid-column-addAfter");
@@ -849,7 +852,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         );
         sleep(300);
         clickOn(".type-editor");
-        MatcherAssert.assertThat("Clicked on: " + point(".type-editor").query(), getFocusOwner(), Matchers.instanceOf(EditorDisplay.class));
+        MatcherAssert.assertThat("Clicked on: " + point(".type-editor"), getFocusOwner(), Matchers.instanceOf(EditorDisplay.class));
         sleep(300);
         push(TFXUtil.ctrlCmd(), KeyCode.A);
         sleep(300);
