@@ -73,8 +73,7 @@ public class TestTypeEditorCompletion extends BaseTestEditorCompletion
         
         mainWindowActions = TAppUtil.openDataAsTable(windowToUse, toLoad).get();
         sleep(1000);
-        // Start creating column 
-        correctTargetWindow();
+        // Start creating column
         Node expandRight = TFXUtil.fx(() -> lookup(".expand-arrow").match(n -> FXUtility.hasPseudoclass(n, "expand-right")).<Node>query());
         assertNotNull(expandRight);
         // Won't happen, assertion will fail:

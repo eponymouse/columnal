@@ -77,7 +77,7 @@ public interface CreateDataTableTrait extends FxRobotInterface, ScrollToTrait, C
         
         // Only need to click once as already selected by keyboard:
         clickOnItemInBounds(lookup(".create-table-grid-button"), virtualGrid, new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-        correctTargetWindow().clickOn(".id-new-data");
+        clickOn(".id-new-data");
         correctTargetWindow();
         write(tableName, 1);
         push(KeyCode.TAB);

@@ -114,9 +114,9 @@ public class TestExpressionEditor extends BaseTestExpressionEditorEntry implemen
                 clickOnItemInBounds(fromNode(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             // Not sure why this doesn't work:
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-            correctTargetWindow().clickOn(".id-new-transform");
-            correctTargetWindow().clickOn(".id-transform-calculate");
-            correctTargetWindow().write("Table1");
+            clickOn(".id-new-transform");
+            clickOn(".id-transform-calculate");
+            write("Table1");
             push(KeyCode.ENTER);
             TFXUtil.sleep(200);
             write("DestCol");
@@ -127,7 +127,6 @@ public class TestExpressionEditor extends BaseTestExpressionEditorEntry implemen
             // Close dialog, ignoring errors:
             TFXUtil.doubleOk(this);
             // Now close dialog, and check for equality;
-            correctTargetWindow();
             View view = waitForOne(".view");
             assertNotShowing("OK button", ".ok-button");
             Calculate calculate = (Calculate) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));

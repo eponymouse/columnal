@@ -80,10 +80,10 @@ public class BaseTestExpressionEditorEntry extends FXApplicationTest implements 
                 clickOnItemInBounds(fromNode(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             // Not sure why this doesn't work:
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-            correctTargetWindow().clickOn(".id-new-transform");
-            correctTargetWindow().clickOn(".id-transform-calculate");
+            clickOn(".id-new-transform");
+            clickOn(".id-transform-calculate");
             retryUntil(focused(".text-field"));
-            correctTargetWindow().write(expressionValue.tableId.getRaw());
+            write(expressionValue.tableId.getRaw());
             push(KeyCode.ENTER);
             TFXUtil.sleep(200);
             write("DestCol");
@@ -98,7 +98,6 @@ public class BaseTestExpressionEditorEntry extends FXApplicationTest implements 
                 // Get rid of popups:
                 TFXUtil.doubleOk(this);
                 // Now close dialog, and check for equality;
-                correctTargetWindow();
                 View view = waitForOne(".view");
                 TFXUtil.sleep(500);
                 assertNotShowing("No OK buttong", ".ok-button");

@@ -191,8 +191,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
         // Only need to click once as already selected by keyboard:
         clickOnItemInBounds(".create-table-grid-button", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-        correctTargetWindow().clickOn(".id-new-data");
-        correctTargetWindow();
+        clickOn(".id-new-data");
         if (tableName != null)
         {
             write(tableName, DELAY);
