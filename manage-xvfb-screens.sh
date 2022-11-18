@@ -33,7 +33,8 @@ case $1 in
     sawfish --display=:"$2".0 &
     echo $! > processes-"$2"-sawfish.pid
     sleep 5
-    ffmpeg -nostdin -y -video_size 1280x1024 -framerate 8 -f x11grab -i :"$2".0 -codec:v libx264rgb -preset ultrafast -vf drawtext=text='%{localtime\:%T}':x=100:y=50:fontcolor=white:fontsize=30 recording-"$3".mp4 > "$3".out.ffmpeg.log 2> "$3".err.ffmpeg.log &
+    # From https://einar.slaskete.net/2011/09/05/adding-time-stamp-overlay-to-video-stream-using-ffmpeg/
+    ffmpeg -nostdin -y -video_size 1280x1024 -framerate 8 -f x11grab -i :"$2".0 -codec:v libx264rgb -preset ultrafast -vf "drawtext=text='%{localtime\:%T}':x=100:y=50:fontcolor=white:fontsize=30" recording-"$3".mp4 > "$3".out.ffmpeg.log 2> "$3".err.ffmpeg.log &
     echo $! > processes-"$2"-ffmpeg.pid
     ;;
   stop)
