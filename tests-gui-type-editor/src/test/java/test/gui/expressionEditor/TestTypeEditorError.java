@@ -307,7 +307,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
 
     private void assertErrorShowing(boolean underlineShowing, @Nullable Boolean popupShowing)
     {
-        Scene dialogScene = TFXUtil.fx(() -> getRealFocusedWindow().getScene());
+        Scene dialogScene = TFXUtil.fx(() -> targetWindow().getScene());
         Collection<Path> errorUnderline = TFXUtil.fx(() -> lookup(".type-editor .error-underline").<Path>queryAll());
         assertEquals("Underline showing", underlineShowing, errorUnderline.size() > 0);
         if (popupShowing != null)

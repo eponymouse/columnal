@@ -50,11 +50,11 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
         // We should be focused on name initially with the whole field selected, or blank:
         assertNotShowing("Should be no errors showing in type editor while unfocused", ".type-editor .error-underline");
         write(columnDetails.columnId.getRaw(), DELAY);
-        Window dialog = TFXUtil.fx(() -> getRealFocusedWindow());
+        Window dialog = targetWindow();
         Log.debug("Pressing TAB on window: " + dialog);
         push(KeyCode.TAB);
         enterType(TypeExpression.fromDataType(columnDetails.dataType), r);
-        dialog = TFXUtil.fx(() -> getRealFocusedWindow());
+        dialog = targetWindow();
         Log.debug("Pressing ESCAPE on window: " + dialog);
         push(KeyCode.ESCAPE);
         push(KeyCode.ESCAPE);

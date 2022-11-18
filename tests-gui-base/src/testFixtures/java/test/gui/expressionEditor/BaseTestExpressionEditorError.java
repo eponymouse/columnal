@@ -227,7 +227,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
 
     private void assertErrorShowing(boolean underlineShowing, @Nullable Boolean errorPopupShowing)
     {
-        Scene dialogScene = TFXUtil.fx(() -> getRealFocusedWindow().getScene());
+        Scene dialogScene = TFXUtil.fx(() -> targetWindow().getScene());
         Collection<Path> errorUnderline = TFXUtil.fx(() -> lookup(".expression-editor .error-underline").<Path>queryAll());
         assertEquals("Underline showing", underlineShowing, errorUnderline.size() > 0);
         if (errorPopupShowing != null)
