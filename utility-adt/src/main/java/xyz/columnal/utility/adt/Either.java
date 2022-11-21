@@ -346,6 +346,12 @@ public sealed interface Either<A, B> permits Either.Left, Either.Right, Comparab
         {
             return false;
         }
+
+        @Override
+        public String toString()
+        {
+            return "Left {" + a + "}";
+        }
     }
 
     public sealed static class Right<A, B> implements Either<A, B> permits ComparableEither.Right
@@ -431,6 +437,12 @@ public sealed interface Either<A, B> permits Either.Left, Either.Right, Comparab
         public boolean isRight()
         {
             return true;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "Right {" + b + "}";
         }
     }
 }

@@ -95,7 +95,6 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
     @OnThread(Tag.Simulation)
     private void enterUnitDetails(GenUnitDefinition.UnitDetails unitDetails) throws InternalException
     {
-        correctTargetWindow();
         TextInputControl input = selectAllCurrentTextField();
         write(unitDetails.name);
         assertEquals(unitDetails.name, TFXUtil.fx(input::getText));

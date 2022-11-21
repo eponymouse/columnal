@@ -30,12 +30,6 @@ public interface QueryTrait extends FxRobotInterface
         while (r.isEmpty() && count >= 0);
         return r.orElseThrow(() -> new RuntimeException("Nothing found for \"" + query + "\""));
     }
-    
-    @OnThread(Tag.Any)
-    public default void waitClickOn(String query)
-    {
-        clickOn(this.<Node>waitForOne(query));
-    }
 
     @OnThread(Tag.Any)
     public default void assertShowing(String message, String query)

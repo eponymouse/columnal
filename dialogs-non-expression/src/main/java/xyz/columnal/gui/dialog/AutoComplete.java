@@ -591,6 +591,9 @@ public class AutoComplete<C extends Completion>
 
         public void textFieldKeyPressed(KeyEvent e)
         {
+            Log.debug("AutoComplete observed key event on field: " + e + (isShowing() ? " while showing" : " while hidden"));
+            Log.debug("Focus owner in window: " + Utility.onNullable(getScene(), Scene::getFocusOwner));
+            
             if (e.getCode() == KeyCode.ESCAPE && isShowing())
             {
                 hide();

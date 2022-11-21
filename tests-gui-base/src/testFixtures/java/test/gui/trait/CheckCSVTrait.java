@@ -68,7 +68,7 @@ public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnT
         destCSV.deleteOnExit();
 
         // Enter file name into first dialog:
-        correctTargetWindow().write(destCSV.getAbsolutePath());
+        write(destCSV.getAbsolutePath());
         push(KeyCode.ENTER);
 
         /* TODO add and handle options dialog

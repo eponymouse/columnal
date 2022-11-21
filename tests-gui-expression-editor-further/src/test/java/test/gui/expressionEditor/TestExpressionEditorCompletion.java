@@ -91,8 +91,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
 
         mainWindowActions = TAppUtil.openDataAsTable(windowToUse, toLoad).get();
         sleep(1000);
-        // Not much more to do -- just edit the expression 
-        correctTargetWindow();
+        // Not much more to do -- just edit the expression
         clickOn(TFXUtil.fx(() -> lookup(".column-title").match((Label l) -> TFXUtil.fx(() -> l.getText()).startsWith("My C")).<Label>query()));
         retryUntil(focused(".column-name-text-field"));
         // Close auto-complete:

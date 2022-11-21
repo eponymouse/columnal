@@ -265,7 +265,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
     @OnThread(Tag.Any)
     default public void defocusSTFAndCheck(@Nullable String checkContentAfterDefocus, FXPlatformRunnable defocus)
     {
-        Window window = TFXUtil.fx(() -> getRealFocusedWindow());
+        Window window = targetWindow();
         Node node = TFXUtil.fx(() -> window.getScene().getFocusOwner());
         assertTrue("" + node, node instanceof DocumentTextField);
         DocumentTextField field = (DocumentTextField) node;

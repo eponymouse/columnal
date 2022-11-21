@@ -86,18 +86,18 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
 
             clickOn("#id-menu-view").moveTo(".id-menu-view-types", Motion.VERTICAL_FIRST).clickOn();
             TFXUtil.sleep(200);
-            Window typeWindow = fxGetRealFocusedWindow();
+            Window typeWindow = targetWindow();
             clickOn(".id-types-add");
             TFXUtil.sleep(200);
-            Window dialog = fxGetRealFocusedWindow();
+            Window dialog = targetWindow();
             enterTypeDetails(typeDefinition, random, mainWindowActions._test_getTableManager().getTypeManager());
             moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(".ok-button");
             TFXUtil.sleep(500);
-            Assert.assertNotEquals(dialog, fxGetRealFocusedWindow());
+            Assert.assertNotEquals(dialog, targetWindow());
             clickOn(".close-button");
             TFXUtil.sleep(500);
-            Assert.assertNotEquals(typeWindow, fxGetRealFocusedWindow());
+            Assert.assertNotEquals(typeWindow, targetWindow());
 
             // Check that saved types in file match our new unit:
             String fileContent = FileUtils.readFileToString(TFXUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
@@ -322,6 +322,12 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     @OnThread(Tag.Simulation)
     public void testDeleteType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionA, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionB, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionC, int whichToDelete) throws Exception
     {
+        // If the names overlap they won't register successfully and the test will be invalid:
+        if (typeDefinitionA.getTaggedTypeName().equals(typeDefinitionB.getTaggedTypeName())
+            || typeDefinitionA.getTaggedTypeName().equals(typeDefinitionC.getTaggedTypeName())
+            || typeDefinitionB.getTaggedTypeName().equals(typeDefinitionC.getTaggedTypeName()))
+            return;
+        
         TBasicUtil.printSeedOnFail(() -> {
             DummyManager prevManager = new DummyManager();
             prevManager.getTypeManager().registerTaggedType(typeDefinitionA.getTaggedTypeName().getRaw(), typeDefinitionA.getTypeArguments(), typeDefinitionA.getTags());
