@@ -322,6 +322,12 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
     @OnThread(Tag.Simulation)
     public void testDeleteType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionA, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionB, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionC, int whichToDelete) throws Exception
     {
+        // If the names overlap they won't register successfully and the test will be invalid:
+        if (typeDefinitionA.getTaggedTypeName().equals(typeDefinitionB.getTaggedTypeName())
+            || typeDefinitionA.getTaggedTypeName().equals(typeDefinitionC.getTaggedTypeName())
+            || typeDefinitionB.getTaggedTypeName().equals(typeDefinitionC.getTaggedTypeName()))
+            return;
+        
         TBasicUtil.printSeedOnFail(() -> {
             DummyManager prevManager = new DummyManager();
             prevManager.getTypeManager().registerTaggedType(typeDefinitionA.getTaggedTypeName().getRaw(), typeDefinitionA.getTypeArguments(), typeDefinitionA.getTags());
